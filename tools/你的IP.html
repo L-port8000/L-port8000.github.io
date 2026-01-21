@@ -1,0 +1,44 @@
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>你的IP</title>
+  <style>
+    body { font-family: sans-serif; }
+    .box { margin: 10px 0; }
+  </style>
+</head>
+<body>
+  <h2>你的IP</h2>
+
+  <div class="box">
+    <strong>HTTP:</strong>
+    <span id="http-ip">取得中...</span>
+  </div>
+
+  <div class="box">
+    <strong>HTTPS:</strong>
+    <span id="https-ip">取得中...</span>
+  </div>
+  <script>
+    // HTTP
+    fetch('http://api.ipify.org?format=json')
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById('http-ip').textContent = data.ip;
+      })
+      .catch(() => {
+        document.getElementById('http-ip').textContent = '取得失敗（Mixed Contentの可能性）';
+      });
+
+    // HTTPS
+    fetch('https://api.ipify.org?format=json')
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById('https-ip').textContent = data.ip;
+      })
+      .catch(() => {
+        document.getElementById('https-ip').textContent = '取得失敗';
+      });
+  </script>
+</body>
+</html>
