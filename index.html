@@ -1,68 +1,130 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>個人ホームページ | 一樹（いつき）</title>
-  <style>
-    body {
-      font-family: "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
-      background: #f2f4f7;
-      margin: 0;
-      color: #333;
-    }
-    header {
-      background: #111;
-      color: #fff;
-      padding: 50px 20px;
-      text-align: center;
-      position: relative;
-    }
-    .profile-image {
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      width: 80px;
-      height: 80px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 2px solid #fff;
-    }
-    main {
-      max-width: 900px;
-      margin: 40px auto;
-      padding: 0 20px;
-    }
-    section {
-      background: #fff;
-      padding: 30px;
-      border-radius: 12px;
-      margin-bottom: 30px;
-    }
-    h2 {
-      border-bottom: 2px solid #e0e0e0;
-      padding-bottom: 8px;
-    }
-    ul {
-      padding-left: 20px;
-    }
-    .accounts a {
-      display: block;
-      margin-top: 5px;
-      color: #1da1f2;
-      text-decoration: none;
-    }
-    footer {
-      text-align: center;
-      padding: 20px;
-      color: #777;
-      font-size: 14px;
-    }
-  </style>
+<meta charset="UTF-8">
+<link rel="icon" href="./transparent.png">
+<title>個人ホームページ | 一樹（いつき）</title>
+
+<style>
+:root {
+  --bg: #0f172a;
+  --card: #111827;
+  --accent: #38bdf8;
+  --text: #e5e7eb;
+  --sub: #9ca3af;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Hiragino Kaku Gothic ProN", "Meiryo", system-ui, sans-serif;
+  background: linear-gradient(180deg, #f8fafc, #eef2ff);
+  color: #ffffff;
+}
+
+/* Header */
+header {
+  padding: 80px 20px 60px;
+  text-align: center;
+  position: relative;
+}
+
+.profile-image {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--accent);
+  box-shadow: 0 0 30px rgba(56,189,248,.5);
+}
+
+/* name color */
+header h1 {
+  margin: 20px 0 10px;
+  font-size: 2.2rem;
+  letter-spacing: 1px;
+  color: #111111; /* 黒に変更 */
+}
+
+/* name tag color */
+header p {
+  color: #888888; /* グレーに変更 */
+}
+
+/* Footer */
+footer {
+  color: #e0e0e0;
+}
+
+main {
+  max-width: 960px;
+  margin: 0 auto 60px;
+  padding: 0 20px;
+}
+
+section {
+  background: rgba(17,24,39,.9);
+  border-radius: 16px;
+  padding: 30px;
+  margin-bottom: 30px;
+  box-shadow: 0 10px 40px rgba(0,0,0,.4);
+}
+
+h2 {
+  margin-top: 0;
+  font-size: 1.4rem;
+  border-left: 5px solid var(--accent);
+  padding-left: 12px;
+}
+
+/* 本文 */
+p, li {
+  color: #ffffff;
+}
+
+ul {
+  padding-left: 20px;
+}
+
+/* ===== SNS Buttons ===== */
+.accounts a {
+  display: flex;
+  align-items: center;
+  margin-top: 12px;
+  padding: 14px 18px;
+  background: linear-gradient(135deg, #1e293b, #020617);
+  border-radius: 12px;
+  color: var(--text);
+  text-decoration: none;
+  border: 1px solid #1f2937;
+  transition: .3s;
+}
+
+.accounts a:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent);
+  box-shadow: 0 0 20px rgba(56,189,248,.3);
+}
+
+/* Footer */
+footer {
+  text-align: center;
+  padding: 30px;
+  color: var(--sub);
+  font-size: 13px;
+}
+</style>
 </head>
+
 <body>
 
 <header>
-  <img src="https://pbs.twimg.com/profile_images/2012132705790816256/u9nxDVUb_400x400.png" alt="プロフィール画像" class="profile-image">
+  <img src="https://pbs.twimg.com/profile_images/2012132705790816256/u9nxDVUb_400x400.png"
+       alt="プロフィール画像"
+       class="profile-image">
 
   <h1>一樹（いつき）</h1>
   <p>ゲーム / プログラミング / ガジェット</p>
@@ -70,59 +132,52 @@
 
 <main>
 
-  <section>
-    <h2>プロフィール</h2>
-    <p>
-      Xでゲームのことや、普通に日常ツイート、技術的なことを調べたり勉強したりしている。
-       趣味：ゲーム、プログラミング、無料VPN,プロキシ探し(CGI Proxy含む)
-       活動場所：X, blue sky, discord, note, youtube, reddit
-    </p>
-  </section>
+<section>
+  <h2>プロフィール</h2>
+  <p>
+    Xでゲームのことや日常ツイート、技術的なことを調べたり勉強しています。<br>
+    趣味：ゲーム、プログラミング、無料VPN・プロキシ探し（CGI Proxy含む）<br>
+    活動場所：X / Bluesky / Discord / note / YouTube / Reddit
+  </p>
+</section>
 
-  <section>
-    <h2>なに書こう</h2>
-    <ul>
-      <li>L_port8000乗っ取り事件ありました</li>
-    </ul>
-  </section>
+<section>
+  <h2>なに書こう</h2>
+  <ul>
+    <li>L_port8000 乗っ取り事件</li>
+  </ul>
+</section>
 
-  <section>
-    <h2>アカウント一覧</h2>
-    <ul>
-      <li><strong>L_port8000：</strong> 乗っ取り済み、Xに復元要請申請中。</li>
-      <li><strong>L_port9999：</strong> 凍結済み</li>
-      <li><strong>L_port443：</strong> 凍結済み</li>
-      <li><strong>L_port8080：</strong> 現本垢、時々返信規制入ります。</li>
-    </ul>
-  </section>
+<section>
+  <h2>Xアカウント一覧</h2>
+  <ul>
+    <li><strong>L_port8000：</strong> 乗っ取り済み（Xに復元要請中）</li>
+    <li><strong>L_port9999：</strong> 凍結済み、復元見込みなし</li>
+    <li><strong>L_port443：</strong> 凍結済み、復元見込みなし</li>
+    <li><strong>L_port8080：</strong> 現本垢（時々返信規制）</li>
+  </ul>
+</section>
 
-  <section class="accounts">
-    <h2>SNS</h2>
-    <a href="https://x.com/L_port8000" target="_blank">
-      X旧: @L_port8000
-    </a>
-    <a href="https://x.com/L_port8080" target="_blank">
-      X現: @L_port8080
-    </a>
-    <a href="https://bsky.app/profile/l-port8000.bsky.social" target="_blank">
-      Bsky: l-port8000.bsky.social
-    </a>
-    <a href="https://discord.com/login" target="_blank">
-      Discord: @L_port8000
-    </a>
-    <a href="https://note.com/L_port8000" target="_blank">
-      note: @L_port8000
-    </a>
-    <a href="https://youtube.com/L_port8000" target="_blank">
-      youtube: @L_port8000
-    </a>
-    <a href="https://writening.net/page?6nvSxT" target="_blank">
-      アカウント集のリンク(writening.net)情報更新早め
-    </a>
-  </section>
+<section class="accounts">
+  <h2>SNS</h2>
+  <a href="https://x.com/L_port8000" target="_blank">X旧: @L_port8000</a>
+  <a href="https://x.com/L_port8080" target="_blank">X現: @L_port8080</a>
+  <a href="https://bsky.app/profile/l-port8000.bsky.social" target="_blank">
+    Bluesky: l-port8000.bsky.social
+  </a>
+  <a href="https://discord.com/login" target="_blank">Discord: @L_port8000</a>
+  <a href="https://note.com/L_port8000" target="_blank">note: @L_port8000</a>
+  <a href="https://youtube.com/L_port8000" target="_blank">YouTube: @L_port8000</a>
+  <a href="https://writening.net/page?6nvSxT" target="_blank">
+    アカウント情報（更新早め）
+  </a>
+</section>
+
 </main>
+
 <footer>
-  © Regia_:0000
+© Regia_:0000
 </footer>
+
 </body>
 </html>
