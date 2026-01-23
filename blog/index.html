@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" href="../transparent.png">
-<title>一樹のブログ | L_port8000</title>
+<title>blog | L_port8000</title>
 
 <style>
 :root {
@@ -78,6 +78,26 @@ main {
   color: var(--sub);
 }
 
+/* トップページ戻るボタン */
+.back-button {
+  display: inline-block;
+  margin: 30px 0;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #1e293b, #020617);
+  border-radius: 12px;
+  color: var(--text);
+  text-decoration: none;
+  border: 1px solid #1f2937;
+  transition: 0.3s;
+  font-weight: bold;
+}
+
+.back-button:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent);
+  box-shadow: 0 0 20px rgba(56,189,248,.3);
+}
+
 /* Footer */
 footer {
   text-align: center;
@@ -101,12 +121,11 @@ footer {
   <h2>L_port8000 乗っ取り事件</h2>
   <p>2026-01-23 / 注意喚起 / X / 乗っ取り</p>
 </a>
-<!-- 
-<a href="another-article.html" class="article-card">
-  <h2>ブログ記事タイトル例</h2>
-  <p>2024-XX-ZZ / Category</p>
-</a>
- -->
+
+<!-- トップページに戻るボタン -->
+<div style="text-align:center;">
+  <a href="../index.html" class="back-button">トップページに戻る</a>
+</div>
 
 </main>
 
