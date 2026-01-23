@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="../transparent.png">
+<title>一樹のブログ | L_port8000</title>
+
+<style>
+:root {
+  --accent: #38bdf8;
+  --text: #e5e7eb;
+  --sub: #9ca3af;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: "Hiragino Kaku Gothic ProN","Meiryo",system-ui,sans-serif;
+  background: linear-gradient(180deg,#f8fafc,#eef2ff);
+  color: #ffffff;
+}
+
+/* Header */
+header {
+  padding: 70px 20px 50px;
+  text-align: center;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 2.2rem;
+  color: #111;
+}
+
+header p {
+  margin-top: 8px;
+  color: #666;
+  font-size: 0.95rem;
+}
+
+/* Main */
+main {
+  max-width: 960px;
+  margin: 0 auto 60px;
+  padding: 0 20px;
+}
+
+/* 記事カード */
+.article-card {
+  background: rgba(17,24,39,.92);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 10px 40px rgba(0,0,0,.4);
+  transition: transform 0.3s, box-shadow 0.3s;
+  text-decoration: none;
+  color: var(--text);
+  display: block;
+}
+
+.article-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 15px 50px rgba(0,0,0,.5);
+}
+
+.article-card h2 {
+  margin: 0 0 12px 0;
+  font-size: 1.4rem;
+  border-left: 5px solid var(--accent);
+  padding-left: 10px;
+}
+
+.article-card p {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--sub);
+}
+
+/* Footer */
+footer {
+  text-align: center;
+  padding: 30px;
+  font-size: 13px;
+  color: var(--sub);
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>blog</h1>
+  <p>ゲーム / プログラミング / ガジェット</p>
+</header>
+
+<main>
+
+<a href="./pages/2026-1-23-1.html" class="article-card">
+  <h2>L_port8000 乗っ取り事件</h2>
+  <p>2026-01-23 / 注意喚起 / X / 乗っ取り</p>
+</a>
+<!-- 
+<a href="another-article.html" class="article-card">
+  <h2>ブログ記事タイトル例</h2>
+  <p>2024-XX-ZZ / Category</p>
+</a>
+ -->
+
+</main>
+
+<footer>
+© Regia_:0000
+</footer>
+
+</body>
+</html>
