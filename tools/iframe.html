@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>Super Firefox-ish Pro Max (Full UI & Popup Block)</title>
+<title>iframe</title>
 <style>
 :root { --bg-color: #f0f0f4; --toolbar-bg: #f9f9fb; --text-color: #000; --border-color: #d0d0d7; --accent: #0060df; }
 body.dark-mode { --bg-color: #1c1b22; --toolbar-bg: #2b2a33; --text-color: #fbfbfe; --border-color: #52525e; --accent: #00ddff; }
@@ -13,7 +13,7 @@ body { margin: 0; font-family: system-ui, sans-serif; background: var(--bg-color
 
 #tabs-bar { display: flex; background: var(--bg-color); padding: 5px 5px 0 5px; gap: 4px; border-bottom: 1px solid var(--border-color); overflow-x: auto; min-height: 35px; }
 #tabs-bar.hidden { display: none; }
-.tab { padding: 6px 12px; background: rgba(0,0,0,0.05); border-radius: 8px 8px 0 0; cursor: pointer; min-width: 120px; max-width: 180px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; border: 1px solid var(--border-color); border-bottom: none; white-space: nowrap; }
+.tab { padding: 6px 12px; background: rgba(0,0,0,0.05); border-radius: 8px 8px 0 0; cursor: pointer; min-width: 120px; max-width: 180px; display: flex; justify-content: space-between; align-items: center; font-size: 11px; border: 1px solid var(--border-color); border-bottom: none; white-space: nowrap; }
 .tab.active { background: var(--toolbar-bg); font-weight: bold; border-top: 2px solid var(--accent); }
 .close-btn { margin-left: 8px; opacity: 0.5; }
 .close-btn:hover { color: red; opacity: 1; }
@@ -21,26 +21,25 @@ body { margin: 0; font-family: system-ui, sans-serif; background: var(--bg-color
 #chrome { background: var(--toolbar-bg); border-bottom: 1px solid var(--border-color); padding: 8px; display: flex; gap: 8px; align-items: center; z-index: 10; position: relative; }
 #url { flex: 1; padding: 8px 15px; border-radius: 20px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-color); }
 
-.star-btn { font-size: 20px; cursor: pointer; color: #ccc; user-select: none; transition: color 0.2s; }
+.star-btn { font-size: 20px; cursor: pointer; color: #ccc; user-select: none; }
 .star-btn.active { color: #f1c40f; }
 
 #main-container { display: flex; flex: 1; overflow: hidden; position: relative; }
 #side-tabs { width: 180px; background: var(--toolbar-bg); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 8px; gap: 4px; overflow-y: auto; }
 #side-tabs.hidden { display: none; }
 
-#view { flex: 1; background: white; position: relative; height: 100%; width: 100%; }
-.page-element { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; display: none; background: var(--bg-color); }
+#view { flex: 1; background: white; position: relative; }
+.page-element { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; display: none; }
 .page-element.active { display: block; }
-iframe.page-element { background: white; }
 
 .settings-page { padding: 40px 20px; overflow-y: auto; box-sizing: border-box; }
 .card { background: var(--toolbar-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); max-width: 600px; margin: 0 auto 20px; color: var(--text-color); }
 .preset-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
 .proxy-item { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border-color); }
-.bookmark-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border-color); }
 .status-connected { color: #28a745; font-weight: bold; font-size: 13px; margin-right: 8px; }
 
-button { padding: 6px 12px; cursor: pointer; border-radius: 4px; border: 1px solid var(--border-color); background: rgba(0,0,0,0.05); color: inherit; }
+button { padding: 6px 12px; cursor: pointer; border-radius: 4px; border: 1px solid var(--border-color); background: rgba(0,0,0,0.1); color: inherit; }
+button:disabled { opacity: 0.3; cursor: default; }
 </style>
 </head>
 <body>
@@ -49,12 +48,12 @@ button { padding: 6px 12px; cursor: pointer; border-radius: 4px; border: 1px sol
 
 <div id="tabs-bar"></div>
 <div id="chrome">
-    <button onclick="navBack()">◀</button>
-    <button onclick="navForward()">▶</button>
+    <button id="btn-back" onclick="navBack()">◀</button>
+    <button id="btn-forward" onclick="navForward()">▶</button>
     <button onclick="navReload()">⟳</button>
     <button onclick="goHome()">◻️</button>
     <span id="star-btn" class="star-btn" onclick="toggleBookmark()">★</span>
-    <input id="url" placeholder="settings:// または URLを入力">
+    <input id="url" placeholder="URLまたは検索語句を入力">
     <button onclick="go()">Go</button>
     <button onclick="openSettings()">⚙️</button>
 </div>
@@ -75,17 +74,16 @@ let settings = {
 };
 
 const PROXIES = {
-    1: { name: "Proxy1", url: "https://55gms.com/embed.html#", info: "152.53.37.155 America - NewYork" },
-    2: { name: "Proxy2", url: "https://55gms.me/embed.html#", info: "152.53.37.155 America - NewYork" },
-    3: { name: "Proxy3", url: "https://55gms.app/embed.html#", info: "152.53.37.155 America - NewYork" },
-    4: { name: "Proxy4", url: "https://algebra.learnnexus.xyz/embed.html#", info: "152.53.37.155 America - NewYork" },
-    5: { name: "Proxy5", url: "https://biology.learnnexus.xyz/embed.html#", info: "152.53.37.155 America - NewYork" }
+    1: { name: "Proxy1", url: "https://55gms.com/embed.html#", info: "US - NY" },
+    2: { name: "Proxy2", url: "https://55gms.me/embed.html#", info: "US - NY" },
+    3: { name: "Proxy3", url: "https://55gms.app/embed.html#", info: "US - NY" },
+    4: { name: "Proxy4", url: "https://algebra.learnnexus.xyz/embed.html#", info: "US - NY" },
+    5: { name: "Proxy5", url: "https://biology.learnnexus.xyz/embed.html#", info: "US - NY" }
 };
 
 const PRESETS = [
     { name: "Google", url: "https://google.com/?igu=1" },
     { name: "OffiDocs", url: "https://search.offidocs.com" },
-    { name: "Nation Online", url: "https://nation.online" },
     { name: "Excite", url: "https://excite.co.jp" }
 ];
 
@@ -107,45 +105,38 @@ function init() {
     const savedTabs = localStorage.getItem('browser-sessions');
     if (savedTabs) {
         const parsed = JSON.parse(savedTabs);
-        parsed.forEach(t => createTabObject(t.url, t.id, t.title));
+        parsed.forEach(t => createTabObject(t.url, t.id, t.title, t.history, t.historyIndex));
         switchTab(parseInt(localStorage.getItem('browser-last-active')) || tabs[0].id);
     } else { createNewTab(settings.homeUrl); }
 }
 
-function saveState() {
-    localStorage.setItem('browser-settings', JSON.stringify(settings));
-    localStorage.setItem('browser-sessions', JSON.stringify(tabs.map(t => ({id: t.id, url: t.url, title: t.title}))));
-    localStorage.setItem('browser-last-active', activeTabId);
-}
-
-function getEffectiveUrl(url) {
-    if (url === "settings://" || !settings.activeProxyId) return url;
-    return PROXIES[settings.activeProxyId].url + url;
-}
-
-function applyTabMode() {
-    document.getElementById('side-tabs').classList.toggle('hidden', !settings.useVerticalTabs);
-    document.getElementById('tabs-bar').classList.toggle('hidden', settings.useVerticalTabs);
-}
-
-function createTabObject(url, id = Date.now(), title = "新規タブ") {
+function createTabObject(url, id = Date.now(), title = "Loading...", history = null, hIndex = 0) {
     const view = document.getElementById('view');
-    let el;
-    if (url === "settings://") {
-        el = document.createElement('div');
-        el.className = "page-element settings-page";
+    const tab = { 
+        id, 
+        url, 
+        title, 
+        history: history || [url], 
+        historyIndex: hIndex,
+        element: null 
+    };
+    
+    updateTabElement(tab);
+    tabs.push(tab);
+    return tab;
+}
+
+function updateTabElement(tab) {
+    if (tab.element) tab.element.remove();
+    const el = (tab.url === "settings://") ? document.createElement('div') : document.createElement('iframe');
+    el.id = `page-${tab.id}`;
+    el.className = "page-element" + (tab.id === activeTabId ? " active" : "");
+    
+    if (tab.url === "settings://") {
         renderSettingsInto(el);
     } else {
-        el = document.createElement('iframe');
-        el.className = "page-element";
         el.setAttribute("sandbox", SANDBOX_SETTINGS);
-        el.src = getEffectiveUrl(url);
-    }
-    el.id = `page-${id}`;
-    view.appendChild(el);
-
-    const tab = { id, url, title, element: el };
-    if (url !== "settings://") {
+        el.src = getEffectiveUrl(tab.url);
         setProgress(30);
         el.onload = () => {
             setProgress(100);
@@ -154,20 +145,21 @@ function createTabObject(url, id = Date.now(), title = "新規タブ") {
             updateStarUI();
         };
     }
-    tabs.push(tab);
-    return tab;
+    document.getElementById('view').appendChild(el);
+    tab.element = el;
 }
 
 function switchTab(id) {
     activeTabId = id;
     tabs.forEach(t => {
-        const isActive = t.id === id;
-        t.element.classList.toggle('active', isActive);
-        if (isActive) {
+        const active = t.id === id;
+        t.element.classList.toggle('active', active);
+        if (active) {
             document.getElementById('url').value = t.url;
             if (t.url === "settings://") renderSettingsInto(t.element);
         }
     });
+    updateNavButtons();
     updateStarUI();
     renderTabsUI();
     saveState();
@@ -178,104 +170,109 @@ function go() {
     if (url !== "settings://" && !url.startsWith('http')) url = "https://" + url;
     const tab = tabs.find(t => t.id === activeTabId);
     
-    if (tab.element) tab.element.remove();
-    let el;
-    if (url === "settings://") {
-        el = document.createElement('div');
-        el.className = "page-element settings-page active";
-        renderSettingsInto(el);
-    } else {
-        el = document.createElement('iframe');
-        el.className = "page-element active";
-        el.setAttribute("sandbox", SANDBOX_SETTINGS);
-        setProgress(30);
-        el.src = getEffectiveUrl(url);
-        el.onload = () => { setProgress(100); tab.title = url.replace(/https?:\/\//, '').split('/')[0]; renderTabsUI(); updateStarUI(); };
+    if (tab.url !== url) {
+        tab.history = tab.history.slice(0, tab.historyIndex + 1);
+        tab.history.push(url);
+        tab.historyIndex++;
+        tab.url = url;
+        updateTabElement(tab);
+        updateNavButtons();
+        saveState();
     }
-    el.id = `page-${tab.id}`;
-    document.getElementById('view').appendChild(el);
-    tab.element = el;
-    tab.url = url;
-    saveState();
 }
 
+function navBack() {
+    const tab = tabs.find(t => t.id === activeTabId);
+    if (tab && tab.historyIndex > 0) {
+        tab.historyIndex--;
+        tab.url = tab.history[tab.historyIndex];
+        updateTabElement(tab);
+        switchTab(tab.id);
+    }
+}
+
+function navForward() {
+    const tab = tabs.find(t => t.id === activeTabId);
+    if (tab && tab.historyIndex < tab.history.length - 1) {
+        tab.historyIndex++;
+        tab.url = tab.history[tab.historyIndex];
+        updateTabElement(tab);
+        switchTab(tab.id);
+    }
+}
+
+function updateNavButtons() {
+    const tab = tabs.find(t => t.id === activeTabId);
+    if (!tab) return;
+    document.getElementById('btn-back').disabled = (tab.historyIndex <= 0);
+    document.getElementById('btn-forward').disabled = (tab.historyIndex >= tab.history.length - 1);
+}
+
+function getEffectiveUrl(url) { return (url === "settings://" || !settings.activeProxyId) ? url : PROXIES[settings.activeProxyId].url + url; }
+function saveState() {
+    localStorage.setItem('browser-settings', JSON.stringify(settings));
+    localStorage.setItem('browser-sessions', JSON.stringify(tabs.map(t => ({id: t.id, url: t.url, title: t.title, history: t.history, historyIndex: t.historyIndex}))));
+    localStorage.setItem('browser-last-active', activeTabId);
+}
+function createNewTab(url = settings.homeUrl) { switchTab(createTabObject(url).id); }
+function closeTab(id, e) { e.stopPropagation(); if (tabs.length === 1) return; const idx = tabs.findIndex(t => t.id === id); tabs[idx].element.remove(); tabs.splice(idx, 1); switchTab(tabs[Math.max(0, idx-1)].id); }
+function navReload() { const t = tabs.find(x => x.id === activeTabId); if(t) updateTabElement(t); }
+function openSettings() { document.getElementById('url').value = "settings://"; go(); }
+function goHome() { document.getElementById('url').value = settings.homeUrl; go(); }
 function toggleBookmark() {
     const tab = tabs.find(t => t.id === activeTabId);
     if (tab.url === "settings://") return;
     const idx = settings.bookmarks.findIndex(b => b.url === tab.url);
     if (idx > -1) settings.bookmarks.splice(idx, 1);
     else settings.bookmarks.push({ title: tab.title, url: tab.url });
-    updateStarUI();
-    saveState();
+    updateStarUI(); saveState();
 }
-
 function updateStarUI() {
     const tab = tabs.find(t => t.id === activeTabId);
-    if (!tab) return;
-    const isB = settings.bookmarks.some(b => b.url === tab.url);
+    const isB = settings.bookmarks.some(b => b.url === (tab ? tab.url : ""));
     document.getElementById('star-btn').classList.toggle('active', isB);
 }
-
+function applyTabMode() {
+    document.getElementById('side-tabs').classList.toggle('hidden', !settings.useVerticalTabs);
+    document.getElementById('tabs-bar').classList.toggle('hidden', settings.useVerticalTabs);
+}
 function renderTabsUI() {
     const hBar = document.getElementById('tabs-bar');
     const vBar = document.getElementById('side-tabs');
-    const createTabEl = (tab) => {
+    const createEl = (t) => {
         const div = document.createElement('div');
-        div.className = `tab ${tab.id === activeTabId ? 'active' : ''}`;
-        div.innerHTML = `<span style="overflow:hidden; text-overflow:ellipsis;">${tab.title}</span><span class="close-btn" onclick="closeTab(${tab.id}, event)">×</span>`;
-        div.onclick = () => switchTab(tab.id);
+        div.className = `tab ${t.id === activeTabId ? 'active' : ''}`;
+        div.innerHTML = `<span style="overflow:hidden;text-overflow:ellipsis;">${t.title}</span><span class="close-btn" onclick="closeTab(${t.id}, event)">×</span>`;
+        div.onclick = () => switchTab(t.id);
         return div;
     };
-    hBar.innerHTML = '';
-    if (!settings.useVerticalTabs) {
-        tabs.forEach(t => hBar.appendChild(createTabEl(t)));
-        const add = document.createElement('button'); add.textContent = "+"; add.onclick = () => createNewTab(); hBar.appendChild(add);
-    }
-    vBar.innerHTML = '<div style="font-size:10px; opacity:0.5; margin-bottom:5px;">VERTICAL TABS</div>';
-    if (settings.useVerticalTabs) {
-        tabs.forEach(t => vBar.appendChild(createTabEl(t)));
-        const addV = document.createElement('button'); addV.textContent = "+ 新規タブ"; addV.onclick = () => createNewTab(); vBar.appendChild(addV);
-    }
+    hBar.innerHTML = ''; vBar.innerHTML = '<small style="opacity:0.5;margin-bottom:5px;">VERTICAL TABS</small>';
+    if (!settings.useVerticalTabs) { tabs.forEach(t => hBar.appendChild(createEl(t))); const add = document.createElement('button'); add.textContent = "+"; add.onclick = () => createNewTab(); hBar.appendChild(add); }
+    else { tabs.forEach(t => vBar.appendChild(createEl(t))); const addV = document.createElement('button'); addV.textContent = "+ 新規タブ"; addV.onclick = () => createNewTab(); vBar.appendChild(addV); }
 }
 
 function renderSettingsInto(container) {
-    let proxyHtml = "";
-    for (const id in PROXIES) {
-        const p = PROXIES[id];
-        const isConnected = settings.activeProxyId == id;
-        proxyHtml += `<div class="proxy-item"><div><strong>${p.name}</strong><br><small>${p.info}</small></div><div>${isConnected ? '<span class="status-connected">接続済み</span>' : ''}<button onclick="toggleProxy(${id})">${isConnected ? '切断' : '接続'}</button></div></div>`;
-    }
-
+    container.className = "page-element settings-page active";
     let bks = settings.bookmarks.length ? "" : "<p style='opacity:0.6'>なし</p>";
     settings.bookmarks.forEach((b, i) => {
-        bks += `<div class="bookmark-item"><a href="#" style="color:var(--accent);text-decoration:none;flex:1" onclick="document.getElementById('url').value='${b.url}';go();">${b.title}</a><button onclick="removeBookmark(${i})">削除</button></div>`;
+        bks += `<div class="bookmark-item"><a href="#" style="color:var(--accent);text-decoration:none;flex:1" onclick="document.getElementById('url').value='${b.url}';go();">${b.title}</a><button onclick="settings.bookmarks.splice(${i},1);saveState();renderSettingsInto(document.querySelector('.settings-page'))">削除</button></div>`;
     });
-
+    let proxies = "";
+    for (const id in PROXIES) {
+        const p = PROXIES[id]; const isC = settings.activeProxyId == id;
+        proxies += `<div class="proxy-item"><div><strong>${p.name}</strong><br><small>${p.info}</small></div><div>${isC?'<span class="status-connected">接続中</span>':''}<button onclick="toggleProxy(${id})">${isC?'切断':'接続'}</button></div></div>`;
+    }
     container.innerHTML = `
         <div class="card"><h3>★ ブックマーク</h3>${bks}</div>
-        <div class="card"><h3>◻️ ホーム設定</h3><div style="display:flex;gap:8px"><input type="text" id="set-home" value="${settings.homeUrl}" style="flex:1;padding:8px;"><button onclick="updateHome()">保存</button></div><div class="preset-group" id="preset-list"></div></div>
+        <div class="card"><h3>◻️ ホーム設定</h3><div style="display:flex;gap:8px"><input id="set-home" value="${settings.homeUrl}" style="flex:1;padding:8px;"><button onclick="settings.homeUrl=document.getElementById('set-home').value;saveState();alert('保存済')">保存</button></div><div class="preset-group" id="plist"></div></div>
         <div class="card"><h3>デザイン</h3><button onclick="toggleSet('darkMode')">ダークモード: ${settings.darkMode?'ON':'OFF'}</button> <button onclick="toggleSet('useVerticalTabs')">縦タブ: ${settings.useVerticalTabs?'ON':'OFF'}</button></div>
-        <div class="card"><h3>🌐 PROXY　⚠レイアウトが崩れる場合があります</h3>${proxyHtml}</div>
+        <div class="card"><h3>🌐 PROXY (Popup Blocked)</h3>${proxies}</div>
     `;
-    
-    PRESETS.forEach(p => {
-        const btn = document.createElement('button'); btn.textContent = p.name;
-        btn.onclick = () => { document.getElementById('set-home').value = p.url; settings.homeUrl = p.url; saveState(); };
-        container.querySelector('#preset-list').appendChild(btn);
-    });
+    PRESETS.forEach(p => { const b = document.createElement('button'); b.textContent = p.name; b.onclick = () => { document.getElementById('set-home').value = p.url; settings.homeUrl = p.url; saveState(); }; container.querySelector('#plist').appendChild(b); });
 }
 
-function createNewTab(url = settings.homeUrl) { switchTab(createTabObject(url).id); }
-function closeTab(id, e) { e.stopPropagation(); if (tabs.length === 1) return; const idx = tabs.findIndex(t => t.id === id); tabs[idx].element.remove(); tabs.splice(idx, 1); switchTab(tabs[Math.max(0, idx-1)].id); }
-function openSettings() { document.getElementById('url').value = "settings://"; go(); }
-function navReload() { const t = tabs.find(x => x.id === activeTabId); if(t && t.element.tagName === 'IFRAME') { setProgress(20); t.element.src = getEffectiveUrl(t.url); } }
-function navBack() { alert("セキュリティ制限により、このボタンは無効です。ページ内のリンクをご利用ください。"); }
-function navForward() { alert("進むボタンは制限されています。"); }
-function goHome() { document.getElementById('url').value = settings.homeUrl; go(); }
-window.removeBookmark = (i) => { settings.bookmarks.splice(i, 1); saveState(); renderSettingsInto(tabs.find(t => t.id === activeTabId).element); updateStarUI(); };
-window.updateHome = () => { settings.homeUrl = document.getElementById('set-home').value; saveState(); alert("保存完了"); };
-window.toggleProxy = (id) => { settings.activeProxyId = (settings.activeProxyId == id) ? null : id; saveState(); renderSettingsInto(tabs.find(t => t.id === activeTabId).element); };
-window.toggleSet = (key) => { settings[key] = !settings[key]; if (key === 'darkMode') document.body.classList.toggle('dark-mode'); applyTabMode(); saveState(); renderSettingsInto(tabs.find(t => t.id === activeTabId).element); renderTabsUI(); };
+window.toggleProxy = (id) => { settings.activeProxyId = (settings.activeProxyId == id) ? null : id; saveState(); renderSettingsInto(document.querySelector('.settings-page')); };
+window.toggleSet = (key) => { settings[key] = !settings[key]; if(key==='darkMode') document.body.classList.toggle('dark-mode'); applyTabMode(); saveState(); renderSettingsInto(document.querySelector('.settings-page')); renderTabsUI(); };
 
 document.getElementById("url").addEventListener("keydown", e => { if (e.key === "Enter") go(); });
 init();
