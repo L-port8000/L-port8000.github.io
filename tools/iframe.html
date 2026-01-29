@@ -1,1 +1,337 @@
-<html lang="ja"><head><meta charset="UTF-8"><title>o</title><style>:root{--bg-color:#f0f0f4;--toolbar-bg:#f9f9fb;--text-color:#000;--border-color:#d0d0d7;--accent:#0060df}body.dark-mode{--bg-color:#1c1b22;--toolbar-bg:#2b2a33;--text-color:#fbfbfe;--border-color:#52525e;--accent:#00ddff}body{margin:0;font-family:system-ui,sans-serif;background:var(--bg-color);color:var(--text-color);display:flex;flex-direction:column;height:100vh;overflow:hidden}#tabs-bar{display:flex;background:var(--bg-color);padding:5px 5px 0 5px;gap:4px;border-bottom:1px solid var(--border-color);overflow-x:auto}#tabs-bar.hidden{display:none}.tab{padding:6px 12px;background:rgba(0,0,0,0.05);border-radius:8px 8px 0 0;cursor:pointer;min-width:120px;max-width:180px;display:flex;justify-content:space-between;align-items:center;font-size:12px;border:1px solid var(--border-color);border-bottom:none}.tab.active{background:var(--toolbar-bg);font-weight:bold;border-top:2px solid var(--accent)}.close-btn{margin-left:8px;opacity:0.5;font-weight:normal}.close-btn:hover{color:red;opacity:1}#chrome{background:var(--toolbar-bg);border-bottom:1px solid var(--border-color);padding:8px;display:flex;gap:8px;align-items:center}#url{flex:1;padding:8px 15px;border-radius:20px;border:1px solid var(--border-color);background:var(--bg-color);color:var(--text-color)}#main-container{display:flex;flex:1;overflow:hidden}#side-tabs{width:180px;background:var(--toolbar-bg);border-right:1px solid var(--border-color);display:flex;flex-direction:column;padding:8px;gap:4px;overflow-y:auto}#side-tabs.hidden{display:none}.add-tab-btn-v{margin-top:8px;border:1px dashed var(--border-color);background:transparent;font-size:11px;padding:8px}#view{flex:1;display:flex;flex-direction:column;background:white}#page-container{flex:1;width:100%}iframe{width:100%;height:100%;border:none;display:block}button{padding:6px 12px;cursor:pointer;border-radius:4px;border:1px solid var(--border-color);background:rgba(0,0,0,0.05);color:inherit}button:disabled{opacity:0.3;cursor:not-allowed}.settings-page{padding:30px;background:var(--bg-color);height:100%;overflow-y:auto;box-sizing:border-box}.card{background:var(--toolbar-bg);padding:20px;border-radius:12px;border:1px solid var(--border-color);max-width:500px;margin:0 auto 20px}</style></head><body><div id="tabs-bar"></div><div id="chrome"><button id="btn-back" onclick="navBack()">◀</button><button id="btn-forward" onclick="navForward()">▶</button><button onclick="navReload()">⟳</button><button onclick="goHome()">🏠</button><input id="url" placeholder="settings:// または URLを入力"><button onclick="go()">Go</button><button onclick="openSettings()">⚙️</button></div><div id="main-container"><div id="side-tabs"></div><div id="view"><div id="page-container"></div></div></div><script>let tabs=[];let activeTabId=null;let settings={homeUrl:"https://google.com/?igu=1",darkMode:false,useVerticalTabs:false};function init(){const savedSettings=localStorage.getItem('browser-settings');if(savedSettings)settings=JSON.parse(savedSettings);if(settings.darkMode)document.body.classList.add('dark-mode');applyTabMode();const savedTabs=localStorage.getItem('browser-sessions');if(savedTabs){tabs=JSON.parse(savedTabs);const lastActive=localStorage.getItem('browser-last-active');switchTab(lastActive?parseInt(lastActive):tabs[0].id);}else{createNewTab(settings.homeUrl);}}function saveState(){localStorage.setItem('browser-settings',JSON.stringify(settings));localStorage.setItem('browser-sessions',JSON.stringify(tabs));localStorage.setItem('browser-last-active',activeTabId);}function applyTabMode(){document.getElementById('side-tabs').classList.toggle('hidden',!settings.useVerticalTabs);document.getElementById('tabs-bar').classList.toggle('hidden',settings.useVerticalTabs);}function createNewTab(url=settings.homeUrl){const id=Date.now();tabs.push({id,url:url,title:"新規タブ",history:[url],historyIndex:0});switchTab(id);}function switchTab(id){activeTabId=id;const tab=tabs.find(t=>t.id===id);if(!tab)return;document.getElementById('url').value=tab.url;loadUrlIntoView(tab.url);updateNavButtons();renderTabsUI();saveState();}function loadUrlIntoView(url){const container=document.getElementById('page-container');container.innerHTML='';if(url==="settings://"){container.appendChild(createSettingsUI());}else{const ifr=document.createElement('iframe');ifr.src=url;ifr.onload=()=>{const tab=tabs.find(t=>t.id===activeTabId);if(tab){tab.title=url.replace(/https?:\/\//,'').split('/')[0]||url;renderTabsUI();}};container.appendChild(ifr);}}function renderTabsUI(){const hBar=document.getElementById('tabs-bar');const vBar=document.getElementById('side-tabs');const createTabEl=(tab,isVertical)=>{const isActive=tab.id===activeTabId;const div=document.createElement('div');div.className=`tab ${isActive?'active':''}`;if(isVertical)div.style.borderRadius="4px";div.innerHTML=`<span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${tab.title}</span><span class="close-btn" onclick="closeTab(${tab.id}, event)">×</span>`;div.onclick=()=>switchTab(tab.id);return div;};hBar.innerHTML='';if(!settings.useVerticalTabs){tabs.forEach(t=>hBar.appendChild(createTabEl(t,false)));const addBtn=document.createElement('button');addBtn.textContent="＋";addBtn.onclick=()=>createNewTab();hBar.appendChild(addBtn);}vBar.innerHTML='<div style="font-size:10px; opacity:0.5; margin-bottom:5px;">VERTICAL TABS</div>';if(settings.useVerticalTabs){tabs.forEach(t=>vBar.appendChild(createTabEl(t,true)));const addBtnV=document.createElement('button');addBtnV.className="add-tab-btn-v";addBtnV.textContent="＋ 新しいタブを追加";addBtnV.onclick=()=>createNewTab();vBar.appendChild(addBtnV);}}function go(){let url=document.getElementById('url').value;if(url!=="settings://"&&!url.startsWith('http'))url="https://"+url;const tab=tabs.find(t=>t.id===activeTabId);if(tab.url!==url){tab.history=tab.history.slice(0,tab.historyIndex+1);tab.history.push(url);tab.historyIndex++;tab.url=url;loadUrlIntoView(url);updateNavButtons();saveState();}}function navBack(){const tab=tabs.find(t=>t.id===activeTabId);if(tab&&tab.historyIndex>0){tab.historyIndex--;tab.url=tab.history[tab.historyIndex];document.getElementById('url').value=tab.url;loadUrlIntoView(tab.url);updateNavButtons();saveState();}}function navForward(){const tab=tabs.find(t=>t.id===activeTabId);if(tab&&tab.historyIndex<tab.history.length-1){tab.historyIndex++;tab.url=tab.history[tab.historyIndex];document.getElementById('url').value=tab.url;loadUrlIntoView(tab.url);updateNavButtons();saveState();}}function navReload(){const tab=tabs.find(t=>t.id===activeTabId);if(tab)loadUrlIntoView(tab.url);}function goHome(){const tab=tabs.find(t=>t.id===activeTabId);const home=settings.homeUrl;if(tab.url===home){navReload();return}document.getElementById('url').value=home;tab.history=tab.history.slice(0,tab.historyIndex+1);tab.history.push(home);tab.historyIndex++;tab.url=home;loadUrlIntoView(home);updateNavButtons();saveState();}function updateNavButtons(){const tab=tabs.find(t=>t.id===activeTabId);if(!tab)return;document.getElementById('btn-back').disabled=(tab.historyIndex<=0);document.getElementById('btn-forward').disabled=(tab.historyIndex>=tab.history.length-1);}function closeTab(id,e){e.stopPropagation();if(tabs.length===1)return;const idx=tabs.findIndex(t=>t.id===id);tabs=tabs.filter(t=>t.id!==id);if(activeTabId===id)switchTab(tabs[Math.max(0,idx-1)].id);else renderTabsUI();saveState();}function openSettings(){const tab=tabs.find(t=>t.id===activeTabId);if(tab.url!=="settings://"){tab.history=tab.history.slice(0,tab.historyIndex+1);tab.history.push("settings://");tab.historyIndex++;tab.url="settings://";document.getElementById('url').value="settings://";}loadUrlIntoView("settings://");updateNavButtons();saveState();}function createSettingsUI(){const div=document.createElement('div');div.className="settings-page";div.innerHTML=`<div class="card"><h3>🏠 ホーム設定</h3><input type="text" id="set-home" value="${settings.homeUrl}" style="width:70%; padding:8px; border:1px solid var(--border-color); border-radius:4px;"><button onclick="updateHome()">保存</button><div style="margin-top:10px;"><button onclick="setHomePreset('https://www.google.com/?igu=1')">Google</button><button onclick="setHomePreset('https://nation.online')">Nation Online</button></div></div><div class="card"><h3>🎨 表示・デザイン</h3><div style="display:flex; flex-direction:column; gap:10px;"><button onclick="toggleSet('darkMode')">ダークモード: ${settings.darkMode?'ON':'OFF'}</button><button onclick="toggleSet('useVerticalTabs')">縦タブにする: ${settings.useVerticalTabs?'ON (縦のみ)':'OFF (横のみ)'}</button></div></div>`;return div;}window.updateHome=()=>{settings.homeUrl=document.getElementById('set-home').value;saveState();alert("保存しました");};window.setHomePreset=(url)=>{settings.homeUrl=url;document.getElementById('set-home').value=url;saveState();};window.toggleSet=(key)=>{settings[key]=!settings[key];if(key==='darkMode')document.body.classList.toggle('dark-mode');applyTabMode();saveState();loadUrlIntoView("settings://");};document.getElementById("url").addEventListener("keydown",e=>{if(e.key==="Enter")go();});init();</script></body></html>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>Super Firefox-ish Pro Fixed</title>
+<style>
+:root { --bg-color: #f0f0f4; --toolbar-bg: #f9f9fb; --text-color: #000; --border-color: #d0d0d7; --accent: #0060df; }
+body.dark-mode { --bg-color: #1c1b22; --toolbar-bg: #2b2a33; --text-color: #fbfbfe; --border-color: #52525e; --accent: #00ddff; }
+body { margin: 0; font-family: system-ui, sans-serif; background: var(--bg-color); color: var(--text-color); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+#tabs-bar { display: flex; background: var(--bg-color); padding: 5px 5px 0 5px; gap: 4px; border-bottom: 1px solid var(--border-color); overflow-x: auto; min-height: 35px; }
+#tabs-bar.hidden { display: none; }
+.tab { padding: 6px 12px; background: rgba(0,0,0,0.05); border-radius: 8px 8px 0 0; cursor: pointer; min-width: 120px; max-width: 180px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; border: 1px solid var(--border-color); border-bottom: none; white-space: nowrap; }
+.tab.active { background: var(--toolbar-bg); font-weight: bold; border-top: 2px solid var(--accent); }
+.close-btn { margin-left: 8px; opacity: 0.5; }
+.close-btn:hover { color: red; opacity: 1; }
+
+#chrome { background: var(--toolbar-bg); border-bottom: 1px solid var(--border-color); padding: 8px; display: flex; gap: 8px; align-items: center; z-index: 10; }
+#url { flex: 1; padding: 8px 15px; border-radius: 20px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-color); }
+
+#main-container { display: flex; flex: 1; overflow: hidden; position: relative; }
+#side-tabs { width: 180px; background: var(--toolbar-bg); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 8px; gap: 4px; overflow-y: auto; }
+#side-tabs.hidden { display: none; }
+
+#view { flex: 1; background: white; position: relative; height: 100%; width: 100%; }
+.page-element { 
+    position: absolute; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%; 
+    border: none; 
+    display: none;
+    background: var(--bg-color);
+}
+.page-element.active { 
+    display: block;
+}
+iframe.page-element { background: white; }
+.settings-page { padding: 40px 20px; overflow-y: auto; box-sizing: border-box; }
+.card { background: var(--toolbar-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); max-width: 600px; margin: 0 auto 20px; color: var(--text-color); }
+.preset-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+.proxy-item { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border-color); }
+.status-connected { color: #28a745; font-weight: bold; font-size: 13px; margin-right: 8px; }
+
+button { padding: 6px 12px; cursor: pointer; border-radius: 4px; border: 1px solid var(--border-color); background: rgba(0,0,0,0.05); color: inherit; }
+</style>
+</head>
+<body>
+<div id="tabs-bar"></div>
+<div id="chrome">
+    <button id="btn-back" onclick="navBack()">◀</button>
+    <button id="btn-forward" onclick="navForward()">▶</button>
+    <button onclick="navReload()">⟳</button>
+    <button onclick="goHome()">◻️</button>
+    <input id="url" placeholder="settings:// または URLを入力">
+    <button onclick="go()">Go</button>
+    <button onclick="openSettings()">⚙️</button>
+</div>
+<div id="main-container">
+    <div id="side-tabs"></div>
+    <div id="view"></div>
+</div>
+
+<script>
+let tabs = [];
+let activeTabId = null;
+let settings = {
+    homeUrl: "https://google.com/?igu=1",
+    darkMode: false,
+    useVerticalTabs: false,
+    activeProxyId: null
+};
+
+const PROXIES = {
+    1: { name: "Proxy1", url: "https://55gms.com/embed.html#", info: "152.53.37.155 America - NewYork" },
+    2: { name: "Proxy2", url: "https://55gms.me/embed.html#", info: "152.53.37.155 America - NewYork" },
+    3: { name: "Proxy3", url: "https://55gms.app/embed.html#", info: "152.53.37.155 America - NewYork" },
+    4: { name: "Proxy4", url: "https://algebra.learnnexus.xyz/embed.html#", info: "152.53.37.155 America - NewYork" },
+    5: { name: "Proxy5", url: "https://biology.learnnexus.xyz/embed.html#", info: "152.53.37.155 America - NewYork" }
+};
+
+const PRESETS = [
+    { name: "Google", url: "https://google.com/?igu=1" },
+    { name: "OffiDocs", url: "https://search.offidocs.com" },
+    { name: "Nation Online", url: "https://nation.online" },
+    { name: "Excite", url: "https://excite.co.jp" }
+];
+
+function init() {
+    const savedSettings = localStorage.getItem('browser-settings');
+    if (savedSettings) settings = JSON.parse(savedSettings);
+    if (settings.darkMode) document.body.classList.add('dark-mode');
+    applyTabMode();
+    const savedTabs = localStorage.getItem('browser-sessions');
+    if (savedTabs) {
+        const parsedTabs = JSON.parse(savedTabs);
+        const lastActive = localStorage.getItem('browser-last-active');
+        parsedTabs.forEach(t => createTabObject(t.url, t.id, t.title, t.history, t.historyIndex));
+        switchTab(lastActive ? parseInt(lastActive) : tabs[0].id);
+    } else { createNewTab(settings.homeUrl); }
+}
+
+function saveState() {
+    localStorage.setItem('browser-settings', JSON.stringify(settings));
+    const tabData = tabs.map(t => ({ id: t.id, url: t.url, title: t.title, history: t.history, historyIndex: t.historyIndex }));
+    localStorage.setItem('browser-sessions', JSON.stringify(tabData));
+    localStorage.setItem('browser-last-active', activeTabId);
+}
+
+function getEffectiveUrl(url) {
+    if (url === "settings://" || !settings.activeProxyId) return url;
+    return PROXIES[settings.activeProxyId].url + url;
+}
+
+function applyTabMode() {
+    document.getElementById('side-tabs').classList.toggle('hidden', !settings.useVerticalTabs);
+    document.getElementById('tabs-bar').classList.toggle('hidden', settings.useVerticalTabs);
+}
+
+function createTabObject(url, id = Date.now(), title = "新規タブ", history = null, hIndex = 0) {
+    const pageContainer = document.getElementById('view');
+    let el;
+    if (url === "settings://") {
+        el = document.createElement('div');
+        el.className = "page-element settings-page";
+        renderSettingsInto(el);
+    } else {
+        el = document.createElement('iframe');
+        el.src = getEffectiveUrl(url);
+        el.className = "page-element";
+    }
+    el.id = `page-${id}`;
+    pageContainer.appendChild(el);
+
+    const newTab = { id, url, title, history: history || [url], historyIndex: hIndex, element: el };
+    
+    if (url !== "settings://") {
+        el.onload = () => {
+            newTab.title = newTab.url.replace(/https?:\/\//, '').split('/')[0] || newTab.url;
+            renderTabsUI();
+        };
+    }
+    tabs.push(newTab);
+    return newTab;
+}
+
+function createNewTab(url = settings.homeUrl) { const tab = createTabObject(url); switchTab(tab.id); }
+
+function switchTab(id) {
+    activeTabId = id;
+    tabs.forEach(t => {
+        const isActive = t.id === id;
+        t.element.classList.toggle('active', isActive);
+        if (isActive) {
+            document.getElementById('url').value = t.url;
+            if (t.url === "settings://") renderSettingsInto(t.element);
+        }
+    });
+    updateNavButtons();
+    renderTabsUI();
+    saveState();
+}
+
+function updateTabContent(tab, url) {
+    if (tab.element) tab.element.remove();
+    let el;
+    if (url === "settings://") {
+        el = document.createElement('div');
+        el.className = "page-element settings-page active";
+        renderSettingsInto(el);
+    } else {
+        el = document.createElement('iframe');
+        el.src = getEffectiveUrl(url);
+        el.className = "page-element active";
+        el.onload = () => { tab.title = url.replace(/https?:\/\//, '').split('/')[0]; renderTabsUI(); };
+    }
+    el.id = `page-${tab.id}`;
+    document.getElementById('view').appendChild(el);
+    tab.element = el;
+}
+
+function go() {
+    let url = document.getElementById('url').value;
+    if (url !== "settings://" && !url.startsWith('http')) url = "https://" + url;
+    const tab = tabs.find(t => t.id === activeTabId);
+    if (tab.url !== url) {
+        tab.history = tab.history.slice(0, tab.historyIndex + 1);
+        tab.history.push(url);
+        tab.historyIndex++;
+        tab.url = url;
+        updateTabContent(tab, url);
+        updateNavButtons();
+        saveState();
+    }
+}
+
+function navBack() {
+    const tab = tabs.find(t => t.id === activeTabId);
+    if (tab && tab.historyIndex > 0) {
+        tab.historyIndex--;
+        tab.url = tab.history[tab.historyIndex];
+        document.getElementById('url').value = tab.url;
+        updateTabContent(tab, tab.url);
+        updateNavButtons();
+        saveState();
+    }
+}
+
+function navForward() {
+    const tab = tabs.find(t => t.id === activeTabId);
+    if (tab && tab.historyIndex < tab.history.length - 1) {
+        tab.historyIndex++;
+        tab.url = tab.history[tab.historyIndex];
+        document.getElementById('url').value = tab.url;
+        updateTabContent(tab, tab.url);
+        updateNavButtons();
+        saveState();
+    }
+}
+
+function navReload() {
+    const tab = tabs.find(t => t.id === activeTabId);
+    if (tab && tab.element.tagName === 'IFRAME') { tab.element.src = getEffectiveUrl(tab.url); } 
+    else if (tab.url === "settings://") { renderSettingsInto(tab.element); }
+}
+
+function goHome() { document.getElementById('url').value = settings.homeUrl; go(); }
+
+function updateNavButtons() {
+    const tab = tabs.find(t => t.id === activeTabId);
+    if (!tab) return;
+    document.getElementById('btn-back').disabled = (tab.historyIndex <= 0);
+    document.getElementById('btn-forward').disabled = (tab.historyIndex >= tab.history.length - 1);
+}
+
+function closeTab(id, e) {
+    e.stopPropagation();
+    if (tabs.length === 1) return;
+    const tab = tabs.find(t => t.id === id);
+    if (tab.element) tab.element.remove();
+    const idx = tabs.findIndex(t => t.id === id);
+    tabs = tabs.filter(t => t.id !== id);
+    if (activeTabId === id) switchTab(tabs[Math.max(0, idx - 1)].id);
+    else renderTabsUI();
+    saveState();
+}
+
+function renderTabsUI() {
+    const hBar = document.getElementById('tabs-bar');
+    const vBar = document.getElementById('side-tabs');
+    const createTabEl = (tab, isVertical) => {
+        const isActive = tab.id === activeTabId;
+        const div = document.createElement('div');
+        div.className = `tab ${isActive ? 'active' : ''}`;
+        div.innerHTML = `<span style="overflow:hidden; text-overflow:ellipsis;">${tab.title}</span><span class="close-btn" onclick="closeTab(${tab.id}, event)">×</span>`;
+        div.onclick = () => switchTab(tab.id);
+        return div;
+    };
+    hBar.innerHTML = '';
+    if (!settings.useVerticalTabs) {
+        tabs.forEach(t => hBar.appendChild(createTabEl(t, false)));
+        const addBtn = document.createElement('button');
+        addBtn.textContent = "＋"; addBtn.onclick = () => createNewTab(); hBar.appendChild(addBtn);
+    }
+    vBar.innerHTML = '<div style="font-size:10px; opacity:0.5; margin-bottom:5px;">VERTICAL TABS</div>';
+    if (settings.useVerticalTabs) {
+        tabs.forEach(t => vBar.appendChild(createTabEl(t, true)));
+        const addBtnV = document.createElement('button');
+        addBtnV.textContent = "＋ 新規タブ"; addBtnV.onclick = () => createNewTab(); vBar.appendChild(addBtnV);
+    }
+}
+
+function openSettings() {
+    const tab = tabs.find(t => t.id === activeTabId);
+    if (tab.url !== "settings://") {
+        tab.history = tab.history.slice(0, tab.historyIndex + 1);
+        tab.history.push("settings://");
+        tab.historyIndex++;
+        tab.url = "settings://";
+        document.getElementById('url').value = "settings://";
+        updateTabContent(tab, "settings://");
+    }
+}
+
+function renderSettingsInto(container) {
+    let proxyHtml = "";
+    for (const id in PROXIES) {
+        const p = PROXIES[id];
+        const isConnected = settings.activeProxyId == id;
+        proxyHtml += `
+            <div class="proxy-item">
+                <div><strong>${p.name}</strong><br><small style="opacity:0.7;">${p.info}</small></div>
+                <div>
+                    ${isConnected ? '<span class="status-connected">接続済み</span>' : ''}
+                    <button onclick="toggleProxy(${id})">${isConnected ? '切断' : '接続'}</button>
+                </div>
+            </div>
+        `;
+    }
+    let presetHtml = "";
+    PRESETS.forEach(p => { presetHtml += `<button onclick="setHomePreset('${p.url}')">${p.name}</button>`; });
+
+    container.innerHTML = `
+        <div class="card">
+            <h3>◻️ ホーム設定</h3>
+            <div style="display:flex; gap:8px;"><input type="text" id="set-home" value="${settings.homeUrl}" style="flex:1; padding:8px;"><button onclick="updateHome()">保存</button></div>
+            <div class="preset-group">${presetHtml}</div>
+        </div>
+        <div class="card">
+            <h3>🎨 デザイン</h3>
+            <button onclick="toggleSet('darkMode')">ダークモード: ${settings.darkMode ? 'ON' : 'OFF'}</button>
+            <button onclick="toggleSet('useVerticalTabs')">縦タブ: ${settings.useVerticalTabs ? 'ON' : 'OFF'}</button>
+        </div>
+        <div class="card"><h3>🌐 PROXY</h3>${proxyHtml}</div>
+    `;
+}
+
+window.setHomePreset = (url) => { document.getElementById('set-home').value = url; settings.homeUrl = url; saveState(); };
+window.updateHome = () => { settings.homeUrl = document.getElementById('set-home').value; saveState(); alert("保存完了"); };
+window.toggleProxy = (id) => {
+    settings.activeProxyId = (settings.activeProxyId == id) ? null : id;
+    saveState();
+    renderSettingsInto(tabs.find(t => t.id === activeTabId).element);
+};
+window.toggleSet = (key) => {
+    settings[key] = !settings[key];
+    if (key === 'darkMode') document.body.classList.toggle('dark-mode');
+    applyTabMode(); saveState();
+    renderSettingsInto(tabs.find(t => t.id === activeTabId).element);
+    renderTabsUI();
+};
+document.getElementById("url").addEventListener("keydown", e => { if (e.key === "Enter") go(); });
+init();
+</script>
+</body>
+</html>
