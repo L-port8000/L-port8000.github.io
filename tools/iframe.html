@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>iframe</title>
+<title>o</title>
 <style>
 :root { --bg-color: #f0f0f4; --toolbar-bg: #f9f9fb; --text-color: #000; --border-color: #d0d0d7; --accent: #0060df; }
 body.dark-mode { --bg-color: #1c1b22; --toolbar-bg: #2b2a33; --text-color: #fbfbfe; --border-color: #52525e; --accent: #00ddff; }
@@ -292,9 +292,9 @@ function renderSettingsInto(container) {
         <div class="card"><h3>🌓 表示設定</h3>
             <button onclick="settings.darkMode=!settings.darkMode; document.body.classList.toggle('dark-mode'); saveState(); renderSettingsInto(document.querySelector('.settings-page'));">ダークモード切替</button>
             <select onchange="settings.viewMode=this.value; saveState();" style="margin-left:10px;">
-                <option value="iframe" ${settings.viewMode==='iframe'?'selected':''}>iframe</option>
-                <option value="object" ${settings.viewMode==='object'?'selected':''}>object</option>
-                <option value="embed" ${settings.viewMode==='embed'?'selected':''}>embed</option>
+                <option value="iframe" ${settings.viewMode==='iframe'?'selected':''}>iframe（ポップアップブロックができます）</option>
+                <option value="object" ${settings.viewMode==='object'?'selected':''}>object（表示できないサイトがあります）</option>
+                <option value="embed" ${settings.viewMode==='embed'?'selected':''}>embed（PDFなどが表示できます）</option>
             </select>
         </div>
 
