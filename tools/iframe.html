@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>o</title>
-<link rel="icon" href="./transparent.png">
+<link rel="icon" href="../transparent.png">
 <style>
 :root { --bg-color: #f0f0f4; --toolbar-bg: #f9f9fb; --text-color: #000; --border-color: #d0d0d7; --accent: #0060df; }
 body.dark-mode { --bg-color: #1c1b22; --toolbar-bg: #2b2a33; --text-color: #fbfbfe; --border-color: #52525e; --accent: #00ddff; }
@@ -106,8 +106,8 @@ function getIconUrl(url) {
     if (url === "settings://") return "https://gstatic.com/images/branding/product/1x/settings_32dp.png";
     try {
         const domain = new URL(url).hostname;
-        return `https://google.com/s2/favicons?domain=${domain}&sz=32`;
-    } catch(e) { return "https://google.com/s2/favicons?domain=example.com"; }
+        return `https://icons.duckduckgo.com/ip3/${domain}.ico`;
+    } catch(e) { return "https://icons.duckduckgo.com/ip3/example.com.ico"; }
 }
 
 function init() {
