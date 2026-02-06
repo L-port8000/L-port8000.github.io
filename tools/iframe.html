@@ -102,11 +102,11 @@ function setProgress(percent) {
 }
 
 function getIconUrl(url) {
-    if (url === "settings://") return "https://www.gstatic.com/images/branding/product/1x/settings_32dp.png";
+    if (url === "settings://") return "https://gstatic.com/images/branding/product/1x/settings_32dp.png";
     try {
         const domain = new URL(url).hostname;
-        return `https://www.google.com/s2/favicons?domain=${domain}&sz=32`;
-    } catch(e) { return "https://www.google.com/s2/favicons?domain=example.com"; }
+        return `https://google.com/s2/favicons?domain=${domain}&sz=32`;
+    } catch(e) { return "https://google.com/s2/favicons?domain=example.com"; }
 }
 
 function init() {
