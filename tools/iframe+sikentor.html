@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>o - Tor Multi-Gateway</title>
+<link rel="icon" href="../transparent.png">
+<style>
+:root { --bg-color: #f0f0f4; --toolbar-bg: #f9f9fb; --text-color: #000; --border-color: #d0d0d7; --accent: #0060df; --tor-color: #7d4698; }
+body.dark-mode { --bg-color: #1c1b22; --toolbar-bg: #2b2a33; --text-color: #fbfbfe; --border-color: #52525e; --accent: #00ddff; --tor-color: #9d66b8; }
+body { margin: 0; font-family: system-ui, sans-serif; background: var(--bg-color); color: var(--text-color); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+/* 既存のスタイルを継承 */
+#progress-container { position: absolute; top: 0; left: 0; width: 100%; height: 2px; z-index: 1000; pointer-events: none; }
+#progress-bar { width: 0%; height: 100%; background: var(--accent); transition: width 0.3s ease; }
+#tabs-bar { display: flex; background: var(--bg-color); padding: 5px 5px 0 5px; gap: 4px; border-bottom: 1px solid var(--border-color); overflow-x: auto; min-height: 35px; scrollbar-width: none; }
+#tabs-bar::-webkit-scrollbar { display: none; }
+.tab { padding: 6px 12px; background: rgba(0,0,0,0.05); border-radius: 8px 8px 0 0; cursor: pointer; min-width: 140px; max-width: 200px; display: flex; align-items: center; font-size: 11px; border: 1px solid var(--border-color); border-bottom: none; white-space: nowrap; transition: 0.2s; }
+.tab.active { background: var(--toolbar-bg); font-weight: bold; border-top: 2px solid var(--accent); }
+.tab img { width: 14px; height: 14px; margin-right: 6px; border-radius: 2px; }
+.tab-title { flex: 1; overflow: hidden; text-overflow: ellipsis; }
+.close-btn { margin-left: 8px; opacity: 0.3; font-size: 14px; }
+.close-btn:hover { color: red; opacity: 1; }
+#chrome { background: var(--toolbar-bg); border-bottom: 1px solid var(--border-color); padding: 8px; display: flex; gap: 8px; align-items: center; z-index: 10; }
+#url { flex: 1; padding: 8px 15px; border-radius: 20px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-color); font-size: 13px; }
+#bookmark-bar { background: var(--toolbar-bg); padding: 4px 10px; display: flex; gap: 10px; border-bottom: 1px solid var(--border-color); font-size: 11px; overflow-x: auto; min-height: 20px; }
+.bm-item { display: flex; align-items: center; gap: 4px; cursor: pointer; padding: 4px 8px; border-radius: 4px; white-space: nowrap; max-width: 150px; }
+.bm-item:hover { background: rgba(0,0,0,0.05); }
+.bm-item img { width: 12px; height: 12px; }
+.star-btn { font-size: 20px; cursor: pointer; color: #ccc; }
+.star-btn.active { color: #f1c40f; }
+#main-container { display: flex; flex: 1; overflow: hidden; position: relative; }
+#view { flex: 1; background: white; position: relative; }
+.page-element { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; display: none; background: white; }
+.page-element.active { display: block; }
+.settings-page { padding: 40px 20px; overflow-y: auto; box-sizing: border-box; background: var(--bg-color) !important; }
+.card { background: var(--toolbar-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); max-width: 600px; margin: 0 auto 20px; color: var(--text-color); }
+.preset-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+.proxy-item { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border-color); }
+.status-connected { color: #28a745; font-weight: bold; font-size: 13px; margin-right: 8px; }
+.status-tor { color: var(--tor-color); font-weight: bold; font-size: 13px; margin-right: 8px; }
+button { padding: 6px 12px; cursor: pointer; border-radius: 4px; border: 1px solid var(--border-color); background: rgba(0,0,0,0.05); color: inherit; }
+button:disabled { opacity: 0.3; cursor: default; }
+select, input[type="text"] { padding: 8px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-color); }
+</style>
+</head>
+<body>
+
+<div id="progress-container"><div id="progress-bar"></div></div>
+
+<div id="tabs-bar"></div>
+<div id="chrome">
+    <button id="btn-back" onclick="navBack()">◀</button>
+    <button id="btn-forward" onclick="navForward()">▶</button>
+    <button onclick="navReload()">⟳</button>
+    <button onclick="goHome()">◻️</button>
+    <span id="star-btn" class="star-btn" onclick="toggleBookmark()">★</span>
+    <input id="url" placeholder="URLを入力してEnter">
+    <button onclick="go()">Go</button>
+    <button onclick="openSettings()">⚙️</button>
+</div>
+<div id="bookmark-bar"></div>
+
+<div id="main-container">
+    <div id="view"></div>
+</div>
+
+<script>
+let tabs = [];
+let activeTabId = null;
+let settings = {
+    homeUrl: "https://google.com/?igu=1",
+    darkMode: false,
+    bookmarks: [],
+    viewMode: "iframe",
+    activeProxyId: null,
+    torEnabled: false,
+    torGateway: ".tor.lc" // 初期ゲートウェイ
+};
+
+// Onionドメインを変換する関数 (動的なゲートウェイ対応)
+function normalizeTorUrl(url) {
+    if (settings.torEnabled && url.includes(".onion")) {
+        return url.replace(".onion", settings.torGateway);
+    }
+    return url;
+}
+
+/* --- ヘルパー関数群 --- */
+function saveState() {
+    localStorage.setItem('browser-settings', JSON.stringify(settings));
+    localStorage.setItem('browser-sessions', JSON.stringify(tabs.map(t => ({id: t.id, url: t.url, title: t.title, history: t.history, historyIndex: t.historyIndex}))));
+    localStorage.setItem('browser-last-active', activeTabId);
+}
+
+function setProgress(percent) {
+    const bar = document.getElementById('progress-bar');
+    bar.style.width = percent + "%";
+    if (percent >= 100) setTimeout(() => { bar.style.width = "0%"; }, 400);
+}
+
+function getIconUrl(url) {
+    if (url === "settings://") return "https://gstatic.com/images/branding/product/1x/settings_32dp.png";
+    try { const domain = new URL(url).hostname; return `https://icons.duckduckgo.com/ip3/${domain}.ico`; } 
+    catch(e) { return "https://icons.duckduckgo.com/ip3/example.com.ico"; }
+}
+
+function getEffectiveUrl(url) {
+    if (url === "settings://") return url;
+    let target = normalizeTorUrl(url);
+    return !settings.activeProxyId ? target : PROXIES[settings.activeProxyId].url + target;
+}
+
+/* --- タブ管理 --- */
+function createTabObject(url, id = Date.now(), title = "読み込み中...", history = null, hIndex = 0) {
+    const tab = { id, url, title, history: history || [url], historyIndex: hIndex, element: null };
+    updateTabElement(tab);
+    tabs.push(tab);
+    return tab;
+}
+
+function updateTabElement(tab) {
+    if (tab.element) tab.element.remove();
+    const viewArea = document.getElementById('view');
+    let el;
+
+    if (tab.url === "settings://") {
+        el = document.createElement('div');
+        el.className = "page-element settings-page";
+        renderSettingsInto(el);
+    } else {
+        const finalUrl = getEffectiveUrl(tab.url);
+        el = document.createElement(settings.viewMode === "iframe" ? 'iframe' : (settings.viewMode === "object" ? 'object' : 'embed'));
+        if (settings.viewMode === "iframe") {
+            el.src = finalUrl; el.setAttribute("sandbox", SANDBOX_SETTINGS);
+        } else { el.data = finalUrl; el.src = finalUrl; el.type = "text/html"; }
+        
+        el.className = "page-element";
+        setProgress(30);
+        el.onload = () => {
+            setProgress(100);
+            try { tab.title = el.contentDocument.title || new URL(tab.url).hostname; } 
+            catch(e) { tab.title = tab.url.replace(/https?:\/\//,'').split('/')[0]; }
+            renderTabsUI(); updateStarUI();
+        };
+    }
+    el.id = `page-${tab.id}`;
+    if (tab.id === activeTabId) el.classList.add('active');
+    viewArea.appendChild(el);
+    tab.element = el;
+}
+
+function switchTab(id) {
+    activeTabId = id;
+    tabs.forEach(t => {
+        const active = t.id === id;
+        t.element.classList.toggle('active', active);
+        if (active) {
+            document.getElementById('url').value = t.url;
+            if (t.url === "settings://") renderSettingsInto(t.element);
+        }
+    });
+    updateNavButtons(); updateStarUI(); renderTabsUI(); saveState();
+}
+
+function renderTabsUI() {
+    const bar = document.getElementById('tabs-bar');
+    bar.innerHTML = '';
+    tabs.forEach(t => {
+        const div = document.createElement('div');
+        div.className = `tab ${t.id === activeTabId ? 'active' : ''}`;
+        div.innerHTML = `<img src="${getIconUrl(t.url)}"><span class="tab-title">${t.title}</span><span class="close-btn" onclick="closeTab(${t.id}, event)">×</span>`;
+        div.onclick = () => switchTab(t.id);
+        bar.appendChild(div);
+    });
+    const add = document.createElement('button'); add.textContent = "+"; add.style="height:28px; margin-top:5px;"; add.onclick = () => createNewTab(); bar.appendChild(add);
+}
+
+/* --- ナビゲーション --- */
+function go() {
+    let url = document.getElementById('url').value;
+    if (url !== "settings://" && !url.startsWith('http')) url = "https://" + url;
+    const tab = tabs.find(t => t.id === activeTabId);
+    if (tab.url !== url) {
+        tab.history = tab.history.slice(0, tab.historyIndex + 1);
+        tab.history.push(url); tab.historyIndex++; tab.url = url;
+        updateTabElement(tab); switchTab(tab.id);
+    }
+}
+
+function navBack() { const t = tabs.find(x => x.id === activeTabId); if (t && t.historyIndex > 0) { t.historyIndex--; t.url = t.history[t.historyIndex]; updateTabElement(t); switchTab(t.id); } }
+function navForward() { const t = tabs.find(x => x.id === activeTabId); if (t && t.historyIndex < t.history.length - 1) { t.historyIndex++; t.url = t.history[t.historyIndex]; updateTabElement(t); switchTab(t.id); } }
+function navReload() { const t = tabs.find(x => x.id === activeTabId); if(t) updateTabElement(t); }
+function openSettings() { document.getElementById('url').value = "settings://"; go(); }
+function goHome() { document.getElementById('url').value = settings.homeUrl; go(); }
+
+function renderSettingsInto(container) {
+    let proxyHtml = "";
+    for (const id in PROXIES) {
+        const p = PROXIES[id]; const isC = settings.activeProxyId == id;
+        proxyHtml += `<div class="proxy-item"><div><strong>${p.name}</strong><br><small>${p.info}</small></div><div>${isC?'<span class="status-connected">接続中</span>':''}<button onclick="toggleProxy(${id})">${isC?'切断':'接続'}</button></div></div>`;
+    }
+
+    container.innerHTML = `
+        <div class="card"><h3>★ ブックマーク管理</h3>
+            ${settings.bookmarks.length === 0 ? '<p style="opacity:0.5">なし</p>' : 
+              settings.bookmarks.map((b,i)=>`<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <span><img src="${getIconUrl(b.url)}" style="width:12px; margin-right:5px;">${b.title}</span>
+                <button onclick="settings.bookmarks.splice(${i},1);saveState();renderSettingsInto(document.querySelector('.settings-page'));renderBookmarkBar();">削除</button>
+              </div>`).join('')}
+        </div>
+
+        <div class="card"><h3>🧅 Tor接続設定</h3>
+            <div class="proxy-item">
+                <div><strong>Tor Gateway モード</strong><br>
+                    <select onchange="settings.torGateway=this.value; saveState();" style="margin-top:5px;">
+                        <option value=".tor.lc" ${settings.torGateway==='.tor.lc'?'selected':''}>.tor.lc (normal)</option>
+                        <option value=".onion.pe" ${settings.torGateway==='.onion.pe'?'selected':''}>.onion.pe (sub)</option>
+                    </select>
+                </div>
+                <div>
+                    ${settings.torEnabled ? '<span class="status-tor">ON</span>' : '<span style="opacity:0.5; font-size:13px; margin-right:8px;">OFF</span>'}
+                    <button onclick="toggleTor()">${settings.torEnabled ? '停止' : '有効化'}</button>
+                </div>
+            </div>
+            <p style="font-size:11px; opacity:0.7;">※ .onionアドレスを入力した際に、選択したゲートウェイへ自動で書き換えます。<br>.onionドメインへのアクセスを有効にします<br>⚠こちらは試験中の機能です。<br>　セキュリティ的な懸念点があるので推奨されません。<br>！セキュリティレベルが低いため、一部開けないサイトが存在します。<br>！信頼できるURLのみ開いてください、危険性のあるURLは開かないでください</p>
+        </div>
+
+        <div class="card"><h3>◻️ ホーム設定</h3>
+            <div style="display:flex; gap:8px; margin-bottom:10px;"><input type="text" id="set-home" value="${settings.homeUrl}" style="flex:1;"><button onclick="settings.homeUrl=document.getElementById('set-home').value;saveState();alert('保存しました')">保存</button></div>
+            <div class="preset-group" id="plist"></div>
+        </div>
+
+        <div class="card"><h3>🌓 表示設定</h3>
+            <button onclick="settings.darkMode=!settings.darkMode; document.body.classList.toggle('dark-mode'); saveState(); renderSettingsInto(document.querySelector('.settings-page'));">ダークモード切替</button>
+            <select onchange="settings.viewMode=this.value; saveState();" style="margin-left:10px;">
+                <option value="iframe" ${settings.viewMode==='iframe'?'selected':''}>iframe</option>
+                <option value="object" ${settings.viewMode==='object'?'selected':''}>object</option>
+                <option value="embed" ${settings.viewMode==='embed'?'selected':''}>embed</option>
+            </select>
+        </div>
+
+        <div class="card"><h3>🌐 プロキシ設定</h3>${proxyHtml}</div>
+    `;
+
+    PRESETS.forEach(p => {
+        const b = document.createElement('button'); b.textContent = p.name;
+        b.onclick = () => { document.getElementById('set-home').value = p.url; settings.homeUrl = p.url; saveState(); };
+        container.querySelector('#plist').appendChild(b);
+    });
+}
+
+/* --- 初期化・起動 --- */
+window.toggleTor = () => {
+    settings.torEnabled = !settings.torEnabled;
+    saveState();
+    const t = tabs.find(x => x.id === activeTabId);
+    if (t && t.url.includes(".onion")) updateTabElement(t);
+    renderSettingsInto(document.querySelector('.settings-page'));
+};
+
+window.toggleProxy = (id) => {
+    settings.activeProxyId = (settings.activeProxyId == id) ? null : id;
+    saveState();
+    const t = tabs.find(x => x.id === activeTabId);
+    if (t && t.url !== "settings://") updateTabElement(t);
+    renderSettingsInto(document.querySelector('.settings-page'));
+};
+
+const PROXIES = {
+    1:  { name: "55games - 1",  url: "https://55gms.com/embed.html#", info: "US - NY elite" },
+    2:  { name: "55games - 2",  url: "https://55gms.me/embed.html#", info: "US - NY elite" },
+    3:  { name: "55games - 3",  url: "https://55gms.app/embed.html#", info: "US - NY elite" },
+    4:  { name: "55games - 4",  url: "https://algebra.learnnexus.xyz/embed.html#", info: "US - NY elite" },
+    5:  { name: "55games - 5",  url: "https://biology.learnnexus.xyz/embed.html#", info: "US - NY elite" },
+    6:  { name: "Workers - 1",  url: "https://sk.skkatoo.workers.dev/-----", info: "US - SF Non-anony" },
+    7:  { name: "Workers - 2",  url: "https://black-resonance-5407.cvfr.workers.dev/-----", info: "US - SF Non-anony" },
+    8:  { name: "Workers - 2",  url: "https://loli.loli12.workers.dev/-----", info: "US - SF Non-anony" },
+    9:  { name: "Workers - 3",  url: "https://loli.xianyu1.workers.dev/-----", info: "US - SF Non-anony" },
+    10: { name: "Workers - 4",  url: "https://lucky-mountain-6e91.networkfreedom.workers.dev/-----", info: "US - SF Non-anony" },
+    11: { name: "Workers - 5",  url: "https://proxy.dijkstra.workers.dev/-----", info: "US - SF Non-anony" },
+    12: { name: "Workers - 6",  url: "https://b.007.workers.dev/-----", info: "US - SF Non-anony" },
+    13: { name: "Workers - 7",  url: "https://1.wv1.workers.dev/-----", info: "US - SF Non-anony" },
+    14: { name: "Workers - 8",  url: "https://proxy.fan.workers.dev/-----", info: "US - SF Non-anony" },
+    15: { name: "Workers - 9",  url: "https://jsproxy1.jimmytinsley.workers.dev/-----", info: "US - SF Non-anony" },
+    16: { name: "Workers - 10", url: "https://proxy.rdr.workers.dev/-----", info: "US - SF Non-anony" },
+    17: { name: "Workers - 11", url: "https://proxy.thiruhostinger.workers.dev/?url=", info: "US - SF Non-anony" },
+    18: { name: "Workers - 12", url: "https://lucky-mountain-6e91.networkfreedom.workers.dev/-----", info: "US - SF Non-anony" },
+    19: { name: "Workers - 13", url: "https://tohyotalk.habataku.workers.dev/-----", info: "US - SF Non-anony" },
+    20: { name: "Workers - 14", url: "https://little-credit-fc7d.sfzanghao.workers.dev/-----", info: "US - SF Non-anony" },
+    21: { name: "Freeplace Tor", url: "https://freeplace.in/proxy/browse.php?u=", info: "Tor Proxy low Security" }
+};
+const PRESETS = [
+   { name: "Google", url: "https://google.com/?igu=1" },
+   { name: "OffiDocs", url: "https://offidocs.com" },
+   { name: "nation", url: "https://nation.online" },
+   { name: "StartPage", url: "https://startpagel6srwcjlue4zgq3zevrujfaow726kjytqbbjyrswwmjzcqd.onion" } ];
+const SANDBOX_SETTINGS = "allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-presentation allow-same-origin allow-scripts allow-storage-access-by-user-activation";
+
+function init() {
+    const saved = localStorage.getItem('browser-settings');
+    if (saved) settings = { ...settings, ...JSON.parse(saved) };
+    if (settings.darkMode) document.body.classList.add('dark-mode');
+    const savedTabs = localStorage.getItem('browser-sessions');
+    if (savedTabs) {
+        JSON.parse(savedTabs).forEach(t => createTabObject(t.url, t.id, t.title, t.history, t.historyIndex));
+        switchTab(parseInt(localStorage.getItem('browser-last-active')) || tabs[0].id);
+    } else { createNewTab(settings.homeUrl); }
+    renderBookmarkBar();
+}
+
+function renderBookmarkBar() {
+    const bar = document.getElementById('bookmark-bar'); bar.innerHTML = '';
+    settings.bookmarks.forEach(bm => {
+        const div = document.createElement('div'); div.className = 'bm-item';
+        div.innerHTML = `<img src="${getIconUrl(bm.url)}"><span>${bm.title}</span>`;
+        div.onclick = () => { document.getElementById('url').value = bm.url; go(); };
+        bar.appendChild(div);
+    });
+}
+
+function closeTab(id, e) { e.stopPropagation(); if (tabs.length === 1) return; const idx = tabs.findIndex(t => t.id === id); tabs[idx].element.remove(); tabs.splice(idx, 1); switchTab(tabs[Math.max(0, idx-1)].id); }
+function createNewTab(url = settings.homeUrl) { switchTab(createTabObject(url).id); }
+function updateStarUI() { const t = tabs.find(x => x.id === activeTabId); const isB = settings.bookmarks.some(b => b.url === (t ? t.url : "")); document.getElementById('star-btn').classList.toggle('active', isB); }
+function updateNavButtons() { const t = tabs.find(x => x.id === activeTabId); if (!t) return; document.getElementById('btn-back').disabled = (t.historyIndex <= 0); document.getElementById('btn-forward').disabled = (t.historyIndex >= t.history.length - 1); }
+function toggleBookmark() { const tab = tabs.find(t => t.id === activeTabId); if (tab.url === "settings://") return; const idx = settings.bookmarks.findIndex(b => b.url === tab.url); if (idx > -1) settings.bookmarks.splice(idx, 1); else settings.bookmarks.push({ title: tab.title, url: tab.url }); updateStarUI(); renderBookmarkBar(); saveState(); }
+
+document.getElementById("url").addEventListener("keydown", e => { if (e.key === "Enter") go(); });
+init();
+</script>
+</body>
+</html>
