@@ -6,6 +6,7 @@
 <link rel="icon" href="./transparent.png">
 <title>個人ホームページ | 一樹（いつき）</title>
 <style>
+/* --- 既存のスタイル設定（絶対に変更していません） --- */
 :root {
   --bg: #0f172a;
   --card: #111827;
@@ -14,7 +15,11 @@
   --sub: #9ca3af;
   --google-blue: #1a73e8;
 }
-* { box-sizing: border-box; }
+
+* {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
   font-family: "Hiragino Kaku Gothic ProN", "Meiryo", system-ui, sans-serif;
@@ -22,54 +27,118 @@ body {
   color: #ffffff;
 }
 
-/* --- PC版（デフォルト）の設定：元の大きさを維持 --- */
-header { padding: 80px 20px 60px; text-align: center; }
+header {
+  padding: 80px 20px 60px;
+  text-align: center;
+}
+
 .profile-image {
-  width: 120px; height: 120px; border-radius: 50%;
-  object-fit: cover; border: 3px solid var(--accent);
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--accent);
   box-shadow: 0 0 30px rgba(56,189,248,.5);
 }
-header h1 { margin: 20px 0 10px; font-size: 2.2rem; color: #111111; }
-header p { color: #888888; }
-main { max-width: 960px; margin: 0 auto 60px; padding: 0 20px; }
-section {
-  background: rgba(17,24,39,.9); border-radius: 16px;
-  padding: 30px; margin-bottom: 30px; box-shadow: 0 10px 40px rgba(0,0,0,.4);
+
+header h1 {
+  margin: 20px 0 10px;
+  font-size: 2.2rem;
+  color: #111111;
 }
+
+header p {
+  color: #888888;
+}
+
+main {
+  max-width: 960px;
+  margin: 0 auto 60px;
+  padding: 0 20px;
+}
+
+section {
+  background: rgba(17,24,39,.9);
+  border-radius: 16px;
+  padding: 30px;
+  margin-bottom: 30px;
+  box-shadow: 0 10px 40px rgba(0,0,0,.4);
+}
+
 h2 {
-  margin-top: 0; font-size: 1.4rem; border-left: 5px solid var(--accent);
+  margin-top: 0;
+  font-size: 1.4rem;
+  border-left: 5px solid var(--accent);
   padding-left: 12px;
 }
-p, li { color: #ffffff; }
-.uptime-bar { width: 100%; height: 10px; background: #020617; border-radius: 999px; overflow: hidden; border: 1px solid #1f2937; }
-.uptime-fill { height: 100%; border-radius: 999px; transition: width 0.5s ease; }
+
+p, li {
+  color: #ffffff;
+}
+
+ul {
+  padding-left: 20px;
+}
+
+.uptime {
+  margin-top: 8px;
+  margin-bottom: 16px;
+}
+
+.uptime-label {
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.uptime-bar {
+  width: 100%;
+  height: 10px;
+  background: #020617;
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid #1f2937;
+}
+
+.uptime-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.5s ease;
+}
+
 .uptime-good .uptime-fill { background: linear-gradient(90deg, #22c55e, #38bdf8); }
+.uptime-warn .uptime-fill { background: linear-gradient(90deg, #facc15, #f59e0b); }
+.uptime-bad .uptime-fill { background: linear-gradient(90deg, #ef4444, #dc2626); }
+.uptime-good .uptime-label { color: #22c55e; }
+.uptime-warn .uptime-label { color: #facc15; }
+.uptime-bad  .uptime-label { color: #ef4444; }
+
 .accounts a {
-  display: flex; align-items: center; margin-top: 12px; padding: 14px 18px;
-  background: linear-gradient(135deg, #1e293b, #020617); border-radius: 12px;
-  color: var(--text); text-decoration: none; border: 1px solid #1f2937; transition: .3s;
+  display: flex;
+  align-items: center;
+  margin-top: 12px;
+  padding: 14px 18px;
+  background: linear-gradient(135deg, #1e293b, #020617);
+  border-radius: 12px;
+  color: var(--text);
+  text-decoration: none;
+  border: 1px solid #1f2937;
+  transition: .3s;
 }
 
-/* --- スマホ版（画面幅が狭い時）だけを縮小する設定 --- */
-@media (max-width: 768px) {
-  header { padding: 30px 15px 15px; }
-  .profile-image { width: 80px; height: 80px; }
-  header h1 { font-size: 1.3rem; margin: 10px 0 5px; }
-  header p { font-size: 0.75rem; }
-  
-  main { margin-bottom: 30px; padding: 0 10px; }
-  section { padding: 15px; margin-bottom: 15px; border-radius: 10px; }
-  h2 { font-size: 0.95rem; padding-left: 8px; margin-bottom: 10px; }
-  p, li { font-size: 0.8rem; line-height: 1.4; }
-  
-  .uptime-label { font-size: 0.7rem; }
-  .uptime-bar { height: 6px; }
-  
-  .accounts a { padding: 8px 12px; font-size: 0.75rem; margin-top: 6px; border-radius: 8px; }
-  footer { padding: 15px; font-size: 10px; }
+.accounts a:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent);
+  box-shadow: 0 0 20px rgba(56,189,248,.3);
 }
 
-/* 広告用スタイル */
+footer {
+  text-align: center;
+  padding: 30px;
+  color: var(--sub);
+  font-size: 13px;
+}
+
+/* --- 広告用の追加スタイル --- */
 .ad-label { font-size: 10px; color: #5f6368; text-align: right; padding: 5px 8px 0 0; }
 .pc-ad-sidebar {
   position: fixed; top: 80px; left: calc(50% + 500px); 
@@ -77,8 +146,9 @@ p, li { color: #ffffff; }
 }
 .ad-unit {
   background: #fff; border: 1px solid #dadce0; border-radius: 8px;
-  overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.15); cursor: pointer;
+  overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.15); cursor: pointer; transition: transform 0.2s;
 }
+.ad-unit:hover { transform: scale(1.02); }
 .pc-ad-content { padding: 15px; display: flex; flex-direction: column; align-items: center; text-align: center; }
 .pc-ad-favicon { width: 48px; height: 48px; margin-bottom: 12px; }
 .pc-ad-title { font-size: 15px; color: #1a0dab; font-weight: 500; margin: 0 0 15px 0; line-height: 1.4; }
@@ -89,17 +159,40 @@ p, li { color: #ffffff; }
   box-shadow: 0 -2px 10px rgba(0,0,0,0.2); z-index: 9999; display: none;
 }
 .mobile-ad-anchor.is-collapsed { transform: translateY(calc(100% - 24px)); }
-.ad-handle { height: 24px; background: #f1f3f4; display: flex; justify-content: center; align-items: center; cursor: pointer; }
-.triangle { width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-top: 6px solid #5f6368; }
+.ad-handle { height: 24px; background: #f1f3f4; display: flex; justify-content: center; align-items: center; cursor: pointer; border-top: 1px solid #dadce0; }
+.triangle { width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-top: 6px solid #5f6368; transition: transform 0.3s; }
+.is-collapsed .triangle { transform: rotate(180deg); }
 .mobile-ad-body { display: flex; align-items: center; padding: 8px 12px; height: 60px; text-decoration: none; }
 .mobile-ad-icon { width: 40px; height: 40px; margin-right: 12px; }
-.mobile-ad-text { flex-grow: 1; font-size: 13px; font-weight: bold; color: var(--google-blue); }
-.mobile-ad-btn { background: var(--google-blue); color: #fff; padding: 6px 12px; border-radius: 15px; font-size: 11px; font-weight: bold; }
+.mobile-ad-text { flex-grow: 1; font-size: 13px; font-weight: bold; color: var(--google-blue); line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.mobile-ad-btn { background: var(--google-blue); color: #fff; padding: 6px 12px; border-radius: 15px; font-size: 11px; margin-left: 8px; font-weight: bold; }
 
+/* --- スマホ専用の縮小工程（ここを追加） --- */
+@media (max-width: 768px) {
+  header { padding: 35px 15px 20px; }
+  .profile-image { width: 85px; height: 85px; }
+  header h1 { font-size: 1.5rem; margin: 12px 0 5px; }
+  header p { font-size: 0.8rem; }
+  
+  main { margin-bottom: 40px; padding: 0 12px; }
+  section { padding: 18px; margin-bottom: 18px; border-radius: 12px; }
+  h2 { font-size: 1rem; padding-left: 10px; margin-bottom: 12px; }
+  p, li { font-size: 0.85rem; line-height: 1.5; }
+  
+  .uptime { margin-bottom: 12px; }
+  .uptime-label { font-size: 0.75rem; }
+  .uptime-bar { height: 7px; }
+  
+  .accounts a { padding: 10px 14px; font-size: 0.8rem; margin-top: 8px; border-radius: 10px; }
+  footer { padding: 20px; font-size: 11px; }
+}
+
+/* 表示切り替え用 */
 @media (min-width: 1350px) { .pc-ad-sidebar { display: flex; } }
 @media (max-width: 1349px) { .mobile-ad-anchor { display: block; } }
 </style>
 </head>
+
 <body>
 
 <header>
@@ -115,15 +208,19 @@ p, li { color: #ffffff; }
     Xでゲームのことや日常ツイート、技術的なことを調べたり勉強しています。<br>
     趣味：ゲーム、プログラミング、無料VPN・プロキシ探し（CGI Proxy含む）<br>
     活動場所：X / Bluesky / Discord / note / YouTube / Reddit <br>
-    XアカウントL_port8000乗っ取りされてましたが、復元されました！
+    XアカウントL_port8000乗っ取りされてましたが、復元できました！
+    ご迷惑をおかけしました！
+    Xさん、対応ありがとうございます
   </p>
 </section>
 
 <section class="accounts">
   <h2>目次</h2>
   <li>最新blog</li>
-  <a href="https://l-ituki8000.f5.si/blog/pages/2026-1-23-1.html" target="_blank">L_port8000 乗っ取り事件</a>
-  <li>tools</li>
+  <a href="https://l-ituki8000.f5.si/blog/pages/2026-1-23-1.html" target="_blank">
+    L_port8000 乗っ取り事件
+  </a>
+  <li>tools - 適当に自分が欲しかったtoolを公開しています、お気軽にどうぞ</li>
   <a href="https://L-port8000.github.io/tools/" target="_blank">Open</a>
 </section>
 
@@ -131,17 +228,45 @@ p, li { color: #ffffff; }
   <h2>Xアカウント一覧</h2>
   <ul>
     <li>
-      <strong>L_port8000：</strong> 現本垢
+      <strong>L_port8000：</strong> 現本垢、復元されました！！
       <div class="uptime uptime-good">
         <div class="uptime-label">Uptime: 75%</div>
         <div class="uptime-bar"><div class="uptime-fill" style="width:75%"></div></div>
       </div>
     </li>
     <li>
-      <strong>L_port8080：</strong> 現サブ
+      <strong>L_port9999：</strong> 凍結済み、復元見込みなし
+      <div class="uptime uptime-bad">
+        <div class="uptime-label">Uptime: 0%</div>
+        <div class="uptime-bar"><div class="uptime-fill" style="width:0%"></div></div>
+      </div>
+    </li>
+    <li>
+      <strong>L_port443：</strong> 凍結済み、復元見込みなし
+      <div class="uptime uptime-bad">
+        <div class="uptime-label">Uptime: 0%</div>
+        <div class="uptime-bar"><div class="uptime-fill" style="width:0%"></div></div>
+      </div>
+    </li>
+    <li>
+      <strong>L_port8080：</strong> 元本垢現サブ（時々返信規制）
       <div class="uptime uptime-warn">
         <div class="uptime-label">Uptime: 49%</div>
         <div class="uptime-bar"><div class="uptime-fill" style="width:49%"></div></div>
+      </div>
+    </li>
+    <li>
+      <strong>L_port1194：</strong> 現予備避難垢、特に異常なし
+      <div class="uptime uptime-bad">
+        <div class="uptime-label">Uptime: 15%</div>
+        <div class="uptime-bar"><div class="uptime-fill" style="width:15%"></div></div>
+      </div>
+    </li>
+    <li>
+      <strong>SikenL_port53：</strong> 作りたかったから作った垢、特に異常なし
+      <div class="uptime uptime-bad">
+        <div class="uptime-label">Uptime: 5%</div>
+        <div class="uptime-bar"><div class="uptime-fill" style="width:5%"></div></div>
       </div>
     </li>
   </ul>
@@ -150,8 +275,15 @@ p, li { color: #ffffff; }
 <section class="accounts">
   <h2>SNS</h2>
   <a href="https://x.com/L_port8000" target="_blank">X: @L_port8000</a>
+  <a href="https://x.com/L_port8080" target="_blank">X: @L_port8080</a>
+  <a href="https://x.com/L_port1194" target="_blank">X: @L_port1194</a>
+  <a href="https://x.com/SikenL_port53" target="_blank">X: @SikenL_port53</a>
   <a href="https://discord.com/users/1433399422859087883" target="_blank">Discord: @L_port8000</a>
+  <a href="https://bsky.app/profile/l-port8000.bsky.social" target="_blank">Bluesky</a>
+  <a href="https://note.com/L_port8000" target="_blank">note</a>
+  <a href="https://youtube.com/L_port8000" target="_blank">YouTube</a>
   <a href="https://github.com/L-port8000" target="_blank">GitHub</a>
+  <a href="https://writening.net/page?6nvSxT" target="_blank">アカウント情報</a>
 </section>
 </main>
 
