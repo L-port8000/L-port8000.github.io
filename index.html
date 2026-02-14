@@ -316,9 +316,9 @@ footer {
 
 <div id="mobileAd" class="mobile-ad-anchor">
   <div class="ad-handle" onclick="toggleMobileAd()"><div class="triangle"></div></div>
-  <a href="https://blog.soyaakinohara.net/オリキャラをvtuberにして24時間耐久配信させよう！！" class="mobile-ad-body" target="_blank">
-    <img src="https://www.google.com/s2/favicons?domain=blog.soyaakinohara.net&sz=64" class="mobile-ad-icon">
-    <div class="mobile-ad-text">オリキャラをvtuberにして24時間耐久配信させよう！！ - 窓也たちのメモ帳</div>
+  <a href="#" id="mobileAdLink" class="mobile-ad-body" target="_blank">
+    <img src="" id="mobileAdIcon" class="mobile-ad-icon">
+    <div id="mobileAdText" class="mobile-ad-text"></div>
     <div class="mobile-ad-btn">見る</div>
   </a>
 </div>
@@ -327,6 +327,25 @@ footer {
 function toggleMobileAd() {
   document.getElementById('mobileAd').classList.toggle('is-collapsed');
 }
+
+function setupRandomMobileAd() {
+  const pcAds = document.querySelectorAll('.pc-ad-sidebar .ad-unit');
+  if (pcAds.length === 0) return;
+
+  const randomIndex = Math.floor(Math.random() * pcAds.length);
+  const selectedAd = pcAds[randomIndex];
+
+  const urlMatch = selectedAd.getAttribute('onclick').match(/'([^']+)'/);
+  const url = urlMatch ? urlMatch[1] : "#";
+  const title = selectedAd.querySelector('.pc-ad-title').innerText;
+  const iconSrc = selectedAd.querySelector('.pc-ad-favicon').src;
+
+  document.getElementById('mobileAdLink').href = url;
+  document.getElementById('mobileAdText').innerText = title;
+  document.getElementById('mobileAdIcon').src = iconSrc;
+}
+
+window.onload = setupRandomMobileAd;
 </script>
 
 </body>
