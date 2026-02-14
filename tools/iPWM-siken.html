@@ -24,7 +24,7 @@
 
         .auth-card { width: 100%; max-width: 300px; text-align: center; }
         .pw-input { width: 100%; padding: 15px; background: var(--ios-card); border: 1px solid var(--ios-separator); border-radius: 12px; color: white; font-size: 18px; text-align: center; margin-bottom: 20px; box-sizing: border-box; outline: none; }
-        .unlock-btn { background: var(--ios-accent); color: white; border: none; padding: 12px 30px; border-radius: 20px; font-size: 16px; font-weight: 600; cursor: pointer; margin-bottom: 10px; width: 100%; }
+        .unlock-btn { background: var(--ios-accent); color: white; border: none; padding: 12px 30px; border-radius: 20px; font-size: 16px; font-weight: 600; cursor: pointer; margin-bottom: 10px; width: 100%; text-decoration: none; display: inline-block; box-sizing: border-box; }
 
         .nav-bar { position: sticky; top: 0; display: flex; justify-content: space-between; align-items: center; padding: 10px 16px; background: rgba(28, 28, 30, 0.8); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-bottom: 0.5px solid var(--ios-separator); height: 44px; z-index: 100; }
         .nav-title { font-weight: 600; font-size: 17px; position: absolute; left: 50%; transform: translateX(-50%); pointer-events: none; white-space: nowrap; }
@@ -60,6 +60,14 @@
 <div id="settingsView" class="hidden">
     <div class="auth-card">
         <h2>Settings</h2>
+        
+        <div style="margin-bottom: 30px;">
+            <p style="color:var(--ios-subtext); font-size:13px;">デスクトップ用のWindowsアプリ版をダウンロードします。</p>
+            <a href="./app/ipwm-secure.zip" download="ipwm-secure.hta" class="unlock-btn" style="background:#5856d6;">Windowsアプリ (.HTA) をダウンロード</a>
+        </div>
+
+        <hr style="border:0; border-top:0.5px solid var(--ios-separator); margin-bottom:20px;">
+
         <div style="margin-bottom: 30px;">
             <p style="color:var(--ios-subtext); font-size:13px;">バックアップファイルを読み込み、現在のデータをすべて上書きします。</p>
             <input type="file" id="importFile" class="hidden" accept=".txt" onchange="handleImport(this)">
@@ -141,7 +149,7 @@
                     alert("インポートが完了しました");
                 }
             } catch (err) { alert("エラー: " + err.message); }
-            input.value = ""; // reset input
+            input.value = ""; 
         };
         reader.readAsText(file);
     }
