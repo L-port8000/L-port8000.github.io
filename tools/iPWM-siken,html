@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>iPWM Secure</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <style>
+        :root {
+            --ios-bg: #000000;
+            --ios-card: #1c1c1e;
+            --ios-accent: #0a84ff;
+            --ios-text: #ffffff;
+            --ios-subtext: #8e8e93;
+            --ios-separator: #38383a;
+            --ios-red: #ff453a;
+        }
+
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: var(--ios-bg); color: var(--ios-text); margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; overflow-x: hidden; }
+
+        #authOverlay, #settingsView {
+            position: fixed; inset: 0; background: var(--ios-bg); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px;
+        }
+
+        .auth-card { width: 100%; max-width: 300px; text-align: center; }
+        .pw-input { width: 100%; padding: 15px; background: var(--ios-card); border: 1px solid var(--ios-separator); border-radius: 12px; color: white; font-size: 18px; text-align: center; margin-bottom: 20px; box-sizing: border-box; outline: none; }
+        .unlock-btn { background: var(--ios-accent); color: white; border: none; padding: 12px 30px; border-radius: 20px; font-size: 16px; font-weight: 600; cursor: pointer; margin-bottom: 10px; width: 100%; }
+
+        .nav-bar { position: sticky; top: 0; display: flex; justify-content: space-between; align-items: center; padding: 10px 16px; background: rgba(28, 28, 30, 0.8); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-bottom: 0.5px solid var(--ios-separator); height: 44px; z-index: 100; }
+        .nav-title { font-weight: 600; font-size: 17px; position: absolute; left: 50%; transform: translateX(-50%); pointer-events: none; white-space: nowrap; }
+        .nav-btn { color: var(--ios-accent); background: none; border: none; font-size: 16px; cursor: pointer; min-width: 44px; padding: 5px 0; }
+        
+        .container { padding: 16px; max-width: 600px; margin: auto; }
+        .ios-list { background: var(--ios-card); border-radius: 10px; overflow: hidden; margin-bottom: 24px; animation: fadeIn 0.3s ease-out; }
+        .list-item { padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 0.5px solid var(--ios-separator); cursor: pointer; transition: background 0.2s; }
+        .list-item:active { background: #3a3a3c; }
+
+        .input-group { background: var(--ios-card); border-radius: 10px; padding: 0 16px; margin-bottom: 20px; }
+        label { color: var(--ios-subtext); font-size: 12px; display: block; padding-top: 10px; }
+        input, textarea { width: 100%; background: transparent; border: none; color: white; font-size: 17px; padding: 12px 0; border-bottom: 0.5px solid var(--ios-separator); outline: none; }
+        
+        .fab { position: fixed; bottom: 30px; right: 24px; width: 56px; height: 56px; background: var(--ios-accent); border-radius: 28px; border: none; color: white; font-size: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); cursor: pointer; z-index: 90; }
+        .hidden { display: none !important; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes shake { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(0.5deg); } 75% { transform: rotate(-0.5deg); } }
+        .edit-active { animation: shake 0.2s infinite; color: var(--ios-accent); border-left: 3px solid var(--ios-accent); }
+    </style>
+</head>
+<body>
+
+<div id="authOverlay">
+    <div class="auth-card">
+        <h2>iPWM Secure</h2>
+        <input type="password" id="masterPwInput" class="pw-input" placeholder="Password" autofocus>
+        <button class="unlock-btn" onclick="initApp()">Unlock</button>
+    </div>
+</div>
+
+<div id="settingsView" class="hidden">
+    <div class="auth-card">
+        <h2>Settings</h2>
+        <div style="margin-bottom: 30px;">
+            <p style="color:var(--ios-subtext); font-size:13px;">バックアップファイルを読み込み、現在のデータをすべて上書きします。</p>
+            <input type="file" id="importFile" class="hidden" accept=".txt" onchange="handleImport(this)">
+            <button class="unlock-btn" style="background:#32d74b;" onclick="document.getElementById('importFile').click()">Import from File</button>
+        </div>
+        
+        <hr style="border:0; border-top:0.5px solid var(--ios-separator); margin-bottom:20px;">
+        
+        <h2>Change Password</h2>
+        <input type="password" id="newPwInput" class="pw-input" placeholder="New Password">
+        <input type="password" id="confirmPwInput" class="pw-input" placeholder="Confirm">
+        <button class="unlock-btn" onclick="changeMasterPassword()">Update Password</button>
+        <button class="nav-btn" style="display:block; margin: 10px auto; color:var(--ios-red);" onclick="toggleSettings()">Close</button>
+    </div>
+</div>
+
+<div class="nav-bar">
+    <div style="min-width:60px;">
+        <button id="backBtn" class="nav-btn hidden" onclick="goBack()">＜</button>
+        <button id="setBtn" class="nav-btn" onclick="toggleSettings()">⚙️</button>
+    </div>
+    <div id="viewTitle" class="nav-title">Vault</div>
+    <div style="min-width:60px; text-align:right;">
+        <button id="editBtn" class="nav-btn" onclick="toggleEditMode()">編集</button>
+        <button id="exportBtn" class="nav-btn" onclick="exportToTxt()">出力</button>
+    </div>
+</div>
+
+<div class="container">
+    <div id="listView" class="ios-list"></div>
+    <div id="formView" class="hidden">
+        <div class="input-group" id="inputs"></div>
+        <button class="nav-btn" style="width:100%; font-size:18px; font-weight:600; margin-top:20px;" onclick="saveData()">完了</button>
+        <button id="deleteBtn" class="nav-btn" style="color:var(--ios-red); width:100%; margin-top:20px;" onclick="deleteItem()">削除</button>
+    </div>
+</div>
+
+<button id="addBtn" class="fab" onclick="showAddForm()">＋</button>
+
+<script>
+    let db = [];
+    let currentPath = []; 
+    let isEditMode = false;
+    let masterKey = "";
+
+    function initApp() {
+        const pw = document.getElementById('masterPwInput').value;
+        if (!pw) return;
+        masterKey = pw;
+        const encryptedData = localStorage.getItem('pwm_secure_v1');
+        if (encryptedData) {
+            try {
+                const bytes = CryptoJS.AES.decrypt(encryptedData, masterKey);
+                const decryptedText = bytes.toString(CryptoJS.enc.Utf8);
+                if (!decryptedText) throw new Error();
+                db = JSON.parse(decryptedText);
+            } catch (e) { alert("パスワードが違います"); return; }
+        }
+        document.getElementById('authOverlay').classList.add('hidden');
+        render();
+    }
+
+    function toggleSettings() { document.getElementById('settingsView').classList.toggle('hidden'); }
+
+    function handleImport(input) {
+        const file = input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const content = e.target.result;
+            try {
+                const newDb = parseBackupTxt(content);
+                if (newDb.length === 0) throw new Error("有効なデータが見つかりませんでした");
+                if (confirm("データを上書きしますか？現在のデータは消去されます。")) {
+                    db = newDb;
+                    saveDataToStorage();
+                    render();
+                    toggleSettings();
+                    alert("インポートが完了しました");
+                }
+            } catch (err) { alert("エラー: " + err.message); }
+            input.value = ""; // reset input
+        };
+        reader.readAsText(file);
+    }
+
+    function parseBackupTxt(txt) {
+        const lines = txt.split('\n');
+        const newDb = [];
+        let currentMail = null;
+        let currentAlias = null;
+
+        lines.forEach(line => {
+            const mailMatch = line.match(/\[Mail\]\s*(.+)/);
+            const aliasMatch = line.match(/Alias:\s*(.+)/);
+            const siteMatch = line.match(/Site:\s*(.+)/);
+            const idMatch = line.match(/ID:\s*(.+)/);
+            const pwMatch = line.match(/PW:\s*(.+)/);
+
+            if (mailMatch) {
+                currentMail = { email: mailMatch[1].trim(), aliases: [] };
+                newDb.push(currentMail);
+            } else if (aliasMatch && currentMail) {
+                currentAlias = { alias: aliasMatch[1].trim(), sites: [] };
+                currentMail.aliases.push(currentAlias);
+            } else if (siteMatch && currentAlias) {
+                currentAlias.sites.push({ siteName: siteMatch[1].trim(), user: "", pass: "", memo: "" });
+            } else if (idMatch && currentAlias) {
+                const lastSite = currentAlias.sites[currentAlias.sites.length - 1];
+                if (lastSite) lastSite.user = idMatch[1].trim();
+            } else if (pwMatch && currentAlias) {
+                const lastSite = currentAlias.sites[currentAlias.sites.length - 1];
+                if (lastSite) lastSite.pass = pwMatch[1].trim();
+            }
+        });
+        return newDb;
+    }
+
+    function changeMasterPassword() {
+        const newPw = document.getElementById('newPwInput').value;
+        if (newPw !== document.getElementById('confirmPwInput').value) return alert("一致しません");
+        masterKey = newPw;
+        saveDataToStorage();
+        alert("更新しました");
+        toggleSettings();
+    }
+
+    function render() {
+        const lv = document.getElementById('listView');
+        const fv = document.getElementById('formView');
+        lv.innerHTML = ''; fv.classList.add('hidden'); lv.classList.remove('hidden');
+        document.getElementById('addBtn').classList.remove('hidden');
+        const depth = currentPath.length;
+        let list = getListAtCurrentDepth();
+        document.getElementById('setBtn').classList.toggle('hidden', depth > 0);
+        document.getElementById('exportBtn').classList.toggle('hidden', depth > 0 || isEditMode);
+        document.getElementById('backBtn').classList.toggle('hidden', depth === 0);
+        document.getElementById('editBtn').classList.toggle('hidden', depth === 3);
+
+        if (depth === 0) document.getElementById('viewTitle').innerText = "メール";
+        else if (depth === 1) document.getElementById('viewTitle').innerText = "エイリアス";
+        else document.getElementById('viewTitle').innerText = "アカウント";
+
+        list.forEach((item, index) => {
+            const div = document.createElement('div');
+            div.className = 'list-item' + (isEditMode ? ' edit-active' : '');
+            let name = (depth === 0) ? item.email : (depth === 1) ? item.alias : item.siteName;
+            div.innerHTML = `<span style="flex-grow:1">${name || "名称なし"}</span><span>${isEditMode ? 'Edit' : '＞'}</span>`;
+            div.onclick = () => {
+                if (isEditMode) showForm(index);
+                else { currentPath.push(index); if (currentPath.length === 3) showDetail(); else render(); }
+            };
+            lv.appendChild(div);
+        });
+    }
+
+    function getListAtCurrentDepth() {
+        if (currentPath.length === 0) return db;
+        if (currentPath.length === 1) return db[currentPath[0]].aliases || (db[currentPath[0]].aliases = []);
+        if (currentPath.length === 2) return db[currentPath[0]].aliases[currentPath[1]].sites || (db[currentPath[0]].aliases[currentPath[1]].sites = []);
+        return [];
+    }
+
+    function showAddForm() { isEditMode = false; showForm(null); }
+
+    function showForm(editIndex) {
+        document.getElementById('listView').classList.add('hidden');
+        document.getElementById('addBtn').classList.add('hidden');
+        document.getElementById('formView').classList.remove('hidden');
+        const inputs = document.getElementById('inputs');
+        inputs.dataset.editIndex = editIndex;
+        let list = getListAtCurrentDepth();
+        let data = (editIndex !== null) ? list[editIndex] : {};
+        let label = (currentPath.length === 0) ? "メールアドレス" : (currentPath.length === 1) ? "エイリアス名" : "サイト名";
+        inputs.innerHTML = `<label>${label}</label><input id="f1" value="${data.email || data.alias || data.siteName || ''}" autofocus>`;
+        document.getElementById('deleteBtn').classList.toggle('hidden', editIndex === null);
+    }
+
+    function showDetail() {
+        document.getElementById('listView').classList.add('hidden');
+        document.getElementById('addBtn').classList.add('hidden');
+        document.getElementById('formView').classList.remove('hidden');
+        const s = db[currentPath[0]].aliases[currentPath[1]].sites[currentPath[2]];
+        document.getElementById('inputs').innerHTML = `
+            <label>ユーザー名</label><input id="u" value="${s.user||''}">
+            <label>パスワード</label><input id="p" value="${s.pass||''}">
+            <label>メモ</label><textarea id="m" rows="4" style="width:100%; background:none; color:white; border:none; font-size:17px; padding:10px 0; outline:none;">${s.memo||''}</textarea>
+        `;
+        document.getElementById('inputs').dataset.editIndex = "detail";
+        document.getElementById('deleteBtn').classList.add('hidden');
+    }
+
+    function saveData() {
+        const idx = document.getElementById('inputs').dataset.editIndex;
+        let list = getListAtCurrentDepth();
+        if (idx === "detail") {
+            const s = db[currentPath[0]].aliases[currentPath[1]].sites[currentPath[2]];
+            s.user = document.getElementById('u').value; s.pass = document.getElementById('p').value; s.memo = document.getElementById('m').value;
+        } else {
+            const v = document.getElementById('f1').value;
+            if (idx !== "null") {
+                let item = list[idx];
+                if (currentPath.length === 0) item.email = v; else if (currentPath.length === 1) item.alias = v; else item.siteName = v;
+            } else {
+                if (currentPath.length === 0) db.push({ email: v, aliases: [] });
+                else if (currentPath.length === 1) list.push({ alias: v, sites: [] });
+                else list.push({ siteName: v, user: "", pass: "", memo: "" });
+            }
+        }
+        saveDataToStorage();
+        isEditMode = false; render();
+    }
+
+    function deleteItem() {
+        if (!confirm("削除しますか？")) return;
+        getListAtCurrentDepth().splice(document.getElementById('inputs').dataset.editIndex, 1);
+        saveDataToStorage();
+        isEditMode = false; render();
+    }
+
+    function saveDataToStorage() {
+        const cipher = CryptoJS.AES.encrypt(JSON.stringify(db), masterKey).toString();
+        localStorage.setItem('pwm_secure_v1', cipher);
+    }
+
+    function goBack() { currentPath.pop(); isEditMode = false; render(); }
+    function toggleEditMode() { isEditMode = !isEditMode; render(); }
+
+    function exportToTxt() {
+        let txt = "--- iPWM Backup ---\n";
+        db.forEach(m => {
+            txt += `\n[Mail] ${m.email}`;
+            (m.aliases || []).forEach(a => {
+                txt += `\n  └ Alias: ${a.alias}`;
+                (a.sites || []).forEach(s => {
+                    txt += `\n    ├ Site: ${s.siteName}\n    │ ID: ${s.user}\n    │ PW: ${s.pass}`;
+                });
+            });
+        });
+        const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([txt])); a.download = 'pwm_backup.txt'; a.click();
+    }
+</script>
+</body>
+</html>
