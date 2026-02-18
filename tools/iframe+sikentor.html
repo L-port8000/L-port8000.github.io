@@ -3,13 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <title>o - Tor Multi-Gateway</title>
-<link rel="icon" href="../transparent.png">
+<link rel="icon" href="../icon.png">
 <style>
 :root { --bg-color: #f0f0f4; --toolbar-bg: #f9f9fb; --text-color: #000; --border-color: #d0d0d7; --accent: #0060df; --tor-color: #7d4698; }
 body.dark-mode { --bg-color: #1c1b22; --toolbar-bg: #2b2a33; --text-color: #fbfbfe; --border-color: #52525e; --accent: #00ddff; --tor-color: #9d66b8; }
 body { margin: 0; font-family: system-ui, sans-serif; background: var(--bg-color); color: var(--text-color); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
 
-/* 既存のスタイルを継承 */
 #progress-container { position: absolute; top: 0; left: 0; width: 100%; height: 2px; z-index: 1000; pointer-events: none; }
 #progress-bar { width: 0%; height: 100%; background: var(--accent); transition: width 0.3s ease; }
 #tabs-bar { display: flex; background: var(--bg-color); padding: 5px 5px 0 5px; gap: 4px; border-bottom: 1px solid var(--border-color); overflow-x: auto; min-height: 35px; scrollbar-width: none; }
@@ -74,10 +73,9 @@ let settings = {
     viewMode: "iframe",
     activeProxyId: null,
     torEnabled: false,
-    torGateway: ".tor.lc" // 初期ゲートウェイ
+    torGateway: ".tor.lc"
 };
 
-// Onionドメインを変換する関数 (動的なゲートウェイ対応)
 function normalizeTorUrl(url) {
     if (settings.torEnabled && url.includes(".onion")) {
         return url.replace(".onion", settings.torGateway);
@@ -85,7 +83,6 @@ function normalizeTorUrl(url) {
     return url;
 }
 
-/* --- ヘルパー関数群 --- */
 function saveState() {
     localStorage.setItem('browser-settings', JSON.stringify(settings));
     localStorage.setItem('browser-sessions', JSON.stringify(tabs.map(t => ({id: t.id, url: t.url, title: t.title, history: t.history, historyIndex: t.historyIndex}))));
@@ -110,7 +107,6 @@ function getEffectiveUrl(url) {
     return !settings.activeProxyId ? target : PROXIES[settings.activeProxyId].url + target;
 }
 
-/* --- タブ管理 --- */
 function createTabObject(url, id = Date.now(), title = "読み込み中...", history = null, hIndex = 0) {
     const tab = { id, url, title, history: history || [url], historyIndex: hIndex, element: null };
     updateTabElement(tab);
@@ -175,7 +171,6 @@ function renderTabsUI() {
     const add = document.createElement('button'); add.textContent = "+"; add.style="height:28px; margin-top:5px;"; add.onclick = () => createNewTab(); bar.appendChild(add);
 }
 
-/* --- ナビゲーション --- */
 function go() {
     let url = document.getElementById('url').value;
     if (url !== "settings://" && !url.startsWith('http')) url = "https://" + url;
@@ -249,7 +244,6 @@ function renderSettingsInto(container) {
     });
 }
 
-/* --- 初期化・起動 --- */
 window.toggleTor = () => {
     settings.torEnabled = !settings.torEnabled;
     saveState();
