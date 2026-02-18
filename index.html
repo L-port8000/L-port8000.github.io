@@ -138,13 +138,50 @@ footer {
 }
 
 .ad-label { font-size: 10px; color: #5f6368; text-align: right; padding: 5px 8px 0 0; }
+
 .pc-ad-sidebar {
-  position: fixed; top: 80px; left: calc(50% + 500px); 
-  width: 280px; z-index: 100; display: none; flex-direction: column; gap: 20px;
+  position: fixed; 
+  top: 80px; 
+  left: calc(50% + 490px); 
+  width: clamp(250px, 20vw, 320px); 
+  z-index: 100; 
+  display: none; 
+  flex-direction: column; 
+  gap: 15px;
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
+  padding-right: 10px;
 }
+
 .ad-unit {
-  background: #fff; border: 1px solid #dadce0; border-radius: 8px;
-  overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.15); cursor: pointer; transition: transform 0.2s;
+  background: #fff; 
+  border: 1px solid #dadce0; 
+  border-radius: 8px;
+  overflow: hidden; 
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15); 
+  cursor: pointer; 
+  transition: transform 0.2s, box-shadow 0.2s;
+  flex-shrink: 0;
+}
+
+.pc-ad-title { 
+  font-size: clamp(13px, 1.2vw, 15px);
+  color: #1a0dab; 
+  font-weight: 500; 
+  margin: 0 0 10px 0; 
+  line-height: 1.4; 
+}
+
+@media (min-width: 1350px) { 
+  .pc-ad-sidebar { display: flex; } 
+}
+
+.pc-ad-sidebar::-webkit-scrollbar {
+  width: 5px;
+}
+.pc-ad-sidebar::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 10px;
 }
 .ad-unit:hover { transform: scale(1.02); }
 .pc-ad-content { padding: 15px; display: flex; flex-direction: column; align-items: center; text-align: center; }
