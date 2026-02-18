@@ -9,118 +9,66 @@
 <style>
 :root { --bg: #0f172a; --card: #111827; --accent: #38bdf8; --text: #e5e7eb; --sub: #9ca3af; --google-blue: #1a73e8; }
 * { box-sizing: border-box; }
-body { margin: 0; font-family: "Hiragino Kaku Gothic ProN", "Meiryo", system-ui, sans-serif; background: linear-gradient(180deg, #f8fafc, #eef2ff); color: #ffffff; }
-header { padding: 80px 20px 60px; text-align: center; }
-.profile-image { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid var(--accent); box-shadow: 0 0 30px rgba(56,189,248,.5); }
-header h1 { margin: 20px 0 10px; font-size: 2.2rem; color: #111111; }
-header p { color: #888888; }
-main { max-width: 960px; margin: 0 auto 60px; padding: 0 20px; }
-section { background: rgba(17,24,39,.9); border-radius: 16px; padding: 30px; margin-bottom: 30px; box-shadow: 0 10px 40px rgba(0,0,0,.4); }
-h2 { margin-top: 0; font-size: 1.4rem; border-left: 5px solid var(--accent); padding-left: 12px; }
-p, li { color: #ffffff; }
-ul { padding-left: 20px; }
+body { margin: 0; font-family: "Hiragino Kaku Gothic ProN", "Meiryo", system-ui, sans-serif; background: linear-gradient(180deg, #f8fafc, #eef2ff); color: #ffffff; font-size: 14px; }
+header { padding: 60px 20px 40px; text-align: center; }
+.profile-image { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid var(--accent); box-shadow: 0 0 20px rgba(56,189,248,.4); }
+header h1 { margin: 15px 0 8px; font-size: 1.8rem; color: #111111; }
+header p { color: #888888; font-size: 0.9rem; }
 
-.ad-label { font-size: 10px; color: #5f6368; text-align: right; padding: 5px 8px 0 0; }
+main { max-width: 800px; margin: 0 auto 60px; padding: 0 20px; }
+section { background: rgba(17,24,39,.9); border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 8px 30px rgba(0,0,0,.3); }
+h2 { margin-top: 0; font-size: 1.2rem; border-left: 4px solid var(--accent); padding-left: 10px; margin-bottom: 15px; }
+p, li { color: #ffffff; line-height: 1.6; font-size: 0.95rem; }
+ul { padding-left: 18px; }
+
+.ad-label { font-size: 12px; color: #5f6368; text-align: right; padding: 4px 6px 0 0; }
 .pc-ad-sidebar {
   position: fixed; 
-  top: 80px; 
-  left: calc(50% + 490px); 
-  width: clamp(250px, 20vw, 320px); 
+  top: 100px; 
+  left: calc(50% + 420px); 
+  width: 240px;
   z-index: 100; 
   display: none; 
   flex-direction: column; 
-  gap: 15px;
+  gap: 12px;
   max-height: calc(100vh - 120px);
   overflow-y: auto;
-  padding-right: 10px;
 }
+.ad-unit { background: #ffffff !important; border: 1px solid #dadce0; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.1); cursor: pointer; transition: 0.2s; width: 100%; }
+.pc-ad-content { padding: 12px 10px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+.pc-ad-favicon { width: 40px; height: 40px; margin-bottom: 10px; }
+.pc-ad-title { font-size: 12px; color: #1a0dab; font-weight: 500; margin-bottom: 8px; line-height: 1.3; }
+.pc-ad-button { background: var(--google-blue); color: #fff; padding: 5px 15px; border-radius: 15px; font-size: 11px; font-weight: bold; }
 
-.ad-unit {
-  background: #ffffff !important;
-  border: 1px solid #dadce0; 
-  border-radius: 8px;
-  overflow: hidden; 
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15); 
-  cursor: pointer; 
-  transition: transform 0.2s, box-shadow 0.2s;
-  flex-shrink: 0;
-  margin-bottom: 5px;
-  width: 100%;
-}
-
-.ad-unit:hover {
-  transform: scale(1.02);
-  box-shadow: 0 6px 16px rgba(0,0,0,0.2);
-}
-
-.pc-ad-title {
-  color: #1a0dab !important;
-  text-decoration: none;
-}
-
-.pc-ad-title { 
-  font-size: clamp(13px, 1.1vw, 15px); 
-  color: #1a0dab; 
-  font-weight: 500; 
-  margin: 0 0 10px 0; 
-  line-height: 1.4; 
-}
-
-.pc-ad-sidebar::-webkit-scrollbar {
-  width: 5px;
-}
-.pc-ad-sidebar::-webkit-scrollbar-thumb {
-  background: rgba(0,0,0,0.2);
-  border-radius: 10px;
-}
-
-@media (min-width: 1350px) { 
-  .pc-ad-sidebar { display: flex; } 
-}
-.ad-unit:hover { transform: scale(1.02); }
-.pc-ad-content { padding: 15px; display: flex; flex-direction: column; align-items: center; text-align: center; }
-.pc-ad-favicon { width: 48px; height: 48px; margin-bottom: 12px; }
-.pc-ad-title { font-size: clamp(13px, 1.2vw, 15px); color: #1a0dab; font-weight: 500; margin: 0 0 10px 0; line-height: 1.4; }
-.pc-ad-button { background: var(--google-blue); color: #fff; padding: 8px 24px; border-radius: 20px; font-size: 13px; font-weight: bold; }
-
+/* スマホ広告 */
 .mobile-ad-anchor { position: fixed; bottom: 0; left: 0; width: 100%; background: #fff; box-shadow: 0 -2px 10px rgba(0,0,0,0.2); z-index: 9999; display: none; }
 .mobile-ad-anchor.is-collapsed { transform: translateY(calc(100% - 24px)); }
-.ad-handle { height: 24px; background: #f1f3f4; display: flex; justify-content: center; align-items: center; cursor: pointer; border-top: 1px solid #dadce0; }
-.triangle { width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-top: 6px solid #5f6368; transition: transform 0.3s; }
-.is-collapsed .triangle { transform: rotate(180deg); }
+.ad-handle { height: 24px; background: #f1f3f4; display: flex; justify-content: center; align-items: center; border-top: 1px solid #dadce0; }
 .mobile-ad-body { display: flex; align-items: center; padding: 8px 12px; height: 60px; text-decoration: none; }
-.mobile-ad-icon { width: 40px; height: 40px; margin-right: 12px; }
-.mobile-ad-text { flex-grow: 1; font-size: 13px; font-weight: bold; color: var(--google-blue); line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.mobile-ad-btn { background: var(--google-blue); color: #fff; padding: 6px 12px; border-radius: 15px; font-size: 11px; margin-left: 8px; font-weight: bold; }
+.mobile-ad-icon { width: 32px; height: 32px; margin-right: 12px; }
+.mobile-ad-text { flex-grow: 1; font-size: 12px; font-weight: bold; color: var(--google-blue); }
 
-.uptime { margin-top: 8px; margin-bottom: 16px; }
-.uptime-label { font-size: 0.85rem; margin-bottom: 4px; }
-.uptime-bar { width: 100%; height: 10px; background: #020617; border-radius: 999px; overflow: hidden; border: 1px solid #1f2937; }
-.uptime-fill { height: 100%; border-radius: 999px; transition: width 0.5s ease; }
-.uptime-good .uptime-fill { background: linear-gradient(90deg, #22c55e, #38bdf8); }
-.uptime-warn .uptime-fill { background: linear-gradient(90deg, #facc15, #f59e0b); }
-.uptime-bad .uptime-fill { background: linear-gradient(90deg, #ef4444, #dc2626); }
-.uptime-good .uptime-label { color: #22c55e; }
-.uptime-warn .uptime-label { color: #facc15; }
-.uptime-bad  .uptime-label { color: #ef4444; }
-.accounts a { display: flex; align-items: center; margin-top: 12px; padding: 14px 18px; background: linear-gradient(135deg, #1e293b, #020617); border-radius: 12px; color: var(--text); text-decoration: none; border: 1px solid #1f2937; transition: .3s; }
-.accounts a:hover { transform: translateY(-2px); border-color: var(--accent); box-shadow: 0 0 20px rgba(56,189,248,.3); }
-footer { text-align: center; padding: 30px; color: var(--sub); font-size: 13px; }
+footer { text-align: center; padding: 30px; color: var(--sub); font-size: 12px; }
 
-@media (min-width: 1350px) { .pc-ad-sidebar { display: flex; } }
-@media (max-width: 1349px) { .mobile-ad-anchor { display: block; } }
+@media (min-width: 1250px) { .pc-ad-sidebar { display: flex; } }
+@media (max-width: 1249px) { .mobile-ad-anchor { display: block; } }
 @media (max-width: 768px) {
   header { padding: 35px 15px 20px; }
-  .profile-image { width: 85px; height: 85px; }
-  header h1 { font-size: 1.5rem; }
-  main { padding: 0 12px; }
-  section { padding: 18px; }
+  header h1 { font-size: 1.4rem; }
+  section { padding: 15px; }
 }
+
+/* Uptime・SNS */
+.uptime { margin-top: 5px; margin-bottom: 12px; }
+.uptime-label { font-size: 0.75rem; color: #22c55e; }
+.uptime-bar { width: 100%; height: 8px; background: #020617; border-radius: 999px; border: 1px solid #1f2937; overflow: hidden; }
+.uptime-fill { height: 100%; background: linear-gradient(90deg, #22c55e, #38bdf8); }
+.accounts a { display: flex; align-items: center; margin-top: 8px; padding: 10px 15px; background: linear-gradient(135deg, #1e293b, #020617); border-radius: 10px; color: var(--text); text-decoration: none; border: 1px solid #1f2937; transition: .3s; font-size: 0.9rem; }
+.accounts a:hover { transform: translateY(-1px); border-color: var(--accent); }
 </style>
 </head>
 
 <body>
-
 <header>
   <img src="./transparent.png" alt="プロフィール画像" class="profile-image">
   <h1>一樹（いつき）</h1>
@@ -130,139 +78,63 @@ footer { text-align: center; padding: 30px; color: var(--sub); font-size: 13px; 
 <main>
 <section>
   <h2>プロフィール</h2>
-  <p>
-    Xでゲームのことや日常ツイート、技術的なことを調べたり勉強しています。<br>
-    趣味：ゲーム、プログラミング、無料VPN・プロキシ探し（CGI Proxy含む）<br>
-    活動場所：X / Bluesky / Discord / note / YouTube / Reddit <br>
-    XアカウントL_port8000乗っ取りされてましたが、復元できました！
-    ご迷惑をおかけしました！
-    Xさん、対応ありがとうございます
-  </p>
+  <p>Xでゲームのことや日常ツイート、技術的なことを勉強中。趣味はプログラミングや便利なネットツールの探索です。L_port8000復元しました！</p>
 </section>
 
 <section class="accounts">
   <h2>目次</h2>
-  <li>最新blog</li>
-  <a href="https://l-ituki8000.f5.si/blog/pages/2026-1-23-1.html" target="_blank">
-    L_port8000 乗っ取り事件
-  </a>
-  <li>tools - 適当に自分が欲しかったtoolを公開しています、お気軽にどうぞ</li>
-  <a href="https://L-port8000.github.io/tools/" target="_blank">Open</a>
+  <a href="https://l-ituki8000.f5.si/blog/pages/2026-1-23-1.html" target="_blank">L_port8000 乗っ取り事件（Blog）</a>
+  <a href="https://L-port8000.github.io/tools/" target="_blank">公開ツール一覧</a>
 </section>
 
 <section>
-  <h2>Xアカウント一覧</h2>
-  <ul>
-    <li>
-      <strong>L_port8000：</strong> 現本垢、復元されました！！
-      <div class="uptime uptime-good">
-        <div class="uptime-label">Uptime: 75%</div>
-        <div class="uptime-bar"><div class="uptime-fill" style="width:75%"></div></div>
-      </div>
-    </li>
-    <li>
-      <strong>L_port9999：</strong> 凍結済み、復元見込みなし
-      <div class="uptime uptime-bad">
-        <div class="uptime-label">Uptime: 0%</div>
-        <div class="uptime-bar"><div class="uptime-fill" style="width:0%"></div></div>
-      </div>
-    </li>
-    <li>
-      <strong>L_port443：</strong> 凍結済み、復元見込みなし
-      <div class="uptime uptime-bad">
-        <div class="uptime-label">Uptime: 0%</div>
-        <div class="uptime-bar"><div class="uptime-fill" style="width:0%"></div></div>
-      </div>
-    </li>
-    <li>
-      <strong>L_port8080：</strong> 元本垢現サブ（時々返信規制）
-      <div class="uptime uptime-warn">
-        <div class="uptime-label">Uptime: 49%</div>
-        <div class="uptime-bar"><div class="uptime-fill" style="width:49%"></div></div>
-      </div>
-    </li>
-    <li>
-      <strong>L_port1194：</strong> 現予備避難垢、特に異常なし
-      <div class="uptime uptime-bad">
-        <div class="uptime-label">Uptime: 15%</div>
-        <div class="uptime-bar"><div class="uptime-fill" style="width:15%"></div></div>
-      </div>
-    </li>
-  </ul>
+  <h2>X Status</h2>
+  <div class="uptime">
+    <div class="uptime-label">L_port8000: Online (75%)</div>
+    <div class="uptime-bar"><div class="uptime-fill" style="width:75%"></div></div>
+  </div>
 </section>
 
 <section class="accounts">
   <h2>SNS</h2>
-  <a href="https://x.com/L_port8000" target="_blank">X: @L_port8000</a>
-  <a href="https://x.com/L_port8080" target="_blank">X: @L_port8080</a>
-  <a href="https://x.com/L_port1194" target="_blank">X: @L_port1194</a>
-  <a href="https://discord.com/users/1433399422859087883" target="_blank">Discord: @L_port8000</a>
-  <a href="https://bsky.app/profile/l-port8000.bsky.social" target="_blank">Bluesky</a>
-  <a href="https://note.com/L_port8000" target="_blank">note</a>
-  <a href="https://youtube.com/L_port8000" target="_blank">YouTube</a>
-  <a href="https://github.com/L-port8000" target="_blank">GitHub</a>
-  <a href="https://instagram.com/l_port8000" target="_blank">Instagram</a>
-  <a href="https://writening.net/page?6nvSxT" target="_blank">アカウント情報</a>
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+    <a href="https://x.com/L_port8000" target="_blank">X</a>
+    <a href="https://discord.com/users/1433399422859087883" target="_blank">Discord</a>
+    <a href="https://github.com/L-port8000" target="_blank">GitHub</a>
+    <a href="https://bsky.app/profile/l-port8000.bsky.social" target="_blank">Bluesky</a>
+  </div>
 </section>
 </main>
 
 <footer>© 2026 Regia_:0000</footer>
 
 <div class="pc-ad-sidebar" id="pcAdSidebar"></div>
-
 <div id="mobileAd" class="mobile-ad-anchor">
   <div class="ad-handle" onclick="toggleMobileAd()"><div class="triangle"></div></div>
   <a href="#" id="mobileAdLink" class="mobile-ad-body" target="_blank">
     <img src="" id="mobileAdIcon" class="mobile-ad-icon">
     <div id="mobileAdText" class="mobile-ad-text"></div>
-    <div class="mobile-ad-btn">見る</div>
   </a>
 </div>
+
 <script>
-function toggleMobileAd() {
-  const ad = document.getElementById('mobileAd');
-  if(ad) ad.classList.toggle('is-collapsed');
-}
-
+function toggleMobileAd() { document.getElementById('mobileAd').classList.toggle('is-collapsed'); }
 function renderAds() {
-  if (typeof adData === 'undefined') {
-    console.error("adDataが見つかりません。PR.jsの中身を確認してください。");
-    return;
-  }
-
-  const shuffled = [...adData].sort(() => 0.5 - Math.random());
-
+  if (typeof adData === 'undefined') return;
   const pcContainer = document.getElementById('pcAdSidebar');
   if (pcContainer) {
-    const count = Math.min(shuffled.length, Math.floor(Math.random() * 2) + 2); 
-    const pcAds = shuffled.slice(0, count);
-
-    pcContainer.innerHTML = ''; 
-    pcAds.forEach(ad => {
-      pcContainer.innerHTML += `
-        <div class="ad-unit" onclick="window.open('${ad.url}', '_blank')">
-          <div class="ad-label">スポンサー：勝手に.PR</div>
-          <div class="pc-ad-content">
-            <img src="${ad.favicon}" class="pc-ad-favicon">
-            <div class="pc-ad-title">${ad.title}</div>
-            <div class="pc-ad-button">詳細を見る</div>
-          </div>
-        </div>
-      `;
+    adData.slice(0, 2).forEach(ad => {
+      pcContainer.innerHTML += `<div class="ad-unit" onclick="window.open('${ad.url}', '_blank')"><div class="ad-label">PR</div><div class="pc-ad-content"><img src="${ad.favicon}" class="pc-ad-favicon"><div class="pc-ad-title">${ad.title}</div><div class="pc-ad-button">詳細</div></div></div>`;
     });
   }
-
   const mobileLink = document.getElementById('mobileAdLink');
-  if (mobileLink && shuffled.length > 0) {
-    const mobileAd = shuffled[0];
-    mobileLink.href = mobileAd.url;
-    document.getElementById('mobileAdText').innerText = mobileAd.title;
-    document.getElementById('mobileAdIcon').src = mobileAd.favicon;
+  if (mobileLink && adData[0]) {
+    mobileLink.href = adData[0].url;
+    document.getElementById('mobileAdText').innerText = adData[0].title;
+    document.getElementById('mobileAdIcon').src = adData[0].favicon;
   }
 }
-
 window.addEventListener('load', renderAds);
 </script>
-
 </body>
 </html>
