@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
     <title>Firefox Mobile Multi-Gateway</title>
     <style>
         :root {
@@ -37,11 +40,9 @@
             overflow: hidden;
         }
 
-        /* --- Progress Bar --- */
         #progress-container { position: absolute; top: 0; left: 0; width: 100%; height: 3px; z-index: 1000; pointer-events: none; }
         #progress-bar { width: 0%; height: 100%; background: var(--accent); transition: width 0.3s ease; }
 
-        /* --- Main View --- */
         #main-container {
             flex: 1;
             position: relative;
@@ -55,7 +56,6 @@
         }
         .page-element.active { display: block; }
 
-        /* --- Bookmarks (Above Toolbar) --- */
         #bookmark-bar {
             background: var(--toolbar-bg);
             border-top: 1px solid var(--border-color);
@@ -76,7 +76,6 @@
         }
         .bm-item img { width: 14px; height: 14px; border-radius: 2px; }
 
-        /* --- Bottom Toolbar (Firefox Mobile Style) --- */
         #toolbar {
             background: var(--toolbar-bg);
             border-top: 1px solid var(--border-color);
@@ -94,7 +93,7 @@
             border-radius: 24px;
             display: flex;
             align-items: center;
-            padding: 0px 2px;
+            padding: 8px 16px;
         }
 
         #url {
@@ -102,7 +101,7 @@
             border: none;
             background: transparent;
             color: var(--text-color);
-            font-size: 14px;
+            font-size: 15px;
             outline: none;
             width: 100%;
         }
@@ -114,7 +113,6 @@
         }
         .icon-btn:disabled { opacity: 0.3; }
 
-        /* Tab Count Icon */
         #tab-count-btn {
             border: 2px solid var(--text-color);
             border-radius: 6px;
@@ -122,7 +120,6 @@
             font-size: 13px; font-weight: bold;
         }
 
-        /* --- Menu Overlay --- */
         #menu-overlay {
             position: fixed;
             bottom: calc(70px + var(--safe-area-bottom));
@@ -145,7 +142,6 @@
         .menu-item:hover { background: rgba(128,128,128,0.1); }
         .star-active { color: #f1c40f; }
 
-        /* --- Tab Switcher Overlay --- */
         #tab-switcher {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: var(--bg-color); z-index: 1000;
@@ -172,10 +168,9 @@
         }
         .tab-card-header img { width: 14px; height: 14px; }
         .tab-card-header span { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .tab-close-x { font-size: 20px; padding: 0 4px; color: var(--text-color); }
-        .tab-card-body { flex: 1; background: rgba(128,128,128,0.05); display: flex; align-items: center; justify-content: center; color: #888; font-size: 10px; }
+        .tab-close-x { font-size: 20px; padding: 0 4px; color: var(--text-color); cursor: pointer;}
+        .tab-card-body { flex: 1; background: rgba(128,128,128,0.05); display: flex; align-items: center; justify-content: center; color: #888; font-size: 10px; cursor: pointer; }
 
-        /* --- Settings Page (Mobile Optimized) --- */
         .settings-page { padding: 20px; overflow-y: auto; background: var(--bg-color) !important; color: var(--text-color); }
         .card { background: var(--toolbar-bg); padding: 16px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 16px; }
         .card h3 { margin-top: 0; margin-bottom: 12px; font-size: 16px; color: var(--accent); border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
@@ -184,14 +179,21 @@
         .status-connected { color: #28a745; font-weight: bold; font-size: 12px; margin-right: 8px; }
         .status-tor { color: var(--tor-color); font-weight: bold; font-size: 12px; margin-right: 8px; }
         select, input[type="text"] { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-color); box-sizing: border-box; font-size: 14px; margin-bottom: 8px; }
-        button.btn { padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border-color); background: rgba(128,128,128,0.1); color: inherit; font-size: 14px; }
+        button.btn { padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border-color); background: rgba(128,128,128,0.1); color: inherit; font-size: 14px; cursor: pointer; }
         button.btn-primary { background: var(--accent); color: white; border: none; width: 100%; padding: 12px; font-weight: bold; border-radius: 8px; margin-top: 10px; }
         .preset-group { display: flex; flex-wrap: wrap; gap: 8px; }
 
-        /* Fullscreen Close Button */
-        #fs-close-btn { position: fixed; top: 15px; right: 15px; z-index: 9999; width: 40px; height: 40px; background: rgba(0,0,0,0.5); color: white; border: none; border-radius: 50%; display: none; font-size: 24px; line-height: 1; justify-content: center; align-items: center; }
-        :fullscreen #bookmark-bar, :fullscreen #toolbar { display: none !important; }
-        :fullscreen #fs-close-btn { display: flex; }
+        /* --- Fullscreen Styles (Safari対応) --- */
+        #fs-close-btn { position: fixed; top: 15px; right: 15px; z-index: 9999; width: 40px; height: 40px; background: rgba(0,0,0,0.5); color: white; border: none; border-radius: 50%; display: none; font-size: 24px; line-height: 1; justify-content: center; align-items: center; cursor: pointer;}
+        
+        /* 通常のフルスクリーン API と、iOS用の疑似フルスクリーンクラスの両方に対応 */
+        :fullscreen #bookmark-bar, :fullscreen #toolbar,
+        :-webkit-full-screen #bookmark-bar, :-webkit-full-screen #toolbar,
+        .pseudo-fullscreen #bookmark-bar, .pseudo-fullscreen #toolbar { display: none !important; }
+        
+        :fullscreen #fs-close-btn,
+        :-webkit-full-screen #fs-close-btn,
+        .pseudo-fullscreen #fs-close-btn { display: flex; }
 
     </style>
 </head>
@@ -249,7 +251,6 @@
 </div>
 
 <script>
-// --- State & Settings ---
 let tabs = [];
 let activeTabId = null;
 let settings = {
@@ -297,8 +298,6 @@ const PRESETS = [
    { name: "StartPage", url: "https://startpagel6srwcjlue4zgq3zevrujfaow726kjytqbbjyrswwmjzcqd.onion" } 
 ];
 const SANDBOX_SETTINGS = "allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-presentation allow-same-origin allow-scripts allow-storage-access-by-user-activation";
-
-// --- Core Logic ---
 
 function init() {
     const saved = localStorage.getItem('browser-settings');
@@ -423,7 +422,6 @@ function closeTab(id, e) {
     saveState();
 }
 
-// --- Navigation & UI ---
 
 function go() {
     let url = document.getElementById('url').value;
@@ -454,7 +452,6 @@ function updateNavButtons() {
     document.getElementById('btn-back').disabled = (t.historyIndex <= 0); 
 }
 
-// --- Bookmarks ---
 function renderBookmarkBar() {
     const bar = document.getElementById('bookmark-bar'); 
     bar.innerHTML = '';
@@ -491,7 +488,6 @@ function toggleBookmark() {
     updateStarUI(); renderBookmarkBar(); saveState(); 
 }
 
-// --- Overlays (Menu & Tab Switcher) ---
 function toggleMenu() {
     const menu = document.getElementById('menu-overlay');
     menu.style.display = (menu.style.display === 'flex') ? 'none' : 'flex';
@@ -531,17 +527,37 @@ function toggleDarkMode() {
     if (activeEl) renderSettingsInto(activeEl);
 }
 
-// --- Fullscreen ---
 function toggleFullscreen() {
-    if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(err => console.error(err));
+    const docEl = document.documentElement;
+    const requestFS = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.mozRequestFullScreen || docEl.msRequestFullscreen;
+
+    if (requestFS) {
+        if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+            requestFS.call(docEl).catch(err => {
+                console.log("フルスクリーンAPIがブロックされました。疑似フルスクリーンに切り替えます:", err);
+                fallbackPseudoFullscreen();
+            });
+        } else {
+            exitFullscreen();
+        }
     } else {
-        exitFullscreen();
+        fallbackPseudoFullscreen();
     }
 }
-function exitFullscreen() { if (document.exitFullscreen) document.exitFullscreen(); }
 
-// --- Settings Page Rendering ---
+function fallbackPseudoFullscreen() {
+    document.body.classList.add('pseudo-fullscreen');
+}
+
+function exitFullscreen() {
+    const exitFS = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
+    
+    if (exitFS && (document.fullscreenElement || document.webkitFullscreenElement)) {
+        exitFS.call(document);
+    }
+    document.body.classList.remove('pseudo-fullscreen');
+}
+
 function renderSettingsInto(container) {
     let proxyHtml = "";
     for (const id in PROXIES) {
@@ -620,7 +636,6 @@ window.toggleProxy = (id) => {
     renderSettingsInto(document.querySelector('.settings-page'));
 };
 
-// Initialize
 init();
 </script>
 </body>
