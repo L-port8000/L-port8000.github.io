@@ -2,7 +2,7 @@
 <head>
 <meta charset="UTF-8">
 <title>o - Tor Multi-Gateway</title>
-<link rel="icon" href="../transparent.png">
+<link rel="icon" href="../icon.png">
 <style>
 :root { --bg-color: #f0f0f4; --toolbar-bg: #f9f9fb; --text-color: #000; --border-color: #d0d0d7; --accent: #0060df; --tor-color: #7d4698; }
 body.dark-mode { --bg-color: #1c1b22; --toolbar-bg: #2b2a33; --text-color: #fbfbfe; --border-color: #52525e; --accent: #00ddff; --tor-color: #9d66b8; }
@@ -173,7 +173,7 @@ function updateTabElement(tab) {
         el.onload = () => {
             setProgress(100);
             try { tab.title = el.contentDocument.title || new URL(tab.url).hostname; } 
-            catch(e) { tab.title = tab.url.replace(/https?:///,'').split('/')[0]; }
+            catch(e) { tab.title = tab.url.replace(/https?:\/\//,'').split('/')[0]; }
             renderTabsUI(); updateStarUI();
         };
     }
@@ -242,7 +242,7 @@ function renderSettingsInto(container) {
               </div>`).join('')}
         </div>
 
-        <div class="card"><h3>???? Tor接続設定</h3>
+        <div class="card"><h3>🧅 Tor接続設定</h3>
             <div class="proxy-item">
                 <div><strong>Tor Gateway モード</strong><br>
                     <select onchange="settings.torGateway=this.value; saveState();" style="margin-top:5px;">
@@ -263,7 +263,7 @@ function renderSettingsInto(container) {
             <div class="preset-group" id="plist"></div>
         </div>
 
-        <div class="card"><h3>???? 表示設定</h3>
+        <div class="card"><h3>🌓 表示設定</h3>
             <button onclick="settings.darkMode=!settings.darkMode; document.body.classList.toggle('dark-mode'); saveState(); renderSettingsInto(document.querySelector('.settings-page'));">ダークモード切替</button>
             <select onchange="settings.viewMode=this.value; saveState();" style="margin-left:10px;">
                 <option value="iframe" ${settings.viewMode==='iframe'?'selected':''}>iframe</option>
@@ -272,7 +272,7 @@ function renderSettingsInto(container) {
             </select>
         </div>
 
-        <div class="card"><h3>???? プロキシ設定</h3>${proxyHtml}</div>
+        <div class="card"><h3>🌐 プロキシ設定</h3>${proxyHtml}</div>
     `;
 
     PRESETS.forEach(p => {
