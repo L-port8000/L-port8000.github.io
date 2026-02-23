@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Firefox Mobile Multi-Gateway</title>
+    <style>
+        :root {
+            --bg-color: #f9f9fb;
+            --toolbar-bg: #ffffff;
+            --text-color: #15141a;
+            --border-color: #cfcfd8;
+            --accent: #0060df;
+            --tor-color: #7d4698;
+            --tab-card-bg: #ffffff;
+            --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+        }
+
+        body.dark-mode {
+            --bg-color: #1c1b22;
+            --toolbar-bg: #2b2a33;
+            --text-color: #fbfbfe;
+            --border-color: #52525e;
+            --accent: #00ddff;
+            --tor-color: #9d66b8;
+            --tab-card-bg: #42414d;
+        }
+
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* --- Progress Bar --- */
+        #progress-container { position: absolute; top: 0; left: 0; width: 100%; height: 3px; z-index: 1000; pointer-events: none; }
+        #progress-bar { width: 0%; height: 100%; background: var(--accent); transition: width 0.3s ease; }
+
+        /* --- Main View --- */
+        #main-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .page-element {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            border: none; display: none; background: white;
+        }
+        .page-element.active { display: block; }
+
+        /* --- Bookmarks (Above Toolbar) --- */
+        #bookmark-bar {
+            background: var(--toolbar-bg);
+            border-top: 1px solid var(--border-color);
+            padding: 8px 12px;
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            white-space: nowrap;
+            scrollbar-width: none;
+            z-index: 90;
+        }
+        #bookmark-bar::-webkit-scrollbar { display: none; }
+        .bm-item {
+            display: flex; align-items: center; gap: 6px;
+            background: rgba(128,128,128,0.1);
+            padding: 6px 12px; border-radius: 16px;
+            font-size: 13px; cursor: pointer;
+        }
+        .bm-item img { width: 14px; height: 14px; border-radius: 2px; }
+
+        /* --- Bottom Toolbar (Firefox Mobile Style) --- */
+        #toolbar {
+            background: var(--toolbar-bg);
+            border-top: 1px solid var(--border-color);
+            padding: 8px 12px calc(8px + var(--safe-area-bottom));
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 100;
+        }
+
+        #url-container {
+            flex: 1;
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            padding: 0px 2px;
+        }
+
+        #url {
+            flex: 1;
+            border: none;
+            background: transparent;
+            color: var(--text-color);
+            font-size: 14px;
+            outline: none;
+            width: 100%;
+        }
+
+        .icon-btn {
+            background: transparent; border: none; color: var(--text-color);
+            font-size: 20px; cursor: pointer; padding: 4px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .icon-btn:disabled { opacity: 0.3; }
+
+        /* Tab Count Icon */
+        #tab-count-btn {
+            border: 2px solid var(--text-color);
+            border-radius: 6px;
+            width: 24px; height: 24px;
+            font-size: 13px; font-weight: bold;
+        }
+
+        /* --- Menu Overlay --- */
+        #menu-overlay {
+            position: fixed;
+            bottom: calc(70px + var(--safe-area-bottom));
+            right: 12px;
+            background: var(--toolbar-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+            display: none;
+            flex-direction: column;
+            width: 220px;
+            z-index: 200;
+            overflow: hidden;
+        }
+        .menu-item {
+            padding: 14px 16px; display: flex; align-items: center; gap: 12px;
+            font-size: 15px; cursor: pointer; border-bottom: 1px solid var(--border-color);
+        }
+        .menu-item:last-child { border-bottom: none; }
+        .menu-item:hover { background: rgba(128,128,128,0.1); }
+        .star-active { color: #f1c40f; }
+
+        /* --- Tab Switcher Overlay --- */
+        #tab-switcher {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-color); z-index: 1000;
+            display: none; flex-direction: column;
+        }
+        #tab-switcher.active { display: flex; }
+        #tab-switcher-header {
+            padding: 16px; display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid var(--border-color); background: var(--toolbar-bg);
+        }
+        #tab-grid {
+            flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+            padding: 16px; overflow-y: auto;
+        }
+        .tab-card {
+            background: var(--tab-card-bg); border: 1px solid var(--border-color); border-radius: 12px;
+            aspect-ratio: 3/4; display: flex; flex-direction: column; overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05); position: relative;
+        }
+        .tab-card.active { border: 2px solid var(--accent); }
+        .tab-card-header {
+            padding: 8px 10px; display: flex; align-items: center; gap: 6px;
+            font-size: 12px; border-bottom: 1px solid var(--border-color); background: var(--toolbar-bg);
+        }
+        .tab-card-header img { width: 14px; height: 14px; }
+        .tab-card-header span { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .tab-close-x { font-size: 20px; padding: 0 4px; color: var(--text-color); }
+        .tab-card-body { flex: 1; background: rgba(128,128,128,0.05); display: flex; align-items: center; justify-content: center; color: #888; font-size: 10px; }
+
+        /* --- Settings Page (Mobile Optimized) --- */
+        .settings-page { padding: 20px; overflow-y: auto; background: var(--bg-color) !important; color: var(--text-color); }
+        .card { background: var(--toolbar-bg); padding: 16px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 16px; }
+        .card h3 { margin-top: 0; margin-bottom: 12px; font-size: 16px; color: var(--accent); border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
+        .proxy-item { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border-color); }
+        .proxy-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+        .status-connected { color: #28a745; font-weight: bold; font-size: 12px; margin-right: 8px; }
+        .status-tor { color: var(--tor-color); font-weight: bold; font-size: 12px; margin-right: 8px; }
+        select, input[type="text"] { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-color); box-sizing: border-box; font-size: 14px; margin-bottom: 8px; }
+        button.btn { padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border-color); background: rgba(128,128,128,0.1); color: inherit; font-size: 14px; }
+        button.btn-primary { background: var(--accent); color: white; border: none; width: 100%; padding: 12px; font-weight: bold; border-radius: 8px; margin-top: 10px; }
+        .preset-group { display: flex; flex-wrap: wrap; gap: 8px; }
+
+        /* Fullscreen Close Button */
+        #fs-close-btn { position: fixed; top: 15px; right: 15px; z-index: 9999; width: 40px; height: 40px; background: rgba(0,0,0,0.5); color: white; border: none; border-radius: 50%; display: none; font-size: 24px; line-height: 1; justify-content: center; align-items: center; }
+        :fullscreen #bookmark-bar, :fullscreen #toolbar { display: none !important; }
+        :fullscreen #fs-close-btn { display: flex; }
+
+    </style>
+</head>
+<body>
+
+<div id="progress-container"><div id="progress-bar"></div></div>
+<button id="fs-close-btn" onclick="exitFullscreen()">×</button>
+
+<div id="tab-switcher">
+    <div id="tab-switcher-header">
+        <button class="icon-btn" onclick="toggleTabSwitcher()">✕</button>
+        <span style="font-weight: bold; font-size: 16px;">開いているタブ</span>
+        <button class="icon-btn" onclick="createNewTab(); toggleTabSwitcher();">＋</button>
+    </div>
+    <div id="tab-grid"></div>
+</div>
+
+<div id="main-container">
+    <div id="view"></div>
+</div>
+
+<div id="menu-overlay">
+    <div class="menu-item" onclick="navForward(); toggleMenu();">
+        <span style="width: 24px; text-align: center;">▶</span> 進む
+    </div>
+    <div class="menu-item" onclick="navReload(); toggleMenu();">
+        <span style="width: 24px; text-align: center;">⟳</span> 更新
+    </div>
+    <div class="menu-item" onclick="goHome(); toggleMenu();">
+        <span style="width: 24px; text-align: center;">🏠</span> ホーム
+    </div>
+    <div class="menu-item" onclick="toggleBookmark(); toggleMenu();">
+        <span id="menu-star" style="width: 24px; text-align: center; font-size: 20px;">★</span> ブックマーク
+    </div>
+    <div class="menu-item" onclick="toggleFullscreen(); toggleMenu();">
+        <span style="width: 24px; text-align: center;">⛶</span> フルスクリーン
+    </div>
+    <div class="menu-item" onclick="openSettings(); toggleMenu();">
+        <span style="width: 24px; text-align: center;">⚙️</span> 設定
+    </div>
+    <div class="menu-item" onclick="toggleDarkMode(); toggleMenu();">
+        <span style="width: 24px; text-align: center;">🌓</span> ダークモード
+    </div>
+</div>
+
+<div id="bookmark-bar"></div>
+
+<div id="toolbar">
+    <button class="icon-btn" onclick="navBack()" id="btn-back">◀</button>
+    <div id="url-container">
+        <input id="url" type="text" placeholder="検索またはアドレス入力" inputmode="url">
+    </div>
+    <button id="tab-count-btn" class="icon-btn" onclick="toggleTabSwitcher()">1</button>
+    <button class="icon-btn" onclick="toggleMenu()">⋮</button>
+</div>
+
+<script>
+// --- State & Settings ---
+let tabs = [];
+let activeTabId = null;
+let settings = {
+    homeUrl: "https://google.com/?igu=1",
+    darkMode: false,
+    bookmarks: [],
+    viewMode: "iframe",
+    activeProxyId: null,
+    torEnabled: false,
+    torGateway: ".tor.lc"
+};
+
+const PROXIES = {
+    1:  { name: "55games - 1",  url: "https://55gms.com/embed.html#", info: "US - NY elite" },
+    2:  { name: "55games - 2",  url: "https://55gms.me/embed.html#", info: "US - NY elite" },
+    3:  { name: "55games - 3",  url: "https://55gms.app/embed.html#", info: "US - NY elite" },
+    4:  { name: "55games - 4",  url: "https://algebra.learnnexus.xyz/embed.html#", info: "US - NY elite" },
+    5:  { name: "55games - 5",  url: "https://biology.learnnexus.xyz/embed.html#", info: "US - NY elite" },
+    6:  { name: "Workers - 1",  url: "https://sk.skkatoo.workers.dev/-----", info: "US - SF Non-anony" },
+    7:  { name: "Workers - 2",  url: "https://black-resonance-5407.cvfr.workers.dev/-----", info: "US - SF Non-anony" },
+    8:  { name: "Workers - 2",  url: "https://loli.loli12.workers.dev/-----", info: "US - SF Non-anony" },
+    9:  { name: "Workers - 3",  url: "https://loli.xianyu1.workers.dev/-----", info: "US - SF Non-anony" },
+    10: { name: "Workers - 4",  url: "https://lucky-mountain-6e91.networkfreedom.workers.dev/-----", info: "US - SF Non-anony" },
+    11: { name: "Workers - 5",  url: "https://proxy.dijkstra.workers.dev/-----", info: "US - SF Non-anony" },
+    12: { name: "Workers - 6",  url: "https://b.007.workers.dev/-----", info: "US - SF Non-anony" },
+    13: { name: "Workers - 7",  url: "https://1.wv1.workers.dev/-----", info: "US - SF Non-anony" },
+    14: { name: "Workers - 8",  url: "https://proxy.fan.workers.dev/-----", info: "US - SF Non-anony" },
+    15: { name: "Workers - 9",  url: "https://jsproxy1.jimmytinsley.workers.dev/-----", info: "US - SF Non-anony" },
+    16: { name: "Workers - 10", url: "https://proxy.rdr.workers.dev/-----", info: "US - SF Non-anony" },
+    17: { name: "Workers - 11", url: "https://proxy.thiruhostinger.workers.dev/?url=", info: "US - SF Non-anony" },
+    18: { name: "Workers - 12", url: "https://lucky-mountain-6e91.networkfreedom.workers.dev/-----", info: "US - SF Non-anony" },
+    19: { name: "Workers - 13", url: "https://tohyotalk.habataku.workers.dev/-----", info: "US - SF Non-anony" },
+    20: { name: "Workers - 14", url: "https://little-credit-fc7d.sfzanghao.workers.dev/-----", info: "US - SF Non-anony" },
+    21: { name: "Workers - 15", url: "https://proxy.thiruhostinger.workers.dev/?url=", info: "US - SF Non-anony" },
+    22: { name: "Freeplace Tor", url: "https://freeplace.in/proxy/browse.php?u=", info: "Tor Proxy low Security" },
+    23: { name: "dogeub", url: "https://learn.teaching.za.com/scramjet/", info: "siken" },
+    24: { name: "vapor", url: "https://lesson-plans1.vapor.my.cdn.cloudflare.net/vpr/go/", info: "siken" },
+    25: { name: "Blank", url: "https://", info: "Blank" }
+};
+
+const PRESETS = [
+   { name: "Google", url: "https://google.com/?igu=1" },
+   { name: "OffiDocs", url: "https://offidocs.com" },
+   { name: "nation", url: "https://nation.online" },
+   { name: "StartPage", url: "https://startpagel6srwcjlue4zgq3zevrujfaow726kjytqbbjyrswwmjzcqd.onion" } 
+];
+const SANDBOX_SETTINGS = "allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-presentation allow-same-origin allow-scripts allow-storage-access-by-user-activation";
+
+// --- Core Logic ---
+
+function init() {
+    const saved = localStorage.getItem('browser-settings');
+    if (saved) settings = { ...settings, ...JSON.parse(saved) };
+    if (settings.darkMode) document.body.classList.add('dark-mode');
+    
+    const savedTabs = localStorage.getItem('browser-sessions');
+    if (savedTabs && JSON.parse(savedTabs).length > 0) {
+        JSON.parse(savedTabs).forEach(t => createTabObject(t.url, t.id, t.title, t.history, t.historyIndex));
+        switchTab(parseInt(localStorage.getItem('browser-last-active')) || tabs[0].id);
+    } else { 
+        createNewTab(settings.homeUrl); 
+    }
+    renderBookmarkBar();
+}
+
+function saveState() {
+    localStorage.setItem('browser-settings', JSON.stringify(settings));
+    localStorage.setItem('browser-sessions', JSON.stringify(tabs.map(t => ({id: t.id, url: t.url, title: t.title, history: t.history, historyIndex: t.historyIndex}))));
+    localStorage.setItem('browser-last-active', activeTabId);
+    document.getElementById('tab-count-btn').textContent = tabs.length;
+}
+
+function setProgress(percent) {
+    const bar = document.getElementById('progress-bar');
+    bar.style.width = percent + "%";
+    if (percent >= 100) setTimeout(() => { bar.style.width = "0%"; }, 400);
+}
+
+function getIconUrl(url) {
+    if (url === "settings://") return "https://gstatic.com/images/branding/product/1x/settings_32dp.png";
+    try { const domain = new URL(url).hostname; return `https://icons.duckduckgo.com/ip3/${domain}.ico`; } 
+    catch(e) { return "https://icons.duckduckgo.com/ip3/example.com.ico"; }
+}
+
+function normalizeTorUrl(url) {
+    if (settings.torEnabled && url.includes(".onion")) {
+        return url.replace(".onion", settings.torGateway);
+    }
+    return url;
+}
+
+function getEffectiveUrl(url) {
+    if (url === "settings://") return url;
+    let target = normalizeTorUrl(url);
+    return !settings.activeProxyId ? target : PROXIES[settings.activeProxyId].url + target;
+}
+
+function createTabObject(url, id = Date.now(), title = "読み込み中...", history = null, hIndex = 0) {
+    const tab = { id, url, title, history: history || [url], historyIndex: hIndex, element: null };
+    updateTabElement(tab);
+    tabs.push(tab);
+    saveState();
+    return tab;
+}
+
+function updateTabElement(tab) {
+    if (tab.element) tab.element.remove();
+    const viewArea = document.getElementById('view');
+    let el;
+
+    if (tab.url === "settings://") {
+        el = document.createElement('div');
+        el.className = "page-element settings-page";
+        renderSettingsInto(el);
+    } else {
+        const finalUrl = getEffectiveUrl(tab.url);
+        el = document.createElement(settings.viewMode === "iframe" ? 'iframe' : (settings.viewMode === "object" ? 'object' : 'embed'));
+        if (settings.viewMode === "iframe") {
+            el.src = finalUrl; el.setAttribute("sandbox", SANDBOX_SETTINGS);
+        } else { el.data = finalUrl; el.src = finalUrl; el.type = "text/html"; }
+        
+        el.className = "page-element";
+        setProgress(30);
+        el.onload = () => {
+            setProgress(100);
+            try { tab.title = el.contentDocument.title || new URL(tab.url).hostname; } 
+            catch(e) { tab.title = tab.url.replace(/https?:\/\//,'').split('/')[0]; }
+            updateStarUI(); saveState();
+            if (document.getElementById('tab-switcher').classList.contains('active')) renderTabGrid();
+        };
+    }
+    el.id = `page-${tab.id}`;
+    if (tab.id === activeTabId) el.classList.add('active');
+    viewArea.appendChild(el);
+    tab.element = el;
+}
+
+function switchTab(id) {
+    activeTabId = id;
+    tabs.forEach(t => {
+        const active = t.id === id;
+        t.element.classList.toggle('active', active);
+        if (active) {
+            document.getElementById('url').value = t.url;
+            if (t.url === "settings://") renderSettingsInto(t.element);
+        }
+    });
+    updateNavButtons(); updateStarUI(); saveState();
+}
+
+function createNewTab(url = settings.homeUrl) { 
+    switchTab(createTabObject(url).id); 
+}
+
+function closeTab(id, e) { 
+    if(e) e.stopPropagation(); 
+    if (tabs.length === 1) {
+        tabs[0].url = settings.homeUrl;
+        tabs[0].history = [settings.homeUrl];
+        tabs[0].historyIndex = 0;
+        updateTabElement(tabs[0]);
+        switchTab(tabs[0].id);
+        renderTabGrid();
+        return;
+    }
+    const idx = tabs.findIndex(t => t.id === id); 
+    tabs[idx].element.remove(); 
+    tabs.splice(idx, 1); 
+    switchTab(tabs[Math.max(0, idx-1)].id); 
+    renderTabGrid();
+    saveState();
+}
+
+// --- Navigation & UI ---
+
+function go() {
+    let url = document.getElementById('url').value;
+    if (url !== "settings://" && !url.startsWith('http')) {
+        if (url.includes('.') && !url.includes(' ')) url = "https://" + url;
+        else url = "https://www.google.com/search?q=" + encodeURIComponent(url);
+    }
+    const tab = tabs.find(t => t.id === activeTabId);
+    if (tab.url !== url) {
+        tab.history = tab.history.slice(0, tab.historyIndex + 1);
+        tab.history.push(url); tab.historyIndex++; tab.url = url;
+        updateTabElement(tab); switchTab(tab.id);
+    }
+    document.getElementById('url').blur();
+}
+
+document.getElementById("url").addEventListener("keydown", e => { if (e.key === "Enter") go(); });
+
+function navBack() { const t = tabs.find(x => x.id === activeTabId); if (t && t.historyIndex > 0) { t.historyIndex--; t.url = t.history[t.historyIndex]; updateTabElement(t); switchTab(t.id); } }
+function navForward() { const t = tabs.find(x => x.id === activeTabId); if (t && t.historyIndex < t.history.length - 1) { t.historyIndex++; t.url = t.history[t.historyIndex]; updateTabElement(t); switchTab(t.id); } }
+function navReload() { const t = tabs.find(x => x.id === activeTabId); if(t) updateTabElement(t); }
+function openSettings() { document.getElementById('url').value = "settings://"; go(); }
+function goHome() { document.getElementById('url').value = settings.homeUrl; go(); }
+
+function updateNavButtons() { 
+    const t = tabs.find(x => x.id === activeTabId); 
+    if (!t) return; 
+    document.getElementById('btn-back').disabled = (t.historyIndex <= 0); 
+}
+
+// --- Bookmarks ---
+function renderBookmarkBar() {
+    const bar = document.getElementById('bookmark-bar'); 
+    bar.innerHTML = '';
+    if (settings.bookmarks.length === 0) {
+        bar.style.display = 'none';
+        return;
+    }
+    bar.style.display = 'flex';
+    settings.bookmarks.forEach(bm => {
+        const div = document.createElement('div'); div.className = 'bm-item';
+        div.innerHTML = `<img src="${getIconUrl(bm.url)}"><span>${bm.title}</span>`;
+        div.onclick = () => { document.getElementById('url').value = bm.url; go(); };
+        bar.appendChild(div);
+    });
+}
+
+function updateStarUI() { 
+    const t = tabs.find(x => x.id === activeTabId); 
+    const isB = settings.bookmarks.some(b => b.url === (t ? t.url : "")); 
+    const menuStar = document.getElementById('menu-star');
+    if (isB) {
+        menuStar.classList.add('star-active');
+    } else {
+        menuStar.classList.remove('star-active');
+    }
+}
+
+function toggleBookmark() { 
+    const tab = tabs.find(t => t.id === activeTabId); 
+    if (tab.url === "settings://") return; 
+    const idx = settings.bookmarks.findIndex(b => b.url === tab.url); 
+    if (idx > -1) settings.bookmarks.splice(idx, 1); 
+    else settings.bookmarks.push({ title: tab.title, url: tab.url }); 
+    updateStarUI(); renderBookmarkBar(); saveState(); 
+}
+
+// --- Overlays (Menu & Tab Switcher) ---
+function toggleMenu() {
+    const menu = document.getElementById('menu-overlay');
+    menu.style.display = (menu.style.display === 'flex') ? 'none' : 'flex';
+}
+
+function toggleTabSwitcher() {
+    const switcher = document.getElementById('tab-switcher');
+    const isActive = switcher.classList.toggle('active');
+    if (isActive) renderTabGrid();
+}
+
+function renderTabGrid() {
+    const grid = document.getElementById('tab-grid');
+    grid.innerHTML = '';
+    tabs.forEach(t => {
+        const card = document.createElement('div');
+        card.className = `tab-card ${t.id === activeTabId ? 'active' : ''}`;
+        card.innerHTML = `
+            <div class="tab-card-header">
+                <img src="${getIconUrl(t.url)}">
+                <span>${t.title}</span>
+                <div class="tab-close-x" onclick="closeTab(${t.id}, event)">×</div>
+            </div>
+            <div class="tab-card-body" onclick="switchTab(${t.id}); toggleTabSwitcher();">
+                ${t.url === "settings://" ? "⚙️ 設定" : "ページプレビュー"}
+            </div>
+        `;
+        grid.appendChild(card);
+    });
+}
+
+function toggleDarkMode() {
+    settings.darkMode = !settings.darkMode;
+    document.body.classList.toggle('dark-mode');
+    saveState();
+    const activeEl = document.querySelector('.settings-page');
+    if (activeEl) renderSettingsInto(activeEl);
+}
+
+// --- Fullscreen ---
+function toggleFullscreen() {
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => console.error(err));
+    } else {
+        exitFullscreen();
+    }
+}
+function exitFullscreen() { if (document.exitFullscreen) document.exitFullscreen(); }
+
+// --- Settings Page Rendering ---
+function renderSettingsInto(container) {
+    let proxyHtml = "";
+    for (const id in PROXIES) {
+        const p = PROXIES[id]; const isC = settings.activeProxyId == id;
+        proxyHtml += `<div class="proxy-item"><div><strong>${p.name}</strong><br><small style="color:#888;">${p.info}</small></div><div>${isC?'<span class="status-connected">接続中</span>':''}<button class="btn" onclick="toggleProxy(${id})">${isC?'切断':'接続'}</button></div></div>`;
+    }
+
+    container.innerHTML = `
+        <h2 style="margin-top:0;">⚙️ 設定</h2>
+        
+        <div class="card"><h3>★ ブックマーク管理</h3>
+            ${settings.bookmarks.length === 0 ? '<p style="opacity:0.5; font-size:14px;">なし</p>' : 
+              settings.bookmarks.map((b,i)=>`<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; font-size:14px;">
+                <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:70%;"><img src="${getIconUrl(b.url)}" style="width:14px; margin-right:6px; vertical-align:middle;">${b.title}</span>
+                <button class="btn" onclick="settings.bookmarks.splice(${i},1);saveState();renderSettingsInto(document.querySelector('.settings-page'));renderBookmarkBar();">削除</button>
+              </div>`).join('')}
+        </div>
+
+        <div class="card"><h3>🧅 Tor接続設定</h3>
+            <div class="proxy-item" style="border:none; padding:0;">
+                <div style="flex:1;">
+                    <label style="font-size:14px; font-weight:bold;">Tor Gateway モード</label>
+                    <select onchange="settings.torGateway=this.value; saveState();">
+                        <option value=".tor.lc" ${settings.torGateway==='.tor.lc'?'selected':''}>.tor.lc (normal)</option>
+                        <option value=".onion.pe" ${settings.torGateway==='.onion.pe'?'selected':''}>.onion.pe (sub)</option>
+                    </select>
+                </div>
+                <div style="margin-left: 10px; display:flex; align-items:center; flex-direction:column;">
+                    ${settings.torEnabled ? '<span class="status-tor">ON</span>' : '<span style="opacity:0.5; font-size:12px; margin-bottom:4px;">OFF</span>'}
+                    <button class="btn" onclick="toggleTor()">${settings.torEnabled ? '停止' : '有効化'}</button>
+                </div>
+            </div>
+            <p style="font-size:12px; opacity:0.7; margin-top:8px;">※ .onionアドレスを入力した際に、選択したゲートウェイへ自動で書き換えます。</p>
+        </div>
+
+        <div class="card"><h3>🏠 ホーム設定</h3>
+            <input type="text" id="set-home" value="${settings.homeUrl}">
+            <button class="btn btn-primary" onclick="settings.homeUrl=document.getElementById('set-home').value;saveState();alert('保存しました')">ホームURLを保存</button>
+            <p style="font-size: 14px; margin-top:16px; margin-bottom:8px;">プリセット:</p>
+            <div class="preset-group" id="plist"></div>
+        </div>
+
+        <div class="card"><h3>表示設定</h3>
+            <label style="font-size:14px; font-weight:bold;">レンダリングモード</label>
+            <select onchange="settings.viewMode=this.value; saveState();" style="margin-top:8px;">
+                <option value="iframe" ${settings.viewMode==='iframe'?'selected':''}>iframe (推奨)</option>
+                <option value="object" ${settings.viewMode==='object'?'selected':''}>object</option>
+                <option value="embed" ${settings.viewMode==='embed'?'selected':''}>embed</option>
+            </select>
+        </div>
+
+        <div class="card"><h3>🌐 プロキシ設定</h3>${proxyHtml}</div>
+        
+        <br><br><br> `;
+
+    PRESETS.forEach(p => {
+        const b = document.createElement('button'); b.className = 'btn'; b.textContent = p.name;
+        b.onclick = () => { document.getElementById('set-home').value = p.url; settings.homeUrl = p.url; saveState(); };
+        container.querySelector('#plist').appendChild(b);
+    });
+}
+
+window.toggleTor = () => {
+    settings.torEnabled = !settings.torEnabled;
+    saveState();
+    const t = tabs.find(x => x.id === activeTabId);
+    if (t && t.url.includes(".onion")) updateTabElement(t);
+    renderSettingsInto(document.querySelector('.settings-page'));
+};
+
+window.toggleProxy = (id) => {
+    settings.activeProxyId = (settings.activeProxyId == id) ? null : id;
+    saveState();
+    const t = tabs.find(x => x.id === activeTabId);
+    if (t && t.url !== "settings://") updateTabElement(t);
+    renderSettingsInto(document.querySelector('.settings-page'));
+};
+
+// Initialize
+init();
+</script>
+</body>
+</html>
