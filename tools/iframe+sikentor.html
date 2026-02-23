@@ -1,9 +1,8 @@
-<!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
 <title>o - Tor Multi-Gateway</title>
-<link rel="icon" href="../icon.png">
+<link rel="icon" href="../transparent.png">
 <style>
 :root { --bg-color: #f0f0f4; --toolbar-bg: #f9f9fb; --text-color: #000; --border-color: #d0d0d7; --accent: #0060df; --tor-color: #7d4698; }
 body.dark-mode { --bg-color: #1c1b22; --toolbar-bg: #2b2a33; --text-color: #fbfbfe; --border-color: #52525e; --accent: #00ddff; --tor-color: #9d66b8; }
@@ -40,11 +39,36 @@ body { margin: 0; font-family: system-ui, sans-serif; background: var(--bg-color
 button { padding: 6px 12px; cursor: pointer; border-radius: 4px; border: 1px solid var(--border-color); background: rgba(0,0,0,0.05); color: inherit; }
 button:disabled { opacity: 0.3; cursor: default; }
 select, input[type="text"] { padding: 8px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-color); }
+
+#fs-close-btn {
+    position: fixed;
+    top: 15px;
+    right: 15px;
+    z-index: 9999;
+    width: 32px;
+    height: 32px;
+    background: rgba(0,0,0,0.3);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: none;
+    opacity: 0.2;
+    transition: 0.3s;
+    font-size: 18px;
+    line-height: 1;
+}
+#fs-close-btn:hover { opacity: 1; background: rgba(220, 53, 69, 0.9); }
+
+:fullscreen #tabs-bar, :fullscreen #chrome, :fullscreen #bookmark-bar { display: none !important; }
+:fullscreen #fs-close-btn { display: flex; align-items: center; justify-content: center; }
 </style>
 </head>
 <body>
 
 <div id="progress-container"><div id="progress-bar"></div></div>
+
+<button id="fs-close-btn" onclick="exitFullscreen()">×</button>
 
 <div id="tabs-bar"></div>
 <div id="chrome">
@@ -55,7 +79,7 @@ select, input[type="text"] { padding: 8px; border-radius: 4px; border: 1px solid
     <span id="star-btn" class="star-btn" onclick="toggleBookmark()">★</span>
     <input id="url" placeholder="URLを入力してEnter">
     <button onclick="go()">Go</button>
-    <button onclick="openSettings()">⚙️</button>
+    <button onclick="toggleFullscreen()">⛶</button> <button onclick="openSettings()">⚙️</button>
 </div>
 <div id="bookmark-bar"></div>
 
@@ -75,6 +99,20 @@ let settings = {
     torEnabled: false,
     torGateway: ".tor.lc"
 };
+
+function toggleFullscreen() {
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+            console.error(`Error: ${err.message}`);
+        });
+    } else {
+        exitFullscreen();
+    }
+}
+
+function exitFullscreen() {
+    if (document.exitFullscreen) document.exitFullscreen();
+}
 
 function normalizeTorUrl(url) {
     if (settings.torEnabled && url.includes(".onion")) {
@@ -135,7 +173,7 @@ function updateTabElement(tab) {
         el.onload = () => {
             setProgress(100);
             try { tab.title = el.contentDocument.title || new URL(tab.url).hostname; } 
-            catch(e) { tab.title = tab.url.replace(/https?:\/\//,'').split('/')[0]; }
+            catch(e) { tab.title = tab.url.replace(/https?:///,'').split('/')[0]; }
             renderTabsUI(); updateStarUI();
         };
     }
@@ -204,7 +242,7 @@ function renderSettingsInto(container) {
               </div>`).join('')}
         </div>
 
-        <div class="card"><h3>🧅 Tor接続設定</h3>
+        <div class="card"><h3>???? Tor接続設定</h3>
             <div class="proxy-item">
                 <div><strong>Tor Gateway モード</strong><br>
                     <select onchange="settings.torGateway=this.value; saveState();" style="margin-top:5px;">
@@ -217,7 +255,7 @@ function renderSettingsInto(container) {
                     <button onclick="toggleTor()">${settings.torEnabled ? '停止' : '有効化'}</button>
                 </div>
             </div>
-            <p style="font-size:11px; opacity:0.7;">※ .onionアドレスを入力した際に、選択したゲートウェイへ自動で書き換えます。<br>.onionドメインへのアクセスを有効にします<br>⚠こちらは試験中の機能です。<br>　セキュリティ的な懸念点があるので推奨されません。<br>！セキュリティレベルが低いため、一部開けないサイトが存在します。<br>！信頼できるURLのみ開いてください、危険性のあるURLは開かないでください</p>
+            <p style="font-size:11px; opacity:0.7;">※ .onionアドレスを入力した際に、選択したゲートウェイへ自動で書き換えます。</p>
         </div>
 
         <div class="card"><h3>◻️ ホーム設定</h3>
@@ -225,7 +263,7 @@ function renderSettingsInto(container) {
             <div class="preset-group" id="plist"></div>
         </div>
 
-        <div class="card"><h3>🌓 表示設定</h3>
+        <div class="card"><h3>???? 表示設定</h3>
             <button onclick="settings.darkMode=!settings.darkMode; document.body.classList.toggle('dark-mode'); saveState(); renderSettingsInto(document.querySelector('.settings-page'));">ダークモード切替</button>
             <select onchange="settings.viewMode=this.value; saveState();" style="margin-left:10px;">
                 <option value="iframe" ${settings.viewMode==='iframe'?'selected':''}>iframe</option>
@@ -234,7 +272,7 @@ function renderSettingsInto(container) {
             </select>
         </div>
 
-        <div class="card"><h3>🌐 プロキシ設定</h3>${proxyHtml}</div>
+        <div class="card"><h3>???? プロキシ設定</h3>${proxyHtml}</div>
     `;
 
     PRESETS.forEach(p => {
@@ -281,8 +319,13 @@ const PROXIES = {
     18: { name: "Workers - 12", url: "https://lucky-mountain-6e91.networkfreedom.workers.dev/-----", info: "US - SF Non-anony" },
     19: { name: "Workers - 13", url: "https://tohyotalk.habataku.workers.dev/-----", info: "US - SF Non-anony" },
     20: { name: "Workers - 14", url: "https://little-credit-fc7d.sfzanghao.workers.dev/-----", info: "US - SF Non-anony" },
-    21: { name: "Freeplace Tor", url: "https://freeplace.in/proxy/browse.php?u=", info: "Tor Proxy low Security" }
+    21: { name: "Workers - 15", url: "https://proxy.thiruhostinger.workers.dev/?url=", info: "US - SF Non-anony" },
+    22: { name: "Freeplace Tor", url: "https://freeplace.in/proxy/browse.php?u=", info: "Tor Proxy low Security" },
+    23: { name: "dogeub", url: "https://learn.teaching.za.com/scramjet/", info: "siken" },
+    24: { name: "vapor", url: "https://lesson-plans1.vapor.my.cdn.cloudflare.net/vpr/go/", info: "siken" },
+    25: { name: "Blank", url: "https://", info: "Blank" }
 };
+
 const PRESETS = [
    { name: "Google", url: "https://google.com/?igu=1" },
    { name: "OffiDocs", url: "https://offidocs.com" },
