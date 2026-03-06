@@ -835,6 +835,8 @@ let targetList = [];
 let scanTimestamps = {};
 let currentSelectedCountry = "ALL";
 
+// --- ストレージ・初期化ロジック ---
+
 function saveToStorage() {
     localStorage.setItem('proxyScanData_v3', JSON.stringify({ list: targetList, timestamps: scanTimestamps }));
 }
@@ -843,6 +845,7 @@ function loadFromStorage() {
     const saved = localStorage.getItem('proxyScanData_v3');
     if (saved) {
         const parsed = JSON.parse(saved);
+        // 新しく initialData に追加された項目がある場合、それをマージする（簡易的な差分チェック）
         const savedIps = new Set(parsed.list.map(t => `${t.ip}:${t.port}`));
         initialData.forEach(item => {
             if (!savedIps.has(`${item.ip}:${item.port}`)) {
@@ -859,13 +862,17 @@ function loadFromStorage() {
 function initApp() {
     loadFromStorage();
     const listEl = document.getElementById('countryList');
-    listEl.innerHTML = '';
+    listEl.innerHTML = ''; // クリア
+
+    // ALL項目作成
     const allDiv = document.createElement('div');
     allDiv.className = 'country-item';
     allDiv.id = 'item-ALL';
     allDiv.onclick = () => selectCountry('ALL');
     allDiv.innerHTML = `<span>ALL</span><span class="count-badge" id="badge-ALL">0/0</span>`;
     listEl.appendChild(allDiv);
+
+    // 国リスト抽出と作成
     const countries = [...new Set(targetList.map(t => t.country))].sort();
     countries.forEach(country => {
         const div = document.createElement('div');
@@ -879,6 +886,8 @@ function initApp() {
     updateAllBadges();
     selectCountry('ALL');
 }
+
+// バッジ数字（オンライン/全体）の動的計算
 function updateAllBadges() {
     const uniqueCountries = ['ALL', ...new Set(targetList.map(t => t.country))];
     uniqueCountries.forEach(c => {
