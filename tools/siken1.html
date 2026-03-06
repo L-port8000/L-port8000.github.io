@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>MP4 cleaner</title>
+    <style>
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; background: #1a1a1a; color: #eee; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .panel { background: #23272a; padding: 30px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 100%; max-width: 500px; text-align: center; }
+        h1 { color: #7289da; font-size: 1.5rem; margin-top: 0; margin-bottom: 10px; }
+        .note { font-size: 0.8rem; color: #aaa; margin-bottom: 20px; line-height: 1.5; text-align: left; background: #111; padding: 10px; border-radius: 8px; }
+        input[type="file"] { margin: 10px 0 20px; padding: 10px; background: #111; border-radius: 8px; border: 1px solid #444; width: 90%; color: #fff; }
+        .btn-primary { padding: 12px 30px; border: none; border-radius: 8px; background: #2ecc71; color: white; cursor: pointer; font-weight: bold; font-size: 16px; transition: 0.2s; width: 100%; }
+        .btn-primary:hover { background: #27ae60; }
+        .btn-primary:disabled { background: #555; cursor: not-allowed; }
+        #status { margin-top: 20px; font-weight: bold; color: #f1c40f; font-size: 0.9em; white-space: pre-wrap; line-height: 1.5; }
+        #downloadLink { display: inline-block; margin-top: 20px; padding: 10px 20px; background: #3498db; color: #fff; text-decoration: none; border-radius: 8px; font-weight: bold; display: none; }
+        #downloadLink:hover { background: #2980b9; }
+    </style>
+    <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.js"></script>
+    <script src="https://unpkg.com/@ffmpeg/util@0.12.1/dist/umd/index.js"></script>
+</head>
+<body>
+
+<div class="panel">
+    <h1>不要データ削除ツール</h1>
+    <div class="note">
+        ✅ 映像の再エンコードを行わず、不要なデータだけを削除します。<br>
+        ✅ <b>非常に高速です（数秒〜数分）。</b><br>
+        ⚠️ 2時間などの大容量ファイル（おおむね2GB以上）は、ブラウザのメモリ上限に引っかかってフリーズする可能性があります。
+    </div>
+    
+    <input type="file" id="uploader" accept="video/mp4,video/x-m4v,video/*">
+    <button id="cleanBtn" class="btn-primary" onclick="cleanVideo()" disabled>余分なデータを削除する</button>
+    
+    <div id="status">GitHubにアップロードしてご利用ください。</div>
+    <a id="downloadLink" href="#" download="cleaned.mp4">⬇️ クリーニング済みの動画を保存</a>
+</div>
+
+<script>
+    const { FFmpeg } = window.FFmpegWASM;
+    const { fetchFile } = window.FFmpegUtil;
+    let ffmpeg = null;
+    
+    const uploader = document.getElementById('uploader');
+    const cleanBtn = document.getElementById('cleanBtn');
+    const statusDiv = document.getElementById('status');
+    const downloadLink = document.getElementById('downloadLink');
+
+    uploader.addEventListener('change', () => {
+        if (uploader.files.length > 0) {
+            cleanBtn.disabled = false;
+            statusDiv.style.color = "#f1c40f";
+            statusDiv.innerText = "動画が選択されました。ボタンを押して開始。";
+            downloadLink.style.display = 'none';
+        }
+    });
+
+    async function cleanVideo() {
+        const file = uploader.files[0];
+        if (!file) return;
+
+        cleanBtn.disabled = true;
+        statusDiv.style.color = "#f1c40f";
+        statusDiv.innerText = "エンジンを準備中...";
+
+        try {
+            if (!ffmpeg) {
+                ffmpeg = new FFmpeg();
+                await ffmpeg.load({
+                    coreURL: "https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.js",
+                    wasmURL: "https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.wasm"
+                });
+            }
+
+            statusDiv.innerText = "動画データをブラウザに読み込み中...\n（ファイルが大きいとここで少し時間がかかります）";
+            await ffmpeg.writeFile('input.mp4', await fetchFile(file));
+
+            statusDiv.innerText = "不要なデータを削除しています（超高速処理）...";
+            
+            await ffmpeg.exec([
+                '-i', 'input.mp4',
+                '-map', '0:v:0',
+                '-map', '0:a:0?',
+                '-map_metadata', '-1',
+                '-c', 'copy',
+                'output.mp4'
+            ]);
+
+            statusDiv.innerText = "ファイルの書き出し中...";
+            const data = await ffmpeg.readFile('output.mp4');
+
+            const videoBlob = new Blob([data.buffer], { type: 'video/mp4' });
+            const videoUrl = URL.createObjectURL(videoBlob);
+            
+            downloadLink.href = videoUrl;
+            downloadLink.download = file.name.replace(/\.[^/.]+$/, "") + "_cleaned.mp4";
+            downloadLink.style.display = 'inline-block';
+            
+            statusDiv.style.color = "#2ecc71";
+            statusDiv.innerText = "クリーニング完了！下のボタンから保存してください。";
+
+        } catch (error) {
+            console.error(error);
+            statusDiv.style.color = "#e74c3c";
+            statusDiv.innerHTML = `エラーが発生しました。<br>詳細: ${error.message}`;
+        } finally {
+            cleanBtn.disabled = false;
+        }
+    }
+</script>
+
+</body>
+</html>
