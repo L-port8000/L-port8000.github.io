@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>MP4 cleaner</title>
+    <title>MP4クリーナー（不要データ削除）</title>
     <style>
         body { font-family: 'Helvetica Neue', Arial, sans-serif; background: #1a1a1a; color: #eee; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
         .panel { background: #23272a; padding: 30px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 100%; max-width: 500px; text-align: center; }
@@ -26,19 +26,20 @@
     <div class="note">
         ✅ 映像の再エンコードを行わず、不要なデータだけを削除します。<br>
         ✅ <b>非常に高速です（数秒〜数分）。</b><br>
-        ⚠️ 2時間などの大容量ファイル（おおむね2GB以上）は、ブラウザのメモリ上限に引っかかってフリーズする可能性があります。
+        ⚠️ 2時間などの大容量ファイル（2GB以上）は、ブラウザのメモリ上限により読み込み時にフリーズする可能性があります。
     </div>
     
     <input type="file" id="uploader" accept="video/mp4,video/x-m4v,video/*">
     <button id="cleanBtn" class="btn-primary" onclick="cleanVideo()" disabled>余分なデータを削除する</button>
     
-    <div id="status">GitHubにアップロードしてご利用ください。</div>
+    <div id="status">準備完了。動画を選択してください。</div>
     <a id="downloadLink" href="#" download="cleaned.mp4">⬇️ クリーニング済みの動画を保存</a>
 </div>
 
 <script>
     const { FFmpeg } = window.FFmpegWASM;
-    const { fetchFile } = window.FFmpegUtil;
+    // toBlobURL という回避用ツールを追加
+    const { fetchFile, toBlobURL } = window.FFmpegUtil;
     let ffmpeg = null;
     
     const uploader = document.getElementById('uploader');
@@ -61,28 +62,35 @@
 
         cleanBtn.disabled = true;
         statusDiv.style.color = "#f1c40f";
-        statusDiv.innerText = "エンジンを準備中...";
+        statusDiv.innerText = "エンジンを準備中...（ファイルをダウンロードしています）";
 
         try {
             if (!ffmpeg) {
                 ffmpeg = new FFmpeg();
+                
+                // プログラムのURLを変数にまとめる
+                const coreURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
+                const ffmpegURL = 'https://unpkg.com/@ffmpeg/ffmpeg@0.12.10/dist/umd';
+
+                // ★ toBlobURLを使って、別ドメインのプログラムを「自分のサイトのデータ（Blob）」として読み込ませる
                 await ffmpeg.load({
-                    coreURL: "https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.js",
-                    wasmURL: "https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.wasm"
+                    coreURL: await toBlobURL(`${coreURL}/ffmpeg-core.js`, 'text/javascript'),
+                    wasmURL: await toBlobURL(`${coreURL}/ffmpeg-core.wasm`, 'application/wasm'),
+                    classWorkerURL: await toBlobURL(`${ffmpegURL}/814.ffmpeg.js`, 'text/javascript')
                 });
             }
 
-            statusDiv.innerText = "動画データをブラウザに読み込み中...\n（ファイルが大きいとここで少し時間がかかります）";
+            statusDiv.innerText = "動画データをブラウザに読み込み中...\n（長編動画の場合、画面がフリーズしたようになりますが待機してください）";
             await ffmpeg.writeFile('input.mp4', await fetchFile(file));
 
             statusDiv.innerText = "不要なデータを削除しています（超高速処理）...";
             
             await ffmpeg.exec([
                 '-i', 'input.mp4',
-                '-map', '0:v:0',
-                '-map', '0:a:0?',
+                '-map', '0:v:0',      
+                '-map', '0:a:0?',     
                 '-map_metadata', '-1',
-                '-c', 'copy',
+                '-c', 'copy',         
                 'output.mp4'
             ]);
 
