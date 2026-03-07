@@ -3,170 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="../icon.png" type="image/png">
     <title>ローカルメモ帳</title>
     <style>
         :root {
             --bg-color: #f5f5f5;
             --sidebar-bg: #ffffff;
-            --border-color: #000000;
+            --border-color: #ddd;
             --primary: #1a73e8;
             --primary-hover: #1557b0;
             --text-main: #333;
             --text-sub: #666;
         }
-
         body, html {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
+            margin: 0; padding: 0; height: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color); color: var(--text-main);
         }
-
-        .container {
-            display: flex;
-            height: 100vh;
-        }
-
-        .sidebar {
-            width: 300px;
-            background-color: var(--sidebar-bg);
-            border-right: 1px solid var(--border-color);
-            display: flex;
-            flex-direction: column;
-        }
-
-        .sidebar-header {
-            padding: 15px;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .btn {
-            padding: 8px 12px;
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: bold;
-            transition: background 0.2s;
-        }
-
+        .container { display: flex; height: 100vh; }
+        .sidebar { width: 300px; background-color: var(--sidebar-bg); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; }
+        .sidebar-header { padding: 15px; border-bottom: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 10px; }
+        .btn { padding: 8px 12px; background-color: var(--primary); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: bold; }
         .btn:hover { background-color: var(--primary-hover); }
         .btn-outline { background-color: white; color: var(--text-main); border: 1px solid #ccc; }
         .btn-outline:hover { background-color: #f0f0f0; }
         .btn-danger { background-color: #dc3545; }
-        .btn-danger:hover { background-color: #c82333; }
-
-        .file-controls {
-            display: flex;
-            gap: 5px;
-        }
-        .file-controls button { flex: 1; font-size: 12px; }
-
-        .note-list {
-            flex: 1;
-            overflow-y: auto;
-            list-style: none;
-            margin: 0;
-            padding: 0;
-        }
-
-        .note-item {
-            padding: 15px;
-            border-bottom: 1px solid var(--border-color);
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
+        .file-controls { display: flex; gap: 5px; }
+        .file-controls button { flex: 1; font-size: 11px; }
+        .note-list { flex: 1; overflow-y: auto; list-style: none; margin: 0; padding: 0; }
+        .note-item { padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; }
         .note-item:hover { background-color: #f8f9fa; }
-        .note-item.active { background-color: #e8f0fe; border-left: 4px solid var(--primary); padding-left: 11px; }
-        .note-item-title { font-weight: bold; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .note-item.active { background-color: #e8f0fe; border-left: 4px solid var(--primary); }
+        .note-item-title { font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .note-item-date { font-size: 12px; color: var(--text-sub); }
-
-        .editor {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background-color: white;
-            padding: 20px;
-        }
-
-        .editor-placeholder {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-sub);
-            font-size: 18px;
-        }
-
-        .editor-content {
-            display: none;
-            flex-direction: column;
-            height: 100%;
-        }
-
-        .editor-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        #noteTitle {
-            font-size: 24px;
-            font-weight: bold;
-            border: none;
-            outline: none;
-            width: 100%;
-            margin-right: 15px;
-        }
-
-        #noteBody {
-            flex: 1;
-            resize: none;
-            border: none;
-            outline: none;
-            font-size: 16px;
-            line-height: 1.6;
-            font-family: inherit;
-        }
-
+        .editor { flex: 1; display: flex; flex-direction: column; background: white; padding: 20px; }
+        .editor-placeholder { flex: 1; display: flex; align-items: center; justify-content: center; color: var(--text-sub); }
+        .editor-content { display: none; flex-direction: column; height: 100%; }
+        .editor-header { display: flex; justify-content: space-between; margin-bottom: 15px; }
+        #noteTitle { font-size: 24px; border: none; outline: none; width: 100%; }
+        #noteBody { flex: 1; resize: none; border: none; outline: none; font-size: 16px; line-height: 1.6; }
         #fileInput { display: none; }
     </style>
 </head>
 <body>
-
 <div class="container">
     <div class="sidebar">
         <div class="sidebar-header">
             <button class="btn" onclick="createNewNote()">＋ 新しいメモを追加</button>
             <div class="file-controls">
-                <button class="btn btn-outline" onclick="exportToFile()">ファイルに保存</button>
-                <button class="btn btn-outline" onclick="document.getElementById('fileInput').click()">読み込み</button>
+                <button class="btn btn-outline" onclick="exportToFile()">保存(JSON)</button>
+                <button class="btn btn-outline" onclick="document.getElementById('fileInput').click()">読込(JSON)</button>
                 <input type="file" id="fileInput" accept=".json" onchange="importFromFile(event)">
             </div>
         </div>
-        <ul class="note-list" id="noteList">
-            </ul>
+        <ul class="note-list" id="noteList"></ul>
     </div>
-
     <div class="editor">
-        <div class="editor-placeholder" id="editorPlaceholder">
-            左のリストからメモを選択するか、新しく追加してください
-        </div>
+        <div class="editor-placeholder" id="editorPlaceholder">メモを選択するか新規作成してください</div>
         <div class="editor-content" id="editorContent">
             <div class="editor-header">
                 <input type="text" id="noteTitle" placeholder="タイトルなし" oninput="updateCurrentNote()">
                 <button class="btn btn-danger" onclick="deleteCurrentNote()">削除</button>
             </div>
-            <textarea id="noteBody" placeholder="ここにメモを入力..." oninput="updateCurrentNote()"></textarea>
+            <textarea id="noteBody" placeholder="内容を入力..." oninput="updateCurrentNote()"></textarea>
         </div>
     </div>
 </div>
@@ -175,16 +74,40 @@
     let notes = [];
     let currentNoteId = null;
 
+    // 初期化
     window.onload = () => {
-        const savedNotes = localStorage.getItem('myLocalNotes');
-        if (savedNotes) {
-            notes = JSON.parse(savedNotes);
+        const saved = localStorage.getItem('myLocalNotes');
+        if (saved) {
+            try {
+                notes = JSON.parse(saved);
+                if (!Array.isArray(notes)) notes = [];
+            } catch(e) {
+                notes = [];
+            }
         }
         renderList();
     };
 
     function saveToLocalStorage() {
         localStorage.setItem('myLocalNotes', JSON.stringify(notes));
+    }
+
+    function renderList() {
+        const listEl = document.getElementById('noteList');
+        if (!listEl) return;
+        listEl.innerHTML = '';
+        
+        notes.forEach(note => {
+            const li = document.createElement('li');
+            li.className = `note-item ${note.id === currentNoteId ? 'active' : ''}`;
+            li.onclick = () => selectNote(note.id);
+            
+            li.innerHTML = `
+                <div class="note-item-title">${note.title || '（無題）'}</div>
+                <div class="note-item-date">${note.date}</div>
+            `;
+            listEl.appendChild(li);
+        });
     }
 
     function createNewNote() {
@@ -199,36 +122,15 @@
         selectNote(newNote.id);
     }
 
-    function renderList() {
-        const listEl = document.getElementById('noteList');
-        listEl.innerHTML = '';
-
-        notes.forEach(note => {
-            const li = document.createElement('li');
-            li.className = `note-item ${note.id === currentNoteId ? 'active' : ''}`;
-            li.onclick = () => selectNote(note.id);
-
-            const title = document.createElement('div');
-            title.className = 'note-item-title';
-            title.textContent = note.title || '（タイトルなし）';
-
-            const date = document.createElement('div');
-            date.className = 'note-item-date';
-            date.textContent = note.date;
-
-            li.appendChild(title);
-            li.appendChild(date);
-            listEl.appendChild(li);
-        });
-    }
-
     function selectNote(id) {
         currentNoteId = id;
         const note = notes.find(n => n.id === id);
-        
-        if (note) {
-            document.getElementById('editorPlaceholder').style.display = 'none';
-            document.getElementById('editorContent').style.display = 'flex';
+        const placeholder = document.getElementById('editorPlaceholder');
+        const content = document.getElementById('editorContent');
+
+        if (note && placeholder && content) {
+            placeholder.style.display = 'none';
+            content.style.display = 'flex';
             document.getElementById('noteTitle').value = note.title;
             document.getElementById('noteBody').value = note.body;
         }
@@ -237,78 +139,62 @@
 
     function updateCurrentNote() {
         if (!currentNoteId) return;
-        
-        const noteIndex = notes.findIndex(n => n.id === currentNoteId);
-        if (noteIndex > -1) {
-            notes[noteIndex].title = document.getElementById('noteTitle').value;
-            notes[noteIndex].body = document.getElementById('noteBody').value;
-            notes[noteIndex].date = new Date().toLocaleString();
+        const idx = notes.findIndex(n => n.id === currentNoteId);
+        if (idx > -1) {
+            notes[idx].title = document.getElementById('noteTitle').value;
+            notes[idx].body = document.getElementById('noteBody').value;
+            notes[idx].date = new Date().toLocaleString();
             saveToLocalStorage();
+            // リストを再描画（タイトル更新を反映）
             renderList();
         }
     }
 
     function deleteCurrentNote() {
-        if (confirm('このメモを削除してもよろしいですか？')) {
-            notes = notes.filter(n => n.id !== currentNoteId);
-            currentNoteId = null;
-            saveToLocalStorage();
-            
-            document.getElementById('editorPlaceholder').style.display = 'flex';
-            document.getElementById('editorContent').style.display = 'none';
-            renderList();
-        }
+        if (!confirm('削除しますか？')) return;
+        notes = notes.filter(n => n.id !== currentNoteId);
+        currentNoteId = null;
+        saveToLocalStorage();
+        document.getElementById('editorPlaceholder').style.display = 'flex';
+        document.getElementById('editorContent').style.display = 'none';
+        renderList();
     }
 
     function exportToFile() {
-        if (notes.length === 0) {
-            alert('保存するメモがありません。');
-            return;
-        }
-        const dataStr = JSON.stringify(notes, null, 2);
-        const blob = new Blob([dataStr], { type: 'application/json' });
+        if (notes.length === 0) return alert('メモがありません');
+        const blob = new Blob([JSON.stringify(notes, null, 2)], {type: 'application/json'});
         const url = URL.createObjectURL(blob);
-        
         const a = document.createElement('a');
         a.href = url;
-        a.download = `notes_backup_${new Date().toISOString().split('T')[0]}.json`;
+        a.download = `notes_backup.json`;
         a.click();
-        
         URL.revokeObjectURL(url);
     }
 
     function importFromFile(event) {
         const file = event.target.files[0];
         if (!file) return;
-
         const reader = new FileReader();
-        reader.onload = function(e) {
+        reader.onload = (e) => {
             try {
-                const importedNotes = JSON.parse(e.target.result);
-                if (Array.isArray(importedNotes)) {
-                    if(notes.length > 0 && !confirm('現在のメモを上書きして読み込みますか？
-（キャンセルすると現在のメモに追加されます）')) {
-                        notes = [...importedNotes, ...notes];
+                const imported = JSON.parse(e.target.result);
+                if (Array.isArray(imported)) {
+                    if (notes.length > 0 && !confirm('既存のメモを上書きしますか？（キャンセルで追加）')) {
+                        notes = [...imported, ...notes];
                     } else {
-                        notes = importedNotes;
+                        notes = imported;
                     }
                     saveToLocalStorage();
-                    currentNoteId = null;
-                    document.getElementById('editorPlaceholder').style.display = 'flex';
-                    document.getElementById('editorContent').style.display = 'none';
                     renderList();
-                    alert('読み込みが完了しました。');
-                } else {
-                    alert('無効なファイル形式です。');
+                    alert('読み込み完了');
                 }
-            } catch (error) {
-                alert('ファイルの読み込みに失敗しました。');
+            } catch(err) {
+                alert('エラー：ファイルの形式が正しくありません');
             }
         };
         reader.readAsText(file);
-        event.target.value = '';
+        event.target.value = ''; // 連続インポートを可能にする
     }
 </script>
-
 </body>
 </html>
