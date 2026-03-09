@@ -5,7 +5,12 @@
     <title>Proxy Scanner</title>
     <link rel="icon" href=".../icon.png" type="image/png">
     <style>
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #1a1a1a; color: #eee; margin: 0; display: flex; height: 100vh; overflow: hidden; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #1a1a1a; color: #eee; margin: 0; display: flex; height: 100vh; overflow: hidden; flex-direction: column; }
+        
+        /* 混合コンテンツ警告用バー */
+        #https-warning { display: none; background: #ff4444; color: white; padding: 10px; text-align: center; font-size: 0.9em; font-weight: bold; }
+        
+        .app-container { display: flex; flex: 1; overflow: hidden; }
         .sidebar { width: 300px; background: #252525; border-right: 1px solid #333; display: flex; flex-direction: column; }
         .search-box { padding: 15px; border-bottom: 1px solid #333; }
         #countrySearch { width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #444; background: #1a1a1a; color: white; box-sizing: border-box; }
@@ -35,27 +40,37 @@
 </head>
 <body>
 
-<div class="sidebar">
-    <div class="search-box">
-        <input type="text" id="countrySearch" placeholder="国名を検索..." oninput="filterCountries()">
-    </div>
-    <div id="countryList" class="country-list">
-        </div>
+<div id="https-warning">
+    ⚠️ ブラウザのセキュリティ設定によりHTTP通信がブロックされています。URLバーのアイコンから「安全でないコンテンツ(Insecure content)」を許可してください。
 </div>
 
-<div class="main-content">
-    <div class="controls">
-        <h2 id="currentViewTitle" style="margin:0; font-size: 1.2em;">Loading...</h2>
-        <div class="button-row">
-            <button id="scanBtn" onclick="startScan()">このリストをスキャン</button>
-            <div id="statusSummary" class="counter">-</div>
+<div class="app-container">
+    <div class="sidebar">
+        <div class="search-box">
+            <input type="text" id="countrySearch" placeholder="国名を検索..." oninput="filterCountries()">
         </div>
-        <div id="lastScanTime" class="timestamp-label"></div>
+        <div id="countryList" class="country-list">
+            </div>
     </div>
-    <div id="results" class="grid"></div>
+
+    <div class="main-content">
+        <div class="controls">
+            <h2 id="currentViewTitle" style="margin:0; font-size: 1.2em;">Loading...</h2>
+            <div class="button-row">
+                <button id="scanBtn" onclick="startScan()">このリストをスキャン</button>
+                <div id="statusSummary" class="counter">-</div>
+            </div>
+            <div id="lastScanTime" class="timestamp-label"></div>
+        </div>
+        <div id="results" class="grid"></div>
+    </div>
 </div>
 
 <script>
+// ページがHTTPSで読み込まれた場合、警告を表示
+if (window.location.protocol === 'https:') {
+    document.getElementById('https-warning').style.display = 'block';
+}
 
 const initialData = [
     { country: "United States", ip: "20.57.138.93", port: "1080" },
@@ -846,7 +861,6 @@ function loadFromStorage() {
     const saved = localStorage.getItem('proxyScanData_v3');
     if (saved) {
         const parsed = JSON.parse(saved);
-        // 新しく initialData に追加された項目がある場合、それをマージする（簡易的な差分チェック）
         const savedIps = new Set(parsed.list.map(t => `${t.ip}:${t.port}`));
         initialData.forEach(item => {
             if (!savedIps.has(`${item.ip}:${item.port}`)) {
@@ -863,9 +877,8 @@ function loadFromStorage() {
 function initApp() {
     loadFromStorage();
     const listEl = document.getElementById('countryList');
-    listEl.innerHTML = ''; // クリア
+    listEl.innerHTML = ''; 
 
-    // ALL項目作成
     const allDiv = document.createElement('div');
     allDiv.className = 'country-item';
     allDiv.id = 'item-ALL';
@@ -873,7 +886,6 @@ function initApp() {
     allDiv.innerHTML = `<span>ALL</span><span class="count-badge" id="badge-ALL">0/0</span>`;
     listEl.appendChild(allDiv);
 
-    // 国リスト抽出と作成
     const countries = [...new Set(targetList.map(t => t.country))].sort();
     countries.forEach(country => {
         const div = document.createElement('div');
@@ -888,7 +900,6 @@ function initApp() {
     selectCountry('ALL');
 }
 
-// バッジ数字（オンライン/全体）の動的計算
 function updateAllBadges() {
     const uniqueCountries = ['ALL', ...new Set(targetList.map(t => t.country))];
     uniqueCountries.forEach(c => {
@@ -954,8 +965,10 @@ async function checkPort(target) {
             img.src = "";
             resolve({ status, latency: Date.now() - start });
         };
+        // 修正: 成功時のみonlineとし、エラー時(タイムアウト・切断含む)はofflineにする
         img.onload = () => finalize('online');
-        img.onerror = () => finalize('online');
+        img.onerror = () => finalize('offline'); 
+        
         img.src = `http://${target.ip}:${target.port}/favicon.ico?t=${start}`;
         setTimeout(() => finalize('offline'), 3000);
     });
