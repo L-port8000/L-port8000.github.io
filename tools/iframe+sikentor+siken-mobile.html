@@ -6,7 +6,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
-    <title>o - Multi-Gateway for Mobile</title>
+    <title>Firefox Mobile Multi-Gateway</title>
     <style>
         :root {
             --bg-color: #f9f9fb;
@@ -17,7 +17,12 @@
             --tor-color: #7d4698;
             --tab-card-bg: #ffffff;
             --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+            --safe-area-top: env(safe-area-inset-top, 0px);
         }
+
+        /* 外側の背景色（PC等で見た場合の余白部分） */
+        html { background: #e0e0e0; height: 100%; }
+        html.dark-mode-html { background: #121212; }
 
         body.dark-mode {
             --bg-color: #1c1b22;
@@ -30,7 +35,7 @@
         }
 
         body {
-            margin: 0;
+            margin: 0 auto;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background: var(--bg-color);
             color: var(--text-color);
@@ -38,17 +43,42 @@
             flex-direction: column;
             height: 100vh;
             overflow: hidden;
+            /* レスポンシブ対応：PCやタブレットでは最大幅を固定して中央寄せ */
+            max-width: 800px; 
+            box-shadow: 0 0 20px rgba(0,0,0,0.15);
+            border-left: 1px solid var(--border-color);
+            border-right: 1px solid var(--border-color);
+        }
+        body.dark-mode { box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+
+        @media (max-width: 800px) {
+            body { max-width: 100%; box-shadow: none; border: none; }
+            html { background: var(--bg-color); }
         }
 
+        /* --- Layout Order Logic --- */
+        #main-container { order: 1; flex: 1; position: relative; overflow: hidden; }
+        #bookmark-bar { order: 2; }
+        #toolbar { order: 3; }
+
+        /* ツールバー上部設定時 */
+        body.toolbar-top #toolbar { 
+            order: 1; 
+            border-top: none; 
+            border-bottom: 1px solid var(--border-color); 
+            padding-top: calc(8px + var(--safe-area-top));
+            padding-bottom: 8px;
+        }
+        body.toolbar-top #bookmark-bar { order: 2; border-top: none; border-bottom: 1px solid var(--border-color); }
+        body.toolbar-top #main-container { order: 3; }
+        body.toolbar-top #menu-overlay { bottom: auto; top: calc(65px + var(--safe-area-top)); }
+
+
+        /* --- Progress Bar --- */
         #progress-container { position: absolute; top: 0; left: 0; width: 100%; height: 3px; z-index: 1000; pointer-events: none; }
         #progress-bar { width: 0%; height: 100%; background: var(--accent); transition: width 0.3s ease; }
 
-        #main-container {
-            flex: 1;
-            position: relative;
-            overflow: hidden;
-        }
-
+        /* --- Main View --- */
         .page-element {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -56,6 +86,7 @@
         }
         .page-element.active { display: block; }
 
+        /* --- Bookmarks (Above Toolbar) --- */
         #bookmark-bar {
             background: var(--toolbar-bg);
             border-top: 1px solid var(--border-color);
@@ -76,6 +107,7 @@
         }
         .bm-item img { width: 14px; height: 14px; border-radius: 2px; }
 
+        /* --- Bottom Toolbar (Firefox Mobile Style) --- */
         #toolbar {
             background: var(--toolbar-bg);
             border-top: 1px solid var(--border-color);
@@ -93,7 +125,7 @@
             border-radius: 24px;
             display: flex;
             align-items: center;
-            padding: 4px 16px;
+            padding: 4px 16px; 
         }
 
         #url {
@@ -101,7 +133,7 @@
             border: none;
             background: transparent;
             color: var(--text-color);
-            font-size: 15px;
+            font-size: 15px; 
             outline: none;
             width: 100%;
         }
@@ -113,6 +145,7 @@
         }
         .icon-btn:disabled { opacity: 0.3; }
 
+        /* Tab Count Icon */
         #tab-count-btn {
             border: 2px solid var(--text-color);
             border-radius: 6px;
@@ -120,8 +153,9 @@
             font-size: 13px; font-weight: bold;
         }
 
+        /* --- Menu Overlay --- */
         #menu-overlay {
-            position: fixed;
+            position: absolute;
             bottom: calc(70px + var(--safe-area-bottom));
             right: 12px;
             background: var(--toolbar-bg);
@@ -142,8 +176,9 @@
         .menu-item:hover { background: rgba(128,128,128,0.1); }
         .star-active { color: #f1c40f; }
 
+        /* --- Tab Switcher Overlay --- */
         #tab-switcher {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: var(--bg-color); z-index: 1000;
             display: none; flex-direction: column;
         }
@@ -171,6 +206,7 @@
         .tab-close-x { font-size: 20px; padding: 0 4px; color: var(--text-color); cursor: pointer;}
         .tab-card-body { flex: 1; background: rgba(128,128,128,0.05); display: flex; align-items: center; justify-content: center; color: #888; font-size: 10px; cursor: pointer; }
 
+        /* --- Settings Page (Mobile Optimized) --- */
         .settings-page { padding: 20px; overflow-y: auto; background: var(--bg-color) !important; color: var(--text-color); }
         .card { background: var(--toolbar-bg); padding: 16px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 16px; }
         .card h3 { margin-top: 0; margin-bottom: 12px; font-size: 16px; color: var(--accent); border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
@@ -186,7 +222,6 @@
         /* --- Fullscreen Styles (Safari対応) --- */
         #fs-close-btn { position: fixed; top: 15px; right: 15px; z-index: 9999; width: 40px; height: 40px; background: rgba(0,0,0,0.5); color: white; border: none; border-radius: 50%; display: none; font-size: 24px; line-height: 1; justify-content: center; align-items: center; cursor: pointer;}
         
-        /* 通常のフルスクリーン API と、iOS用の疑似フルスクリーンクラスの両方に対応 */
         :fullscreen #bookmark-bar, :fullscreen #toolbar,
         :-webkit-full-screen #bookmark-bar, :-webkit-full-screen #toolbar,
         .pseudo-fullscreen #bookmark-bar, .pseudo-fullscreen #toolbar { display: none !important; }
@@ -213,29 +248,29 @@
 
 <div id="main-container">
     <div id="view"></div>
-</div>
-
-<div id="menu-overlay">
-    <div class="menu-item" onclick="navForward(); toggleMenu();">
-        <span style="width: 24px; text-align: center;">▶</span> 進む
-    </div>
-    <div class="menu-item" onclick="navReload(); toggleMenu();">
-        <span style="width: 24px; text-align: center;">⟳</span> 更新
-    </div>
-    <div class="menu-item" onclick="goHome(); toggleMenu();">
-        <span style="width: 24px; text-align: center;">🏠</span> ホーム
-    </div>
-    <div class="menu-item" onclick="toggleBookmark(); toggleMenu();">
-        <span id="menu-star" style="width: 24px; text-align: center; font-size: 20px;">★</span> ブックマーク
-    </div>
-    <div class="menu-item" onclick="toggleFullscreen(); toggleMenu();">
-        <span style="width: 24px; text-align: center;">⛶</span> フルスクリーン
-    </div>
-    <div class="menu-item" onclick="openSettings(); toggleMenu();">
-        <span style="width: 24px; text-align: center;">⚙️</span> 設定
-    </div>
-    <div class="menu-item" onclick="toggleDarkMode(); toggleMenu();">
-        <span style="width: 24px; text-align: center;">🌓</span> ダークモード
+    
+    <div id="menu-overlay">
+        <div class="menu-item" onclick="navForward(); toggleMenu();">
+            <span style="width: 24px; text-align: center;">▶</span> 進む
+        </div>
+        <div class="menu-item" onclick="navReload(); toggleMenu();">
+            <span style="width: 24px; text-align: center;">⟳</span> 更新
+        </div>
+        <div class="menu-item" onclick="goHome(); toggleMenu();">
+            <span style="width: 24px; text-align: center;">🏠</span> ホーム
+        </div>
+        <div class="menu-item" onclick="toggleBookmark(); toggleMenu();">
+            <span id="menu-star" style="width: 24px; text-align: center; font-size: 20px;">★</span> ブックマーク
+        </div>
+        <div class="menu-item" onclick="toggleFullscreen(); toggleMenu();">
+            <span style="width: 24px; text-align: center;">⛶</span> フルスクリーン
+        </div>
+        <div class="menu-item" onclick="openSettings(); toggleMenu();">
+            <span style="width: 24px; text-align: center;">⚙️</span> 設定
+        </div>
+        <div class="menu-item" onclick="toggleDarkMode(); toggleMenu();">
+            <span style="width: 24px; text-align: center;">🌓</span> ダークモード
+        </div>
     </div>
 </div>
 
@@ -251,11 +286,13 @@
 </div>
 
 <script>
+// --- State & Settings ---
 let tabs = [];
 let activeTabId = null;
 let settings = {
     homeUrl: "https://google.com/?igu=1",
     darkMode: false,
+    toolbarPos: "bottom", // new setting for toolbar position
     bookmarks: [],
     viewMode: "iframe",
     activeProxyId: null,
@@ -299,10 +336,19 @@ const PRESETS = [
 ];
 const SANDBOX_SETTINGS = "allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-presentation allow-same-origin allow-scripts allow-storage-access-by-user-activation";
 
+// --- Core Logic ---
+
 function init() {
     const saved = localStorage.getItem('browser-settings');
     if (saved) settings = { ...settings, ...JSON.parse(saved) };
-    if (settings.darkMode) document.body.classList.add('dark-mode');
+    
+    if (settings.darkMode) {
+        document.body.classList.add('dark-mode');
+        document.documentElement.classList.add('dark-mode-html');
+    }
+    
+    if (!settings.toolbarPos) settings.toolbarPos = "bottom";
+    applyToolbarPos();
     
     const savedTabs = localStorage.getItem('browser-sessions');
     if (savedTabs && JSON.parse(savedTabs).length > 0) {
@@ -319,6 +365,14 @@ function saveState() {
     localStorage.setItem('browser-sessions', JSON.stringify(tabs.map(t => ({id: t.id, url: t.url, title: t.title, history: t.history, historyIndex: t.historyIndex}))));
     localStorage.setItem('browser-last-active', activeTabId);
     document.getElementById('tab-count-btn').textContent = tabs.length;
+}
+
+function applyToolbarPos() {
+    if (settings.toolbarPos === 'top') {
+        document.body.classList.add('toolbar-top');
+    } else {
+        document.body.classList.remove('toolbar-top');
+    }
 }
 
 function setProgress(percent) {
@@ -422,6 +476,7 @@ function closeTab(id, e) {
     saveState();
 }
 
+// --- Navigation & UI ---
 
 function go() {
     let url = document.getElementById('url').value;
@@ -452,6 +507,7 @@ function updateNavButtons() {
     document.getElementById('btn-back').disabled = (t.historyIndex <= 0); 
 }
 
+// --- Bookmarks ---
 function renderBookmarkBar() {
     const bar = document.getElementById('bookmark-bar'); 
     bar.innerHTML = '';
@@ -488,6 +544,7 @@ function toggleBookmark() {
     updateStarUI(); renderBookmarkBar(); saveState(); 
 }
 
+// --- Overlays (Menu & Tab Switcher) ---
 function toggleMenu() {
     const menu = document.getElementById('menu-overlay');
     menu.style.display = (menu.style.display === 'flex') ? 'none' : 'flex';
@@ -522,11 +579,13 @@ function renderTabGrid() {
 function toggleDarkMode() {
     settings.darkMode = !settings.darkMode;
     document.body.classList.toggle('dark-mode');
+    document.documentElement.classList.toggle('dark-mode-html');
     saveState();
     const activeEl = document.querySelector('.settings-page');
     if (activeEl) renderSettingsInto(activeEl);
 }
 
+// --- Fullscreen (Safari対応) ---
 function toggleFullscreen() {
     const docEl = document.documentElement;
     const requestFS = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.mozRequestFullScreen || docEl.msRequestFullscreen;
@@ -534,7 +593,6 @@ function toggleFullscreen() {
     if (requestFS) {
         if (!document.fullscreenElement && !document.webkitFullscreenElement) {
             requestFS.call(docEl).catch(err => {
-                console.log("フルスクリーンAPIがブロックされました。疑似フルスクリーンに切り替えます:", err);
                 fallbackPseudoFullscreen();
             });
         } else {
@@ -551,13 +609,13 @@ function fallbackPseudoFullscreen() {
 
 function exitFullscreen() {
     const exitFS = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
-    
     if (exitFS && (document.fullscreenElement || document.webkitFullscreenElement)) {
         exitFS.call(document);
     }
     document.body.classList.remove('pseudo-fullscreen');
 }
 
+// --- Settings Page Rendering ---
 function renderSettingsInto(container) {
     let proxyHtml = "";
     for (const id in PROXIES) {
@@ -568,6 +626,24 @@ function renderSettingsInto(container) {
     container.innerHTML = `
         <h2 style="margin-top:0;">⚙️ 設定</h2>
         
+        <div class="card"><h3>🖥️ UI・表示設定</h3>
+            <label style="font-size:14px; font-weight:bold;">テーマカラー</label><br>
+            <button class="btn" style="margin-top:6px; margin-bottom:12px; width:100%;" onclick="toggleDarkMode()">${settings.darkMode ? '🌙 ダークモード (ON)' : '☀️ ライトモード (OFF)'}</button>
+
+            <label style="font-size:14px; font-weight:bold;">検索バー（ツールバー）の位置</label>
+            <select onchange="settings.toolbarPos=this.value; applyToolbarPos(); saveState();" style="margin-top:6px; margin-bottom:12px;">
+                <option value="bottom" ${settings.toolbarPos==='bottom'?'selected':''}>画面下部 (スマホ推奨)</option>
+                <option value="top" ${settings.toolbarPos==='top'?'selected':''}>画面上部 (PC推奨)</option>
+            </select>
+
+            <label style="font-size:14px; font-weight:bold;">レンダリングモード</label>
+            <select onchange="settings.viewMode=this.value; saveState();" style="margin-top:6px;">
+                <option value="iframe" ${settings.viewMode==='iframe'?'selected':''}>iframe (推奨)</option>
+                <option value="object" ${settings.viewMode==='object'?'selected':''}>object</option>
+                <option value="embed" ${settings.viewMode==='embed'?'selected':''}>embed</option>
+            </select>
+        </div>
+
         <div class="card"><h3>★ ブックマーク管理</h3>
             ${settings.bookmarks.length === 0 ? '<p style="opacity:0.5; font-size:14px;">なし</p>' : 
               settings.bookmarks.map((b,i)=>`<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; font-size:14px;">
@@ -580,7 +656,7 @@ function renderSettingsInto(container) {
             <div class="proxy-item" style="border:none; padding:0;">
                 <div style="flex:1;">
                     <label style="font-size:14px; font-weight:bold;">Tor Gateway モード</label>
-                    <select onchange="settings.torGateway=this.value; saveState();">
+                    <select onchange="settings.torGateway=this.value; saveState();" style="margin-top:6px;">
                         <option value=".tor.lc" ${settings.torGateway==='.tor.lc'?'selected':''}>.tor.lc (normal)</option>
                         <option value=".onion.pe" ${settings.torGateway==='.onion.pe'?'selected':''}>.onion.pe (sub)</option>
                     </select>
@@ -598,15 +674,6 @@ function renderSettingsInto(container) {
             <button class="btn btn-primary" onclick="settings.homeUrl=document.getElementById('set-home').value;saveState();alert('保存しました')">ホームURLを保存</button>
             <p style="font-size: 14px; margin-top:16px; margin-bottom:8px;">プリセット:</p>
             <div class="preset-group" id="plist"></div>
-        </div>
-
-        <div class="card"><h3>表示設定</h3>
-            <label style="font-size:14px; font-weight:bold;">レンダリングモード</label>
-            <select onchange="settings.viewMode=this.value; saveState();" style="margin-top:8px;">
-                <option value="iframe" ${settings.viewMode==='iframe'?'selected':''}>iframe (推奨)</option>
-                <option value="object" ${settings.viewMode==='object'?'selected':''}>object</option>
-                <option value="embed" ${settings.viewMode==='embed'?'selected':''}>embed</option>
-            </select>
         </div>
 
         <div class="card"><h3>🌐 プロキシ設定</h3>${proxyHtml}</div>
@@ -636,6 +703,7 @@ window.toggleProxy = (id) => {
     renderSettingsInto(document.querySelector('.settings-page'));
 };
 
+// Initialize
 init();
 </script>
 </body>
