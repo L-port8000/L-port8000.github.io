@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>o - Tor Multi-Gateway</title>
+<link rel="icon" href="../icon.png">
+<style>
+:root { --bg-color: #f0f0f4; --toolbar-bg: #f9f9fb; --text-color: #000; --border-color: #d0d0d7; --accent: #0060df; --tor-color: #7d4698; }
+body.dark-mode { --bg-color: #1c1b22; --toolbar-bg: #2b2a33; --text-color: #fbfbfe; --border-color: #52525e; --accent: #00ddff; --tor-color: #9d66b8; }
+body { margin: 0; font-family: system-ui, sans-serif; background: var(--bg-color); color: var(--text-color); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+#progress-container { position: absolute; top: 0; left: 0; width: 100%; height: 2px; z-index: 1000; pointer-events: none; }
+#progress-bar { width: 0%; height: 100%; background: var(--accent); transition: width 0.3s ease; }
+#tabs-bar { display: flex; background: var(--bg-color); padding: 5px 5px 0 5px; gap: 4px; border-bottom: 1px solid var(--border-color); overflow-x: auto; min-height: 35px; scrollbar-width: none; }
+#tabs-bar::-webkit-scrollbar { display: none; }
+.tab { padding: 6px 12px; background: rgba(0,0,0,0.05); border-radius: 8px 8px 0 0; cursor: pointer; min-width: 140px; max-width: 200px; display: flex; align-items: center; font-size: 11px; border: 1px solid var(--border-color); border-bottom: none; white-space: nowrap; transition: 0.2s; }
+.tab.active { background: var(--toolbar-bg); font-weight: bold; border-top: 2px solid var(--accent); }
+.tab img { width: 14px; height: 14px; margin-right: 6px; border-radius: 2px; }
+.tab-title { flex: 1; overflow: hidden; text-overflow: ellipsis; }
+.close-btn { margin-left: 8px; opacity: 0.3; font-size: 14px; }
+.close-btn:hover { color: red; opacity: 1; }
+#chrome { background: var(--toolbar-bg); border-bottom: 1px solid var(--border-color); padding: 8px; display: flex; gap: 8px; align-items: center; z-index: 10; position: relative; }
+#url { flex: 1; padding: 8px 15px; border-radius: 20px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-color); font-size: 13px; }
+#bookmark-bar { background: var(--toolbar-bg); padding: 4px 10px; display: flex; gap: 10px; border-bottom: 1px solid var(--border-color); font-size: 11px; overflow-x: auto; min-height: 20px; }
+.bm-item { display: flex; align-items: center; gap: 4px; cursor: pointer; padding: 4px 8px; border-radius: 4px; white-space: nowrap; max-width: 150px; }
+.bm-item:hover { background: rgba(0,0,0,0.05); }
+.bm-item img { width: 12px; height: 12px; }
+.star-btn { font-size: 20px; cursor: pointer; color: #ccc; }
+.star-btn.active { color: #f1c40f; }
+#main-container { display: flex; flex: 1; overflow: hidden; position: relative; }
+#view { flex: 1; background: white; position: relative; }
+.page-element { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; display: none; background: white; }
+.page-element.active { display: block; }
+.settings-page { padding: 40px 20px; overflow-y: auto; box-sizing: border-box; background: var(--bg-color) !important; }
+.card { background: var(--toolbar-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); max-width: 600px; margin: 0 auto 20px; color: var(--text-color); }
+.preset-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+button { padding: 6px 12px; cursor: pointer; border-radius: 4px; border: 1px solid var(--border-color); background: rgba(0,0,0,0.05); color: inherit; }
+button:disabled { opacity: 0.3; cursor: default; }
+select, input[type="text"] { padding: 8px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-color); }
+
+#fs-close-btn { position: fixed; top: 15px; right: 15px; z-index: 9999; width: 32px; height: 32px; background: rgba(0,0,0,0.3); color: white; border: none; border-radius: 50%; cursor: pointer; display: none; opacity: 0.2; transition: 0.3s; font-size: 18px; line-height: 1; }
+#fs-close-btn:hover { opacity: 1; background: rgba(220, 53, 69, 0.9); }
+:fullscreen #tabs-bar, :fullscreen #chrome, :fullscreen #bookmark-bar { display: none !important; }
+:fullscreen #fs-close-btn { display: flex; align-items: center; justify-content: center; }
+
+#vpn-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; display: none; align-items: center; justify-content: center; color: white; flex-direction: column; text-align: center; }
+.vpn-box { background: #2b2a33; padding: 30px; border-radius: 12px; max-width: 400px; border: 1px solid #52525e; }
+.vpn-box h2 { color: #ff5555; margin-top: 0; }
+.vpn-box button { background: var(--accent); color: white; border: none; padding: 10px 20px; font-weight: bold; margin-top: 20px; }
+
+#circuit-popup { position: absolute; top: 45px; left: 160px; background: var(--toolbar-bg); border: 1px solid var(--border-color); padding: 15px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 100; display: none; min-width: 240px; font-size: 13px; color: var(--text-color); }
+.circuit-node { display: flex; align-items: center; margin: 8px 0; padding-left: 10px; border-left: 2px solid var(--tor-color); }
+.circuit-node img { width: 16px; height: 16px; margin-right: 8px; border-radius: 3px; }
+
+.node-list-item { display: flex; justify-content: space-between; align-items: center; padding: 6px; border-bottom: 1px solid var(--border-color); font-size: 12px; }
+</style>
+</head>
+<body>
+
+<div id="vpn-overlay">
+    <div class="vpn-box">
+        <h2>⚠️ VPNを利用していますか？</h2>
+        <p>ブラウザの制限上、EntryノードVPNを利用します。VPNを利用することを推奨します</p>
+        <button onclick="continueWithoutVPN()">続行する。</button>
+    </div>
+</div>
+
+<div id="progress-container"><div id="progress-bar"></div></div>
+<button id="fs-close-btn" onclick="exitFullscreen()">×</button>
+
+<div id="tabs-bar"></div>
+<div id="chrome">
+    <button id="btn-back" onclick="navBack()">◀</button>
+    <button id="btn-forward" onclick="navForward()">▶</button>
+    <button onclick="navReload()">⟳</button>
+    <button onclick="goHome()">◻️</button>
+    <button id="btn-circuit" onclick="toggleCircuit()" style="font-size: 16px; padding: 4px 8px;" title="ノード設定">🧅</button>
+    <span id="star-btn" class="star-btn" onclick="toggleBookmark()">★</span>
+    <input id="url" placeholder="URLを入力してEnter">
+    <button onclick="go()">Go</button>
+    <button onclick="toggleFullscreen()">⛶</button> <button onclick="openSettings()">⚙️</button>
+    
+    <div id="circuit-popup"></div>
+</div>
+<div id="bookmark-bar"></div>
+
+<div id="main-container">
+    <div id="view"></div>
+</div>
+
+<script>
+const KNOWN_VPNS = {
+   "219.100": { name: "VPN-gate", domain: "vpngate.net" },
+   "138.229": { name: "VPN-gate", domain: "vpngate.net" },
+   "58.152": { name: "VPN-gate", domain: "vpngate.net" },
+   "2.58": { name: "Proton VPN", domain: "protonvpn.com" },
+   "5.8": { name: "Proton VPN", domain: "protonvpn.com" },
+   "5.157": { name: "Proton VPN", domain: "protonvpn.com" },
+   "5.181": { name: "Proton VPN", domain: "protonvpn.com" },
+   "31.13": { name: "Proton VPN", domain: "protonvpn.com" },
+   "37.19": { name: "Proton VPN", domain: "protonvpn.com" },
+   "37.46": { name: "Proton VPN", domain: "protonvpn.com" },
+   "37.120": { name: "Proton VPN", domain: "protonvpn.com" },
+   "37.221": { name: "Proton VPN", domain: "protonvpn.com" },
+   "45.14": { name: "Proton VPN", domain: "protonvpn.com" },
+   "45.38": { name: "Proton VPN", domain: "protonvpn.com" },
+   "45.87": { name: "Proton VPN", domain: "protonvpn.com" },
+   "45.128": { name: "Proton VPN", domain: "protonvpn.com" },
+   "45.134": { name: "Proton VPN", domain: "protonvpn.com" },
+   "45.152": { name: "Proton VPN", domain: "protonvpn.com" },
+   "62.112": { name: "Proton VPN", domain: "protonvpn.com" },
+   "66.90": { name: "Proton VPN", domain: "protonvpn.com" },
+   "66.115": { name: "Proton VPN", domain: "protonvpn.com" },
+   "66.251": { name: "Proton VPN", domain: "protonvpn.com" },
+   "69.10": { name: "Proton VPN", domain: "protonvpn.com" },
+   "74.63": { name: "Proton VPN", domain: "protonvpn.com" },
+   "77.247": { name: "Proton VPN", domain: "protonvpn.com" },
+   "79.110": { name: "Proton VPN", domain: "protonvpn.com" },
+   "79.135": { name: "Proton VPN", domain: "protonvpn.com" },
+   "84.17": { name: "Proton VPN", domain: "protonvpn.com" },
+   "84.247": { name: "Proton VPN", domain: "protonvpn.com" },
+   "84.252": { name: "Proton VPN", domain: "protonvpn.com" },
+   "85.132": { name: "Proton VPN", domain: "protonvpn.com" },
+   "85.159": { name: "Proton VPN", domain: "protonvpn.com" },
+   "85.204": { name: "Proton VPN", domain: "protonvpn.com" },
+   "85.206": { name: "Proton VPN", domain: "protonvpn.com" },
+   "87.249": { name: "Proton VPN", domain: "protonvpn.com" },
+   "89.36": { name: "Proton VPN", domain: "protonvpn.com" },
+   "89.38": { name: "Proton VPN", domain: "protonvpn.com" },
+   "89.39": { name: "Proton VPN", domain: "protonvpn.com" },
+   "89.45": { name: "Proton VPN", domain: "protonvpn.com" },
+   "89.187": { name: "Proton VPN", domain: "protonvpn.com" },
+   "91.90": { name: "Proton VPN", domain: "protonvpn.com" },
+   "91.219": { name: "Proton VPN", domain: "protonvpn.com" },
+   "92.223": { name: "Proton VPN", domain: "protonvpn.com" },
+   "93.113": { name: "Proton VPN", domain: "protonvpn.com" },
+   "94.137": { name: "Proton VPN", domain: "protonvpn.com" },
+   "102.38": { name: "Proton VPN", domain: "protonvpn.com" },
+   "102.218": { name: "Proton VPN", domain: "protonvpn.com" },
+   "103.75": { name: "Proton VPN", domain: "protonvpn.com" },
+   "103.107": { name: "Proton VPN", domain: "protonvpn.com" },
+   "103.108": { name: "Proton VPN", domain: "protonvpn.com" },
+   "103.125": { name: "Proton VPN", domain: "protonvpn.com" },
+   "103.214": { name: "Proton VPN", domain: "protonvpn.com" },
+   "103.216": { name: "Proton VPN", domain: "protonvpn.com" },
+   "103.230": { name: "Proton VPN", domain: "protonvpn.com" },
+   "104.234": { name: "Proton VPN", domain: "protonvpn.com" },
+   "107.181": { name: "Proton VPN", domain: "protonvpn.com" },
+   "107.186": { name: "Proton VPN", domain: "protonvpn.com" },
+   "116.90": { name: "Proton VPN", domain: "protonvpn.com" },
+   "138.199": { name: "Proton VPN", domain: "protonvpn.com" },
+   "144.48": { name: "Proton VPN", domain: "protonvpn.com" },
+   "146.70": { name: "Proton VPN", domain: "protonvpn.com" },
+   "149.34": { name: "Proton VPN", domain: "protonvpn.com" },
+   "149.36": { name: "Proton VPN", domain: "protonvpn.com" },
+   "149.88": { name: "Proton VPN", domain: "protonvpn.com" },
+   "149.102": { name: "Proton VPN", domain: "protonvpn.com" },
+   "154.47": { name: "Proton VPN", domain: "protonvpn.com" },
+   "156.146": { name: "Proton VPN", domain: "protonvpn.com" },
+   "165.231": { name: "Proton VPN", domain: "protonvpn.com" },
+   "169.150": { name: "Proton VPN", domain: "protonvpn.com" },
+   "172.83": { name: "Proton VPN", domain: "protonvpn.com" },
+   "172.98": { name: "Proton VPN", domain: "protonvpn.com" },
+   "178.218": { name: "Proton VPN", domain: "protonvpn.com" },
+   "178.249": { name: "Proton VPN", domain: "protonvpn.com" },
+   "180.149": { name: "Proton VPN", domain: "protonvpn.com" },
+   "185.51": { name: "Proton VPN", domain: "protonvpn.com" },
+   "185.76": { name: "Proton VPN", domain: "protonvpn.com" },
+   "185.107": { name: "Proton VPN", domain: "protonvpn.com" },
+   "185.156": { name: "Proton VPN", domain: "protonvpn.com" },
+   "185.159": { name: "Proton VPN", domain: "protonvpn.com" },
+   "185.185": { name: "Proton VPN", domain: "protonvpn.com" },
+   "185.229": { name: "Proton VPN", domain: "protonvpn.com" },
+   "185.230": { name: "Proton VPN", domain: "protonvpn.com" },
+   "185.246": { name: "Proton VPN", domain: "protonvpn.com" },
+   "188.214": { name: "Proton VPN", domain: "protonvpn.com" },
+   "188.215": { name: "Proton VPN", domain: "protonvpn.com" },
+   "188.241": { name: "Proton VPN", domain: "protonvpn.com" },
+   "190.2": { name: "Proton VPN", domain: "protonvpn.com" },
+   "193.27": { name: "Proton VPN", domain: "protonvpn.com" },
+   "193.29": { name: "Proton VPN", domain: "protonvpn.com" },
+   "193.37": { name: "Proton VPN", domain: "protonvpn.com" },
+   "193.148": { name: "Proton VPN", domain: "protonvpn.com" },
+   "194.34": { name: "Proton VPN", domain: "protonvpn.com" },
+   "194.126": { name: "Proton VPN", domain: "protonvpn.com" },
+   "195.80": { name: "Proton VPN", domain: "protonvpn.com" },
+   "195.158": { name: "Proton VPN", domain: "protonvpn.com" },
+   "195.181": { name: "Proton VPN", domain: "protonvpn.com" },
+   "196.240": { name: "Proton VPN", domain: "protonvpn.com" },
+   "196.244": { name: "Proton VPN", domain: "protonvpn.com" },
+   "196.245": { name: "Proton VPN", domain: "protonvpn.com" },
+   "212.30": { name: "Proton VPN", domain: "protonvpn.com" },
+   "212.102": { name: "Proton VPN", domain: "protonvpn.com" },
+   "217.138": { name: "Proton VPN", domain: "protonvpn.com" },
+   "45.129": { name: "Surfshark", domain: "surfshark.com" },
+   "139.28": { name: "Surfshark", domain: "surfshark.com" },
+   "156.146": { name: "Mullvad VPN", domain: "mullvad.net" },
+   "185.213": { name: "Mullvad VPN", domain: "mullvad.net" },
+   "198.18": { name: "ExpressVPN", domain: "expressvpn.com" },
+   "149.154": { name: "ExpressVPN", domain: "expressvpn.com" },
+   "172.83": { name: "Private Internet Access", domain: "privateinternetaccess.com" },
+   "154.16": { name: "Private Internet Access", domain: "privateinternetaccess.com" },
+   "64.120": { name: "TorGuard", domain: "torguard.net" },
+   "176.113": { name: "TorGuard", domain: "torguard.net" },
+   "23.94": { name: "Windscribe", domain: "windscribe.com" },
+   "198.23": { name: "Windscribe", domain: "windscribe.com" }
+};
+
+const DEFAULT_RELAYS = [
+    { id: "r1", name: "Workers - US 1", url: "https://sk.skkatoo.workers.dev/-----", domain: "cloudflare.com", type: "prefix" },
+    { id: "r2", name: "Workers - US 2", url: "https://black-resonance-5407.cvfr.workers.dev/-----", domain: "cloudflare.com", type: "prefix" },
+    { id: "r4",  name: "55games - 1", url: "https://55gms.com/embed#", domain: "55gms.com", type: "prefix" },
+    { id: "r3",  name: "55games - 2", url: "https://55gms.me/embed#", domain: "55gms.me", type: "prefix" },
+    { id: "r5",  name: "55games - 3", url: "https://55gms.app/embed#", domain: "55gms.app", type: "prefix" },
+    { id: "r6",  name: "55games - 4", url: "https://algebra.learnnexus.xyz/embed#", domain: "learnnexus.xyz", type: "prefix" },
+    { id: "r7",  name: "55games - 5", url: "https://biology.learnnexus.xyz/embed#", domain: "learnnexus.xyz", type: "prefix" },
+    { id: "r8",  name: "Workers - US 1", url: "https://sk.skkatoo.workers.dev/-----", domain: "workers.dev", type: "prefix" },
+    { id: "r9",  name: "Workers - US 2", url: "https://black-resonance-5407.cvfr.workers.dev/-----", domain: "workers.dev", type: "prefix" },
+    { id: "r10", name: "Workers - US 3", url: "https://loli.loli12.workers.dev/-----", domain: "workers.dev", type: "prefix" },
+    { id: "r11", name: "Workers - US 4", url: "https://loli.xianyu1.workers.dev/-----", domain: "workers.dev", type: "prefix" },
+    { id: "r12", name: "Workers - US 5", url: "https://lucky-mountain-6e91.networkfreedom.workers.dev/-----", domain: "workers.dev", type: "prefix" },
+    { id: "r13", name: "Workers - US 6", url: "https://proxy.dijkstra.workers.dev/-----", domain: "workers.dev", type: "prefix" },
+    { id: "r14", name: "Workers - US 7", url: "https://b.007.workers.dev/-----", domain: "workers.dev", type: "prefix" },
+    { id: "r15", name: "Workers - US 8", url: "https://1.wv1.workers.dev/-----", domain: "workers.dev", type: "prefix" },
+    { id: "r16", name: "Workers - US 9", url: "https://proxy.fan.workers.dev/-----", domain: "workers.dev", type: "prefix" },
+    { id: "r17", name: "Workers - US 10", url: "https://jsproxy1.jimmytinsley.workers.dev/-----", domain: "workers.dev", type: "prefix" },
+    { id: "r18", name: "Workers - US 11", url: "https://proxy.rdr.workers.dev/-----", domain: "workers.dev", type: "prefix" },
+    { id: "r19", name: "Workers - US 12", url: "https://proxy.thiruhostinger.workers.dev/?url=", domain: "workers.dev", type: "prefix" },
+    { id: "r20", name: "Workers - US 13", url: "https://lucky-mountain-6e91.networkfreedom.workers.dev/-----", domain: "workers.dev", type: "prefix" },
+    { id: "r21", name: "Workers - US 14", url: "https://tohyotalk.habataku.workers.dev/-----", domain: "workers.dev", type: "prefix" },
+    { id: "r22", name: "Workers - US 15", url: "https://little-credit-fc7d.sfzanghao.workers.dev/-----", domain: "workers.dev", type: "prefix" },
+    { id: "r23", name: "Workers - US 16", url: "https://proxy.thiruhostinger.workers.dev/?url=", domain: "workers.dev", type: "prefix" },
+    { id: "r24", name: "Blank", url: "https://", domain: "" }
+];
+
+const DEFAULT_EXITS = [
+    { id: "e1", name: "Freeplace - 1", url: "https://freeplace.in/proxy/browse.php?u=", domain: "freeplace.in", type: "prefix" },
+    { id: "e2", name: "Freeplace - 2", url: "https://freeplace.info/proxy/browse.php?u=", domain: "freeplace.info", type: "prefix" },
+    { id: "e3", name: "Torlc", suffix: ".tor.lc", domain: "tor.lc", type: "replace" },
+    { id: "e4", name: "onionpe", suffix: ".onion.pe", domain: "onion.pe", type: "replace" }
+];
+
+const PRESETS = [ { name: "Google", url: "https://google.com/?igu=1" }, { name: "OffiDocs", url: "https://offidocs.com" }, { name: "StartPage", url: "https://startpagel6srwcjlue4zgq3zevrujfaow726kjytqbbjyrswwmjzcqd.onion" } ];
+
+const SANDBOX_SETTINGS = "allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-presentation allow-same-origin allow-scripts allow-storage-access-by-user-activation";
+
+const STORAGE_SETTINGS_KEY = 'tmg-app-settings';
+const STORAGE_SESSIONS_KEY = 'tmg-app-sessions';
+const STORAGE_LAST_ACTIVE_KEY = 'tmg-app-last-active';
+
+let tabs = [];
+let activeTabId = null;
+let currentEntryNode = { name: "None or Unknown VPN)", domain: "localhost" };
+
+let settings = {
+    homeUrl: "https://google.com/?igu=1",
+    darkMode: false,
+    bookmarks: [],
+    viewMode: "iframe",
+    relays: JSON.parse(JSON.stringify(DEFAULT_RELAYS)),
+    exits: JSON.parse(JSON.stringify(DEFAULT_EXITS))
+};
+
+async function checkVPN() {
+    try {
+        let res = await fetch("https://api.ipify.org?format=json");
+        let data = await res.json();
+        
+        let matchedKey = Object.keys(KNOWN_VPNS).find(prefix => data.ip.startsWith(prefix));
+        
+        if (matchedKey) {
+            currentEntryNode = KNOWN_VPNS[matchedKey];
+            initBrowser();
+        } else {
+            document.getElementById("vpn-overlay").style.display = "flex";
+        }
+    } catch(e) { 
+        document.getElementById("vpn-overlay").style.display = "flex"; 
+    }
+}
+function initBrowser() {
+    const saved = localStorage.getItem(STORAGE_SETTINGS_KEY);
+    if (saved) {
+        let parsed = JSON.parse(saved);
+        settings.homeUrl = parsed.homeUrl || settings.homeUrl;
+        settings.darkMode = parsed.darkMode || false;
+        settings.bookmarks = parsed.bookmarks || [];
+        settings.viewMode = parsed.viewMode || "iframe";
+        settings.relays = parsed.relays || JSON.parse(JSON.stringify(DEFAULT_RELAYS));
+        settings.exits = parsed.exits || JSON.parse(JSON.stringify(DEFAULT_EXITS));
+    }
+    if (settings.darkMode) document.body.classList.add('dark-mode');
+    
+    const savedTabs = localStorage.getItem(STORAGE_SESSIONS_KEY);
+    if (savedTabs) {
+        JSON.parse(savedTabs).forEach(t => createTabObject(t.url, t.id, t.title, t.history, t.historyIndex, t.relayId, t.exitId));
+        switchTab(parseInt(localStorage.getItem(STORAGE_LAST_ACTIVE_KEY)) || tabs[0].id);
+    } else createNewTab(settings.homeUrl); 
+    renderBookmarkBar();
+}
+window.onload = checkVPN;
+
+function toggleFullscreen() {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(()=>{});
+    else exitFullscreen();
+}
+function exitFullscreen() { if (document.exitFullscreen) document.exitFullscreen(); }
+
+function saveState() {
+    localStorage.setItem(STORAGE_SETTINGS_KEY, JSON.stringify(settings));
+    localStorage.setItem(STORAGE_SESSIONS_KEY, JSON.stringify(tabs.map(t => ({
+        id: t.id, url: t.url, title: t.title, history: t.history, historyIndex: t.historyIndex,
+        relayId: t.relay ? t.relay.id : null,
+        exitId: t.exit ? t.exit.id : null
+    }))));
+    localStorage.setItem(STORAGE_LAST_ACTIVE_KEY, activeTabId);
+}
+
+function setProgress(percent) {
+    const bar = document.getElementById('progress-bar');
+    bar.style.width = percent + "%";
+    if (percent >= 100) setTimeout(() => { bar.style.width = "0%"; }, 400);
+}
+
+function getIconUrl(url) {
+    if (url === "settings://") return "https://gstatic.com/images/branding/product/1x/settings_32dp.png";
+    if (url.includes("localhost")) return "https://icons.duckduckgo.com/ip3/example.com.ico";
+    try { return `https://icons.duckduckgo.com/ip3/${new URL(url).hostname}.ico`; } 
+    catch(e) { return "https://icons.duckduckgo.com/ip3/example.com.ico"; }
+}
+
+function getEffectiveUrl(tab, url) {
+    if (url === "settings://") return url;
+    let target = url;
+    
+    if (tab.exit) {
+        if (tab.exit.type === "replace") {
+            if (target.includes(".onion")) target = target.replace(/\.onion/g, tab.exit.suffix);
+        } else {
+            target = (tab.exit.url || "") + target;
+        }
+    }
+    
+    if (tab.relay) {
+        target = (tab.relay.url || "") + target;
+    }
+    
+    return target;
+}
+
+function createTabObject(url, id = Date.now(), title = "読み込み中...", history = null, hIndex = 0, savedRelayId = undefined, savedExitId = undefined) {
+    const tab = { id, url, title, history: history || [url], historyIndex: hIndex, element: null, relay: null, exit: null };
+    
+    // タブ作成時のノード設定（保存データがあれば復元、なければランダムに一つ割り当て）
+    if (savedRelayId !== undefined) {
+        tab.relay = savedRelayId ? settings.relays.find(r => r.id === savedRelayId) : null;
+    } else {
+        tab.relay = settings.relays.length > 0 ? settings.relays[Math.floor(Math.random() * settings.relays.length)] : null;
+    }
+    
+    if (savedExitId !== undefined) {
+        tab.exit = savedExitId ? settings.exits.find(e => e.id === savedExitId) : null;
+    } else {
+        tab.exit = settings.exits.length > 0 ? settings.exits[Math.floor(Math.random() * settings.exits.length)] : null;
+    }
+
+    updateTabElement(tab);
+    tabs.push(tab);
+    return tab;
+}
+
+function updateTabElement(tab) {
+    if (tab.element) tab.element.remove();
+    const viewArea = document.getElementById('view');
+    let el;
+    if (tab.url === "settings://") {
+        el = document.createElement('div'); el.className = "page-element settings-page";
+        renderSettingsInto(el);
+    } else {
+        const finalUrl = getEffectiveUrl(tab, tab.url);
+        el = document.createElement(settings.viewMode === "iframe" ? 'iframe' : (settings.viewMode === "object" ? 'object' : 'embed'));
+        if (settings.viewMode === "iframe") { el.src = finalUrl; el.setAttribute("sandbox", SANDBOX_SETTINGS); } 
+        else { el.data = finalUrl; el.src = finalUrl; el.type = "text/html"; }
+        
+        el.className = "page-element"; setProgress(30);
+        el.onload = () => {
+            setProgress(100);
+            try { tab.title = el.contentDocument.title || new URL(tab.url).hostname; } catch(e) { tab.title = tab.url.replace(/https?:\/\//,'').split('/')[0]; }
+            renderTabsUI(); updateStarUI();
+        };
+    }
+    el.id = `page-${tab.id}`;
+    if (tab.id === activeTabId) el.classList.add('active');
+    viewArea.appendChild(el); tab.element = el;
+}
+
+function switchTab(id) {
+    activeTabId = id;
+    tabs.forEach(t => {
+        const active = t.id === id;
+        t.element.classList.toggle('active', active);
+        if (active) document.getElementById('url').value = t.url;
+    });
+    syncSettingsUI();
+    updateNavButtons(); updateStarUI(); renderTabsUI(); saveState();
+}
+
+function syncSettingsUI() {
+    document.querySelectorAll('.settings-page').forEach(container => renderSettingsInto(container));
+}
+
+function renderSettingsInto(container) {
+    if (!container) return;
+    
+    container.innerHTML = `
+        <div class="card"><h3>★ ブックマーク管理</h3>
+            ${settings.bookmarks.length === 0 ? '<p style="opacity:0.5">なし</p>' : 
+              settings.bookmarks.map((b,i)=>`<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <span><img src="${getIconUrl(b.url)}" style="width:12px; margin-right:5px;">${b.title}</span>
+                <button onclick="removeBookmark(${i})">削除</button>
+              </div>`).join('')}
+        </div>
+
+        <div class="card" style="border-left: 4px solid var(--tor-color);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <h3 style="margin:0;">🧅 カスタムノード管理</h3>
+                <button onclick="resetNodes()" style="background:#dc3545; color:white; border:none; padding:6px 10px; font-size:12px; border-radius:4px;">初期状態に戻す</button>
+            </div>
+            <p style="font-size:12px; opacity:0.8; margin-top:0;">※ノードの切り替え・オンオフは、ツールバーの「🧅」ボタンから<b>タブごと</b>に設定できます。</p>
+            
+            <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; margin-bottom:15px; background:rgba(0,0,0,0.05); padding:10px; border-radius:8px;">
+                <div><strong>タイプ</strong><br>
+                    <select class="n-type" onchange="const p=this.closest('.card'); p.querySelector('.n-action').disabled = (this.value==='relay'); if(this.value==='relay') p.querySelector('.n-action').value='prefix';">
+                        <option value="relay">Relay(中継)</option><option value="exit">Exit(出口)</option>
+                    </select>
+                </div>
+                <div><strong>アクション</strong><br>
+                    <select class="n-action" disabled>
+                        <option value="prefix">URLの先頭に追加</option><option value="replace">.onionを置換</option>
+                    </select>
+                </div>
+                <div style="flex:1;"><strong>名前</strong><br><input type="text" class="n-name" placeholder="My Node" style="width:100%;"></div>
+                <div style="flex:2;"><strong>URL / 置換文字列</strong><br><input type="text" class="n-url" placeholder="https://..." style="width:100%;"></div>
+                <button onclick="addCustomNode(this)" style="background:var(--accent); color:white; border:none; padding:8px 15px;">＋追加</button>
+            </div>
+            
+            <h4 style="margin:0 0 5px 0; font-size:13px;">登録済み 中継 (Relay)</h4>
+            <div style="max-height:100px; overflow-y:auto; margin-bottom:10px; background:var(--bg-color); border:1px solid var(--border-color); border-radius:4px;">
+                ${settings.relays.length === 0 ? '<div style="padding:6px; font-size:12px; opacity:0.5;">登録されていません</div>' :
+                  settings.relays.map(r => `<div class="node-list-item"><span>[${r.type==='replace'?'置換':'追加'}] ${r.name} <span style="font-size:10px; opacity:0.5;">${r.domain}</span></span> <button onclick="removeNode('relay', '${r.id}')" style="padding:2px 6px; font-size:11px;">削除</button></div>`).join('')}
+            </div>
+
+            <h4 style="margin:0 0 5px 0; font-size:13px;">登録済み 出口 (Exit)</h4>
+            <div style="max-height:100px; overflow-y:auto; background:var(--bg-color); border:1px solid var(--border-color); border-radius:4px;">
+                ${settings.exits.length === 0 ? '<div style="padding:6px; font-size:12px; opacity:0.5;">登録されていません</div>' :
+                  settings.exits.map(e => `<div class="node-list-item"><span>[${e.type==='replace'?'置換':'追加'}] ${e.name} <span style="font-size:10px; opacity:0.5;">${e.domain}</span></span> <button onclick="removeNode('exit', '${e.id}')" style="padding:2px 6px; font-size:11px;">削除</button></div>`).join('')}
+            </div>
+        </div>
+
+        <div class="card"><h3>◻️ ホーム設定</h3>
+            <div style="display:flex; gap:8px; margin-bottom:10px;">
+                <input type="text" class="set-home" value="${settings.homeUrl}" style="flex:1;">
+                <button onclick="saveHomeUrl()">保存</button>
+            </div>
+            <div class="preset-group">
+                ${PRESETS.map(p => `<button onclick="applyPreset('${p.url}')">${p.name}</button>`).join('')}
+            </div>
+        </div>
+
+        <div class="card"><h3>🌓 表示設定</h3>
+            <button onclick="toggleDarkMode()">ダークモード切替</button>
+            <select onchange="changeViewMode(this.value)" style="margin-left:10px;">
+                <option value="iframe" ${settings.viewMode==='iframe'?'selected':''}>iframe</option>
+                <option value="object" ${settings.viewMode==='object'?'selected':''}>object</option>
+                <option value="embed" ${settings.viewMode==='embed'?'selected':''}>embed</option>
+            </select>
+        </div>
+    `;
+}
+
+// ------------------------------------------------------------------
+// ★ カスタムノード追加・削除処理
+// ------------------------------------------------------------------
+window.addCustomNode = (btn) => {
+    const container = btn.closest('.settings-page');
+    if (!container) return;
+
+    const type = container.querySelector('.n-type').value;
+    const action = container.querySelector('.n-action').value;
+    const name = container.querySelector('.n-name').value.trim();
+    const val = container.querySelector('.n-url').value.trim();
+    
+    if(!name || !val) return alert("名前とURL(または置換文字列)を入力してください");
+    
+    let domain = "example.com";
+    if (action === "prefix") {
+        try { domain = new URL(val).hostname; } catch(e){}
+    } else {
+        domain = val.replace(/^\./, '');
+    }
+    
+    const id = "c_" + Date.now();
+    if(type === 'relay') settings.relays.push({ id, name, url: val, domain, type: action });
+    else {
+        if (action === "replace") settings.exits.push({ id, name, suffix: val, domain, type: action });
+        else settings.exits.push({ id, name, url: val, domain, type: action });
+    }
+    
+    saveState(); 
+    syncSettingsUI(); 
+};
+
+window.removeNode = (type, id) => {
+    if(type === 'relay') settings.relays = settings.relays.filter(x => x.id !== id);
+    else settings.exits = settings.exits.filter(x => x.id !== id);
+    saveState(); 
+    syncSettingsUI();
+};
+
+window.resetNodes = () => {
+    if(!confirm("ノードのリストを初期状態に戻しますか？\n（追加したカスタムノードはすべて削除されます）")) return;
+    settings.relays = JSON.parse(JSON.stringify(DEFAULT_RELAYS));
+    settings.exits = JSON.parse(JSON.stringify(DEFAULT_EXITS));
+    saveState();
+    syncSettingsUI();
+    alert("初期状態にリセットしました！");
+};
+
+window.removeBookmark = (index) => { settings.bookmarks.splice(index, 1); saveState(); syncSettingsUI(); renderBookmarkBar(); };
+window.saveHomeUrl = () => { const activeSettings = document.querySelector('.settings-page.active'); if (!activeSettings) return; settings.homeUrl = activeSettings.querySelector('.set-home').value; saveState(); syncSettingsUI(); alert('ホームURLを保存しました'); };
+window.applyPreset = (url) => { settings.homeUrl = url; saveState(); syncSettingsUI(); };
+window.toggleDarkMode = () => { settings.darkMode = !settings.darkMode; document.body.classList.toggle('dark-mode', settings.darkMode); saveState(); syncSettingsUI(); };
+window.changeViewMode = (val) => { settings.viewMode = val; saveState(); syncSettingsUI(); };
+
+function renderTabsUI() {
+    const bar = document.getElementById('tabs-bar'); bar.innerHTML = '';
+    tabs.forEach(t => {
+        const div = document.createElement('div'); div.className = `tab ${t.id === activeTabId ? 'active' : ''}`;
+        div.innerHTML = `<img src="${getIconUrl(t.url)}"><span class="tab-title">${t.title}</span><span class="close-btn" onclick="closeTab(${t.id}, event)">×</span>`;
+        div.onclick = () => switchTab(t.id); bar.appendChild(div);
+    });
+    const add = document.createElement('button'); add.textContent = "+"; add.style="height:28px; margin-top:5px;"; add.onclick = () => createNewTab(); bar.appendChild(add);
+}
+
+function go() {
+    let url = document.getElementById('url').value;
+    if (url !== "settings://" && !url.startsWith('http')) url = "https://" + url;
+    const tab = tabs.find(t => t.id === activeTabId);
+    if (tab.url !== url) {
+        tab.history = tab.history.slice(0, tab.historyIndex + 1);
+        tab.history.push(url); tab.historyIndex++; tab.url = url;
+        updateTabElement(tab); switchTab(tab.id);
+    }
+}
+
+function navBack() { const t = tabs.find(x => x.id === activeTabId); if (t && t.historyIndex > 0) { t.historyIndex--; t.url = t.history[t.historyIndex]; updateTabElement(t); switchTab(t.id); } }
+function navForward() { const t = tabs.find(x => x.id === activeTabId); if (t && t.historyIndex < t.history.length - 1) { t.historyIndex++; t.url = t.history[t.historyIndex]; updateTabElement(t); switchTab(t.id); } }
+function navReload() { const t = tabs.find(x => x.id === activeTabId); if(t) { updateTabElement(t); } }
+function openSettings() { document.getElementById('url').value = "settings://"; go(); }
+function goHome() { document.getElementById('url').value = settings.homeUrl; go(); }
+
+// ------------------------------------------------------------------
+// ★ タブごとのノード設定（オンオフ切り替え）パネル
+// ------------------------------------------------------------------
+function toggleCircuit() {
+    const popup = document.getElementById('circuit-popup');
+    if (popup.style.display === 'block') { popup.style.display = 'none'; return; }
+    
+    const tab = tabs.find(x => x.id === activeTabId);
+    if (!tab) return;
+
+    let html = `<div style="font-weight:bold; margin-bottom:10px; text-align:center;">タブごとのノード設定</div>`;
+    html += `<div class="circuit-node"><img src="${getIconUrl('https://' + currentEntryNode.domain)}"><span>Entry: ${currentEntryNode.name}</span></div>`;
+    
+    // Relay (中継) の選択 (settings.relays を使用)
+    html += `<div style="margin-top:10px;">
+        <label style="font-size:11px; font-weight:bold; color:var(--tor-color);">Relay (中継):</label>
+        <select style="width:100%; margin-top:4px; padding:4px;" onchange="updateTabNode('relay', this.value)">
+            <option value="">🚫 OFF (経由しない)</option>
+            ${settings.relays.map(r => `<option value="${r.id}" ${tab.relay && tab.relay.id === r.id ? 'selected' : ''}>${r.name}</option>`).join('')}
+        </select>
+    </div>`;
+
+    // Exit (出口) の選択 (settings.exits を使用)
+    html += `<div style="margin-top:10px;">
+        <label style="font-size:11px; font-weight:bold; color:var(--tor-color);">Exit (出口):</label>
+        <select style="width:100%; margin-top:4px; padding:4px;" onchange="updateTabNode('exit', this.value)">
+            <option value="">🚫 OFF (経由しない)</option>
+            ${settings.exits.map(e => `<option value="${e.id}" ${tab.exit && tab.exit.id === e.id ? 'selected' : ''}>${e.name}</option>`).join('')}
+        </select>
+    </div>`;
+
+    html += `<div style="margin-top:10px; font-size:11px; opacity:0.7; text-align:center;">変更すると自動的に再読み込みされます</div>`;
+    
+    popup.innerHTML = html; popup.style.display = 'block';
+}
+
+window.updateTabNode = (type, nodeId) => {
+    const tab = tabs.find(x => x.id === activeTabId);
+    if (!tab) return;
+    
+    if (type === 'relay') tab.relay = nodeId ? settings.relays.find(r => r.id === nodeId) : null;
+    if (type === 'exit')  tab.exit  = nodeId ? settings.exits.find(e => e.id === nodeId)  : null;
+    
+    saveState(); 
+    navReload(); 
+};
+
+document.addEventListener('click', (e) => {
+    if(!e.target.closest('#circuit-popup') && !e.target.closest('#btn-circuit')) document.getElementById('circuit-popup').style.display = 'none';
+});
+
+function renderBookmarkBar() {
+    const bar = document.getElementById('bookmark-bar'); bar.innerHTML = '';
+    settings.bookmarks.forEach(bm => {
+        const div = document.createElement('div'); div.className = 'bm-item';
+        div.innerHTML = `<img src="${getIconUrl(bm.url)}"><span>${bm.title}</span>`;
+        div.onclick = () => { document.getElementById('url').value = bm.url; go(); };
+        bar.appendChild(div);
+    });
+}
+
+function closeTab(id, e) { e.stopPropagation(); if (tabs.length === 1) return; const idx = tabs.findIndex(t => t.id === id); tabs[idx].element.remove(); tabs.splice(idx, 1); switchTab(tabs[Math.max(0, idx-1)].id); }
+function createNewTab(url = settings.homeUrl) { switchTab(createTabObject(url).id); }
+function updateStarUI() { const t = tabs.find(x => x.id === activeTabId); const isB = settings.bookmarks.some(b => b.url === (t ? t.url : "")); document.getElementById('star-btn').classList.toggle('active', isB); }
+function updateNavButtons() { const t = tabs.find(x => x.id === activeTabId); if (!t) return; document.getElementById('btn-back').disabled = (t.historyIndex <= 0); document.getElementById('btn-forward').disabled = (t.historyIndex >= t.history.length - 1); }
+function toggleBookmark() { const tab = tabs.find(t => t.id === activeTabId); if (tab.url === "settings://") return; const idx = settings.bookmarks.findIndex(b => b.url === tab.url); if (idx > -1) settings.bookmarks.splice(idx, 1); else settings.bookmarks.push({ title: tab.title, url: tab.url }); updateStarUI(); renderBookmarkBar(); saveState(); syncSettingsUI(); }
+
+document.getElementById("url").addEventListener("keydown", e => { if (e.key === "Enter") go(); });
+</script>
+</body>
+</html>
