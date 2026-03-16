@@ -156,6 +156,7 @@ const KNOWN_VPNS = {
    "149.36": { name: "Proton VPN", domain: "protonvpn.com" },
    "149.88": { name: "Proton VPN", domain: "protonvpn.com" },
    "149.102": { name: "Proton VPN", domain: "protonvpn.com" },
+   "152.53": { name: "Proton VPN", domain: "protonvpn.com" },
    "154.47": { name: "Proton VPN", domain: "protonvpn.com" },
    "156.146": { name: "Proton VPN", domain: "protonvpn.com" },
    "165.231": { name: "Proton VPN", domain: "protonvpn.com" },
@@ -282,7 +283,7 @@ async function checkVPN() {
 }
 
 function continueWithoutVPN() {
-    currentEntryNode = { name: "User (Unprotected)", domain: "example.com" };
+    currentEntryNode = { name: "User (None or UnknownVPN)", domain: "torproject.org" };
     document.getElementById("vpn-overlay").style.display = "none";
     initBrowser();
 }
