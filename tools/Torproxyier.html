@@ -89,6 +89,7 @@ select, input[type="text"] { padding: 8px; border-radius: 4px; border: 1px solid
 </div>
 
 <script>
+
 const KNOWN_VPNS = {
    "219.100": { name: "VPN-gate", domain: "vpngate.net" },
    "138.229": { name: "VPN-gate", domain: "vpngate.net" },
@@ -206,6 +207,7 @@ const KNOWN_VPNS = {
    "198.23": { name: "Windscribe", domain: "windscribe.com" }
 };
 
+
 const DEFAULT_RELAYS = [
     { id: "r1", name: "Workers - US 1", url: "https://sk.skkatoo.workers.dev/-----", domain: "cloudflare.com", type: "prefix" },
     { id: "r2", name: "Workers - US 2", url: "https://black-resonance-5407.cvfr.workers.dev/-----", domain: "cloudflare.com", type: "prefix" },
@@ -250,7 +252,7 @@ const STORAGE_LAST_ACTIVE_KEY = 'tmg-app-last-active';
 
 let tabs = [];
 let activeTabId = null;
-let currentEntryNode = { name: "None or Unknown VPN)", domain: "localhost" };
+let currentEntryNode = { name: "User (Non-VPN)", domain: "localhost" };
 
 let settings = {
     homeUrl: "https://google.com/?igu=1",
@@ -278,6 +280,13 @@ async function checkVPN() {
         document.getElementById("vpn-overlay").style.display = "flex"; 
     }
 }
+
+function continueWithoutVPN() {
+    currentEntryNode = { name: "User (Unprotected)", domain: "example.com" };
+    document.getElementById("vpn-overlay").style.display = "none";
+    initBrowser();
+}
+
 function initBrowser() {
     const saved = localStorage.getItem(STORAGE_SETTINGS_KEY);
     if (saved) {
@@ -351,7 +360,6 @@ function getEffectiveUrl(tab, url) {
 function createTabObject(url, id = Date.now(), title = "読み込み中...", history = null, hIndex = 0, savedRelayId = undefined, savedExitId = undefined) {
     const tab = { id, url, title, history: history || [url], historyIndex: hIndex, element: null, relay: null, exit: null };
     
-    // タブ作成時のノード設定（保存データがあれば復元、なければランダムに一つ割り当て）
     if (savedRelayId !== undefined) {
         tab.relay = savedRelayId ? settings.relays.find(r => r.id === savedRelayId) : null;
     } else {
@@ -478,9 +486,6 @@ function renderSettingsInto(container) {
     `;
 }
 
-// ------------------------------------------------------------------
-// ★ カスタムノード追加・削除処理
-// ------------------------------------------------------------------
 window.addCustomNode = (btn) => {
     const container = btn.closest('.settings-page');
     if (!container) return;
@@ -559,9 +564,6 @@ function navReload() { const t = tabs.find(x => x.id === activeTabId); if(t) { u
 function openSettings() { document.getElementById('url').value = "settings://"; go(); }
 function goHome() { document.getElementById('url').value = settings.homeUrl; go(); }
 
-// ------------------------------------------------------------------
-// ★ タブごとのノード設定（オンオフ切り替え）パネル
-// ------------------------------------------------------------------
 function toggleCircuit() {
     const popup = document.getElementById('circuit-popup');
     if (popup.style.display === 'block') { popup.style.display = 'none'; return; }
@@ -572,7 +574,6 @@ function toggleCircuit() {
     let html = `<div style="font-weight:bold; margin-bottom:10px; text-align:center;">タブごとのノード設定</div>`;
     html += `<div class="circuit-node"><img src="${getIconUrl('https://' + currentEntryNode.domain)}"><span>Entry: ${currentEntryNode.name}</span></div>`;
     
-    // Relay (中継) の選択 (settings.relays を使用)
     html += `<div style="margin-top:10px;">
         <label style="font-size:11px; font-weight:bold; color:var(--tor-color);">Relay (中継):</label>
         <select style="width:100%; margin-top:4px; padding:4px;" onchange="updateTabNode('relay', this.value)">
@@ -581,7 +582,6 @@ function toggleCircuit() {
         </select>
     </div>`;
 
-    // Exit (出口) の選択 (settings.exits を使用)
     html += `<div style="margin-top:10px;">
         <label style="font-size:11px; font-weight:bold; color:var(--tor-color);">Exit (出口):</label>
         <select style="width:100%; margin-top:4px; padding:4px;" onchange="updateTabNode('exit', this.value)">
