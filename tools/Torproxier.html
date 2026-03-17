@@ -56,44 +56,117 @@ select, input[type="text"] { padding: 8px; border-radius: 4px; border: 1px solid
 </style>
 </head>
 <body>
-
 <div id="vpn-overlay">
     <div class="vpn-box">
         <h2>⚠️ VPNを利用していますか？</h2>
-        <p>ブラウザの制限上、EntryノードVPNを利用します。VPNを利用することを推奨します</p>
+        <p>ブラウザの制限上、Entryノードの代わりにVPNを利用します。</p>
         <button onclick="continueWithoutVPN()">続行する。</button>
     </div>
 </div>
-
 <div id="progress-container"><div id="progress-bar"></div></div>
 <button id="fs-close-btn" onclick="exitFullscreen()">×</button>
-
 <div id="tabs-bar"></div>
 <div id="chrome">
     <button id="btn-back" onclick="navBack()">◀</button>
     <button id="btn-forward" onclick="navForward()">▶</button>
     <button onclick="navReload()">⟳</button>
     <button onclick="goHome()">◻️</button>
-    <button id="btn-circuit" onclick="toggleCircuit()" style="font-size: 16px; padding: 4px 8px;" title="ノード設定">🧅</button>
+    <button id="btn-circuit" onclick="toggleCircuit()" style="font-size: 16px; padding: 4px 8px;" title="ノード設定">🔒️</button>
     <span id="star-btn" class="star-btn" onclick="toggleBookmark()">★</span>
     <input id="url" placeholder="URLを入力してEnter">
     <button onclick="go()">Go</button>
     <button onclick="toggleFullscreen()">⛶</button> <button onclick="openSettings()">⚙️</button>
-    
     <div id="circuit-popup"></div>
 </div>
 <div id="bookmark-bar"></div>
-
 <div id="main-container">
     <div id="view"></div>
 </div>
-
 <script>
-
 const KNOWN_VPNS = {
-   "219.100": { name: "VPN-gate", domain: "vpngate.net" },
-   "138.229": { name: "VPN-gate", domain: "vpngate.net" },
-   "58.152": { name: "VPN-gate", domain: "vpngate.net" },
+   "1.66": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "1.55": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "14.11": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "14.52": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "14.56": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "15.53": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "31.10": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "39.111": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "42.147": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "49.1": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "49.228": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "49.164": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "58.3": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "58.87": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "58.152": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "58.227": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "59.20": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "59.23": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "69.129": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "59.138": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "60.69": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "60.122": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "60.137": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "60.141": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "61.21": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "61.75": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "79.105": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "82.1": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "85.175": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "88.222": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "90.150": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "91.196": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "91.218": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "92.124": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "94.255": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "95.25": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "101.128": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "100.35": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "103.152": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "109.252": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "111.106": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "113.22": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "114.204": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "114.206": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "117.3": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "118.68": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "119.24": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "121.109": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "121.138": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "121.161": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "122.222": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "123.198": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "124.18": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "124.110": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "125.14": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "126.77": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "126.78": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "126.142": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "126.147": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "126.208": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "138.64": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "138.229": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "150.9": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "153.168": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "158.169": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "160.13": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "173.195": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "176.212": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "178.34": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "180.5": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "180.30": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "180.97": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "180.200": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "184.22": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "185.201": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "195.208": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "203.179": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "212.32": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "219.100": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "219.104": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "222.113": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "222.148": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
+   "223.204": { name: "VPN-gate", domain: "www.tsukuba.ac.jp" },
    "2.58": { name: "Proton VPN", domain: "protonvpn.com" },
    "5.8": { name: "Proton VPN", domain: "protonvpn.com" },
    "5.157": { name: "Proton VPN", domain: "protonvpn.com" },
@@ -118,6 +191,7 @@ const KNOWN_VPNS = {
    "77.247": { name: "Proton VPN", domain: "protonvpn.com" },
    "79.110": { name: "Proton VPN", domain: "protonvpn.com" },
    "79.135": { name: "Proton VPN", domain: "protonvpn.com" },
+   "80.79": { name: "Proton VPN", domain: "protonvpn.com" },
    "84.17": { name: "Proton VPN", domain: "protonvpn.com" },
    "84.247": { name: "Proton VPN", domain: "protonvpn.com" },
    "84.252": { name: "Proton VPN", domain: "protonvpn.com" },
@@ -193,6 +267,7 @@ const KNOWN_VPNS = {
    "196.245": { name: "Proton VPN", domain: "protonvpn.com" },
    "212.30": { name: "Proton VPN", domain: "protonvpn.com" },
    "212.102": { name: "Proton VPN", domain: "protonvpn.com" },
+   "212.104": { name: "Proton VPN", domain: "protonvpn.com" },
    "217.138": { name: "Proton VPN", domain: "protonvpn.com" },
    "45.129": { name: "Surfshark", domain: "surfshark.com" },
    "139.28": { name: "Surfshark", domain: "surfshark.com" },
@@ -207,16 +282,14 @@ const KNOWN_VPNS = {
    "23.94": { name: "Windscribe", domain: "windscribe.com" },
    "198.23": { name: "Windscribe", domain: "windscribe.com" }
 };
-
-
 const DEFAULT_RELAYS = [
     { id: "r1", name: "Workers - US 1", url: "https://sk.skkatoo.workers.dev/-----", domain: "cloudflare.com", type: "prefix" },
     { id: "r2", name: "Workers - US 2", url: "https://black-resonance-5407.cvfr.workers.dev/-----", domain: "cloudflare.com", type: "prefix" },
-    { id: "r4",  name: "55games - 1", url: "https://55gms.com/embed#", domain: "55gms.com", type: "prefix" },
-    { id: "r3",  name: "55games - 2", url: "https://55gms.me/embed#", domain: "55gms.me", type: "prefix" },
-    { id: "r5",  name: "55games - 3", url: "https://55gms.app/embed#", domain: "55gms.app", type: "prefix" },
-    { id: "r6",  name: "55games - 4", url: "https://algebra.learnnexus.xyz/embed#", domain: "learnnexus.xyz", type: "prefix" },
-    { id: "r7",  name: "55games - 5", url: "https://biology.learnnexus.xyz/embed#", domain: "learnnexus.xyz", type: "prefix" },
+    { id: "r4",  name: "55games - 1", url: "https://55gms.com/embed.html#", domain: "55gms.com", type: "prefix" },
+    { id: "r3",  name: "55games - 2", url: "https://55gms.me/embed.html#", domain: "55gms.me", type: "prefix" },
+    { id: "r5",  name: "55games - 3", url: "https://55gms.app/embed.html#", domain: "55gms.app", type: "prefix" },
+    { id: "r6",  name: "55games - 4", url: "https://algebra.learnnexus.xyz/embed.html#", domain: "learnnexus.xyz", type: "prefix" },
+    { id: "r7",  name: "55games - 5", url: "https://biology.learnnexus.xyz/embed.html#", domain: "learnnexus.xyz", type: "prefix" },
     { id: "r8",  name: "Workers - US 1", url: "https://sk.skkatoo.workers.dev/-----", domain: "workers.dev", type: "prefix" },
     { id: "r9",  name: "Workers - US 2", url: "https://black-resonance-5407.cvfr.workers.dev/-----", domain: "workers.dev", type: "prefix" },
     { id: "r10", name: "Workers - US 3", url: "https://loli.loli12.workers.dev/-----", domain: "workers.dev", type: "prefix" },
@@ -235,15 +308,13 @@ const DEFAULT_RELAYS = [
     { id: "r23", name: "Workers - US 16", url: "https://proxy.thiruhostinger.workers.dev/?url=", domain: "workers.dev", type: "prefix" },
     { id: "r24", name: "Blank", url: "https://", domain: "" }
 ];
-
 const DEFAULT_EXITS = [
     { id: "e1", name: "Freeplace - 1", url: "https://freeplace.in/proxy/browse.php?u=", domain: "freeplace.in", type: "prefix" },
-    { id: "e2", name: "Freeplace - 2", url: "https://freeplace.info/proxy/browse.php?u=", domain: "freeplace.info", type: "prefix" },
+    { id: "e2", name: "Freeplace - 2", url: "http://freeplace.info/proxy/browse.php?u=", domain: "http://freeplace.info", type: "prefix" },
     { id: "e3", name: "Torlc", suffix: ".tor.lc", domain: "tor.lc", type: "replace" },
     { id: "e4", name: "onionpe", suffix: ".onion.pe", domain: "onion.pe", type: "replace" }
 ];
-
-const PRESETS = [ { name: "Google", url: "https://google.com/?igu=1" }, { name: "OffiDocs", url: "https://offidocs.com" }, { name: "StartPage", url: "https://startpagel6srwcjlue4zgq3zevrujfaow726kjytqbbjyrswwmjzcqd.onion" } ];
+const PRESETS = [ { name: "Google", url: "https://google.com" }, { name: "OffiDocs", url: "https://offidocs.com" }, { name: "StartPage", url: "https://startpagel6srwcjlue4zgq3zevrujfaow726kjytqbbjyrswwmjzcqd.onion" } ];
 
 const SANDBOX_SETTINGS = "allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-presentation allow-same-origin allow-scripts allow-storage-access-by-user-activation";
 
@@ -432,10 +503,10 @@ function renderSettingsInto(container) {
 
         <div class="card" style="border-left: 4px solid var(--tor-color);">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                <h3 style="margin:0;">🧅 カスタムノード管理</h3>
+                <h3 style="margin:0;">🔒️ カスタムノード管理</h3>
                 <button onclick="resetNodes()" style="background:#dc3545; color:white; border:none; padding:6px 10px; font-size:12px; border-radius:4px;">初期状態に戻す</button>
             </div>
-            <p style="font-size:12px; opacity:0.8; margin-top:0;">※ノードの切り替え・オンオフは、ツールバーの「🧅」ボタンから<b>タブごと</b>に設定できます。</p>
+            <p style="font-size:12px; opacity:0.8; margin-top:0;">※ノードの切り替え・オンオフは、ツールバーの「🔒️」ボタンから<b>タブごと</b>に設定できます。</p>
             
             <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; margin-bottom:15px; background:rgba(0,0,0,0.05); padding:10px; border-radius:8px;">
                 <div><strong>タイプ</strong><br>
