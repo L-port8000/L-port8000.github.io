@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ローカルメモ帳 - 拡張版</title>
+    <title>ローカルメモ帳</title>
     <style>
         :root {
             --bg-color: #f5f5f5;
@@ -13,7 +13,7 @@
             --primary-hover: #1557b0;
             --text-main: #333;
             --text-sub: #666;
-            --sidebar-width: 300px; /* 初期幅 */
+            --sidebar-width: 300px;
         }
         body, html {
             margin: 0; padding: 0; height: 100%;
@@ -23,20 +23,18 @@
         }
         .container { display: flex; height: 100vh; position: relative; }
         
-        /* サイドバー */
         .sidebar { 
             width: var(--sidebar-width); 
-            min-width: 50px; /* 閉じた時のアイコン分など */
+            min-width: 50px;
             max-width: 600px;
             background-color: var(--sidebar-bg); 
             border-right: 1px solid var(--border-color); 
             display: flex; 
             flex-direction: column;
-            transition: width 0.2s ease; /* 開閉時のアニメーション */
+            transition: width 0.2s ease;
             position: relative;
         }
-        
-        /* サイドバーが閉じている状態のクラス */
+    
         .sidebar.collapsed {
             width: 0px;
             min-width: 0px;
@@ -58,8 +56,6 @@
         .note-item.active { background-color: #e8f0fe; border-left: 4px solid var(--primary); }
         .note-item-title { font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .note-item-date { font-size: 12px; color: var(--text-sub); }
-
-        /* リサイズ用のバー */
         .resizer {
             width: 4px;
             cursor: col-resize;
@@ -68,11 +64,8 @@
             z-index: 10;
         }
         .resizer:hover { background-color: var(--primary); }
-
-        /* メインエディタ */
         .editor { flex: 1; display: flex; flex-direction: column; background: white; position: relative; }
         
-        /* トグルボタン（Gemini風） */
         .toggle-sidebar {
             position: absolute;
             left: 10px;
@@ -87,7 +80,7 @@
         }
 
         .editor-content-wrapper {
-            padding: 60px 40px 20px 40px; /* 上部にボタンを避けるスペース */
+            padding: 60px 40px 20px 40px;
             flex: 1;
             display: flex;
             flex-direction: column;
@@ -138,19 +131,15 @@
     let notes = [];
     let currentNoteId = null;
 
-    // --- レイアウト制御用のコード ---
     const sidebar = document.getElementById('sidebar');
     const resizer = document.getElementById('resizer');
     let isResizing = false;
 
-    // サイドバーの開閉
     function toggleSidebar() {
         sidebar.classList.toggle('collapsed');
-        // 閉じたときはリサイザーも隠す
         resizer.style.display = sidebar.classList.contains('collapsed') ? 'none' : 'block';
     }
 
-    // ドラッグリサイズ機能
     resizer.addEventListener('mousedown', (e) => {
         isResizing = true;
         document.body.style.cursor = 'col-resize';
@@ -169,7 +158,6 @@
         document.body.style.cursor = 'default';
     });
 
-    // --- メモ機能のコード (基本ロジックは維持) ---
     window.onload = () => {
         const saved = localStorage.getItem('myLocalNotes');
         if (saved) {
