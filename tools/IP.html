@@ -11,33 +11,60 @@
   <h2>你的IP</h2>
 
   <div class="box">
-    <strong>HTTP:</strong>
-    <span id="http-ip">取得中...</span>
+    <strong>HTTP (IPv4):</strong>
+    <span id="http-ipv4">取得中...</span>
   </div>
 
   <div class="box">
-    <strong>HTTPS:</strong>
-    <span id="https-ip">取得中...</span>
+    <strong>HTTP (IPv6):</strong>
+    <span id="http-ipv6">取得中...</span>
   </div>
+
+  <div class="box">
+    <strong>HTTPS (IPv4):</strong>
+    <span id="https-ipv4">取得中...</span>
+  </div>
+
+  <div class="box">
+    <strong>HTTPS (IPv6):</strong>
+    <span id="https-ipv6">取得中...</span>
+  </div>
+
   <script>
-    // HTTP
-    fetch('http://api.ipify.org?format=json')
-      .then(res => res.json())
+    fetch('http://icanhazip.com')
+      .then(res => res.text())
       .then(data => {
-        document.getElementById('http-ip').textContent = data.ip;
+        document.getElementById('http-ipv4').textContent = data.trim();
       })
       .catch(() => {
-        document.getElementById('http-ip').textContent = '取得失敗（Mixed Contentの可能性）';
+        document.getElementById('http-ipv4').textContent = '取得失敗';
       });
 
-    // HTTPS
-    fetch('https://api.ipify.org?format=json')
-      .then(res => res.json())
+    fetch('http://ipv6.icanhazip.com')
+      .then(res => res.text())
       .then(data => {
-        document.getElementById('https-ip').textContent = data.ip;
+        document.getElementById('http-ipv6').textContent = data.trim();
       })
       .catch(() => {
-        document.getElementById('https-ip').textContent = '取得失敗';
+        document.getElementById('http-ipv6').textContent = 'なし';
+      });
+
+    fetch('https://icanhazip.com')
+      .then(res => res.text())
+      .then(data => {
+        document.getElementById('https-ipv4').textContent = data.trim();
+      })
+      .catch(() => {
+        document.getElementById('https-ipv4').textContent = '取得失敗';
+      });
+
+    fetch('https://ipv6.icanhazip.com')
+      .then(res => res.text())
+      .then(data => {
+        document.getElementById('https-ipv6').textContent = data.trim();
+      })
+      .catch(() => {
+        document.getElementById('https-ipv6').textContent = 'なし';
       });
   </script>
 </body>
