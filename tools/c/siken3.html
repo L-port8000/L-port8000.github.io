@@ -1,162 +1,287 @@
-<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"><title>o - ツイメモ</title><style>:root{--p:#1d9bf0;--b:#fff;--bg-l:#f7f9f9;--bd:#eff3f4;--d:#0f1419;--l:#536471;--l-ac:rgba(29,155,240,0.1)}[data-theme=dark]{--b:#000;--bg-l:#16181c;--bd:#2f3336;--d:#e7e9ea;--l:#71767b;--l-ac:rgba(29,155,240,0.15)}*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--b);color:var(--d);padding-bottom:70px;overflow-x:hidden}header{position:sticky;top:0;background:rgba(var(--b),0.85);padding:10px 16px;font-size:18px;font-weight:800;border-bottom:1px solid var(--bd);z-index:10;backdrop-filter:blur(12px);display:flex;align-items:center;gap:15px}.v{display:none}.v.a{display:block}.av{background:#71767b;border-radius:50%;background-size:cover;background-position:center;flex-shrink:0}.av-s{width:32px;height:32px}.av-m{width:40px;height:40px}.tw{padding:12px 16px;border-bottom:1px solid var(--bd);display:flex;gap:12px;position:relative;cursor:pointer}.tw:hover{background:var(--bg-l)}.tc{flex-grow:1}.th{display:flex;align-items:center;font-size:15px;gap:4px;margin-bottom:2px}.tn{font-weight:700}.tid{color:var(--l)}.t-img{width:100%;max-height:300px;object-fit:cover;border-radius:16px;margin-top:10px;border:1px solid var(--bd)}.tm{display:flex;justify-content:space-between;max-width:425px;margin-top:12px;color:var(--l)}.tm-i{display:flex;align-items:center;gap:4px;font-size:12px;width:25%}.tm-g{width:18px;height:18px;fill:var(--l)}.fab{position:fixed;right:20px;bottom:80px;width:56px;height:56px;background:var(--p);border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,0.2);z-index:20}.post-ov{position:fixed;top:0;left:0;width:100%;height:100%;background:var(--b);z-index:100;display:none;flex-direction:column}.post-h{padding:12px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--bd)}.post-b{padding:16px;flex-grow:1;display:flex;gap:12px}.ti{width:100%;height:150px;border:none;background:transparent;color:var(--d);resize:none;font-size:19px;outline:none}.m-inp{display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--bd);overflow-x:auto}.m-inp label{display:flex;align-items:center;background:var(--bg-l);border-radius:20px;padding:6px 12px;font-size:13px;color:var(--l);white-space:nowrap}.m-inp input{width:50px;border:none;background:transparent;color:var(--d);outline:none;margin-left:4px}.btn{background:var(--p);color:#fff;border:none;padding:8px 18px;border-radius:30px;font-size:14px;font-weight:700}.ph-bg{height:125px;background:#cfd9de;background-size:cover;background-position:center}.ph-b{padding:12px 16px;position:relative}.ph-av{width:80px;height:80px;border:4px solid var(--b);position:absolute;top:-40px}.ph-n{font-size:20px;font-weight:800;margin-top:45px}.ph-i{color:var(--l);font-size:15px}.ph-f{display:flex;gap:15px;margin-top:12px;font-size:14px}.ph-f b{color:var(--d)}nav{position:fixed;bottom:0;width:100%;background:var(--b);border-top:1px solid var(--bd);display:flex;z-index:10}.ni{padding:14px;flex:1;text-align:center}.ni svg{width:26px;height:26px;fill:var(--l)}.ni.a svg{fill:var(--d)}.f-g{padding:16px}input[type=text],input[type=number]{width:100%;padding:10px;margin-bottom:10px;border:1px solid var(--bd);background:var(--bg-l);color:var(--d);border-radius:8px}.acc-item{display:flex;padding:12px 16px;border-bottom:1px solid var(--bd);align-items:center;gap:12px;position:relative}.chk{position:absolute;right:20px;fill:var(--p);display:none}.act .chk{display:block}.dtw{padding:16px;border-bottom:1px solid var(--bd)}.dtw-h{display:flex;gap:12px;margin-bottom:12px}.dtw-tx{font-size:22px;line-height:1.3;margin-bottom:12px}.dtw-st{color:var(--l);font-size:15px;padding:12px 0;border-bottom:1px solid var(--bd)}</style></head>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+    <title>o - ツイメモ</title>
+    <style>
+        :root { --p: #1d9bf0; --b: #fff; --bg-l: #f7f9f9; --bd: #eff3f4; --d: #0f1419; --l: #536471; --l-ac: rgba(29,155,240,0.1) }
+        [data-theme=dark] { --b: #000; --bg-l: #16181c; --bd: #2f3336; --d: #e7e9ea; --l: #71767b; --l-ac: rgba(29,155,240,0.15) }
+        * { box-sizing: border-box }
+        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--b); color: var(--d); padding-bottom: 70px; overflow-x: hidden }
+        header { position: sticky; top: 0; background: var(--b); padding: 10px 16px; font-size: 18px; font-weight: 800; border-bottom: 1px solid var(--bd); z-index: 10; backdrop-filter: blur(12px); display: flex; align-items: center; gap: 15px }
+        .v { display: none }
+        .v.a { display: block }
+        .av { background: #71767b; border-radius: 50%; background-size: cover; background-position: center; flex-shrink: 0; }
+        .av-s { width: 32px; height: 32px; cursor: pointer; }
+        .av-m { width: 40px; height: 40px; }
+        .tw { padding: 12px 16px; border-bottom: 1px solid var(--bd); display: flex; gap: 12px; position: relative; cursor: pointer }
+        .tw:hover { background: var(--bg-l) }
+        .tc { flex-grow: 1 }
+        .th { display: flex; align-items: center; font-size: 15px; gap: 4px; margin-bottom: 2px }
+        .tn { font-weight: 700 }
+        .tid { color: var(--l) }
+        .t-img { width: 100%; max-height: 300px; object-fit: cover; border-radius: 16px; margin-top: 10px; border: 1px solid var(--bd) }
+        .tm { display: flex; justify-content: space-between; max-width: 425px; margin-top: 12px; color: var(--l); font-size: 13px; }
+        .tm-i { display: flex; align-items: center; gap: 4px; flex: 1; }
+        .tm-svg { width: 18px; height: 18px; fill: var(--l); }
+        .fab { position: fixed; right: 20px; bottom: 80px; width: 56px; height: 56px; background: var(--p); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 20 }
+        .post-ov { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--b); z-index: 100; display: none; flex-direction: column }
+        .post-h { padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--bd) }
+        .post-b { padding: 16px; flex-grow: 1; display: flex; gap: 12px; overflow-y: auto; }
+        .ti { width: 100%; height: 120px; border: none; background: transparent; color: var(--d); resize: none; font-size: 19px; outline: none }
+        .m-inp { display: flex; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--bd); background: var(--b); overflow-x: auto; }
+        .m-inp label { display: flex; align-items: center; background: var(--bg-l); border-radius: 20px; padding: 6px 12px; font-size: 12px; white-space: nowrap; }
+        .m-inp input { width: 45px; border: none; background: transparent; color: var(--d); outline: none; margin-left: 4px; font-weight: bold; }
+        .btn { background: var(--p); color: #fff; border: none; padding: 8px 18px; border-radius: 30px; font-size: 14px; font-weight: 700; cursor: pointer; }
+        .ph-bg { height: 125px; background: #cfd9de; background-size: cover; background-position: center }
+        .ph-b { padding: 12px 16px; position: relative }
+        .ph-av { width: 80px; height: 80px; border: 4px solid var(--b); position: absolute; top: -40px }
+        .ph-n { font-size: 20px; font-weight: 800; margin-top: 45px }
+        .ph-i { color: var(--l); font-size: 15px }
+        nav { position: fixed; bottom: 0; width: 100%; background: var(--b); border-top: 1px solid var(--bd); display: flex; z-index: 10 }
+        .ni { padding: 14px; flex: 1; text-align: center; cursor: pointer; }
+        .ni svg { width: 26px; height: 26px; fill: var(--l) }
+        .ni.a svg { fill: var(--d) }
+        .f-g { padding: 16px }
+        input[type=text], input[type=number] { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid var(--bd); background: var(--bg-l); color: var(--d); border-radius: 8px }
+        .acc-item { display: flex; padding: 12px 16px; border-bottom: 1px solid var(--bd); align-items: center; gap: 12px; position: relative; cursor: pointer; }
+        .chk { position: absolute; right: 20px; fill: var(--p); display: none; width: 20px; height: 20px; }
+        .act .chk { display: block }
+        .dtw { padding: 16px; border-bottom: 1px solid var(--bd) }
+    </style>
+</head>
 <body data-theme="light">
-<div id="vh" class="v a"><header><div id="h-av" class="av av-s" onclick="up(d.ac)"></div><span>ホーム</span></header><div id="tl" class="tl"></div><div class="fab" onclick="op()"><svg viewBox="0 0 24 24" width="24" height="24" fill="white"><path d="M23 10h-9V1c0-.55-.45-1-1-1h-2c-.55 0-1 .45-1 1v9H1c-.55 0-1 .45-1 1v2c0 .55.45 1 1 1h9v9c0 .55.45 1 1 1h2c.55 0 1-.45 1-1v-9h9c.55 0 1-.45 1-1v-2c0-.55-.45-1-1-1z"/></svg></div></div>
-<div id="vp" class="v"><header><span onclick="sv('h')">←</span><span id="ph-title"></span></header><div id="p-himg" class="ph-bg"></div><div class="ph-b"><div id="p-av" class="ph-av av"></div><div style="text-align:right"><button class="btn" style="background:none;color:var(--d);border:1px solid var(--bd)" onclick="oep()">編集</button></div><div class="ph-n" id="p-name"></div><div class="ph-i" id="p-id"></div><div class="ph-f"><span id="p-fg"></span> <span>フォロー</span><span id="p-fw"></span> <span>フォロワー</span></div></div><div id="p-tl" class="tl" style="border-top:1px solid var(--bd);margin-top:10px"></div></div>
-<div id="vd" class="v"><header><span onclick="sv('h')">←</span><span>ポスト</span></header><div id="d-cont"></div><div id="d-rp-tl" class="tl"></div><div class="fab" onclick="op_rp()"><svg viewBox="0 0 24 24" width="24" height="24" fill="white"><path d="M1.751 10c0-4.42 3.584-8 8.005-8h4.366c.336.027.614.28.614.615v2.307c0 .422-.39.725-.81.68-1.53-.16-3.05-.19-4.17-.19-3.31 0-6.005 2.69-6.005 6 0 3.31 2.695 6 6.005 6h10.499l-4.28-4.29c-.19-.19-.19-.51 0-.7.2-.2.51-.2.7 0l5.14 5.14c.2.2.2.51 0 .7l-5.14 5.14c-.1.1-.23.15-.35.15s-.25-.05-.35-.15c-.19-.19-.19-.51 0-.7l4.28-4.29H9.756C5.335 18 1.751 14.42 1.751 10z"/></svg></div></div>
-<div id="va" class="v"><header>アカウント</header><div class="f-g"><h3>新規追加</h3><input type="text" id="an" placeholder="名前"><input type="text" id="ai" placeholder="@ID"><button class="btn" style="width:100%" onclick="ca()">作成</button></div><div id="alst"></div></div>
-<div id="vs" class="v"><header>設定</header><div class="f-g"><button class="btn" style="width:100%;margin-bottom:10px" onclick="st('light')">☀️ ライト</button><button class="btn" style="width:100%;background:#333" onclick="st('dark')">🌙 ダーク</button><hr style="border:0;border-top:1px solid var(--bd);margin:20px 0"><button class="btn" style="width:100%;margin-bottom:10px" onclick="ed()">データ保存</button><button class="btn" style="width:100%" onclick="document.getElementById('ifile').click()">データ読込</button><input type="file" id="ifile" style="display:none" onchange="idat(event)"><button class="btn" style="background:red;width:100%;margin-top:30px" onclick="cd()">全データ消去</button></div></div>
-<div id="pov" class="post-ov"><div class="post-h"><span onclick="clp()">キャンセル</span><button class="btn" onclick="pt()" id="p-btn">ツイート</button></div><div class="post-b"><div id="post-av" class="av-m av"></div><div style="flex:1"><textarea id="ti" class="ti" placeholder="いまどうしてる？"></textarea><img id="p-pre" class="t-img" style="display:none;max-height:150px"></div></div><div id="e-del" style="display:none;padding:10px 16px"><button class="btn" style="background:red;width:100%" onclick="dt()">ツイートを削除</button></div><div class="m-inp"><label>💬<input type="number" id="irp" value="0"></label><label>🔁<input type="number" id="irt" value="0"></label><label>❤️<input type="number" id="ifv" value="0"></label><label>📊<input type="number" id="ivw" value="0"></label></div><div style="padding:10px 16px"><button class="btn" style="background:none;color:var(--p);padding:0" onclick="document.getElementById('f-img').click()">🖼 画像追加</button><input type="file" id="f-img" style="display:none" onchange="pvw(this,'t')"></div></div>
-<div id="eov" class="post-ov"><div class="post-h"><span onclick="cle()">キャンセル</span><button class="btn" onclick="upd()">保存</button></div><div class="f-g">名前<input type="text" id="en"><br>ID<input type="text" id="ei"><br>フォロー<input type="number" id="efg"><br>フォロワー<input type="number" id="efw"><br><button class="btn" onclick="document.getElementById('f-av').click()">アイコン変更</button><input type="file" id="f-av" style="display:none" onchange="pvw(this,'av')"><br><br><button class="btn" onclick="document.getElementById('f-hd').click()">ヘッダー変更</button><input type="file" id="f-hd" style="display:none" onchange="pvw(this,'hd')"><hr style="border:0;border-top:1px solid var(--bd);margin:20px 0"><button class="btn" style="background:red;width:100%" onclick="da()">このアカウントを削除</button></div></div>
-<nav><div class="ni a" id="nh" onclick="sv('h')"><svg viewBox="0 0 24 24"><path d="M21.591 10.619l-8.528-7.9c-.26-.24-.666-.24-.926 0l-8.528 7.9c-.279.26-.387.678-.277 1.057.11.378.455.648.847.648H5.14v8.328c0 .552.447 1 1 1h4c.553 0 1-.448 1-1v-6h2v6c0 .552.447 1 1 1h4c.553 0 1-.448 1-1v-8.328h.922c.392 0 .737-.27.847-.648.11-.379.002-.797-.277-1.057z"/></svg></div><div class="ni" id="na" onclick="sv('a')"><svg viewBox="0 0 24 24"><path d="M17.863 13.44c1.477 1.58 2.366 3.72 2.366 6.06 0 .28-.02.55-.05.82-.01.1-.01.2-.02.3-.12 1.02-.41 1.98-.82 2.88l-.28.61H5.14l-.28-.61c-.41-.9-.7-1.86-.82-2.88-.01-.1-.01-.2-.02-.3C4.01 20.05 4 19.78 4 19.5c0-2.34.889-4.48 2.366-6.06C4.125 12.01 2 9.25 2 6c0-3.87 3.13-7 7-7 2.36 0 4.43 1.17 5.7 2.96C15.97 1.17 18.04 0 20.3 0c3.87 0 7 3.13 7 7 0 3.25-2.125 6.01-5.137 7.44z"/></svg></div><div class="ni" id="ns" onclick="sv('s')"><svg viewBox="0 0 24 24"><path d="M12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5zm10.5-3.5c0 .74-.4 1.39-1 1.73l-.76.44c-.7.41-.93 1.3-.53 2l.44.76c.33.58.27 1.31-.15 1.83l-1.42 1.42c-.52.42-1.25.48-1.83.15l-.76-.44c-.7-.41-1.59-.17-2 .53l-.44.76c-.34.6-.99 1-1.73 1h-2c-.74 0-1.39-.4-1.73-1l-.44-.76c-.41-.7-1.3-.94-2-.54l-.76.44c-.58.33-1.31.27-1.83-.15L3.28 18.7c-.42-.52-.48-1.25-.15-1.83l.44-.76c.41-.7.17-1.59-.54-2l-.76-.44c-.6-.34-1-.99-1-1.73v-2z"/></svg></div></nav>
+    <div id="vh" class="v a">
+        <header><div id="h-av" class="av av-s" onclick="up(d.ac)"></div><span>ホーム</span></header>
+        <div id="tl" class="tl"></div>
+        <div class="fab" onclick="op()"><svg viewBox="0 0 24 24" width="24" height="24" fill="white"><path d="M23 10h-9V1c0-.55-.45-1-1-1h-2c-.55 0-1 .45-1 1v9H1c-.55 0-1 .45-1 1v2c0 .55.45 1 1 1h9v9c0 .55.45 1 1 1h2c.55 0 1-.45 1-1v-9h9c.55 0 1-.45 1-1v-2c0-.55-.45-1-1-1z"/></svg></div>
+    </div>
+    <div id="vp" class="v"><header><span onclick="sv('h')">←</span><span id="ph-title"></span></header><div id="p-himg" class="ph-bg"></div><div class="ph-b"><div id="p-av" class="ph-av av"></div><div style="text-align:right"><button class="btn" style="background:none;color:var(--d);border:1px solid var(--bd)" onclick="oep()">編集</button></div><div class="ph-n" id="p-name"></div><div class="ph-i" id="p-id"></div><div style="margin-top:12px;font-size:14px"><span id="p-fg"></span> フォロー <span id="p-fw"></span> フォロワー</div></div><div id="p-tl" class="tl" style="border-top:1px solid var(--bd);margin-top:10px"></div></div>
+    <div id="vd" class="v">
+        <header><span id="back-btn" onclick="sv('h')">←</span><span>ポスト</span></header>
+        <div id="d-cont"></div>
+        <div id="d-rp-tl" class="tl"></div>
+        <div class="fab" onclick="op_rp()"><svg viewBox="0 0 24 24" width="24" height="24" fill="white"><path d="M1.75 10c0-4.42 3.58-8 8-8h4.37c.33.03.61.28.61.62v2.3c0 .43-.39.73-.81.69-1.53-.17-3.05-.2-4.17-.2-3.31 0-6 2.69-6 6s2.69 6 6 6h10.5l-4.28-4.29c-.19-.19-.19-.51 0-.7.2-.2.51-.2.7 0l5.14 5.14c.2.2.2.51 0 .7l-5.14 5.14c-.1.1-.23.15-.35.15s-.25-.05-.35-.15c-.19-.19-.19-.51 0-.7l4.28-4.29H9.75c-4.42 0-8-3.58-8-8z"/></svg></div>
+    </div>
+    <div id="va" class="v"><header>アカウント</header><div class="f-g"><h3>新規追加</h3><input type="text" id="an" placeholder="名前"><input type="text" id="ai" placeholder="@ID"><button class="btn" style="width:100%" onclick="ca()">作成</button></div><div id="alst"></div></div>
+    <div id="vs" class="v"><header>設定</header><div class="f-g"><button class="btn" style="width:100%;margin-bottom:10px" onclick="st('light')">☀️ ライト</button><button class="btn" style="width:100%;background:#333;margin-bottom:10px" onclick="st('dark')">🌙 ダーク</button><hr style="border:0;border-top:1px solid var(--bd);margin:20px 0"><button class="btn" style="width:100%;margin-bottom:10px" onclick="edat()">💾 データを保存 (JSON)</button><button class="btn" style="width:100%;margin-bottom:10px" onclick="document.getElementById('ifile').click()">📂 データを読込</button><input type="file" id="ifile" style="display:none" onchange="idat(event)"><hr style="border:0;border-top:1px solid var(--bd);margin:20px 0"><button class="btn" style="background:red;width:100%" onclick="cd()">全データ消去</button></div></div>
+
+    <div id="pov" class="post-ov">
+        <div class="post-h"><span onclick="clp()">キャンセル</span><button class="btn" onclick="pt()" id="p-btn">ツイート</button></div>
+        <div class="post-b"><div id="post-av" class="av-m av"></div><div style="flex:1"><textarea id="ti" class="ti" placeholder="いまどうしてる？"></textarea><img id="p-pre" class="t-img" style="display:none;max-height:150px"></div></div>
+        <div class="m-inp">
+            <label>💬<input type="number" id="irp" value="0"></label>
+            <label>🔁<input type="number" id="irt" value="0"></label>
+            <label>❤️<input type="number" id="ifv" value="0"></label>
+            <label>📊<input type="number" id="ivw" value="0"></label>
+        </div>
+        <div style="padding:10px 16px"><button class="btn" style="background:none;color:var(--p);padding:0" onclick="document.getElementById('f-img').click()">🖼 画像追加</button><input type="file" id="f-img" style="display:none" onchange="pvw(this,'t')"></div>
+    </div>
+    <div id="eov" class="post-ov"><div class="post-h"><span onclick="cle()">キャンセル</span><button class="btn" onclick="upd()">保存</button></div><div class="f-g">名前<input type="text" id="en">ID<input type="text" id="ei">フォロー<input type="number" id="efg">フォロワー<input type="number" id="efw"><br><button class="btn" onclick="document.getElementById('f-av').click()">アイコン変更</button><input type="file" id="f-av" style="display:none" onchange="pvw(this,'av')"><br><br><button class="btn" onclick="document.getElementById('f-hd').click()">ヘッダー変更</button><input type="file" id="f-hd" style="display:none" onchange="pvw(this,'hd')"><hr style="border:0;border-top:1px solid var(--bd);margin:20px 0"><button class="btn" style="background:red;width:100%" onclick="da()">アカウント削除</button></div></div>
+
+    <nav>
+        <div class="ni a" id="nh" onclick="sv('h')"><svg viewBox="0 0 24 24"><path d="M21.59 10.62l-8.53-7.9c-.26-.24-.67-.24-.93 0l-8.53 7.9c-.28.26-.39.68-.28 1.06.11.38.46.65.85.65h.92v8.33c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-6h2v6c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-8.33h.92c.39 0 .74-.27.85-.65.11-.38 0-.8-.28-1.06z"/></svg></div>
+        <div class="ni" id="na" onclick="sv('a')"><svg viewBox="0 0 24 24"><path d="M17.86 13.44c1.48 1.58 2.37 3.72 2.37 6.06 0 .28-.02.55-.05.82-.01.1-.01.2-.02.3-.12 1.02-.41 1.98-.82 2.88l-.28.61h-14.12l-.28-.61c-.41-.9-.7-1.86-.82-2.88-.01-.1-.01-.2-.02-.3-.03-.27-.05-.54-.05-.82 0-2.34.89-4.48 2.37-6.06-3.01-1.43-5.14-4.19-5.14-7.44 0-3.87 3.13-7 7-7 2.36 0 4.43 1.17 5.7 2.96 1.27-1.79 3.34-2.96 5.7-2.96 3.87 0 7 3.13 7 7 0 3.25-2.13 6.01-5.14 7.44z"/></svg></div>
+        <div class="ni" id="ns" onclick="sv('s')"><svg viewBox="0 0 24 24"><path d="M12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5zm10.5-3.5c0 .74-.4 1.39-1 1.73l-.76.44c-.7.41-.93 1.3-.53 2l.44.76c.33.58.27 1.31-.15 1.83l-1.42 1.42c-.52.42-1.25.48-1.83.15l-.76-.44c-.7-.41-1.59-.17-2 .53l-.44.76c-.34.6-.99 1-1.73 1h-2c-.74 0-1.39-.4-1.73-1l-.44-.76c-.41-.7-1.3-.94-2-.54l-.76.44c-.58.33-1.31.27-1.83-.15l-1.42-1.42c-.42-.52-.48-1.25-.15-1.83l.44-.76c.41-.7.17-1.59-.54-2l-.76-.44c-.6-.34-1-.99-1-1.73v-2z"/></svg></div>
+    </nav>
+
 <script>
-const sRP='<svg class="tm-g" viewBox="0 0 24 24"><path d="M1.751 10c0-4.42 3.584-8 8.005-8h4.366c.336.027.614.28.614.615v2.307c0 .422-.39.725-.81.68-1.53-.16-3.05-.19-4.17-.19-3.31 0-6.005 2.69-6.005 6 0 3.31 2.695 6 6.005 6h10.499l-4.28-4.29c-.19-.19-.19-.51 0-.7.2-.2.51-.2.7 0l5.14 5.14c.2.2.2.51 0 .7l-5.14 5.14c-.1.1-.23.15-.35.15s-.25-.05-.35-.15c-.19-.19-.19-.51 0-.7l4.28-4.29H9.756C5.335 18 1.751 14.42 1.751 10z"/></svg>';
-const sRT='<svg class="tm-g" viewBox="0 0 24 24"><path d="M4.5 3.88l4.432 4.14c.197.184.197.49 0 .674-.197.185-.517.185-.714 0L5.25 5.85v10.65c0 .69.56 1.25 1.25 1.25h11.25s.517.185.714 0c.197-.184.197-.49 0-.674L4.5 3.88z"/></svg>';
-const sFV='<svg class="tm-g" viewBox="0 0 24 24"><path d="M16.697 5.5c-1.222-.06-2.679.308-3.73 1.026-.174.117-.38.117-.554 0C11.36 5.808 9.903 5.44 8.681 5.5c-2.43.116-4.12 2.053-4.12 4.417 0 2.38 3.013 4.234 5.378 6.027l1.01 1.03c.316.323.82.323 1.136 0l1.01-1.03c2.364-1.793 5.378-3.647 5.378-6.027 0-2.364-1.69-4.301-4.12-4.417z"/></svg>';
-const sVW='<svg class="tm-g" viewBox="0 0 24 24"><path d="M12 2.25c-5.376 0-9.75 4.374-9.75 9.75s4.374 9.75 9.75 9.75 9.75-4.374 9.75-9.75S17.376 2.25 12 2.25zm0 16.5c-3.723 0-6.75-3.027-6.75-6.75S8.277 5.25 12 5.25s6.75 3.027 6.75 6.75S15.723 18.75 12 18.75z"/></svg>';
-const sCHK='<svg class="chk" width="20" height="20" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>';
+let d={a:[{id:"a1",n:"ユーザー",i:"@user",fw:0,fg:0,av:"",hd:""}],ac:"a1",t:[],th:"light"};
+let curTImg="", curAImg="", curHImg="", profId=null, replyId=null;
+const DB_NAME = "TwimemoDB", STORE_NAME = "AppData";
 
-let d={a:[{id:"a1",n:"ユーザー",i:"@user",fw:100,fg:50,av:"",hd:""}],ac:"a1",t:[],th:"light"};
-let curTImg="", curAImg="", curHImg="", editId=null, profId=null, replyId=null, detailId=null;
-
-function ld(){
-  let s=localStorage.getItem("tmMU2"); if(s) d=JSON.parse(s);
-  st(d.th||"light"); ra(); rt();
+function openDB() {
+    return new Promise((res, rej) => {
+        const req = indexedDB.open(DB_NAME, 2);
+        req.onupgradeneeded = e => { if(!e.target.result.objectStoreNames.contains(STORE_NAME)) e.target.result.createObjectStore(STORE_NAME); };
+        req.onsuccess = e => res(e.target.result);
+        req.onerror = rej;
+    });
 }
-function sd(){localStorage.setItem("tmMU2",JSON.stringify(d))}
-function st(t){d.th=t;document.body.setAttribute("data-theme",t);sd()}
-function fmt(n){n=Number(n);return n>=1000?(n/1000).toFixed(1)+"K":n}
-
-function op(tid=null){
-  editId=tid; replyId=null;
-  document.getElementById("pov").style.display="flex";
-  document.getElementById("e-del").style.display=tid?"block":"none";
-  let a=d.a.find(x=>x.id===d.ac)||d.a[0];
-  document.getElementById("post-av").style.backgroundImage=a.av?`url(${a.av})`:"";
-  if(tid){
-    let t=d.t.find(x=>x.id===tid); document.getElementById("ti").value=t.tx;
-    ["irp","irt","ifv","ivw"].forEach(k=>document.getElementById(k).value=t[k.slice(1)]);
-  } else {
-    ["irp","irt","ifv","ivw"].forEach(k=>document.getElementById(k).value=0);
-  }
-}
-function op_rp(){
-  replyId = detailId; editId = null;
-  document.getElementById("pov").style.display="flex";
-  document.getElementById("e-del").style.display="none";
-  let a=d.a.find(x=>x.id===d.ac)||d.a[0];
-  document.getElementById("post-av").style.backgroundImage=a.av?`url(${a.av})`:"";
-  ["irp","irt","ifv","ivw"].forEach(k=>document.getElementById(k).value=0);
+async function sd() { const db = await openDB(); const tx = db.transaction(STORE_NAME, "readwrite"); tx.objectStore(STORE_NAME).put(d, "mainData"); }
+async function ld() {
+    const db = await openDB();
+    const tx = db.transaction(STORE_NAME, "readonly");
+    const req = tx.objectStore(STORE_NAME).get("mainData");
+    req.onsuccess = () => { if (req.result) d = req.result; st(d.th || "light"); ra(); rt(); };
 }
 
-function clp(){document.getElementById("pov").style.display="none";curTImg="";editId=null;replyId=null;document.getElementById("ti").value="";document.getElementById("p-pre").style.display="none"}
+function fmt(n){ n=Number(n)||0; return n>=10000?(n/1000).toFixed(1)+"K":n.toLocaleString(); }
 
-function pt(){
-  let tx=document.getElementById("ti").value;
-  let o={tx,im:curTImg,rp:v("irp"),rt:v("irt"),fv:v("ifv"),vw:v("ivw")};
-  if(editId){ 
-    Object.assign(d.t.find(x=>x.id===editId),o) 
-  }else{ 
-    d.t.push({id:Date.now()+"",aid:d.ac,ts:Date.now(),replyTo:replyId,...o});
-    if(replyId){
-      let parent = d.t.find(x=>x.id===replyId);
-      if(parent) parent.rp = Number(parent.rp) + 1;
-    }
-  }
-  clp();sd();rt();
-  if(profId)up(profId);
-  if(detailId)openDetail(detailId);
-}
-
-function dt(){if(confirm("削除？")){d.t=d.t.filter(x=>x.id!==editId);clp();sd();rt();if(profId)up(profId);if(detailId===editId)sv('h');}}
-function v(id){return document.getElementById(id).value||0}
-
-function rt(target="tl", aid=null){
-  let tl=document.getElementById(target); tl.innerHTML="";
-  let list = aid ? d.t.filter(x=>x.aid===aid) : d.t.filter(x=>!x.replyTo);
-  [...list].sort((a,b)=>b.ts-a.ts).forEach(t=>{
-    let a=d.a.find(x=>x.id===t.aid)||d.a[0];
-    let e=document.createElement("div");e.className="tw";
-    e.onclick = () => openDetail(t.id);
-    e.innerHTML=`<div class="av av-m" style="background-image:url(${a.av})" onclick="event.stopPropagation();up('${a.id}')"></div><div class="tc"><div class="th" onclick="event.stopPropagation();up('${a.id}')"><span class="tn">${a.n}</span><span class="tid">${a.i}</span></div><div class="tt">${t.tx}</div>${t.im?`<img src="${t.im}" class="t-img">`:""}<div class="tm"><div class="tm-i">${sRP}${fmt(t.rp)}</div><div class="tm-i">${sRT}${fmt(t.rt)}</div><div class="tm-i">${sFV}${fmt(t.fv)}</div><div class="tm-i">${sVW}${fmt(t.vw)}</div></div></div><div style="padding:4px;color:var(--l)" onclick="event.stopPropagation();op('${t.id}')">⋯</div>`;
-    tl.appendChild(e);
-  });
-}
-
-function openDetail(tid){
-  detailId = tid; sv('d');
-  let t = d.t.find(x=>x.id===tid);
-  let a = d.a.find(x=>x.id===t.aid)||d.a[0];
-  let cont = document.getElementById("d-cont");
-  let date = new Date(t.ts).toLocaleString();
-  cont.innerHTML = `<div class="dtw"><div class="dtw-h"><div class="av av-m" style="background-image:url(${a.av})" onclick="up('${a.id}')"></div><div><div class="tn">${a.n}</div><div class="tid">${a.i}</div></div><div style="margin-left:auto;color:var(--l)" onclick="op('${t.id}')">⋯</div></div><div class="dtw-tx">${t.tx}</div>${t.im?`<img src="${t.im}" class="t-img">`:""}<div class="dtw-st">${date} · <b>${fmt(t.vw)}</b> 表示</div><div class="tm" style="max-width:none;border-bottom:1px solid var(--bd);padding:12px 0"><div class="tm-i">${sRP}${fmt(t.rp)}</div><div class="tm-i">${sRT}${fmt(t.rt)}</div><div class="tm-i">${sFV}${fmt(t.fv)}</div></div></div>`;
-  
-  // 返信を表示
-  let rtl = document.getElementById("d-rp-tl");
-  rtl.innerHTML = "";
-  let replies = d.t.filter(x=>x.replyTo === tid);
-  replies.forEach(r=>{
-    let ra = d.a.find(x=>x.id===r.aid)||d.a[0];
-    let e=document.createElement("div");e.className="tw";
-    e.onclick = () => openDetail(r.id);
-    e.innerHTML=`<div class="av av-m" style="background-image:url(${ra.av})" onclick="event.stopPropagation();up('${ra.id}')"></div><div class="tc"><div class="th" onclick="event.stopPropagation();up('${ra.id}')"><span class="tn">${ra.n}</span><span class="tid">${ra.i}</span></div><div class="tt">${r.tx}</div>${r.im?`<img src="${r.im}" class="t-img">`:""}<div class="tm"><div class="tm-i">${sRP}${fmt(r.rp)}</div><div class="tm-i">${sRT}${fmt(r.rt)}</div><div class="tm-i">${sFV}${fmt(r.fv)}</div><div class="tm-i">${sVW}${fmt(r.vw)}</div></div></div>`;
-    rtl.appendChild(e);
-  });
-}
-
-function up(aid){
-  profId=aid; detailId=null; let a=d.a.find(x=>x.id===aid); sv('p');
-  document.getElementById("ph-title").innerText=a.n;
-  document.getElementById("p-name").innerText=a.n;
-  document.getElementById("p-id").innerText=a.i;
-  document.getElementById("p-fw").innerHTML=`<b>${fmt(a.fw)}</b>`;
-  document.getElementById("p-fg").innerHTML=`<b>${fmt(a.fg)}</b>`;
-  document.getElementById("p-av").style.backgroundImage=a.av?`url(${a.av})`:"";
-  document.getElementById("p-himg").style.backgroundImage=a.hd?`url(${a.hd})`:"";
-  rt("p-tl", aid);
-}
-
-function oep(){
-  let a=d.a.find(x=>x.id===profId);
-  document.getElementById("eov").style.display="flex";
-  document.getElementById("en").value=a.n; document.getElementById("ei").value=a.i;
-  document.getElementById("efg").value=a.fg; document.getElementById("efw").value=a.fw;
-  curAImg=a.av; curHImg=a.hd;
-}
-function upd(){
-  let a=d.a.find(x=>x.id===profId);
-  Object.assign(a,{n:document.getElementById("en").value,i:document.getElementById("ei").value,fg:v("efg"),fw:v("efw"),av:curAImg,hd:curHImg});
-  cle();sd();up(profId);ra();rt();
-}
-function da(){if(confirm("アカウントを削除しますか？")){d.t=d.t.filter(x=>x.aid!==profId);d.a=d.a.filter(x=>x.id!==profId);if(d.ac===profId)d.ac=d.a[0].id;cle();sd();sv('h');ra();rt()}}
-function cle(){document.getElementById("eov").style.display="none"}
-function ca(){
-  let id="a"+Date.now(); d.a.push({id,n:document.getElementById("an").value||"名無し",i:document.getElementById("ai").value||"@user",fw:0,fg:0,av:"",hd:""});
-  sd();ra();
-}
-function ra(){
-  let l=document.getElementById("alst"); l.innerHTML="<h3>アカウント切り替え</h3>";
-  let curA = d.a.find(x=>x.id===d.ac) || d.a[0];
-  document.getElementById("h-av").style.backgroundImage=curA.av?`url(${curA.av})`:"";
-  d.a.forEach(a=>{
-    let e=document.createElement("div"); e.className="acc-item"+(d.ac===a.id?" act":""); e.onclick=()=>{d.ac=a.id;sd();ra();rt()};
-    e.innerHTML=`<div class="av av-m" style="background-image:url(${a.av})"></div><div><div class="tn">${a.n}</div><div class="tid">${a.i}</div></div>${sCHK}`;
-    l.appendChild(e);
-  });
-}
-function pvw(i,m){
-  let f=i.files[0]; let r=new FileReader();
-  r.onload=e=>{
-    if(m==='t'){curTImg=e.target.result; let p=document.getElementById("p-pre");p.src=curTImg;p.style.display="block"}
-    if(m==='av')curAImg=e.target.result; if(m==='hd')curHImg=e.target.result;
-  };
-  if(f)r.readAsDataURL(f);
-}
 function sv(v){
-  window.scrollTo(0,0); ["h","a","s","p","d"].forEach(x=>{let el=document.getElementById("v"+x);if(el)el.classList.remove("a");let n=document.getElementById("n"+x);if(n)n.classList.remove("a")});
-  document.getElementById("v"+v).classList.add("a"); if(v!=='p'&&v!=='d')document.getElementById("n"+v).classList.add("a");
+    window.scrollTo(0,0);
+    document.querySelectorAll(".v").forEach(x=>x.classList.remove("a"));
+    document.getElementById("v"+v).classList.add("a");
+    document.querySelectorAll(".ni").forEach(x=>x.classList.remove("a"));
+    const n = document.getElementById("n"+v); if(n) n.classList.add("a");
 }
-function ed(){let a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(d)],{type:"application/json"}));a.download="twimemo_ultimate.json";a.click()}
-function idat(e){let r=new FileReader();r.onload=ev=>{d=JSON.parse(ev.target.result);sd();location.reload()};r.readAsText(e.target.files[0])}
-function cd(){if(confirm("全データを消去しますか？")){localStorage.clear();location.reload()}}
+
+function ra() {
+    const l = document.getElementById("alst"); l.innerHTML = "<h3>アカウント切り替え</h3>";
+    const curA = d.a.find(x => x.id === d.ac) || d.a[0];
+    document.getElementById("h-av").style.backgroundImage = curA.av ? `url(${curA.av})` : "";
+    d.a.forEach(a => {
+        let e = document.createElement("div"); e.className = "acc-item" + (d.ac === a.id ? " act" : "");
+        e.onclick = () => { d.ac = a.id; sd(); ra(); rt(); };
+        e.innerHTML = `<div class="av av-m" style="background-image:url(${a.av})"></div><div style="flex:1"><b>${a.n}</b><br><small>${a.i}</small></div><svg class="chk" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>`;
+        l.appendChild(e);
+    });
+}
+
+function rt(target="tl", aid=null) {
+    const tl = document.getElementById(target); tl.innerHTML = "";
+    const list = aid ? d.t.filter(x => x.aid === aid) : d.t.filter(x => !x.reId);
+    [...list].sort((a,b)=>b.ts - a.ts).forEach(t => {
+        const a = d.a.find(x => x.id === t.aid) || d.a[0];
+        const e = document.createElement("div"); e.className = "tw";
+        e.onclick = () => showDetail(t.id);
+        e.innerHTML = `
+            <div class="av av-m" style="background-image:url(${a.av})" onclick="event.stopPropagation();up('${a.id}')"></div>
+            <div class="tc">
+                <div class="th"><b>${a.n}</b> <small>${a.i}</small></div>
+                <div>${t.tx}</div>
+                ${t.im ? `<img src="${t.im}" class="t-img">` : ""}
+                <div class="tm">
+                    <div class="tm-i"><svg class="tm-svg" viewBox="0 0 24 24"><path d="M1.75 10c0-4.42 3.58-8 8-8h4.37c.33.03.61.28.61.62v2.3c0 .43-.39.73-.81.69-1.53-.17-3.05-.2-4.17-.2-3.31 0-6 2.69-6 6s2.69 6 6 6h10.5l-4.28-4.29c-.19-.19-.19-.51 0-.7.2-.2.51-.2.7 0l5.14 5.14c.2.2.2.51 0 .7l-5.14 5.14c-.1.1-.23.15-.35.15s-.25-.05-.35-.15c-.19-.19-.19-.51 0-.7l4.28-4.29H9.75c-4.42 0-8-3.58-8-8z"/></svg> ${fmt(t.rp)}</div>
+                    <div class="tm-i"><svg class="tm-svg" viewBox="0 0 24 24"><path d="M4.5 3.88l4.43 4.42c.19.19.19.51 0 .71-.19.19-.51.19-.7 0L5.5 6.27V15c0 1.66 1.34 3 3 3h6c.28 0 .5.22.5.5s-.22.5-.5.5h-6c-2.21 0-4-1.79-4-4V6.27L1.77 8.51c-.19.19-.51.19-.7 0-.19-.2-.19-.52 0-.71l4.43-4.42c.19-.2.51-.2.7 0zm15 16.24l-4.43-4.42c-.19-.2-.19-.52 0-.71s.51-.2.71 0l2.72 2.73V9c0-1.66-1.34-3-3-3h-6c-.28 0-.5-.22-.5-.5s.22-.5.5-.5h6c2.21 0 4 1.79 4 4v8.73l2.73-2.73c.19-.19.51-.19.7 0 .2.2.2.52 0 .71l-4.43 4.42c-.2.2-.51.2-.7 0z"/></svg> ${fmt(t.rt)}</div>
+                    <div class="tm-i"><svg class="tm-svg" viewBox="0 0 24 24"><path d="M16.697 5.5c-1.222-.06-2.679.351-3.827 1.36-.11.1-.28.1-.39 0-1.148-1.009-2.605-1.42-3.827-1.36-2.224.11-4.153 1.902-4.403 4.14-.305 2.728 1.479 5.481 4.096 7.302l2.816 1.938c.15.103.351.103.501 0l2.816-1.938c2.617-1.821 4.401-4.574 4.096-7.302-.25-2.238-2.179-4.03-4.403-4.14z"/></svg> ${fmt(t.fv)}</div>
+                    <div class="tm-i"><svg class="tm-svg" viewBox="0 0 24 24"><path d="M8.75 21V3h2v18h-2zM18 21V8.5h2V21h-2zM4 21l.004-10h2L6 21H4zm9.248 0v-7h2v7h-2z"/></svg> ${fmt(t.vw)}</div>
+                </div>
+            </div>`;
+        tl.appendChild(e);
+    });
+}
+
+function showDetail(tid) {
+    const t = d.t.find(x => x.id === tid); if(!t) return;
+    const a = d.a.find(x => x.id === t.aid) || d.a[0];
+    replyId = t.id;
+    sv('d');
+    
+    const backBtn = document.getElementById("back-btn");
+    if (t.reId) {
+        backBtn.onclick = () => showDetail(t.reId);
+    } else {
+        backBtn.onclick = () => sv('h');
+    }
+
+    document.getElementById("d-cont").innerHTML = `
+        <div class="dtw">
+            <div style="display:flex;gap:12px;align-items:center;margin-bottom:12px">
+                <div class="av av-m" style="background-image:url(${a.av})"></div>
+                <div><b>${a.n}</b><br><small>${a.i}</small></div>
+            </div>
+            <div style="font-size:19px;line-height:1.4">${t.tx}</div>
+            ${t.im?`<img src="${t.im}" class="t-img">`:""}
+            <div style="color:var(--l);margin:12px 0;padding:12px 0;border-top:1px solid var(--bd);border-bottom:1px solid var(--bd)">
+                ${new Date(t.ts).toLocaleString()} ・ <b>${fmt(t.vw)}</b> 表示
+            </div>
+            <div style="display:flex;gap:20px;padding-bottom:12px;border-bottom:1px solid var(--bd)">
+                <span><b>${fmt(t.rt)}</b> 再投稿</span> <span><b>${fmt(t.fv)}</b> いいね</span>
+            </div>
+        </div>
+        <div class="f-g"><button class="btn" style="background:red;width:100%" onclick="dt('${t.id}')">ポストを削除</button></div>
+    `;
+    const rps = d.t.filter(x => x.reId === tid);
+    const rtl = document.getElementById("d-rp-tl"); rtl.innerHTML = "";
+    rps.forEach(r => {
+        const ra = d.a.find(x => x.id === r.aid) || d.a[0];
+        let re = document.createElement("div"); re.className = "tw";
+        re.onclick = () => showDetail(r.id);
+        re.innerHTML = `<div class="av av-m" style="background-image:url(${ra.av})"></div><div class="tc"><div class="th"><b>${ra.n}</b> <small>${ra.i}</small></div><div>${r.tx}</div></div>`;
+        rtl.appendChild(re);
+    });
+}
+
+function op(){ replyId = null; document.getElementById("p-btn").innerText="ツイート"; document.getElementById("pov").style.display="flex"; updatePostAv(); }
+function op_rp(){ document.getElementById("p-btn").innerText="返信"; document.getElementById("pov").style.display="flex"; updatePostAv(); }
+function updatePostAv(){ const a=d.a.find(x=>x.id===d.ac); document.getElementById("post-av").style.backgroundImage=a.av?`url(${a.av})`:""; }
+
+function pt() {
+    const tx = document.getElementById("ti").value;
+    const nt = {
+        id: Date.now().toString(),
+        aid: d.ac,
+        ts: Date.now(),
+        tx,
+        im: curTImg,
+        rp: document.getElementById("irp").value || 0,
+        rt: document.getElementById("irt").value || 0,
+        fv: document.getElementById("ifv").value || 0,
+        vw: document.getElementById("ivw").value || 0,
+        reId: replyId
+    };
+    
+    if(replyId) {
+        const target = d.t.find(x => x.id === replyId);
+        if(target) target.rp = (Number(target.rp) || 0) + 1;
+    }
+
+    d.t.push(nt);
+    clp(); sd(); 
+    if(replyId) showDetail(replyId); else rt();
+}
+
+async function compress(base64, size=600) {
+    return new Promise(res => {
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            let w=img.width, h=img.height, scale = Math.min(size/w, size/h, 1);
+            canvas.width = w*scale; canvas.height = h*scale;
+            canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+            res(canvas.toDataURL('image/jpeg', 0.8));
+        };
+        img.src = base64;
+    });
+}
+
+function pvw(i, m) {
+    const f = i.files[0]; if(!f) return; const r = new FileReader();
+    r.onload = async e => {
+        const res = await compress(e.target.result, m==='t'?800:400);
+        if(m==='t'){ curTImg=res; document.getElementById("p-pre").src=res; document.getElementById("p-pre").style.display="block" }
+        if(m==='av') curAImg=res; if(m==='hd') curHImg=res;
+    };
+    r.readAsDataURL(f);
+}
+
+function up(aid) {
+    profId = aid; const a = d.a.find(x => x.id === aid); sv('p');
+    document.getElementById("ph-title").innerText = a.n;
+    document.getElementById("p-name").innerText = a.n;
+    document.getElementById("p-id").innerText = a.i;
+    document.getElementById("p-av").style.backgroundImage = a.av ? `url(${a.av})` : "";
+    document.getElementById("p-himg").style.backgroundImage = a.hd ? `url(${a.hd})` : "";
+    document.getElementById("p-fw").innerText = fmt(a.fw); document.getElementById("p-fg").innerText = fmt(a.fg);
+    rt("p-tl", aid);
+}
+
+function oep() {
+    const a = d.a.find(x => x.id === profId);
+    document.getElementById("eov").style.display = "flex";
+    document.getElementById("en").value = a.n; document.getElementById("ei").value = a.i;
+    document.getElementById("efg").value = a.fg; document.getElementById("efw").value = a.fw;
+    curAImg = a.av; curHImg = a.hd;
+}
+
+function upd() {
+    const a = d.a.find(x => x.id === profId);
+    Object.assign(a, { n: document.getElementById("en").value, i: document.getElementById("ei").value, fg: document.getElementById("efg").value, fw: document.getElementById("efw").value, av: curAImg, hd: curHImg });
+    cle(); sd(); ra(); up(profId);
+}
+
+function ca() { const id="a"+Date.now(); d.a.push({id, n:document.getElementById("an").value||"名無し", i:document.getElementById("ai").value||"@user", fw:0, fg:0, av:"", hd:""}); sd(); ra(); }
+function st(t){ d.th=t; document.body.setAttribute("data-theme", t); sd(); }
+function clp(){ document.getElementById("pov").style.display="none"; curTImg=""; document.getElementById("ti").value=""; document.getElementById("p-pre").style.display="none"; ["irp","irt","ifv","ivw"].forEach(id=>document.getElementById(id).value=0); }
+function cle(){ document.getElementById("eov").style.display="none" }
+function dt(tid) { if(confirm("削除しますか？")){ d.t = d.t.filter(x=>x.id!==tid); sd(); sv('h'); rt(); } }
+function da(){ if(confirm("消去？")){ d.a=d.a.filter(x=>x.id!==profId); if(d.ac===profId)d.ac=d.a[0].id; sd(); sv('h'); ra(); } }
+function cd(){ if(confirm("全データ消去？")){ indexedDB.deleteDatabase(DB_NAME); location.reload(); } }
+function edat(){ const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([JSON.stringify(d)],{type:"application/json"})); a.download="twimemo_db.json"; a.click(); }
+function idat(e){ const r=new FileReader(); r.onload=ev=>{d=JSON.parse(ev.target.result); sd(); location.reload();}; r.readAsText(e.target.files[0]); }
+
 ld();
-</script></body></html>
+</script>
+</body>
+</html>
