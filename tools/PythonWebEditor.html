@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>Python Web Editor</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #272822;
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .menu-bar {
+            background-color: #333;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border-bottom: 1px solid #444;
+        }
+
+        button {
+            background-color: #555;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background-color: #777;
+        }
+
+        .info {
+            font-size: 0.9em;
+            color: #aaa;
+            margin-left: auto;
+        }
+
+        #editor {
+            flex-grow: 1;
+            width: 100%;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="menu-bar">
+        <strong>Python Editor</strong>
+        <button onclick="changeFontSize(2)">A + (拡大)</button>
+        <button onclick="changeFontSize(-2)">A - (縮小)</button>
+        <button onclick="openSearch()">検索 (Ctrl+F)</button>
+        <div class="info">構文エラーは左端のアイコンで通知されます</div>
+    </div>
+    <div id="editor"># Input here "python"
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.3/ace.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.3/ext-language_tools.min.js"></script>
+
+    <script>
+        var editor = ace.edit("editor");
+        
+        editor.setTheme("ace/theme/monokai");
+        
+        editor.session.setMode("ace/mode/python");
+
+        editor.setOptions({
+            enableBasicAutocompletion: true,
+            enableLiveAutocompletion: true,
+            showPrintMargin: false,
+            highlightActiveLine: true,
+            tabSize: 4,
+            useSoftTabs: true
+        });
+        function changeFontSize(delta) {
+            var currentSize = parseInt(editor.getFontSize());
+            if (isNaN(currentSize)) currentSize = 16;
+            editor.setFontSize(currentSize + delta);
+        }
+        function openSearch() {
+            editor.execCommand("find");
+        }
+    </script>
+</body>
+</html>
