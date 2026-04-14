@@ -1,4 +1,4 @@
-html lang="ja">
+<html lang="ja">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
@@ -11,7 +11,7 @@ html lang="ja">
         header { position: sticky; top: 0; background: var(--b); padding: 10px 16px; font-size: 18px; font-weight: 800; border-bottom: 1px solid var(--bd); z-index: 10; backdrop-filter: blur(12px); display: flex; align-items: center; gap: 15px }
         .v { display: none }
         .v.a { display: block }
-        .av { background: #71767b; border-radius: 50%; background-size: cover; background-position: center; flex-shrink: 0; }
+        .av { background: #71767b; border-radius: 50%; background-size: cover; background-position: center; flex-shrink: 0; cursor: pointer; }
         .av-s { width: 32px; height: 32px; cursor: pointer; }
         .av-m { width: 40px; height: 40px; }
         .tw { padding: 12px 16px; border-bottom: 1px solid var(--bd); display: flex; gap: 12px; position: relative; cursor: pointer }
@@ -29,17 +29,18 @@ html lang="ja">
         .post-ov { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--b); z-index: 100; display: none; flex-direction: column }
         .post-h { padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--bd) }
         .post-b { padding: 16px; flex-grow: 1; display: flex; gap: 12px; overflow-y: auto; }
-        .ti { width: 100%; height: 120px; border: none; background: transparent; color: var(--d); resize: none; font-size: 19px; outline: none }
+        .ti { width: 100%; height: 120px; border: none; background: transparent; color: var(--d); resize: none; font-size: 19px; outline: none; white-space: pre-wrap; word-wrap: break-word; }
         .m-inp { display: flex; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--bd); background: var(--b); overflow-x: auto; }
         .m-inp label { display: flex; align-items: center; background: var(--bg-l); border-radius: 20px; padding: 6px 12px; font-size: 12px; white-space: nowrap; }
         .m-inp input { width: 45px; border: none; background: transparent; color: var(--d); outline: none; margin-left: 4px; font-weight: bold; }
         .btn { background: var(--p); color: #fff; border: none; padding: 8px 18px; border-radius: 30px; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s }
         .btn:hover { opacity: 0.8; transform: translateY(-1px) }
-        .ph-bg { height: 125px; background: #cfd9de; background-size: cover; background-position: center }
+        .ph-bg { height: 125px; background: #cfd9de; background-size: cover; background-position: center; cursor: pointer; }
         .ph-b { padding: 12px 16px; position: relative }
-        .ph-av { width: 80px; height: 80px; border: 4px solid var(--b); position: absolute; top: -40px }
+        .ph-av { width: 80px; height: 80px; border: 4px solid var(--b); position: absolute; top: -40px; cursor: pointer; }
         .ph-n { font-size: 20px; font-weight: 800; margin-top: 45px }
-        .ph-i { color: var(--l); font-size: 15px }
+        .ph-stat { color: var(--l); font-size: 13px; margin-top: 4px; }
+        .ph-i { color: var(--l); font-size: 15px; cursor: pointer; }
         .ph-tabs { display: flex; gap: 0; margin-top: 12px; border-bottom: 1px solid var(--bd) }
         .ph-tab { flex: 1; padding: 12px; text-align: center; cursor: pointer; border-bottom: 3px solid transparent; color: var(--l); font-weight: 600; }
         .ph-tab.a { border-bottom-color: var(--p); color: var(--p) }
@@ -75,7 +76,31 @@ html lang="ja">
         .acc-list-item.active { border-color: var(--p); background: var(--l-ac) }
         .acc-info { flex: 1 }
         .acc-name { font-weight: 600; font-size: 15px }
-        .acc-id { font-size: 13px; color: var(--l) }
+        .acc-id { font-size: 13px; color: var(--l); cursor: pointer; }
+        .post-txt { white-space: pre-wrap; word-wrap: break-word; }
+        .quoted-post { border: 1px solid var(--bd); border-radius: 12px; padding: 12px; margin-top: 10px; background: var(--bg-l); }
+        .quoted-post .th { margin-bottom: 8px; }
+        .quoted-post .post-txt { font-size: 14px; margin: 8px 0; }
+        .quoted-post .t-img { max-height: 150px; margin-top: 8px; }
+        .repost-quote-menu { position: absolute; right: 16px; top: 40px; background: var(--b); border: 1px solid var(--bd); border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 50; min-width: 140px; }
+        .repost-quote-menu button { display: block; width: 100%; padding: 12px 16px; border: none; background: none; cursor: pointer; text-align: left; color: var(--d); font-size: 14px; border-bottom: 1px solid var(--bd); transition: background 0.2s }
+        .repost-quote-menu button:last-child { border-bottom: none; }
+        .repost-quote-menu button:hover { background: var(--bg-l) }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; z-index: 200; align-items: center; justify-content: center; }
+        .modal-overlay.active { display: flex; }
+        .modal-content { max-width: 90vw; max-height: 90vh; object-fit: contain; border-radius: 8px; cursor: pointer; }
+        .repost-label { font-size: 13px; color: var(--l); margin-bottom: 8px; display: flex; align-items: center; gap: 4px; }
+        .repost-original { border: 1px solid var(--bd); border-radius: 12px; padding: 12px; background: var(--bg-l); margin-top: 8px; }
+        .repost-original-header { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+        .repost-original-av { width: 32px; height: 32px; background: #71767b; border-radius: 50%; background-size: cover; background-position: center; cursor: pointer; }
+        .repost-original-name { font-weight: 600; font-size: 13px; }
+        .repost-original-id { font-size: 12px; color: var(--l); }
+        .repost-original-txt { font-size: 13px; white-space: pre-wrap; word-wrap: break-word; margin: 6px 0; }
+        .repost-original-img { width: 100%; max-height: 150px; object-fit: cover; border-radius: 8px; margin-top: 6px; }
+        .repost-original-metrics { display: flex; gap: 12px; margin-top: 6px; color: var(--l); font-size: 12px; }
+        .repost-original-metric-item { display: flex; align-items: center; gap: 2px; }
+        .repost-wrapper { display: flex; gap: 12px; }
+        .repost-content { flex: 1; }
     </style>
 </head>
 <body data-theme="light">
@@ -84,7 +109,7 @@ html lang="ja">
         <div id="tl" class="tl"></div>
         <div class="fab" onclick="op()"><svg viewBox="0 0 24 24" width="24" height="24" fill="white"><path d="M23 10h-9V1c0-.55-.45-1-1-1h-2c-.55 0-1 .45-1 1v9H1c-.55 0-1 .45-1 1v2c0 .55.45 1 1 1h9v9c0 .55.45 1 1 1h2c.55 0 1-.45 1-1v-9h9c.55 0 1-.45 1-1v-2c0-.55-.45-1-1-1z"/></svg></div>
     </div>
-    <div id="vp" class="v"><header><span onclick="sv('h')">←</span><span id="ph-title"></span></header><div id="p-himg" class="ph-bg"></div><div class="ph-b"><div id="p-av" class="ph-av av"></div><div style="text-align:right"><button class="btn" style="background:none;color:var(--d);border:1px solid var(--bd)" onclick="oep()">編集</button></div><div class="ph-n" id="p-name"></div><div class="ph-i" id="p-id"></div><div style="margin-top:12px;font-size:14px"><span id="p-fg"></span> フォロー <span id="p-fw"></span> フォロワー</div><div class="ph-tabs"><div class="ph-tab a" onclick="swTab('posts')">ポスト</div><div class="ph-tab" onclick="swTab('replies')">返信</div></div></div><div id="posts-tab" class="tab-content a"><div id="p-tl" class="tl" style="border-top:1px solid var(--bd);margin-top:10px"></div></div><div id="replies-tab" class="tab-content"><div id="p-rp-tl" class="tl" style="border-top:1px solid var(--bd);margin-top:10px"></div></div></div>
+    <div id="vp" class="v"><header><span onclick="sv('h')">←</span><span id="ph-title"></span></header><div id="p-himg" class="ph-bg" onclick="showImageModal(this.style.backgroundImage)"></div><div class="ph-b"><div id="p-av" class="ph-av av" onclick="event.stopPropagation();showImageModal(this.style.backgroundImage)"></div><div style="text-align:right"><button class="btn" style="background:none;color:var(--d);border:1px solid var(--bd)" onclick="oep()">編集</button></div><div class="ph-n" id="p-name"></div><div class="ph-i" id="p-id" onclick="event.stopPropagation();up(profId)" style="cursor:pointer;"></div><div class="ph-stat" id="p-postcount"></div><div style="margin-top:12px;font-size:14px"><span id="p-fg"></span> フォロー <span id="p-fw"></span> フォロワー</div><div class="ph-tabs"><div class="ph-tab a" onclick="swTab('posts')">ポスト</div><div class="ph-tab" onclick="swTab('replies')">返信</div></div></div><div id="posts-tab" class="tab-content a"><div id="p-tl" class="tl" style="border-top:1px solid var(--bd);margin-top:10px"></div></div><div id="replies-tab" class="tab-content"><div id="p-rp-tl" class="tl" style="border-top:1px solid var(--bd);margin-top:10px"></div></div></div>
     <div id="vd" class="v">
         <header><span id="back-btn" onclick="sv('h')">←</span><span>ポスト</span></header>
         <div id="d-cont"></div>
@@ -96,7 +121,7 @@ html lang="ja">
 
     <div id="pov" class="post-ov">
         <div class="post-h"><span onclick="clp()">キャンセル</span><button class="btn" onclick="pt()" id="p-btn">ツイート</button></div>
-        <div class="post-b"><div id="post-av" class="av-m av"></div><div style="flex:1"><textarea id="ti" class="ti" placeholder="いまどうしてる？"></textarea><img id="p-pre" class="t-img" style="display:none;max-height:150px"></div></div>
+        <div class="post-b"><div id="post-av" class="av-m av"></div><div style="flex:1"><textarea id="ti" class="ti" placeholder="いまどうしてる？"></textarea><img id="p-pre" class="t-img" style="display:none;max-height:150px"><div id="quoted-preview" style="display:none;margin-top:10px"></div></div></div>
         <div class="m-inp">
             <label>💬<input type="number" id="irp" value="0"></label>
             <label>🔁<input type="number" id="irt" value="0"></label>
@@ -105,7 +130,11 @@ html lang="ja">
         </div>
         <div style="padding:10px 16px"><button class="btn" style="background:none;color:var(--p);padding:0" onclick="document.getElementById('f-img').click()">🖼 画像追加</button><input type="file" id="f-img" style="display:none" onchange="pvw(this,'t')"></div>
     </div>
-    <div id="eov" class="post-ov"><div class="post-h"><span onclick="cle()">キャンセル</span><button class="btn" onclick="upd()">保存</button></div><div class="f-g"><h3>プロフィール</h3>名前<input type="text" id="en">ID<input type="text" id="ei"><br><h3>統計</h3>フォロー<input type="number" id="efg">フォロワー<input type="number" id="efw"><br><h3>メディア</h3><button class="btn" style="width:100%;margin-bottom:10px" onclick="document.getElementById('f-av').click()">🖼 アイコン変更</button><input type="file" id="f-av" style="display:none" onchange="pvw(this,'av')"><button class="btn" style="width:100%;margin-bottom:10px;background:#71767b" onclick="document.getElementById('f-hd').click()">🏞 ヘッダー変更</button><input type="file" id="f-hd" style="display:none" onchange="pvw(this,'hd')"><hr style="border:0;border-top:1px solid var(--bd);margin:20px 0"><button class="btn" style="background:red;width:100%" onclick="da()">⚠ アカウント削除</button></div></div>
+    <div id="eov" class="post-ov"><div class="post-h"><span onclick="cle()">キャンセル</span><button class="btn" onclick="upd()">保存</button></div><div class="f-g"><h3>プロフィール</h3>名前<input type="text" id="en">ID<input type="text" id="ei"><br><h3>統計</h3>フォロー<input type="number" id="efg">フォロワー<input type="number" id="efw"><br><h3>メディア</h3><button class="btn" style="width:100%;margin-bottom:10px" onclick="document.getElementById('f-av').click()">🖼 ア��コン変更</button><input type="file" id="f-av" style="display:none" onchange="pvw(this,'av')"><button class="btn" style="width:100%;margin-bottom:10px;background:#71767b" onclick="document.getElementById('f-hd').click()">🏞 ヘッダー変更</button><input type="file" id="f-hd" style="display:none" onchange="pvw(this,'hd')"><hr style="border:0;border-top:1px solid var(--bd);margin:20px 0"><button class="btn" style="background:red;width:100%" onclick="da()">⚠ アカウント削除</button></div></div>
+
+    <div id="modal" class="modal-overlay" onclick="closeImageModal()">
+        <img id="modal-img" class="modal-content" onclick="event.stopPropagation()">
+    </div>
 
     <nav>
         <div class="ni a" id="nh" onclick="sv('h')"><svg viewBox="0 0 24 24"><path d="M21.59 10.62l-8.53-7.9c-.26-.24-.67-.24-.93 0l-8.53 7.9c-.28.26-.39.68-.28 1.06.11.38.46.65.85.65h.92v8.33c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-6h2v6c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-8.33h.92c.39 0 .74-.27.85-.65.11-.38 0-.8-.28-1.06z"/></svg></div>
@@ -115,7 +144,7 @@ html lang="ja">
 
 <script>
 let d={a:[{id:"a1",n:"ユーザー",i:"@user",fw:0,fg:0,av:"",hd:"",likes:[],reposts:[]}],ac:"a1",t:[],th:"light"};
-let curTImg="", curAImg="", curHImg="", profId=null, replyId=null, editPostId=null, openMenuId=null;
+let curTImg="", curAImg="", curHImg="", profId=null, replyId=null, editPostId=null, openMenuId=null, quotedPostId=null;
 const DB_NAME = "TwimemoDB", STORE_NAME = "AppData";
 
 function openDB() {
@@ -136,6 +165,18 @@ async function ld() {
 
 function fmt(n){ n=Number(n)||0; return n>=10000?(n/1000).toFixed(1)+"K":n.toLocaleString(); }
 
+function showImageModal(bgImg) {
+    const url = bgImg.match(/url\(["']?([^"')]+)["']?\)/)?.[1];
+    if(url) {
+        document.getElementById("modal-img").src = url;
+        document.getElementById("modal").classList.add("active");
+    }
+}
+
+function closeImageModal() {
+    document.getElementById("modal").classList.remove("active");
+}
+
 function sv(v){
     window.scrollTo(0,0);
     document.querySelectorAll(".v").forEach(x=>x.classList.remove("a"));
@@ -152,7 +193,7 @@ function ra() {
     d.a.forEach(a => {
         let e = document.createElement("div"); e.className = "acc-list-item" + (d.ac === a.id ? " active" : "");
         e.onclick = () => { d.ac = a.id; sd(); ra(); rt(); };
-        e.innerHTML = `<div class="av av-m" style="background-image:url(${a.av});width:50px;height:50px;border-radius:8px"></div><div class="acc-info" style="flex:1"><div class="acc-name">${a.n}</div><div class="acc-id">${a.i}</div></div>${d.ac === a.id ? '<svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:var(--p)"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>' : ''}`;
+        e.innerHTML = `<div class="av av-m" style="background-image:url(${a.av});width:50px;height:50px;border-radius:8px;cursor:pointer;" onclick="event.stopPropagation();up('${a.id}')"></div><div class="acc-info" style="flex:1;cursor:pointer;" onclick="event.stopPropagation();up('${a.id}')"><div class="acc-name">${a.n}</div><div class="acc-id" onclick="event.stopPropagation();up('${a.id}')">${a.i}</div></div>${d.ac === a.id ? '<svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:var(--p)"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>' : ''}`;
         l.appendChild(e);
     });
 }
@@ -170,26 +211,83 @@ function swTab(tab) {
     }
 }
 
+function renderQuotedPost(quotedId) {
+    const quoted = d.t.find(x => x.id === quotedId);
+    if(!quoted) return "";
+    const author = d.a.find(x => x.id === quoted.aid) || d.a[0];
+    return `
+        <div class="quoted-post" onclick="event.stopPropagation();">
+            <div class="th"><div><b>${author.n}</b> <small>${author.i}</small></div></div>
+            <div class="post-txt">${quoted.tx}</div>
+            ${quoted.im ? `<img src="${quoted.im}" class="t-img">` : ""}
+        </div>
+    `;
+}
+
 function createTweet(t, isReply=false) {
-    const a = d.a.find(x => x.id === t.aid) || d.a[0];
-    const curA = d.a.find(x => x.id === d.ac);
+    const a = d.a.find(x => x.id === t.aid);
+    if(!a) return null;
+    
     const likeCount = (t.likeBy || []).length;
-    const repostCount = (t.repostBy || []).length;
+    const repostCount = (t.repostCount || 0);
     
     const e = document.createElement("div"); 
     e.className = "tw"; 
     e.id = "tw-"+t.id;
+    
+    if(t.isRepost && t.repostOf) {
+        const original = d.t.find(x => x.id === t.repostOf);
+        if(!original) return null;
+        const originalAuthor = d.a.find(x => x.id === original.aid);
+        if(!originalAuthor) return null;
+        
+        const origLikeCount = (original.likeBy || []).length;
+        const origRepostCount = (original.repostCount || 0);
+        
+        e.innerHTML = `
+            <div class="repost-label">
+                <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:var(--l)"><path d="M4.5 3.88l4.43 4.42c.19.19.19.51 0 .71-.19.19-.51.19-.7 0L5.5 6.27V15c0 1.66 1.34 3 3 3h6c.28 0 .5.22.5.5s-.22.5-.5.5h-6c-2.21 0-4-1.79-4-4V6.27L1.77 8.51c-.19.19-.51.19-.7 0-.19-.2-.19-.52 0-.71l4.43-4.42c.19-.2.51-.2.7 0zm15 16.24l-4.43-4.42c-.19-.2-.19-.52 0-.71s.51-.2.71 0l2.72 2.73V9c0-1.66-1.34-3-3-3h-6c-.28 0-.5-.22-.5-.5s.22-.5.5-.5h6c2.21 0 4 1.79 4 4v8.73l2.73-2.73c.19-.19.51-.19.7 0 .2.2.2.52 0 .71l-4.43 4.42c-.2.2-.51.2-.7 0z"/></svg>
+                <span>${a.n}がリポストしました</span>
+            </div>
+            <div class="repost-wrapper">
+                <div class="av av-m" style="background-image:url(${originalAuthor.av});flex-shrink:0;" onclick="event.stopPropagation();up('${originalAuthor.id}')"></div>
+                <div class="repost-content">
+                    <div class="repost-original" onclick="showDetail('${original.id}')">
+                        <div class="repost-original-header">
+                            <div class="repost-original-av" style="background-image:url(${originalAuthor.av})" onclick="event.stopPropagation();up('${originalAuthor.id}')"></div>
+                            <div>
+                                <div class="repost-original-name">${originalAuthor.n}</div>
+                                <div class="repost-original-id">${originalAuthor.i}</div>
+                            </div>
+                            ${original.aid === d.ac ? `<button class="menu-btn" style="position:absolute;right:12px;top:12px;" onclick="event.stopPropagation();toggleMenu('${original.id}')">⋯</button><div id="menu-${original.id}" class="dropdown-menu" style="display:none;"><button onclick="event.stopPropagation();editPost('${original.id}')">編集</button><button class="danger" onclick="event.stopPropagation();dt('${original.id}')">削除</button></div>` : ''}
+                        </div>
+                        <div class="repost-original-txt">${original.tx}</div>
+                        ${original.im ? `<img src="${original.im}" class="repost-original-img">` : ""}
+                        <div class="repost-original-metrics">
+                            <div class="repost-original-metric-item">💬 ${fmt(original.rp)}</div>
+                            <div class="repost-original-metric-item">🔁 ${fmt(origRepostCount)}</div>
+                            <div class="repost-original-metric-item">❤️ ${fmt(origLikeCount)}</div>
+                            <div class="repost-original-metric-item">📊 ${fmt(original.vw)}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        return e;
+    }
+    
     e.innerHTML = `
         <div class="av av-m" style="background-image:url(${a.av})" onclick="event.stopPropagation();up('${a.id}')"></div>
         <div class="tc" onclick="showDetail('${t.id}')">
             <div class="th"><div><b>${a.n}</b> <small>${a.i}</small></div>
             ${t.aid === d.ac ? `<button class="menu-btn" onclick="event.stopPropagation();toggleMenu('${t.id}')">⋯</button><div id="menu-${t.id}" class="dropdown-menu" style="display:none;"><button onclick="event.stopPropagation();editPost('${t.id}')">編集</button><button class="danger" onclick="event.stopPropagation();dt('${t.id}')">削除</button></div>` : ''}
             </div>
-            <div>${t.tx}</div>
+            <div class="post-txt">${t.tx}</div>
             ${t.im ? `<img src="${t.im}" class="t-img">` : ""}
+            ${t.type === "quote" && t.quotedId ? renderQuotedPost(t.quotedId) : ""}
             <div class="tm">
                 <div class="tm-i" onclick="event.stopPropagation()"><svg class="tm-svg" viewBox="0 0 24 24"><path d="M1.75 10c0-4.42 3.58-8 8-8h4.37c.33.03.61.28.61.62v2.3c0 .43-.39.73-.81.69-1.53-.17-3.05-.2-4.17-.2-3.31 0-6 2.69-6 6s2.69 6 6 6h10.5l-4.28-4.29c-.19-.19-.19-.51 0-.7.2-.2.51-.2.7 0l5.14 5.14c.2.2.2.51 0 .7l-5.14 5.14c-.1.1-.23.15-.35.15s-.25-.05-.35-.15c-.19-.19-.19-.51 0-.7l4.28-4.29H9.75c-4.42 0-8-3.58-8-8z"/></svg> ${fmt(t.rp)}</div>
-                <div class="tm-i" onclick="event.stopPropagation();toggleRepost('${t.id}')" style="${(t.repostBy || []).includes(d.ac) ? 'color:var(--p)' : ''}"><svg class="tm-svg" viewBox="0 0 24 24"><path d="M4.5 3.88l4.43 4.42c.19.19.19.51 0 .71-.19.19-.51.19-.7 0L5.5 6.27V15c0 1.66 1.34 3 3 3h6c.28 0 .5.22.5.5s-.22.5-.5.5h-6c-2.21 0-4-1.79-4-4V6.27L1.77 8.51c-.19.19-.51.19-.7 0-.19-.2-.19-.52 0-.71l4.43-4.42c.19-.2.51-.2.7 0zm15 16.24l-4.43-4.42c-.19-.2-.19-.52 0-.71s.51-.2.71 0l2.72 2.73V9c0-1.66-1.34-3-3-3h-6c-.28 0-.5-.22-.5-.5s.22-.5.5-.5h6c2.21 0 4 1.79 4 4v8.73l2.73-2.73c.19-.19.51-.19.7 0 .2.2.2.52 0 .71l-4.43 4.42c-.2.2-.51.2-.7 0z"/></svg> ${fmt(repostCount)}</div>
+                <div class="tm-i" onclick="event.stopPropagation();toggleRepostQuote('${t.id}')" style="${(t.repostedByMe || []).includes(d.ac) ? 'color:var(--p)' : ''}"><svg class="tm-svg" viewBox="0 0 24 24"><path d="M4.5 3.88l4.43 4.42c.19.19.19.51 0 .71-.19.19-.51.19-.7 0L5.5 6.27V15c0 1.66 1.34 3 3 3h6c.28 0 .5.22.5.5s-.22.5-.5.5h-6c-2.21 0-4-1.79-4-4V6.27L1.77 8.51c-.19.19-.51.19-.7 0-.19-.2-.19-.52 0-.71l4.43-4.42c.19-.2.51-.2.7 0zm15 16.24l-4.43-4.42c-.19-.2-.19-.52 0-.71s.51-.2.71 0l2.72 2.73V9c0-1.66-1.34-3-3-3h-6c-.28 0-.5-.22-.5-.5s.22-.5.5-.5h6c2.21 0 4 1.79 4 4v8.73l2.73-2.73c.19-.19.51-.19.7 0 .2.2.2.52 0 .71l-4.43 4.42c-.2.2-.51.2-.7 0z"/></svg> ${fmt(repostCount)}</div>
                 <div class="tm-i" onclick="event.stopPropagation();toggleLike('${t.id}')" style="${(t.likeBy || []).includes(d.ac) ? 'color:#e74c3c' : ''}"><svg class="tm-svg" viewBox="0 0 24 24"><path d="M16.697 5.5c-1.222-.06-2.679.351-3.827 1.36-.11.1-.28.1-.39 0-1.148-1.009-2.605-1.42-3.827-1.36-2.224.11-4.153 1.902-4.403 4.14-.305 2.728 1.479 5.481 4.096 7.302l2.816 1.938c.15.103.351.103.501 0l2.816-1.938c2.617-1.821 4.401-4.574 4.096-7.302-.25-2.238-2.179-4.03-4.403-4.14z"/></svg> ${fmt(likeCount)}</div>
                 <div class="tm-i"><svg class="tm-svg" viewBox="0 0 24 24"><path d="M8.75 21V3h2v18h-2zM18 21V8.5h2V21h-2zM4 21l.004-10h2L6 21H4zm9.248 0v-7h2v7h-2z"/></svg> ${fmt(t.vw)}</div>
             </div>
@@ -198,18 +296,27 @@ function createTweet(t, isReply=false) {
 }
 
 function rt(target="tl", aid=null) {
-    const tl = document.getElementById(target); tl.innerHTML = "";
-    const list = aid ? d.t.filter(x => x.aid === aid && !x.reId) : d.t.filter(x => !x.reId);
+    const tl = document.getElementById(target); 
+    tl.innerHTML = "";
+    let list;
+    if(aid) {
+        list = d.t.filter(x => x.aid === aid && !x.reId);
+    } else {
+        list = d.t.filter(x => !x.reId);
+    }
     [...list].sort((a,b)=>b.ts - a.ts).forEach(t => {
-        tl.appendChild(createTweet(t));
+        const elem = createTweet(t);
+        if(elem) tl.appendChild(elem);
     });
 }
 
 function rtReply(aid) {
-    const rtl = document.getElementById("p-rp-tl"); rtl.innerHTML = "";
+    const rtl = document.getElementById("p-rp-tl"); 
+    rtl.innerHTML = "";
     const allPosts = d.t.filter(x => x.aid === aid);
     [...allPosts].sort((a,b)=>b.ts - a.ts).forEach(post => {
-        rtl.appendChild(createTweet(post));
+        const elem = createTweet(post);
+        if(elem) rtl.appendChild(elem);
     });
 }
 
@@ -227,18 +334,81 @@ function toggleLike(tid) {
     sd(); rt(); rtProfile();
 }
 
-function toggleRepost(tid) {
+function toggleRepostQuote(tid) {
     const t = d.t.find(x => x.id === tid);
     if(!t) return;
-    if(!t.repostBy) t.repostBy = [];
-    if(t.repostBy.includes(d.ac)) {
-        t.repostBy = t.repostBy.filter(x => x !== d.ac);
-        t.rt = Math.max(0, (t.rt || 0) - 1);
-    } else {
-        t.repostBy.push(d.ac);
-        t.rt = (t.rt || 0) + 1;
+    
+    const container = document.getElementById("tw-"+tid);
+    let menu = document.getElementById("menu-repost-quote-"+tid);
+    
+    if(!menu) {
+        menu = document.createElement("div");
+        menu.id = "menu-repost-quote-"+tid;
+        menu.className = "repost-quote-menu";
+        menu.innerHTML = `
+            <button onclick="event.stopPropagation();doRepost('${tid}')">🔁 リポスト</button>
+            <button onclick="event.stopPropagation();doQuote('${tid}')">💬 引用</button>
+        `;
+        container.appendChild(menu);
     }
-    sd(); rt(); rtProfile();
+    
+    menu.style.display = menu.style.display === "none" ? "block" : "none";
+}
+
+function doRepost(tid) {
+    const t = d.t.find(x => x.id === tid);
+    if(!t) return;
+    
+    if(t.repostedByMe && t.repostedByMe.includes(d.ac)) {
+        t.repostedByMe = t.repostedByMe.filter(x => x !== d.ac);
+        t.repostCount = Math.max(0, (t.repostCount || 0) - 1);
+        d.t = d.t.filter(x => !(x.isRepost && x.repostOf === tid && x.aid === d.ac));
+    } else {
+        if(!t.repostedByMe) t.repostedByMe = [];
+        t.repostedByMe.push(d.ac);
+        t.repostCount = (t.repostCount || 0) + 1;
+        
+        const repostPost = {
+            id: Date.now().toString(),
+            aid: d.ac,
+            isRepost: true,
+            repostOf: tid,
+            ts: Date.now(),
+            tx: "",
+            im: "",
+            rp: 0,
+            rt: 0,
+            fv: 0,
+            vw: 0,
+            reId: null,
+            likeBy: [],
+            repostedByMe: [],
+            repostCount: 0
+        };
+        d.t.push(repostPost);
+    }
+    
+    sd(); 
+    rt(); 
+    rtProfile();
+    closeMenus();
+}
+
+function doQuote(tid) {
+    quotedPostId = tid;
+    document.getElementById("p-btn").innerText = "ツイート";
+    document.getElementById("ti").value = "";
+    document.getElementById("pov").style.display = "flex";
+    
+    const quoted = d.t.find(x => x.id === tid);
+    if(quoted) {
+        const preview = document.getElementById("quoted-preview");
+        preview.innerHTML = renderQuotedPost(tid);
+        preview.style.display = "block";
+    }
+    
+    updatePostAv();
+    closeMenus();
 }
 
 function rtProfile() {
@@ -259,7 +429,7 @@ function toggleMenu(tid) {
 
 function editPost(tid) {
     const post = d.t.find(x => x.id === tid);
-    if(!post || post.aid !== d.ac) return;
+    if(!post || post.aid !== d.ac || post.isRepost) return;
     editPostId = tid;
     document.getElementById("p-btn").innerText = "保存";
     document.getElementById("ti").value = post.tx;
@@ -279,12 +449,17 @@ function editPost(tid) {
 
 function closeMenus() {
     document.querySelectorAll(".dropdown-menu").forEach(m => m.style.display = "none");
+    document.querySelectorAll(".repost-quote-menu").forEach(m => m.style.display = "none");
     openMenuId = null;
 }
 
 function showDetail(tid) {
-    const t = d.t.find(x => x.id === tid); if(!t) return;
-    const a = d.a.find(x => x.id === t.aid) || d.a[0];
+    const t = d.t.find(x => x.id === tid); 
+    if(!t) return;
+    
+    let a = d.a.find(x => x.id === t.aid);
+    if(!a) return;
+    
     replyId = t.id;
     sv('d');
     closeMenus();
@@ -297,19 +472,20 @@ function showDetail(tid) {
     }
 
     const likeCount = (t.likeBy || []).length;
-    const repostCount = (t.repostBy || []).length;
+    const repostCount = (t.repostCount || 0);
 
     document.getElementById("d-cont").innerHTML = `
         <div class="dtw">
             <div style="display:flex;gap:12px;align-items:center;margin-bottom:12px;justify-content:space-between">
-                <div style="display:flex;gap:12px;align-items:center;flex:1">
-                    <div class="av av-m" style="background-image:url(${a.av})"></div>
+                <div style="display:flex;gap:12px;align-items:center;flex:1;cursor:pointer;" onclick="event.stopPropagation();up('${a.id}')">
+                    <div class="av av-m" style="background-image:url(${a.av});cursor:pointer;"></div>
                     <div><b>${a.n}</b><br><small>${a.i}</small></div>
                 </div>
                 ${t.aid === d.ac ? `<button class="menu-btn detail-menu-btn" onclick="event.stopPropagation();toggleMenu('detail-${t.id}')">⋯</button><div id="menu-detail-${t.id}" class="dropdown-menu" style="display:none;"><button onclick="event.stopPropagation();editPost('${t.id}')">編集</button><button class="danger" onclick="event.stopPropagation();dt('${t.id}')">削除</button></div>` : ''}
             </div>
-            <div style="font-size:19px;line-height:1.4">${t.tx}</div>
+            <div style="font-size:19px;line-height:1.4" class="post-txt">${t.tx}</div>
             ${t.im?`<img src="${t.im}" class="t-img">`:""}
+            ${t.type === "quote" && t.quotedId ? renderQuotedPost(t.quotedId) : ""}
             <div style="color:var(--l);margin:12px 0;padding:12px 0;border-top:1px solid var(--bd);border-bottom:1px solid var(--bd)">
                 ${new Date(t.ts).toLocaleString()} ・ <b>${fmt(t.vw)}</b> 表示
             </div>
@@ -321,11 +497,12 @@ function showDetail(tid) {
     const rps = d.t.filter(x => x.reId === tid);
     const rtl = document.getElementById("d-rp-tl"); rtl.innerHTML = "";
     rps.forEach(r => {
-        rtl.appendChild(createTweet(r, true));
+        const elem = createTweet(r, true);
+        if(elem) rtl.appendChild(elem);
     });
 }
 
-function op(){ editPostId = null; replyId = null; document.getElementById("p-btn").innerText="ツイート"; document.getElementById("pov").style.display="flex"; updatePostAv(); closeMenus(); }
+function op(){ editPostId = null; replyId = null; quotedPostId = null; document.getElementById("p-btn").innerText="ツイート"; document.getElementById("pov").style.display="flex"; document.getElementById("quoted-preview").innerHTML = ""; document.getElementById("quoted-preview").style.display = "none"; updatePostAv(); closeMenus(); }
 function op_rp(){ editPostId = null; document.getElementById("p-btn").innerText="返信"; document.getElementById("pov").style.display="flex"; updatePostAv(); closeMenus(); }
 function updatePostAv(){ const a=d.a.find(x=>x.id===d.ac); document.getElementById("post-av").style.backgroundImage=a.av?`url(${a.av})`:""; }
 
@@ -346,6 +523,10 @@ function pt() {
     } else {
         const nt = {
             id: Date.now().toString(),
+            type: quotedPostId ? "quote" : "normal",
+            quotedId: quotedPostId || null,
+            isRepost: false,
+            repostOf: null,
             aid: d.ac,
             ts: Date.now(),
             tx,
@@ -356,7 +537,8 @@ function pt() {
             vw: document.getElementById("ivw").value || 0,
             reId: replyId,
             likeBy: [],
-            repostBy: []
+            repostedByMe: [],
+            repostCount: 0
         };
         
         if(replyId) {
@@ -403,14 +585,21 @@ function pvw(i, m) {
     r.readAsDataURL(f);
 }
 
+function getPostCount(aid) {
+    return d.t.filter(x => x.aid === aid).length;
+}
+
 function up(aid) {
-    profId = aid; const a = d.a.find(x => x.id === aid); sv('p');
+    profId = aid; const a = d.a.find(x => x.id === aid); 
+    if(!a) return;
+    sv('p');
     document.getElementById("ph-title").innerText = a.n;
     document.getElementById("p-name").innerText = a.n;
     document.getElementById("p-id").innerText = a.i;
     document.getElementById("p-av").style.backgroundImage = a.av ? `url(${a.av})` : "";
     document.getElementById("p-himg").style.backgroundImage = a.hd ? `url(${a.hd})` : "";
     document.getElementById("p-fw").innerText = fmt(a.fw); document.getElementById("p-fg").innerText = fmt(a.fg);
+    document.getElementById("p-postcount").innerText = getPostCount(aid) + "件";
     swTab('posts');
     rt("p-tl", aid);
     rtReply(aid);
@@ -418,6 +607,7 @@ function up(aid) {
 
 function oep() {
     const a = d.a.find(x => x.id === profId);
+    if(!a) return;
     document.getElementById("eov").style.display = "flex";
     document.getElementById("en").value = a.n; document.getElementById("ei").value = a.i;
     document.getElementById("efg").value = a.fg; document.getElementById("efw").value = a.fw;
@@ -426,6 +616,7 @@ function oep() {
 
 function upd() {
     const a = d.a.find(x => x.id === profId);
+    if(!a) return;
     Object.assign(a, { n: document.getElementById("en").value, i: document.getElementById("ei").value, fg: document.getElementById("efg").value, fw: document.getElementById("efw").value, av: curAImg, hd: curHImg });
     cle(); sd(); ra(); up(profId);
 }
@@ -453,42 +644,45 @@ function st(t){
 function clp(){ 
     document.getElementById("pov").style.display="none"; 
     editPostId = null; 
+    quotedPostId = null;
     curTImg=""; 
     document.getElementById("ti").value=""; 
     document.getElementById("p-pre").style.display="none"; 
+    document.getElementById("quoted-preview").innerHTML = "";
+    document.getElementById("quoted-preview").style.display = "none";
     ["irp","irt","ifv","ivw"].forEach(id=>document.getElementById(id).value=0); 
     closeMenus(); 
 }
 
 function cle(){ document.getElementById("eov").style.display="none" }
-function dt(tid) { if(confirm("削除しますか？")){ d.t = d.t.filter(x=>x.id!==tid); sd(); sv('h'); rt(); closeMenus(); } }
-
+function dt(tid) { 
+    if(confirm("削除しますか？")){ 
+        d.t = d.t.filter(x=>x.id!==tid); 
+        sd(); 
+        sv('h'); 
+        rt(); 
+        closeMenus(); 
+    } 
+}
 
 function da(){ 
     if(confirm("消去？")){ 
         const deletedAccountId = profId;
         
-
         d.t = d.t.filter(x => x.aid !== deletedAccountId);
         
-
         d.t.forEach(post => {
             if(post.likeBy) post.likeBy = post.likeBy.filter(x => x !== deletedAccountId);
-            if(post.repostBy) post.repostBy = post.repostBy.filter(x => x !== deletedAccountId);
+            if(post.repostedByMe) post.repostedByMe = post.repostedByMe.filter(x => x !== deletedAccountId);
         });
         
-
         d.a = d.a.filter(x => x.id !== deletedAccountId);
         
-
         if(d.ac === deletedAccountId) {
             d.ac = d.a.length > 0 ? d.a[0].id : "a1";
         }
         
-
         sd();
-        
-
         sv('h');
         ra();
         rt();
