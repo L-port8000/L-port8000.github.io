@@ -193,7 +193,7 @@ function ra() {
     d.a.forEach(a => {
         let e = document.createElement("div"); e.className = "acc-list-item" + (d.ac === a.id ? " active" : "");
         e.onclick = () => { d.ac = a.id; sd(); ra(); rt(); };
-        e.innerHTML = `<div class="av av-m" style="background-image:url(${a.av});width:50px;height:50px;border-radius:8px;cursor:pointer;" onclick="event.stopPropagation();up('${a.id}')"></div><div class="acc-info" style="flex:1;cursor:pointer;" onclick="event.stopPropagation();up('${a.id}')"><div class="acc-name">${a.n}</div><div class="acc-id" onclick="event.stopPropagation();up('${a.id}')">${a.i}</div></div>${d.ac === a.id ? '<svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:var(--p)"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>' : ''}`;
+        e.innerHTML = `<div class="av av-m" style="background-image:url(${a.av});width:50px;height:50px;border-radius:8px;"></div><div class="acc-info" style="flex:1;"><div class="acc-name">${a.n}</div><div class="acc-id">${a.i}</div></div>${d.ac === a.id ? '<svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:var(--p)"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>' : ''}`;
         l.appendChild(e);
     });
 }
@@ -245,13 +245,13 @@ function createTweet(t, isReply=false) {
         const origRepostCount = (original.repostCount || 0);
         
         e.innerHTML = `
-            <div class="repost-label">
-                <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:var(--l)"><path d="M4.5 3.88l4.43 4.42c.19.19.19.51 0 .71-.19.19-.51.19-.7 0L5.5 6.27V15c0 1.66 1.34 3 3 3h6c.28 0 .5.22.5.5s-.22.5-.5.5h-6c-2.21 0-4-1.79-4-4V6.27L1.77 8.51c-.19.19-.51.19-.7 0-.19-.2-.19-.52 0-.71l4.43-4.42c.19-.2.51-.2.7 0zm15 16.24l-4.43-4.42c-.19-.2-.19-.52 0-.71s.51-.2.71 0l2.72 2.73V9c0-1.66-1.34-3-3-3h-6c-.28 0-.5-.22-.5-.5s.22-.5.5-.5h6c2.21 0 4 1.79 4 4v8.73l2.73-2.73c.19-.19.51-.19.7 0 .2.2.2.52 0 .71l-4.43 4.42c-.2.2-.51.2-.7 0z"/></svg>
-                <span>${a.n}がリポストしました</span>
-            </div>
-            <div class="repost-wrapper">
+            <div style="display: flex; gap: 12px; width: 100%;">
                 <div class="av av-m" style="background-image:url(${originalAuthor.av});flex-shrink:0;" onclick="event.stopPropagation();up('${originalAuthor.id}')"></div>
-                <div class="repost-content">
+                <div style="flex: 1;">
+                    <div class="repost-label" style="margin-bottom: 8px;">
+                        <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:var(--l)"><path d="M4.5 3.88l4.43 4.42c.19.19.19.51 0 .71-.19.19-.51.19-.7 0L5.5 6.27V15c0 1.66 1.34 3 3 3h6c.28 0 .5.22.5.5s-.22.5-.5.5h-6c-2.21 0-4-1.79-4-4V6.27L1.77 8.51c-.19.19-.51.19-.7 0-.19-.2-.19-.52 0-.71l4.43-4.42c.19-.2.51-.2.7 0zm15 16.24l-4.43-4.42c-.19-.2-.19-.52 0-.71s.51-.2.71 0l2.72 2.73V9c0-1.66-1.34-3-3-3h-6c-.28 0-.5-.22-.5-.5s.22-.5.5-.5h6c2.21 0 4 1.79 4 4v8.73l2.73-2.73c.19-.19.51-.19.7 0 .2.2.2.52 0 .71l-4.43 4.42c-.2.2-.51.2-.7 0z"/></svg>
+                        <span>${a.n}がリポストしました</span>
+                    </div>
                     <div class="repost-original" onclick="showDetail('${original.id}')">
                         <div class="repost-original-header">
                             <div class="repost-original-av" style="background-image:url(${originalAuthor.av})" onclick="event.stopPropagation();up('${originalAuthor.id}')"></div>
