@@ -1,4 +1,4 @@
-<html lang="ja">
+html lang="ja">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
@@ -17,14 +17,15 @@
         .tw { padding: 12px 16px; border-bottom: 1px solid var(--bd); display: flex; gap: 12px; position: relative; cursor: pointer }
         .tw:hover { background: var(--bg-l) }
         .tc { flex-grow: 1 }
-        .th { display: flex; align-items: center; font-size: 15px; gap: 4px; margin-bottom: 2px }
+        .th { display: flex; align-items: center; font-size: 15px; gap: 4px; margin-bottom: 2px; justify-content: space-between }
         .tn { font-weight: 700 }
         .tid { color: var(--l) }
         .t-img { width: 100%; max-height: 300px; object-fit: cover; border-radius: 16px; margin-top: 10px; border: 1px solid var(--bd) }
         .tm { display: flex; justify-content: space-between; max-width: 425px; margin-top: 12px; color: var(--l); font-size: 13px; }
-        .tm-i { display: flex; align-items: center; gap: 4px; flex: 1; }
-        .tm-svg { width: 18px; height: 18px; fill: var(--l); }
-        .fab { position: fixed; right: 20px; bottom: 80px; width: 56px; height: 56px; background: var(--p); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 20 }
+        .tm-i { display: flex; align-items: center; gap: 4px; flex: 1; cursor: pointer; user-select: none; }
+        .tm-i:hover { color: var(--p) }
+        .tm-svg { width: 18px; height: 18px; fill: currentColor; }
+        .fab { position: fixed; right: 20px; bottom: 80px; width: 56px; height: 56px; background: var(--p); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 20; cursor: pointer; }
         .post-ov { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--b); z-index: 100; display: none; flex-direction: column }
         .post-h { padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--bd) }
         .post-b { padding: 16px; flex-grow: 1; display: flex; gap: 12px; overflow-y: auto; }
@@ -32,22 +33,49 @@
         .m-inp { display: flex; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--bd); background: var(--b); overflow-x: auto; }
         .m-inp label { display: flex; align-items: center; background: var(--bg-l); border-radius: 20px; padding: 6px 12px; font-size: 12px; white-space: nowrap; }
         .m-inp input { width: 45px; border: none; background: transparent; color: var(--d); outline: none; margin-left: 4px; font-weight: bold; }
-        .btn { background: var(--p); color: #fff; border: none; padding: 8px 18px; border-radius: 30px; font-size: 14px; font-weight: 700; cursor: pointer; }
+        .btn { background: var(--p); color: #fff; border: none; padding: 8px 18px; border-radius: 30px; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s }
+        .btn:hover { opacity: 0.8; transform: translateY(-1px) }
         .ph-bg { height: 125px; background: #cfd9de; background-size: cover; background-position: center }
         .ph-b { padding: 12px 16px; position: relative }
         .ph-av { width: 80px; height: 80px; border: 4px solid var(--b); position: absolute; top: -40px }
         .ph-n { font-size: 20px; font-weight: 800; margin-top: 45px }
         .ph-i { color: var(--l); font-size: 15px }
+        .ph-tabs { display: flex; gap: 0; margin-top: 12px; border-bottom: 1px solid var(--bd) }
+        .ph-tab { flex: 1; padding: 12px; text-align: center; cursor: pointer; border-bottom: 3px solid transparent; color: var(--l); font-weight: 600; }
+        .ph-tab.a { border-bottom-color: var(--p); color: var(--p) }
         nav { position: fixed; bottom: 0; width: 100%; background: var(--b); border-top: 1px solid var(--bd); display: flex; z-index: 10 }
         .ni { padding: 14px; flex: 1; text-align: center; cursor: pointer; }
-        .ni svg { width: 26px; height: 26px; fill: var(--l) }
+        .ni svg { width: 26px; height: 26px; fill: var(--l); transition: fill 0.2s }
         .ni.a svg { fill: var(--d) }
         .f-g { padding: 16px }
-        input[type=text], input[type=number] { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid var(--bd); background: var(--bg-l); color: var(--d); border-radius: 8px }
-        .acc-item { display: flex; padding: 12px 16px; border-bottom: 1px solid var(--bd); align-items: center; gap: 12px; position: relative; cursor: pointer; }
+        input[type=text], input[type=number] { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid var(--bd); background: var(--bg-l); color: var(--d); border-radius: 8px; font-size: 14px }
+        .acc-item { display: flex; padding: 12px 16px; border-bottom: 1px solid var(--bd); align-items: center; gap: 12px; position: relative; cursor: pointer; transition: background 0.2s }
+        .acc-item:hover { background: var(--bg-l) }
         .chk { position: absolute; right: 20px; fill: var(--p); display: none; width: 20px; height: 20px; }
         .act .chk { display: block }
-        .dtw { padding: 16px; border-bottom: 1px solid var(--bd) }
+        .dtw { padding: 16px; border-bottom: 1px solid var(--bd); position: relative }
+        .menu-btn { background: none; border: none; cursor: pointer; font-size: 18px; color: var(--l); padding: 0; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; transition: color 0.2s }
+        .menu-btn:hover { color: var(--d) }
+        .dropdown-menu { position: absolute; right: 16px; top: 40px; background: var(--b); border: 1px solid var(--bd); border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 50; min-width: 120px; }
+        .dropdown-menu button { display: block; width: 100%; padding: 12px 16px; border: none; background: none; cursor: pointer; text-align: left; color: var(--d); font-size: 14px; border-bottom: 1px solid var(--bd); transition: background 0.2s }
+        .dropdown-menu button:last-child { border-bottom: none; }
+        .dropdown-menu button:hover { background: var(--bg-l) }
+        .dropdown-menu button.danger { color: red; }
+        .tab-content { display: none }
+        .tab-content.a { display: block }
+        .detail-menu-btn { position: absolute; top: 16px; right: 16px; }
+        .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px }
+        .settings-btn { padding: 15px; border-radius: 12px; border: 2px solid var(--bd); background: var(--bg-l); cursor: pointer; font-weight: 600; transition: all 0.2s; text-align: center }
+        .settings-btn:hover { border-color: var(--p); background: var(--l-ac) }
+        .settings-btn.active { border-color: var(--p); background: var(--l-ac); color: var(--p) }
+        .acc-add-btn { width: 100%; padding: 12px; background: var(--p); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px; margin-top: 10px; transition: all 0.2s }
+        .acc-add-btn:hover { opacity: 0.9 }
+        .acc-list-item { display: flex; padding: 15px; background: var(--bg-l); border-radius: 12px; margin-bottom: 10px; align-items: center; gap: 12px; cursor: pointer; transition: all 0.2s; border: 2px solid transparent }
+        .acc-list-item:hover { border-color: var(--p) }
+        .acc-list-item.active { border-color: var(--p); background: var(--l-ac) }
+        .acc-info { flex: 1 }
+        .acc-name { font-weight: 600; font-size: 15px }
+        .acc-id { font-size: 13px; color: var(--l) }
     </style>
 </head>
 <body data-theme="light">
@@ -56,15 +84,15 @@
         <div id="tl" class="tl"></div>
         <div class="fab" onclick="op()"><svg viewBox="0 0 24 24" width="24" height="24" fill="white"><path d="M23 10h-9V1c0-.55-.45-1-1-1h-2c-.55 0-1 .45-1 1v9H1c-.55 0-1 .45-1 1v2c0 .55.45 1 1 1h9v9c0 .55.45 1 1 1h2c.55 0 1-.45 1-1v-9h9c.55 0 1-.45 1-1v-2c0-.55-.45-1-1-1z"/></svg></div>
     </div>
-    <div id="vp" class="v"><header><span onclick="sv('h')">←</span><span id="ph-title"></span></header><div id="p-himg" class="ph-bg"></div><div class="ph-b"><div id="p-av" class="ph-av av"></div><div style="text-align:right"><button class="btn" style="background:none;color:var(--d);border:1px solid var(--bd)" onclick="oep()">編集</button></div><div class="ph-n" id="p-name"></div><div class="ph-i" id="p-id"></div><div style="margin-top:12px;font-size:14px"><span id="p-fg"></span> フォロー <span id="p-fw"></span> フォロワー</div></div><div id="p-tl" class="tl" style="border-top:1px solid var(--bd);margin-top:10px"></div></div>
+    <div id="vp" class="v"><header><span onclick="sv('h')">←</span><span id="ph-title"></span></header><div id="p-himg" class="ph-bg"></div><div class="ph-b"><div id="p-av" class="ph-av av"></div><div style="text-align:right"><button class="btn" style="background:none;color:var(--d);border:1px solid var(--bd)" onclick="oep()">編集</button></div><div class="ph-n" id="p-name"></div><div class="ph-i" id="p-id"></div><div style="margin-top:12px;font-size:14px"><span id="p-fg"></span> フォロー <span id="p-fw"></span> フォロワー</div><div class="ph-tabs"><div class="ph-tab a" onclick="swTab('posts')">ポスト</div><div class="ph-tab" onclick="swTab('replies')">返信</div></div></div><div id="posts-tab" class="tab-content a"><div id="p-tl" class="tl" style="border-top:1px solid var(--bd);margin-top:10px"></div></div><div id="replies-tab" class="tab-content"><div id="p-rp-tl" class="tl" style="border-top:1px solid var(--bd);margin-top:10px"></div></div></div>
     <div id="vd" class="v">
         <header><span id="back-btn" onclick="sv('h')">←</span><span>ポスト</span></header>
         <div id="d-cont"></div>
         <div id="d-rp-tl" class="tl"></div>
         <div class="fab" onclick="op_rp()"><svg viewBox="0 0 24 24" width="24" height="24" fill="white"><path d="M1.75 10c0-4.42 3.58-8 8-8h4.37c.33.03.61.28.61.62v2.3c0 .43-.39.73-.81.69-1.53-.17-3.05-.2-4.17-.2-3.31 0-6 2.69-6 6s2.69 6 6 6h10.5l-4.28-4.29c-.19-.19-.19-.51 0-.7.2-.2.51-.2.7 0l5.14 5.14c.2.2.2.51 0 .7l-5.14 5.14c-.1.1-.23.15-.35.15s-.25-.05-.35-.15c-.19-.19-.19-.51 0-.7l4.28-4.29H9.75c-4.42 0-8-3.58-8-8z"/></svg></div>
     </div>
-    <div id="va" class="v"><header>アカウント</header><div class="f-g"><h3>新規追加</h3><input type="text" id="an" placeholder="名前"><input type="text" id="ai" placeholder="@ID"><button class="btn" style="width:100%" onclick="ca()">作成</button></div><div id="alst"></div></div>
-    <div id="vs" class="v"><header>設定</header><div class="f-g"><button class="btn" style="width:100%;margin-bottom:10px" onclick="st('light')">☀️ ライト</button><button class="btn" style="width:100%;background:#333;margin-bottom:10px" onclick="st('dark')">🌙 ダーク</button><hr style="border:0;border-top:1px solid var(--bd);margin:20px 0"><button class="btn" style="width:100%;margin-bottom:10px" onclick="edat()">💾 データを保存 (JSON)</button><button class="btn" style="width:100%;margin-bottom:10px" onclick="document.getElementById('ifile').click()">📂 データを読込</button><input type="file" id="ifile" style="display:none" onchange="idat(event)"><hr style="border:0;border-top:1px solid var(--bd);margin:20px 0"><button class="btn" style="background:red;width:100%" onclick="cd()">全データ消去</button></div></div>
+    <div id="va" class="v"><header>アカウント</header><div class="f-g"><h3>新規追加</h3><input type="text" id="an" placeholder="名前"><input type="text" id="ai" placeholder="@ID"><button class="acc-add-btn" onclick="ca()">+ アカウントを作成</button><hr style="border:0;border-top:1px solid var(--bd);margin:20px 0"><h3 style="margin-top:0">マイアカウント</h3><div id="alst"></div></div></div>
+    <div id="vs" class="v"><header>設定</header><div class="f-g"><h3>テーマ</h3><div class="settings-grid"><button class="settings-btn" id="light-btn" onclick="st('light')">☀️ ライト</button><button class="settings-btn" id="dark-btn" onclick="st('dark')">🌙 ダーク</button></div><hr style="border:0;border-top:1px solid var(--bd);margin:20px 0"><h3>データ</h3><button class="btn" style="width:100%;margin-bottom:10px" onclick="edat()">💾 保存</button><button class="btn" style="width:100%;margin-bottom:10px;background:#71767b" onclick="document.getElementById('ifile').click()">📂 読込</button><input type="file" id="ifile" style="display:none" onchange="idat(event)"><hr style="border:0;border-top:1px solid var(--bd);margin:20px 0"><h3>危険ゾーン</h3><button class="btn" style="background:red;width:100%" onclick="cd()">🗑 すべてのデータを削除</button></div></div>
 
     <div id="pov" class="post-ov">
         <div class="post-h"><span onclick="clp()">キャンセル</span><button class="btn" onclick="pt()" id="p-btn">ツイート</button></div>
@@ -77,7 +105,7 @@
         </div>
         <div style="padding:10px 16px"><button class="btn" style="background:none;color:var(--p);padding:0" onclick="document.getElementById('f-img').click()">🖼 画像追加</button><input type="file" id="f-img" style="display:none" onchange="pvw(this,'t')"></div>
     </div>
-    <div id="eov" class="post-ov"><div class="post-h"><span onclick="cle()">キャンセル</span><button class="btn" onclick="upd()">保存</button></div><div class="f-g">名前<input type="text" id="en">ID<input type="text" id="ei">フォロー<input type="number" id="efg">フォロワー<input type="number" id="efw"><br><button class="btn" onclick="document.getElementById('f-av').click()">アイコン変更</button><input type="file" id="f-av" style="display:none" onchange="pvw(this,'av')"><br><br><button class="btn" onclick="document.getElementById('f-hd').click()">ヘッダー変更</button><input type="file" id="f-hd" style="display:none" onchange="pvw(this,'hd')"><hr style="border:0;border-top:1px solid var(--bd);margin:20px 0"><button class="btn" style="background:red;width:100%" onclick="da()">アカウント削除</button></div></div>
+    <div id="eov" class="post-ov"><div class="post-h"><span onclick="cle()">キャンセル</span><button class="btn" onclick="upd()">保存</button></div><div class="f-g"><h3>プロフィール</h3>名前<input type="text" id="en">ID<input type="text" id="ei"><br><h3>統計</h3>フォロー<input type="number" id="efg">フォロワー<input type="number" id="efw"><br><h3>メディア</h3><button class="btn" style="width:100%;margin-bottom:10px" onclick="document.getElementById('f-av').click()">🖼 アイコン変更</button><input type="file" id="f-av" style="display:none" onchange="pvw(this,'av')"><button class="btn" style="width:100%;margin-bottom:10px;background:#71767b" onclick="document.getElementById('f-hd').click()">🏞 ヘッダー変更</button><input type="file" id="f-hd" style="display:none" onchange="pvw(this,'hd')"><hr style="border:0;border-top:1px solid var(--bd);margin:20px 0"><button class="btn" style="background:red;width:100%" onclick="da()">⚠ アカウント削除</button></div></div>
 
     <nav>
         <div class="ni a" id="nh" onclick="sv('h')"><svg viewBox="0 0 24 24"><path d="M21.59 10.62l-8.53-7.9c-.26-.24-.67-.24-.93 0l-8.53 7.9c-.28.26-.39.68-.28 1.06.11.38.46.65.85.65h.92v8.33c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-6h2v6c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-8.33h.92c.39 0 .74-.27.85-.65.11-.38 0-.8-.28-1.06z"/></svg></div>
@@ -86,8 +114,8 @@
     </nav>
 
 <script>
-let d={a:[{id:"a1",n:"ユーザー",i:"@user",fw:0,fg:0,av:"",hd:""}],ac:"a1",t:[],th:"light"};
-let curTImg="", curAImg="", curHImg="", profId=null, replyId=null;
+let d={a:[{id:"a1",n:"ユーザー",i:"@user",fw:0,fg:0,av:"",hd:"",likes:[],reposts:[]}],ac:"a1",t:[],th:"light"};
+let curTImg="", curAImg="", curHImg="", profId=null, replyId=null, editPostId=null, openMenuId=null;
 const DB_NAME = "TwimemoDB", STORE_NAME = "AppData";
 
 function openDB() {
@@ -103,7 +131,7 @@ async function ld() {
     const db = await openDB();
     const tx = db.transaction(STORE_NAME, "readonly");
     const req = tx.objectStore(STORE_NAME).get("mainData");
-    req.onsuccess = () => { if (req.result) d = req.result; st(d.th || "light"); ra(); rt(); };
+    req.onsuccess = () => { if (req.result) d = req.result; d.a.forEach(a => { if(!a.likes) a.likes=[]; if(!a.reposts) a.reposts=[]; }); st(d.th || "light"); ra(); rt(); };
 }
 
 function fmt(n){ n=Number(n)||0; return n>=10000?(n/1000).toFixed(1)+"K":n.toLocaleString(); }
@@ -114,42 +142,144 @@ function sv(v){
     document.getElementById("v"+v).classList.add("a");
     document.querySelectorAll(".ni").forEach(x=>x.classList.remove("a"));
     const n = document.getElementById("n"+v); if(n) n.classList.add("a");
+    closeMenus();
 }
 
 function ra() {
-    const l = document.getElementById("alst"); l.innerHTML = "<h3>アカウント切り替え</h3>";
+    const l = document.getElementById("alst"); l.innerHTML = "";
     const curA = d.a.find(x => x.id === d.ac) || d.a[0];
     document.getElementById("h-av").style.backgroundImage = curA.av ? `url(${curA.av})` : "";
     d.a.forEach(a => {
-        let e = document.createElement("div"); e.className = "acc-item" + (d.ac === a.id ? " act" : "");
+        let e = document.createElement("div"); e.className = "acc-list-item" + (d.ac === a.id ? " active" : "");
         e.onclick = () => { d.ac = a.id; sd(); ra(); rt(); };
-        e.innerHTML = `<div class="av av-m" style="background-image:url(${a.av})"></div><div style="flex:1"><b>${a.n}</b><br><small>${a.i}</small></div><svg class="chk" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>`;
+        e.innerHTML = `<div class="av av-m" style="background-image:url(${a.av});width:50px;height:50px;border-radius:8px"></div><div class="acc-info" style="flex:1"><div class="acc-name">${a.n}</div><div class="acc-id">${a.i}</div></div>${d.ac === a.id ? '<svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:var(--p)"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>' : ''}`;
         l.appendChild(e);
     });
 }
 
+function swTab(tab) {
+    document.querySelectorAll(".ph-tab").forEach(x => x.classList.remove("a"));
+    document.querySelectorAll(".tab-content").forEach(x => x.classList.remove("a"));
+    
+    if(tab === 'posts') {
+        document.querySelectorAll(".ph-tab")[0].classList.add("a");
+        document.getElementById("posts-tab").classList.add("a");
+    } else {
+        document.querySelectorAll(".ph-tab")[1].classList.add("a");
+        document.getElementById("replies-tab").classList.add("a");
+    }
+}
+
+function createTweet(t, isReply=false) {
+    const a = d.a.find(x => x.id === t.aid) || d.a[0];
+    const curA = d.a.find(x => x.id === d.ac);
+    const likeCount = (t.likeBy || []).length;
+    const repostCount = (t.repostBy || []).length;
+    
+    const e = document.createElement("div"); 
+    e.className = "tw"; 
+    e.id = "tw-"+t.id;
+    e.innerHTML = `
+        <div class="av av-m" style="background-image:url(${a.av})" onclick="event.stopPropagation();up('${a.id}')"></div>
+        <div class="tc" onclick="showDetail('${t.id}')">
+            <div class="th"><div><b>${a.n}</b> <small>${a.i}</small></div>
+            ${t.aid === d.ac ? `<button class="menu-btn" onclick="event.stopPropagation();toggleMenu('${t.id}')">⋯</button><div id="menu-${t.id}" class="dropdown-menu" style="display:none;"><button onclick="event.stopPropagation();editPost('${t.id}')">編集</button><button class="danger" onclick="event.stopPropagation();dt('${t.id}')">削除</button></div>` : ''}
+            </div>
+            <div>${t.tx}</div>
+            ${t.im ? `<img src="${t.im}" class="t-img">` : ""}
+            <div class="tm">
+                <div class="tm-i" onclick="event.stopPropagation()"><svg class="tm-svg" viewBox="0 0 24 24"><path d="M1.75 10c0-4.42 3.58-8 8-8h4.37c.33.03.61.28.61.62v2.3c0 .43-.39.73-.81.69-1.53-.17-3.05-.2-4.17-.2-3.31 0-6 2.69-6 6s2.69 6 6 6h10.5l-4.28-4.29c-.19-.19-.19-.51 0-.7.2-.2.51-.2.7 0l5.14 5.14c.2.2.2.51 0 .7l-5.14 5.14c-.1.1-.23.15-.35.15s-.25-.05-.35-.15c-.19-.19-.19-.51 0-.7l4.28-4.29H9.75c-4.42 0-8-3.58-8-8z"/></svg> ${fmt(t.rp)}</div>
+                <div class="tm-i" onclick="event.stopPropagation();toggleRepost('${t.id}')" style="${(t.repostBy || []).includes(d.ac) ? 'color:var(--p)' : ''}"><svg class="tm-svg" viewBox="0 0 24 24"><path d="M4.5 3.88l4.43 4.42c.19.19.19.51 0 .71-.19.19-.51.19-.7 0L5.5 6.27V15c0 1.66 1.34 3 3 3h6c.28 0 .5.22.5.5s-.22.5-.5.5h-6c-2.21 0-4-1.79-4-4V6.27L1.77 8.51c-.19.19-.51.19-.7 0-.19-.2-.19-.52 0-.71l4.43-4.42c.19-.2.51-.2.7 0zm15 16.24l-4.43-4.42c-.19-.2-.19-.52 0-.71s.51-.2.71 0l2.72 2.73V9c0-1.66-1.34-3-3-3h-6c-.28 0-.5-.22-.5-.5s.22-.5.5-.5h6c2.21 0 4 1.79 4 4v8.73l2.73-2.73c.19-.19.51-.19.7 0 .2.2.2.52 0 .71l-4.43 4.42c-.2.2-.51.2-.7 0z"/></svg> ${fmt(repostCount)}</div>
+                <div class="tm-i" onclick="event.stopPropagation();toggleLike('${t.id}')" style="${(t.likeBy || []).includes(d.ac) ? 'color:#e74c3c' : ''}"><svg class="tm-svg" viewBox="0 0 24 24"><path d="M16.697 5.5c-1.222-.06-2.679.351-3.827 1.36-.11.1-.28.1-.39 0-1.148-1.009-2.605-1.42-3.827-1.36-2.224.11-4.153 1.902-4.403 4.14-.305 2.728 1.479 5.481 4.096 7.302l2.816 1.938c.15.103.351.103.501 0l2.816-1.938c2.617-1.821 4.401-4.574 4.096-7.302-.25-2.238-2.179-4.03-4.403-4.14z"/></svg> ${fmt(likeCount)}</div>
+                <div class="tm-i"><svg class="tm-svg" viewBox="0 0 24 24"><path d="M8.75 21V3h2v18h-2zM18 21V8.5h2V21h-2zM4 21l.004-10h2L6 21H4zm9.248 0v-7h2v7h-2z"/></svg> ${fmt(t.vw)}</div>
+            </div>
+        </div>`;
+    return e;
+}
+
 function rt(target="tl", aid=null) {
     const tl = document.getElementById(target); tl.innerHTML = "";
-    const list = aid ? d.t.filter(x => x.aid === aid) : d.t.filter(x => !x.reId);
+    const list = aid ? d.t.filter(x => x.aid === aid && !x.reId) : d.t.filter(x => !x.reId);
     [...list].sort((a,b)=>b.ts - a.ts).forEach(t => {
-        const a = d.a.find(x => x.id === t.aid) || d.a[0];
-        const e = document.createElement("div"); e.className = "tw";
-        e.onclick = () => showDetail(t.id);
-        e.innerHTML = `
-            <div class="av av-m" style="background-image:url(${a.av})" onclick="event.stopPropagation();up('${a.id}')"></div>
-            <div class="tc">
-                <div class="th"><b>${a.n}</b> <small>${a.i}</small></div>
-                <div>${t.tx}</div>
-                ${t.im ? `<img src="${t.im}" class="t-img">` : ""}
-                <div class="tm">
-                    <div class="tm-i"><svg class="tm-svg" viewBox="0 0 24 24"><path d="M1.75 10c0-4.42 3.58-8 8-8h4.37c.33.03.61.28.61.62v2.3c0 .43-.39.73-.81.69-1.53-.17-3.05-.2-4.17-.2-3.31 0-6 2.69-6 6s2.69 6 6 6h10.5l-4.28-4.29c-.19-.19-.19-.51 0-.7.2-.2.51-.2.7 0l5.14 5.14c.2.2.2.51 0 .7l-5.14 5.14c-.1.1-.23.15-.35.15s-.25-.05-.35-.15c-.19-.19-.19-.51 0-.7l4.28-4.29H9.75c-4.42 0-8-3.58-8-8z"/></svg> ${fmt(t.rp)}</div>
-                    <div class="tm-i"><svg class="tm-svg" viewBox="0 0 24 24"><path d="M4.5 3.88l4.43 4.42c.19.19.19.51 0 .71-.19.19-.51.19-.7 0L5.5 6.27V15c0 1.66 1.34 3 3 3h6c.28 0 .5.22.5.5s-.22.5-.5.5h-6c-2.21 0-4-1.79-4-4V6.27L1.77 8.51c-.19.19-.51.19-.7 0-.19-.2-.19-.52 0-.71l4.43-4.42c.19-.2.51-.2.7 0zm15 16.24l-4.43-4.42c-.19-.2-.19-.52 0-.71s.51-.2.71 0l2.72 2.73V9c0-1.66-1.34-3-3-3h-6c-.28 0-.5-.22-.5-.5s.22-.5.5-.5h6c2.21 0 4 1.79 4 4v8.73l2.73-2.73c.19-.19.51-.19.7 0 .2.2.2.52 0 .71l-4.43 4.42c-.2.2-.51.2-.7 0z"/></svg> ${fmt(t.rt)}</div>
-                    <div class="tm-i"><svg class="tm-svg" viewBox="0 0 24 24"><path d="M16.697 5.5c-1.222-.06-2.679.351-3.827 1.36-.11.1-.28.1-.39 0-1.148-1.009-2.605-1.42-3.827-1.36-2.224.11-4.153 1.902-4.403 4.14-.305 2.728 1.479 5.481 4.096 7.302l2.816 1.938c.15.103.351.103.501 0l2.816-1.938c2.617-1.821 4.401-4.574 4.096-7.302-.25-2.238-2.179-4.03-4.403-4.14z"/></svg> ${fmt(t.fv)}</div>
-                    <div class="tm-i"><svg class="tm-svg" viewBox="0 0 24 24"><path d="M8.75 21V3h2v18h-2zM18 21V8.5h2V21h-2zM4 21l.004-10h2L6 21H4zm9.248 0v-7h2v7h-2z"/></svg> ${fmt(t.vw)}</div>
-                </div>
-            </div>`;
-        tl.appendChild(e);
+        tl.appendChild(createTweet(t));
     });
+}
+
+function rtReply(aid) {
+    const rtl = document.getElementById("p-rp-tl"); rtl.innerHTML = "";
+    const allPosts = d.t.filter(x => x.aid === aid);
+    [...allPosts].sort((a,b)=>b.ts - a.ts).forEach(post => {
+        rtl.appendChild(createTweet(post));
+    });
+}
+
+function toggleLike(tid) {
+    const t = d.t.find(x => x.id === tid);
+    if(!t) return;
+    if(!t.likeBy) t.likeBy = [];
+    if(t.likeBy.includes(d.ac)) {
+        t.likeBy = t.likeBy.filter(x => x !== d.ac);
+        t.fv = Math.max(0, (t.fv || 0) - 1);
+    } else {
+        t.likeBy.push(d.ac);
+        t.fv = (t.fv || 0) + 1;
+    }
+    sd(); rt(); rtProfile();
+}
+
+function toggleRepost(tid) {
+    const t = d.t.find(x => x.id === tid);
+    if(!t) return;
+    if(!t.repostBy) t.repostBy = [];
+    if(t.repostBy.includes(d.ac)) {
+        t.repostBy = t.repostBy.filter(x => x !== d.ac);
+        t.rt = Math.max(0, (t.rt || 0) - 1);
+    } else {
+        t.repostBy.push(d.ac);
+        t.rt = (t.rt || 0) + 1;
+    }
+    sd(); rt(); rtProfile();
+}
+
+function rtProfile() {
+    if(!profId) return;
+    rt("p-tl", profId);
+    rtReply(profId);
+}
+
+function toggleMenu(tid) {
+    const menu = document.getElementById("menu-"+tid);
+    if(openMenuId && openMenuId !== tid) {
+        const oldMenu = document.getElementById("menu-"+openMenuId);
+        if(oldMenu) oldMenu.style.display = "none";
+    }
+    menu.style.display = menu.style.display === "none" ? "block" : "none";
+    openMenuId = menu.style.display === "block" ? tid : null;
+}
+
+function editPost(tid) {
+    const post = d.t.find(x => x.id === tid);
+    if(!post || post.aid !== d.ac) return;
+    editPostId = tid;
+    document.getElementById("p-btn").innerText = "保存";
+    document.getElementById("ti").value = post.tx;
+    document.getElementById("irp").value = post.rp || 0;
+    document.getElementById("irt").value = post.rt || 0;
+    document.getElementById("ifv").value = post.fv || 0;
+    document.getElementById("ivw").value = post.vw || 0;
+    if(post.im) {
+        curTImg = post.im;
+        document.getElementById("p-pre").src = post.im;
+        document.getElementById("p-pre").style.display = "block";
+    }
+    document.getElementById("pov").style.display = "flex";
+    updatePostAv();
+    closeMenus();
+}
+
+function closeMenus() {
+    document.querySelectorAll(".dropdown-menu").forEach(m => m.style.display = "none");
+    openMenuId = null;
 }
 
 function showDetail(tid) {
@@ -157,6 +287,7 @@ function showDetail(tid) {
     const a = d.a.find(x => x.id === t.aid) || d.a[0];
     replyId = t.id;
     sv('d');
+    closeMenus();
     
     const backBtn = document.getElementById("back-btn");
     if (t.reId) {
@@ -165,11 +296,17 @@ function showDetail(tid) {
         backBtn.onclick = () => sv('h');
     }
 
+    const likeCount = (t.likeBy || []).length;
+    const repostCount = (t.repostBy || []).length;
+
     document.getElementById("d-cont").innerHTML = `
         <div class="dtw">
-            <div style="display:flex;gap:12px;align-items:center;margin-bottom:12px">
-                <div class="av av-m" style="background-image:url(${a.av})"></div>
-                <div><b>${a.n}</b><br><small>${a.i}</small></div>
+            <div style="display:flex;gap:12px;align-items:center;margin-bottom:12px;justify-content:space-between">
+                <div style="display:flex;gap:12px;align-items:center;flex:1">
+                    <div class="av av-m" style="background-image:url(${a.av})"></div>
+                    <div><b>${a.n}</b><br><small>${a.i}</small></div>
+                </div>
+                ${t.aid === d.ac ? `<button class="menu-btn detail-menu-btn" onclick="event.stopPropagation();toggleMenu('detail-${t.id}')">⋯</button><div id="menu-detail-${t.id}" class="dropdown-menu" style="display:none;"><button onclick="event.stopPropagation();editPost('${t.id}')">編集</button><button class="danger" onclick="event.stopPropagation();dt('${t.id}')">削除</button></div>` : ''}
             </div>
             <div style="font-size:19px;line-height:1.4">${t.tx}</div>
             ${t.im?`<img src="${t.im}" class="t-img">`:""}
@@ -177,52 +314,64 @@ function showDetail(tid) {
                 ${new Date(t.ts).toLocaleString()} ・ <b>${fmt(t.vw)}</b> 表示
             </div>
             <div style="display:flex;gap:20px;padding-bottom:12px;border-bottom:1px solid var(--bd)">
-                <span><b>${fmt(t.rt)}</b> 再投稿</span> <span><b>${fmt(t.fv)}</b> いいね</span>
+                <span><b>${fmt(repostCount)}</b> 再投稿</span> <span><b>${fmt(likeCount)}</b> いいね</span>
             </div>
         </div>
-        <div class="f-g"><button class="btn" style="background:red;width:100%" onclick="dt('${t.id}')">ポストを削除</button></div>
     `;
     const rps = d.t.filter(x => x.reId === tid);
     const rtl = document.getElementById("d-rp-tl"); rtl.innerHTML = "";
     rps.forEach(r => {
-        const ra = d.a.find(x => x.id === r.aid) || d.a[0];
-        let re = document.createElement("div"); re.className = "tw";
-        re.onclick = () => showDetail(r.id);
-        re.innerHTML = `<div class="av av-m" style="background-image:url(${ra.av})"></div><div class="tc"><div class="th"><b>${ra.n}</b> <small>${ra.i}</small></div><div>${r.tx}</div></div>`;
-        rtl.appendChild(re);
+        rtl.appendChild(createTweet(r, true));
     });
 }
 
-function op(){ replyId = null; document.getElementById("p-btn").innerText="ツイート"; document.getElementById("pov").style.display="flex"; updatePostAv(); }
-function op_rp(){ document.getElementById("p-btn").innerText="返信"; document.getElementById("pov").style.display="flex"; updatePostAv(); }
+function op(){ editPostId = null; replyId = null; document.getElementById("p-btn").innerText="ツイート"; document.getElementById("pov").style.display="flex"; updatePostAv(); closeMenus(); }
+function op_rp(){ editPostId = null; document.getElementById("p-btn").innerText="返信"; document.getElementById("pov").style.display="flex"; updatePostAv(); closeMenus(); }
 function updatePostAv(){ const a=d.a.find(x=>x.id===d.ac); document.getElementById("post-av").style.backgroundImage=a.av?`url(${a.av})`:""; }
 
 function pt() {
     const tx = document.getElementById("ti").value;
-    const nt = {
-        id: Date.now().toString(),
-        aid: d.ac,
-        ts: Date.now(),
-        tx,
-        im: curTImg,
-        rp: document.getElementById("irp").value || 0,
-        rt: document.getElementById("irt").value || 0,
-        fv: document.getElementById("ifv").value || 0,
-        vw: document.getElementById("ivw").value || 0,
-        reId: replyId
-    };
     
-    if(replyId) {
-        const target = d.t.find(x => x.id === replyId);
-        if(target) target.rp = (Number(target.rp) || 0) + 1;
+    if(editPostId) {
+        const post = d.t.find(x => x.id === editPostId);
+        if(post && post.aid === d.ac) {
+            post.tx = tx;
+            post.im = curTImg;
+            post.rp = document.getElementById("irp").value || 0;
+            post.rt = document.getElementById("irt").value || 0;
+            post.fv = document.getElementById("ifv").value || 0;
+            post.vw = document.getElementById("ivw").value || 0;
+            post.ts = Date.now();
+        }
+    } else {
+        const nt = {
+            id: Date.now().toString(),
+            aid: d.ac,
+            ts: Date.now(),
+            tx,
+            im: curTImg,
+            rp: document.getElementById("irp").value || 0,
+            rt: document.getElementById("irt").value || 0,
+            fv: document.getElementById("ifv").value || 0,
+            vw: document.getElementById("ivw").value || 0,
+            reId: replyId,
+            likeBy: [],
+            repostBy: []
+        };
+        
+        if(replyId) {
+            const target = d.t.find(x => x.id === replyId);
+            if(target) target.rp = (Number(target.rp) || 0) + 1;
+        }
+
+        d.t.push(nt);
     }
 
-    d.t.push(nt);
     clp(); sd(); 
     if(replyId) showDetail(replyId); else rt();
 }
 
-async function compress(base64, size=600) {
+async function compress(base64, size=600, quality=0.95) {
     return new Promise(res => {
         const img = new Image();
         img.onload = () => {
@@ -230,7 +379,7 @@ async function compress(base64, size=600) {
             let w=img.width, h=img.height, scale = Math.min(size/w, size/h, 1);
             canvas.width = w*scale; canvas.height = h*scale;
             canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-            res(canvas.toDataURL('image/jpeg', 0.8));
+            res(canvas.toDataURL('image/jpeg', quality));
         };
         img.src = base64;
     });
@@ -239,7 +388,15 @@ async function compress(base64, size=600) {
 function pvw(i, m) {
     const f = i.files[0]; if(!f) return; const r = new FileReader();
     r.onload = async e => {
-        const res = await compress(e.target.result, m==='t'?800:400);
+        let res = e.target.result;
+        if(m==='hd') {
+            res = await compress(e.target.result, 1200, 0.98);
+        } else if(m==='t') {
+            res = await compress(e.target.result, 800, 0.9);
+        } else if(m==='av') {
+            res = await compress(e.target.result, 400, 0.9);
+        }
+        
         if(m==='t'){ curTImg=res; document.getElementById("p-pre").src=res; document.getElementById("p-pre").style.display="block" }
         if(m==='av') curAImg=res; if(m==='hd') curHImg=res;
     };
@@ -254,7 +411,9 @@ function up(aid) {
     document.getElementById("p-av").style.backgroundImage = a.av ? `url(${a.av})` : "";
     document.getElementById("p-himg").style.backgroundImage = a.hd ? `url(${a.hd})` : "";
     document.getElementById("p-fw").innerText = fmt(a.fw); document.getElementById("p-fg").innerText = fmt(a.fg);
+    swTab('posts');
     rt("p-tl", aid);
+    rtReply(aid);
 }
 
 function oep() {
@@ -271,15 +430,74 @@ function upd() {
     cle(); sd(); ra(); up(profId);
 }
 
-function ca() { const id="a"+Date.now(); d.a.push({id, n:document.getElementById("an").value||"名無し", i:document.getElementById("ai").value||"@user", fw:0, fg:0, av:"", hd:""}); sd(); ra(); }
-function st(t){ d.th=t; document.body.setAttribute("data-theme", t); sd(); }
-function clp(){ document.getElementById("pov").style.display="none"; curTImg=""; document.getElementById("ti").value=""; document.getElementById("p-pre").style.display="none"; ["irp","irt","ifv","ivw"].forEach(id=>document.getElementById(id).value=0); }
+function ca() { 
+    const n = document.getElementById("an").value;
+    const i = document.getElementById("ai").value;
+    if(!n || !i) { alert("名前とIDを入力してください"); return; }
+    const id="a"+Date.now(); 
+    d.a.push({id, n, i, fw:0, fg:0, av:"", hd:"", likes:[], reposts:[]}); 
+    document.getElementById("an").value = "";
+    document.getElementById("ai").value = "";
+    sd(); 
+    ra(); 
+}
+
+function st(t){ 
+    d.th=t; 
+    document.body.setAttribute("data-theme", t); 
+    document.getElementById("light-btn").classList.toggle("active", t==="light");
+    document.getElementById("dark-btn").classList.toggle("active", t==="dark");
+    sd(); 
+}
+
+function clp(){ 
+    document.getElementById("pov").style.display="none"; 
+    editPostId = null; 
+    curTImg=""; 
+    document.getElementById("ti").value=""; 
+    document.getElementById("p-pre").style.display="none"; 
+    ["irp","irt","ifv","ivw"].forEach(id=>document.getElementById(id).value=0); 
+    closeMenus(); 
+}
+
 function cle(){ document.getElementById("eov").style.display="none" }
-function dt(tid) { if(confirm("削除しますか？")){ d.t = d.t.filter(x=>x.id!==tid); sd(); sv('h'); rt(); } }
-function da(){ if(confirm("消去？")){ d.a=d.a.filter(x=>x.id!==profId); if(d.ac===profId)d.ac=d.a[0].id; sd(); sv('h'); ra(); } }
+function dt(tid) { if(confirm("削除しますか？")){ d.t = d.t.filter(x=>x.id!==tid); sd(); sv('h'); rt(); closeMenus(); } }
+
+
+function da(){ 
+    if(confirm("消去？")){ 
+        const deletedAccountId = profId;
+        
+
+        d.t = d.t.filter(x => x.aid !== deletedAccountId);
+        
+
+        d.t.forEach(post => {
+            if(post.likeBy) post.likeBy = post.likeBy.filter(x => x !== deletedAccountId);
+            if(post.repostBy) post.repostBy = post.repostBy.filter(x => x !== deletedAccountId);
+        });
+        
+
+        d.a = d.a.filter(x => x.id !== deletedAccountId);
+        
+
+        if(d.ac === deletedAccountId) {
+            d.ac = d.a.length > 0 ? d.a[0].id : "a1";
+        }
+        
+
+        sd();
+        
+
+        sv('h');
+        ra();
+        rt();
+    } 
+}
+
 function cd(){ if(confirm("全データ消去？")){ indexedDB.deleteDatabase(DB_NAME); location.reload(); } }
 function edat(){ const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([JSON.stringify(d)],{type:"application/json"})); a.download="twimemo_db.json"; a.click(); }
-function idat(e){ const r=new FileReader(); r.onload=ev=>{d=JSON.parse(ev.target.result); sd(); location.reload();}; r.readAsText(e.target.files[0]); }
+function idat(e){ const r=new FileReader(); r.onload=ev=>{d=JSON.parse(ev.target.result); d.a.forEach(a => { if(!a.likes) a.likes=[]; if(!a.reposts) a.reposts=[]; }); sd(); location.reload();}; r.readAsText(e.target.files[0]); }
 
 ld();
 </script>
