@@ -26,7 +26,6 @@
         .sidebar { 
             width: var(--sidebar-width); 
             min-width: 50px;
-            max-width: 600px;
             background-color: var(--sidebar-bg); 
             border-right: 1px solid var(--border-color); 
             display: flex; 
@@ -92,6 +91,90 @@
         #noteTitle { font-size: 24px; border: none; outline: none; width: 100%; font-weight: bold; }
         #noteBody { flex: 1; resize: none; border: none; outline: none; font-size: 16px; line-height: 1.6; }
         #fileInput { display: none; }
+
+        /* モバイルレスポンシブ対応 */
+        @media (max-width: 768px) {
+            :root {
+                --sidebar-width: 100vw;
+            }
+            
+            .sidebar { 
+                position: absolute;
+                left: 0;
+                top: 0;
+                height: 100%;
+                max-width: 100vw;
+                z-index: 50;
+                box-shadow: 2px 0 8px rgba(0,0,0,0.15);
+            }
+
+            .sidebar.collapsed {
+                transform: translateX(-100%);
+            }
+
+            .resizer {
+                display: none !important;
+            }
+
+            .editor-content-wrapper {
+                padding: 50px 20px 20px 20px;
+            }
+
+            .editor-header {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            #noteTitle {
+                font-size: 18px;
+            }
+
+            #noteBody {
+                font-size: 14px;
+            }
+
+            .sidebar-header {
+                min-width: auto;
+            }
+
+            .note-list {
+                min-width: auto;
+            }
+
+            .btn {
+                font-size: 12px;
+                padding: 10px 8px;
+            }
+
+            .file-controls button {
+                font-size: 10px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .editor-content-wrapper {
+                padding: 45px 15px 15px 15px;
+            }
+
+            #noteTitle {
+                font-size: 16px;
+                margin-bottom: 10px;
+            }
+
+            .editor-header {
+                flex-direction: column;
+            }
+
+            .btn {
+                font-size: 11px;
+                padding: 8px 6px;
+            }
+
+            .toggle-sidebar {
+                padding: 4px 6px;
+                font-size: 16px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -135,18 +218,23 @@
     const resizer = document.getElementById('resizer');
     let isResizing = false;
 
+    function isMobileDevice() {
+        return window.innerWidth <= 768;
+    }
+
     function toggleSidebar() {
         sidebar.classList.toggle('collapsed');
         resizer.style.display = sidebar.classList.contains('collapsed') ? 'none' : 'block';
     }
 
     resizer.addEventListener('mousedown', (e) => {
+        if (isMobileDevice()) return;
         isResizing = true;
         document.body.style.cursor = 'col-resize';
     });
 
     document.addEventListener('mousemove', (e) => {
-        if (!isResizing) return;
+        if (!isResizing || isMobileDevice()) return;
         let newWidth = e.clientX;
         if (newWidth > 150 && newWidth < 600) {
             document.documentElement.style.setProperty('--sidebar-width', newWidth + 'px');
@@ -158,6 +246,14 @@
         document.body.style.cursor = 'default';
     });
 
+    document.addEventListener('click', (e) => {
+        if (isMobileDevice() && !sidebar.classList.contains('collapsed')) {
+            if (!sidebar.contains(e.target) && !document.querySelector('.toggle-sidebar').contains(e.target)) {
+                sidebar.classList.add('collapsed');
+            }
+        }
+    });
+
     window.onload = () => {
         const saved = localStorage.getItem('myLocalNotes');
         if (saved) {
@@ -167,6 +263,10 @@
             } catch(e) { notes = []; }
         }
         renderList();
+        
+        if (isMobileDevice()) {
+            sidebar.classList.add('collapsed');
+        }
     };
 
     function saveToLocalStorage() {
@@ -199,6 +299,10 @@
         notes.unshift(newNote);
         saveToLocalStorage();
         selectNote(newNote.id);
+        
+        if (isMobileDevice()) {
+            sidebar.classList.add('collapsed');
+        }
     }
 
     function selectNote(id) {
@@ -213,6 +317,10 @@
             document.getElementById('noteBody').value = note.body;
         }
         renderList();
+        
+        if (isMobileDevice()) {
+            sidebar.classList.add('collapsed');
+        }
     }
 
     function updateCurrentNote() {
