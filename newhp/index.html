@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Minimal Portfolio</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <button class="menu-trigger" id="menuTrigger">
+        <span></span><span></span><span></span>
+    </button>
+
+    <div class="side-menu" id="sideMenu">
+        <div class="side-menu-header">
+            <button id="menuClose" class="menu-close">✕</button>
+        </div>
+        
+        <nav class="side-nav">
+            <ul class="side-nav-links">
+                <li><a href="#home" data-i18n="nav_home">Home</a></li>
+                <li><a href="#about" data-i18n="nav_about">About</a></li>
+                <li><a href="#projects" data-i18n="nav_projects">Projects</a></li>
+                <li><a href="#contact" data-i18n="nav_contact">Contact</a></li>
+            </ul>
+        </nav>
+
+        <hr class="side-divider">
+
+        <div class="settings">
+            <h3 data-i18n="settings_title">Settings</h3>
+            
+            <div class="setting-item">
+                <span data-i18n="mode_label">Mode</span>
+                <div class="switch-container">
+                    <input type="checkbox" id="themeToggle" class="switch-input">
+                    <label for="themeToggle" class="switch-label">
+                        <span class="switch-circle"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="setting-item flex-column">
+                <span data-i18n="lang_label">Language</span>
+                <div class="lang-selector" id="langSelector">
+                    <button data-lang="ja" class="lang-btn">JP</button>
+                    <button data-lang="en" class="lang-btn">EN</button>
+                    <button data-lang="zh-CN" class="lang-btn">简体</button>
+                    <button data-lang="zh-TW" class="lang-btn">繁體</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="overlay" id="overlay"></div>
+
+    <header>
+        <h1 data-i18n="site_title">Your Name</h1>
+        <nav class="nav-container">
+            <ul class="nav-links" id="navLinks">
+                <li><a href="#home" data-i18n="nav_home">Home</a></li>
+                <li><a href="#about" data-i18n="nav_about">About</a></li>
+                <li><a href="#projects" data-i18n="nav_projects">Projects</a></li>
+                <li><a href="#contact" data-i18n="nav_contact">Contact</a></li>
+                <li><a href="#etc" data-i18n="nav_etc">Etc...</a></li>
+            </ul>
+            <div class="scroll-indicator" id="scrollIndicator">
+                <span>&rsaquo;</span>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section id="home" class="tab-content">
+            <h2 data-i18n="nav_home"></h2>
+            <p data-i18n="home_text"></p><br>
+        </section>
+
+        <section id="about" class="tab-content">
+            <h2 data-i18n="nav_about"></h2>
+            <p data-i18n="about_text"></p><br>
+        </section>
+
+        <section id="projects" class="tab-content">
+            <h2 data-i18n="nav_projects"></h2>
+            <p data-i18n="projects_text"></p><br>
+        </section>
+
+        <section id="contact" class="tab-content">
+            <h2 data-i18n="nav_contact"></h2>
+            <p data-i18n="contact_text"></p><br>
+        </section>
+    </main>
+
+    <footer>
+        <p>© 2026 Your Name</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
