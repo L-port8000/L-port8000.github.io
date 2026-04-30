@@ -1,0 +1,211 @@
+/* --- 変数定義 --- */
+:root {
+    /* 1. ライトモード用の設定（画像の上のカバーを白っぽく） */
+    --bg-overlay: rgba(255, 255, 255, 0.85); /* 画像の上の白フェード。0.85は濃さ（0〜1） */
+    --text-color: #444;
+    --sub-text: #999;
+    --border-color: #eee;
+    --accent-color: #4cd964;
+    
+    /* 2. 背景画像の設定（ここに画像パスを指定） */
+    --bg-image: url('./backimg.png'); 
+}
+
+[data-theme="dark"] {
+    /* 3. ダークモード用の設定（画像の上のカバーを黒っぽく） */
+    --bg-overlay: rgba(26, 26, 26, 0.9); /* 画像の上の黒フェード。0.9は濃さ */
+    --text-color: #eee;
+    --sub-text: #888;
+    --border-color: #333;
+}
+
+/* --- 基本スタイル --- */
+body {
+    font-family: "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.8;
+    color: var(--text-color);
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 80px 30px;
+    -webkit-font-smoothing: antialiased;
+
+    /* --- 4. 背景画像の実装（魔法の指定） --- */
+    background-image: 
+        linear-gradient(var(--bg-overlay), var(--bg-overlay)), /* 文字を読みやすくするカバー */
+        var(--bg-image); /* 実際の画像 */
+    
+    background-attachment: fixed; /* 画面をスクロールしても画像は固定（おしゃれになります） */
+    background-size: cover;      /* 画像を画面いっぱいに広げる */
+    background-position: center;  /* 画像の中心を基準にする */
+    
+    /* 5. 既存の transition から background を外す（モード切替時に画像までフェードすると重いため） */
+    transition: color 0.3s; 
+}
+
+header { margin-bottom: 60px; }
+
+h1 {
+    font-size: 1.5rem;
+    font-weight: 300;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+/* --- メインナビゲーション --- */
+.nav-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    margin-top: 30px;
+}
+
+.nav-links {
+    display: flex;
+    list-style: none;
+    padding: 10px 0;
+    margin: 0;
+    gap: 30px;
+    overflow-x: auto;
+    white-space: nowrap;
+    scrollbar-width: none;
+}
+.nav-links::-webkit-scrollbar { display: none; }
+
+.nav-links a {
+    text-decoration: none;
+    color: var(--sub-text);
+    font-size: 0.85rem;
+    transition: color 0.3s;
+}
+.nav-links a:hover { color: var(--text-color); }
+
+.scroll-indicator {
+    position: absolute;
+    right: 0;
+    width: 26px;
+    height: 26px;
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+}
+
+/* --- サイドメニュー & スイッチ --- */
+.menu-trigger {
+    position: fixed;
+    top: 30px;
+    right: 30px;
+    z-index: 1000;
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.menu-trigger span { width: 24px; height: 1px; background: var(--text-color); }
+
+.side-menu {
+    position: fixed;
+    top: 0;
+    right: -350px;
+    width: 300px;
+    height: 100%;
+    background: var(--bg-color);
+    z-index: 1001;
+    transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 40px 30px;
+    box-shadow: -10px 0 30px rgba(0,0,0,0.05);
+}
+.scroll-indicator,
+.lang-btn.active {
+    background-color: var(--bg-overlay) !important;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+.side-menu.open { right: 0; }
+
+.menu-close { background: none; border: none; font-size: 1.2rem; color: var(--text-color); cursor: pointer; float: right; }
+
+.side-nav-links { list-style: none; padding: 0; margin-top: 60px; }
+.side-nav-links li { margin-bottom: 20px; }
+.side-nav-links a { text-decoration: none; color: var(--text-color); font-size: 1.1rem; }
+
+.side-divider { border: none; border-top: 1px solid var(--border-color); margin: 30px 0; }
+
+.setting-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+.setting-item.flex-column { flex-direction: column; align-items: flex-start; gap: 12px; }
+
+/* トグルスイッチ */
+.switch-label {
+    width: 44px;
+    height: 24px;
+    background: var(--border-color);
+    border-radius: 12px;
+    position: relative;
+    cursor: pointer;
+    display: block;
+}
+.switch-circle {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 20px;
+    height: 20px;
+    background: #fff;
+    border-radius: 50%;
+    transition: 0.3s;
+}
+.switch-input { display: none; }
+.switch-input:checked + .switch-label { background: var(--accent-color); }
+.switch-input:checked + .switch-label .switch-circle { transform: translateX(20px); }
+
+/* 言語セレクター */
+.lang-selector {
+    display: flex;
+    width: 100%;
+    background: var(--border-color);
+    border-radius: 8px;
+    padding: 2px;
+}
+.lang-btn {
+    flex: 1;
+    background: none;
+    border: none;
+    padding: 8px 0;
+    font-size: 0.7rem;
+    color: var(--sub-text);
+    cursor: pointer;
+    border-radius: 6px;
+}
+.lang-btn.active {
+    background: var(--bg-color);
+    color: var(--text-color);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.2);
+    display: none;
+    z-index: 999;
+}
+.overlay.open { display: block; }
+
+/* --- コンテンツ表示 --- */
+.tab-content { display: none; }
+.tab-content.active { display: block; animation: fadeInUp 0.6s ease forwards; }
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+footer { margin-top: 100px; font-size: 0.7rem; color: var(--sub-text); }
