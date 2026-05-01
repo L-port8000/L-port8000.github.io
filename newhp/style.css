@@ -1,27 +1,26 @@
-/* --- 変数定義 --- */
 :root {
-    /* 1. ライトモード用の設定（画像の上のカバーを白っぽく） */
-    --bg-overlay: rgba(255, 255, 255, 0.85); /* 画像の上の白フェード。0.85は濃さ（0〜1） */
+    --base-bg-color: #ffffff;
+    --bg-overlay: rgba(255, 255, 255, 0.7); 
+    
     --text-color: #444;
     --sub-text: #999;
     --border-color: #eee;
     --accent-color: #4cd964;
     
-    /* 2. 背景画像の設定（ここに画像パスを指定） */
-    --bg-image: url('./backimg.png'); 
+    --bg-image: url('images/backimg.png'); 
 }
 
 [data-theme="dark"] {
-    /* 3. ダークモード用の設定（画像の上のカバーを黒っぽく） */
-    --bg-overlay: rgba(26, 26, 26, 0.9); /* 画像の上の黒フェード。0.9は濃さ */
+    --base-bg-color: #1a1a1a; 
+    --bg-overlay: rgba(26, 26, 26, 0.7); 
+    
     --text-color: #eee;
     --sub-text: #888;
     --border-color: #333;
 }
 
-/* --- 基本スタイル --- */
 body {
-    font-family: "Helvetica Neue", Arial, sans-serif;
+    font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", sans-serif;
     line-height: 1.8;
     color: var(--text-color);
     max-width: 700px;
@@ -29,20 +28,22 @@ body {
     padding: 80px 30px;
     -webkit-font-smoothing: antialiased;
 
-    /* --- 4. 背景画像の実装（魔法の指定） --- */
+    background-color: var(--base-bg-color);
     background-image: 
-        linear-gradient(var(--bg-overlay), var(--bg-overlay)), /* 文字を読みやすくするカバー */
-        var(--bg-image); /* 実際の画像 */
+        linear-gradient(var(--bg-overlay), var(--bg-overlay)), 
+        var(--bg-image);
     
-    background-attachment: fixed; /* 画面をスクロールしても画像は固定（おしゃれになります） */
-    background-size: cover;      /* 画像を画面いっぱいに広げる */
-    background-position: center;  /* 画像の中心を基準にする */
+    background-attachment: fixed;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
     
-    /* 5. 既存の transition から background を外す（モード切替時に画像までフェードすると重いため） */
     transition: color 0.3s; 
 }
 
-header { margin-bottom: 60px; }
+header {
+    margin-bottom: 60px;
+}
 
 h1 {
     font-size: 1.5rem;
@@ -51,7 +52,6 @@ h1 {
     text-transform: uppercase;
 }
 
-/* --- メインナビゲーション --- */
 .nav-container {
     position: relative;
     display: flex;
@@ -84,7 +84,9 @@ h1 {
     right: 0;
     width: 26px;
     height: 26px;
-    background: var(--bg-color);
+    background: var(--bg-overlay);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
     border: 1px solid var(--border-color);
     border-radius: 50%;
     display: flex;
@@ -95,7 +97,6 @@ h1 {
     transition: opacity 0.3s;
 }
 
-/* --- サイドメニュー & スイッチ --- */
 .menu-trigger {
     position: fixed;
     top: 30px;
@@ -116,21 +117,26 @@ h1 {
     right: -350px;
     width: 300px;
     height: 100%;
-    background: var(--bg-color);
+    background-color: var(--bg-overlay) !important;
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    
     z-index: 1001;
     transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     padding: 40px 30px;
-    box-shadow: -10px 0 30px rgba(0,0,0,0.05);
-}
-.scroll-indicator,
-.lang-btn.active {
-    background-color: var(--bg-overlay) !important;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    box-shadow: -10px 0 30px rgba(0,0,0,0.1);
+    box-sizing: border-box;
 }
 .side-menu.open { right: 0; }
 
-.menu-close { background: none; border: none; font-size: 1.2rem; color: var(--text-color); cursor: pointer; float: right; }
+.menu-close { 
+    background: none; 
+    border: none; 
+    font-size: 1.2rem; 
+    color: var(--text-color); 
+    cursor: pointer; 
+    float: right; 
+}
 
 .side-nav-links { list-style: none; padding: 0; margin-top: 60px; }
 .side-nav-links li { margin-bottom: 20px; }
@@ -141,7 +147,6 @@ h1 {
 .setting-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
 .setting-item.flex-column { flex-direction: column; align-items: flex-start; gap: 12px; }
 
-/* トグルスイッチ */
 .switch-label {
     width: 44px;
     height: 24px;
@@ -165,7 +170,6 @@ h1 {
 .switch-input:checked + .switch-label { background: var(--accent-color); }
 .switch-input:checked + .switch-label .switch-circle { transform: translateX(20px); }
 
-/* 言語セレクター */
 .lang-selector {
     display: flex;
     width: 100%;
@@ -184,7 +188,7 @@ h1 {
     border-radius: 6px;
 }
 .lang-btn.active {
-    background: var(--bg-color);
+    background: var(--bg-overlay);
     color: var(--text-color);
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
@@ -193,15 +197,70 @@ h1 {
     position: fixed;
     top: 0; left: 0;
     width: 100%; height: 100%;
-    background: rgba(0,0,0,0.2);
+    background: rgba(0,0,0,0.3);
     display: none;
     z-index: 999;
 }
 .overlay.open { display: block; }
 
-/* --- コンテンツ表示 --- */
 .tab-content { display: none; }
 .tab-content.active { display: block; animation: fadeInUp 0.6s ease forwards; }
+
+.news-container {
+    margin-top: 40px;
+    width: 100%;
+}
+
+.news-container h1 {
+    font-size: 1.2rem;
+    font-weight: 500;
+    margin-bottom: 20px;
+    letter-spacing: 1px;
+}
+
+.news-scroll {
+    display: flex;
+    gap: 20px;
+    overflow-x: auto;
+    padding-bottom: 15px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.news-scroll::-webkit-scrollbar {
+    display: none;
+}
+
+.news-item {
+    flex: 0 0 320px;
+    background: var(--bg-overlay);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+    transition: transform 0.3s ease;
+}
+
+.news-item:hover {
+    transform: translateY(-5px);
+}
+
+.news-item img {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+    display: block;
+}
+
+.news-item h3 {
+    padding: 15px;
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 400;
+    color: var(--text-color);
+    white-space: normal;
+}
 
 @keyframes fadeInUp {
     from { opacity: 0; transform: translateY(15px); }
