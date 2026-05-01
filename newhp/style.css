@@ -241,7 +241,7 @@ a:hover {
 }
 
 .news-item {
-    flex: 0 0 320px;
+    flex: 0 0 240px;
     background: var(--bg-overlay);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
