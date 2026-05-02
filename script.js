@@ -1,8 +1,8 @@
 const i18nData = {
     ja: {
         nav_home: "ホーム", nav_about: "私について", nav_projects: "プロジェクト", nav_contact: "連絡先", nav_etc: "その他",
-        site_title: "Blank", settings_title: "設定", mode_label: "ダークモード", lang_label: "言語",
-        home_text: "ようこそ。",
+        settings_title: "設定", mode_label: "ダークモード", lang_label: "言語",
+        home_text: "ようこそ。こちらは一樹の個人ホームページです。\n特に大したものは有りませんが、ゆっくり見ていってください！",
         news: "おすすめ",
         about_text: "こんにちは！\nどうも一樹です！主にガジェット界隈に居ます\n結構ジャンル横断させてもらってます\n(例:中国語圏、情報技術系界隈等々)\n\n現在勉強中\n・中国語(簡体)\n・英語\n・電験三種\n・ITパスポート\n\nなどなど勉強中です。\n\n趣味\n・Windowsアプリ開発\n・Linuxいじり\n・アニメ、漫画\n・プログラミング\n・AIと討論（？）\n\n他にも個人的に興味のあるサイトなどをたくさん探したり、学タブでの規制突破方法を探したり、調べ物をするのがすきです。\nTwitterなどでも気軽に話しかけてください！ラフにリプされたらラフに答えます、丁寧にリプしてくれたら丁寧に答えるよう心がけています。\n皆さんこれからもよろしくお願いします！\n相互リンク募集中です！DMなどで教えてください！", // そいち相互リンクしよ
         projects_text: "制作した作品の一覧です\nつまらないものですがどうぞ",
@@ -22,7 +22,7 @@ const i18nData = {
     },
     en: {
         nav_home: "Home", nav_about: "About", nav_projects: "Projects", nav_contact: "Contact", nav_etc: "Other",
-        site_title: "Blank", settings_title: "Settings", mode_label: "Dark Mode", lang_label: "Language",
+        settings_title: "Settings", mode_label: "Dark Mode", lang_label: "Language",
         home_text: "Welcome.",
         news: "Recommended",
         about_text: "This is where my profile goes.",
@@ -36,7 +36,7 @@ const i18nData = {
     },
     "zh-CN": {
         nav_home: "首页", nav_about: "关于", nav_projects: "项目", nav_contact: "联系", nav_etc: "其他",
-        site_title: "Blank", settings_title: "设置", mode_label: "深色模式", lang_label: "语言",
+        settings_title: "设置", mode_label: "深色模式", lang_label: "语言",
         home_text: "欢迎。",
         news: "推荐",
         about_text: "这里是我的个人介绍。",
@@ -50,7 +50,7 @@ const i18nData = {
     },
     "zh-TW": {
         nav_home: "首頁", nav_about: "關於", nav_projects: "項目", nav_contact: "聯繫", nav_etc: "其他",
-        site_title: "Blank", settings_title: "設置", mode_label: "深色模式", lang_label: "語言",
+        settings_title: "設置", mode_label: "深色模式", lang_label: "語言",
         home_text: "歡迎。",
         news: "推薦",
         about_text: "這裡是我的個人介紹。",
