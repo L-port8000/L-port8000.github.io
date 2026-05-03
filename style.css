@@ -315,6 +315,108 @@ a:hover {
     border-style: dashed;
 }
 
+/* Blog専用スタイル */
+.blog-controls { margin-bottom: 30px; }
+
+.search-wrapper input {
+    width: 100%;
+    padding: 12px 18px;
+    background: var(--bg-overlay);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    color: var(--text-color);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    outline: none;
+    font-size: 0.9rem;
+}
+
+.tag-filters {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+    overflow-x: auto;
+    padding-bottom: 5px;
+    scrollbar-width: none;
+}
+.tag-filters::-webkit-scrollbar { display: none; }
+
+.tag-btn {
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-overlay);
+    color: var(--sub-text);
+    font-size: 0.75rem;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.3s;
+}
+.tag-btn.active {
+    background: var(--text-color);
+    color: var(--base-bg-color);
+    border-color: var(--text-color);
+}
+
+.blog-grid {
+    display: grid;
+    gap: 20px;
+    grid-template-columns: 1fr;
+}
+
+.blog-card {
+    background: var(--bg-overlay);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    transition: transform 0.3s ease;
+}
+.blog-card:hover { transform: translateY(-3px); }
+
+.blog-card-content { padding: 20px; }
+
+.post-date { font-size: 0.7rem; color: var(--sub-text); }
+.post-title { margin: 8px 0; font-size: 1.1rem; font-weight: 400; }
+.post-tags-display { display: flex; gap: 8px; margin-top: 10px; }
+.tag-label { font-size: 0.7rem; color: var(--sub-text); }
+
+#loader {
+    position: fixed;
+    inset: 0;
+    background: #0f0f0f;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.loader-content {
+    text-align: center;
+    color: white;
+    font-family: sans-serif;
+}
+
+.loader-icon {
+    width: 80px;
+    margin-bottom: 20px;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    margin: 0 auto 15px;
+    border: 4px solid rgba(255,255,255,0.2);
+    border-top: 4px solid white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
 
 @keyframes fadeInUp {
     from { opacity: 0; transform: translateY(15px); }
