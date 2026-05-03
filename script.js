@@ -1,10 +1,11 @@
+// 共通
 const i18nData = {
     ja: {
         nav_home: "ホーム", nav_about: "私について", nav_projects: "プロジェクト", nav_blog: "ブログ", nav_contact: "連絡先", nav_etc: "その他",
         settings_title: "設定", mode_label: "ダークモード", lang_label: "言語",
         home_text: "ようこそ。こちらは一樹の個人ホームページです。\n特に大したものは有りませんが、ゆっくり見ていってください！",
         news: "おすすめ",
-        about_text: "こんにちは！\nどうも一樹です！主にガジェット界隈に居ます\n結構ジャンル横断させてもらってます\n(例:中国語圏、情報技術系界隈等々)\n\n現在勉強中\n・中国語(簡体)\n・英語\n・電験三種\n・ITパスポート\n\nなどなど勉強中です。\n\n趣味\n・Windowsアプリ開発\n・Linuxいじり\n・アニメ、漫画\n・プログラミング\n・AIと討論（？）\n\n他にも個人的に興味のあるサイトなどをたくさん探したり、学タブでの規制突破方法を探したり、調べ物をするのがすきです。\nTwitterなどでも気軽に話しかけてください！ラフにリプされたらラフに答えます、丁寧にリプしてくれたら丁寧に答えるよう心がけています。\n皆さんこれからもよろしくお願いします！\n相互リンク募集中です！DMなどで教えてください！", // そいち相互リンクしよ
+        about_text: "こんにちは！\nどうも一樹です！主にガジェット界隈に居ます\n結構ジャンル横断させてもらってます\n(例:中国語圏、情報技術系界隈等々)\n\n現在勉強中\n・中国語(簡体)\n・英語\n・電験三種\n・ITパスポート\n\nなどなど勉強中です。\n\n趣味\n・Windowsアプリ開発\n・Linuxいじり\n・アニメ、漫画\n・プログラミング\n・AIと討論（？）\n\n他にも個人的に興味のあるサイトなどをたくさん探したり、学タブでの規制突破方法を探したり、調べ物をするのがすきです。\nTwitterなどでも気軽に話しかけてください！ラフにリプされたらラフに答えます、丁寧にリプしてくれたら丁寧に答えるよう心がけています。\n皆さんこれからもよろしくお願いします！\n相互リンク募集中です！DMなどで教えてください！", // 
         projects_text: "制作した作品の一覧です\nつまらないものですがどうぞ",
         projects_text: "その名の通りIPを確認するツールですIPv4,IPv6両方表示されます。\nただIPv6しか無いものだとバグってIPv4にもIPv6が表示される\nという設計です。終わってますね。",
         contact_text: "ご連絡はこちらから",
@@ -86,7 +87,6 @@ const i18nData = {
     }
 };
 
-
 const elements = {
     trigger: document.getElementById('menuTrigger'),
     close: document.getElementById('menuClose'),
@@ -114,7 +114,6 @@ elements.themeToggle.onchange = (e) => {
 };
 
 
-/* ★追加：\n → <br>変換関数 */
 const formatText = (text) => {
     if (!text) return "";
     return text.replace(/\n/g, "<br>");
@@ -170,3 +169,59 @@ window.onload = () => {
     handleHashChange();
     updateIndicator();
 };
+// Blog
+document.addEventListener('DOMContentLoaded', () => {
+    const blogSearch = document.getElementById('blogSearch');
+    const tagButtons = document.querySelectorAll('.tag-btn');
+    const blogCards = document.querySelectorAll('.blog-card');
+
+    const performFilter = () => {
+        const query = blogSearch.value.trim().toLowerCase();
+        const activeTag = document.querySelector('.tag-btn.active').dataset.tag.toLowerCase();
+
+        blogCards.forEach(card => {
+            const title = card.querySelector('.post-title').textContent.toLowerCase();
+            const tags = card.dataset.tags.toLowerCase().split(' ');
+            
+            let isVisible = true;
+
+            if (query !== "") {
+                if (query.startsWith('#')) {
+                    const tagQuery = query.substring(1);
+                    isVisible = tags.some(t => t.includes(tagQuery));
+                } else {
+                    isVisible = title.includes(query);
+                }
+            }
+
+            if (isVisible && activeTag !== 'all') {
+                isVisible = tags.includes(activeTag);
+            }
+
+            card.style.display = isVisible ? 'block' : 'none';
+        });
+    };
+
+    if (blogSearch) {
+        blogSearch.addEventListener('input', performFilter);
+    }
+
+    tagButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            tagButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            performFilter();
+        });
+    });
+});
+
+window.addEventListener("load", () => {
+    const loader = document.getElementById("loader");
+
+    loader.style.transition = "opacity 0.5s";
+    loader.style.opacity = "0";
+
+    setTimeout(() => {
+        loader.style.display = "none";
+    }, 500);
+});
