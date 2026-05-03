@@ -1,156 +1,32 @@
-<!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>my Archive</title>
-
+    <title>Archive - 一樹 / Ituki</title>
     <link rel="stylesheet" href="../style.css">
-    <style>
-
-        .archive-list {
-            margin-top: 2rem;
-        }
-        .archive-year-section {
-            margin-bottom: 2.5rem;
-        }
-        .archive-year-section h3 {
-            border-bottom: 2px solid var(--accent-color, #ccc);
-            padding-bottom: 5px;
-            margin-bottom: 15px;
-        }
-        .archive-item-container {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin: 12px 0;
-            padding: 5px 0;
-        }
-
-        .archive-date-link {
-            font-family: 'Courier New', Courier, monospace;
-            background-color: rgba(0, 0, 0, 0.05);
-            padding: 4px 10px;
-            border-radius: 4px;
-            text-decoration: none;
-            color: #555;
-            font-size: 0.9em;
-            min-width: 100px;
-            text-align: center;
-            transition: background 0.2s;
-        }
-        .archive-date-link:hover {
-            background-color: rgba(0, 0, 0, 0.15);
-            color: #000;
-        }
-
-        .archive-title-link {
-            text-decoration: none;
-            color: inherit;
-            font-weight: 500;
-            transition: opacity 0.2s;
-        }
-        .archive-title-link:hover {
-            opacity: 0.6;
-            text-decoration: underline;
-        }
-        .back-home {
-            margin-top: 3rem;
-            display: inline-block;
-        }
-    </style>
 </head>
 <body>
 
-    <button class="menu-trigger" id="menuTrigger">
-        <span></span><span></span><span></span>
-    </button>
-
-    <div class="side-menu" id="sideMenu">
-        <div class="side-menu-header">
-            <button id="menuClose" class="menu-close">✕</button>
-        </div>
-        <nav class="side-nav">
-            <ul class="side-nav-links">
-                <li><a href="../#home" data-i18n="nav_home"></a></li>
-                <li><a href="../#about" data-i18n="nav_about"></a></li>
-                <li><a href="../#projects" data-i18n="nav_projects"></a></li>
-                <li><a href="../#contact" data-i18n="nav_contact"></a></li>
-                <li><a href="../#etc" data-i18n="nav_etc"></a></li>
-            </ul>
-        </nav>
-        <hr class="side-divider">
-        <div class="settings">
-            <h3 data-i18n="settings_title"></h3>
-            <div class="setting-item">
-                <span data-i18n="mode_label"></span>
-                <div class="switch-container">
-                    <input type="checkbox" id="themeToggle" class="switch-input">
-                    <label for="themeToggle" class="switch-label">
-                        <span class="switch-circle"></span>
-                    </label>
-                </div>
-            </div>
-            <div class="setting-item flex-column">
-                <span data-i18n="lang_label"></span>
-                <div class="lang-selector" id="langSelector">
-                    <button data-lang="ja" class="lang-btn">JP</button>
-                    <button data-lang="en" class="lang-btn">EN</button>
-                    <button data-lang="zh-CN" class="lang-btn">简体</button>
-                    <button data-lang="zh-TW" class="lang-btn">繁體</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="overlay" id="overlay"></div>
-
-    <header>
-        <h1>一樹 / いつき / Ituki</h1>
-        <nav class="nav-container">
-            <ul class="nav-links" id="navLinks">
-                <li><a href="../#home" data-i18n="nav_home"></a></li>
-                <li><a href="../#about" data-i18n="nav_about"></a></li>
-                <li><a href="../#projects" data-i18n="nav_projects"></a></li>
-                <li><a href="../#contact" data-i18n="nav_contact"></a></li>
-                <li><a href="../#blog" data-i18n="nav_blog"></a></li>
-                <li><a href="../#etc" data-i18n="nav_etc"></a></li>
-            </ul>
-        </nav>
-    </header>
-
     <main>
-        <section class="tab-content active">
+        <section class="archive-container">
             <h2 data-i18n="archive_title"></h2>
             <p data-i18n="archive_content"></p>
 
             <div class="archive-list">
+                <article class="archive-item">
+                    <h3><a href="./archive/20260501.html">2026 5/1</a></h3>
+                    <p>2026年05月03日 公開</p>
+                    <p>試験1</p>
+                </article>
 
-                <div class="archive-year-section">
-                    <h3>2026</h3>
-                    
-                    <div class="archive-item-container">
-                        <a href="./20260513.html" class="archive-date-link">2026.05.13</a>
-                        <a href="../blog/2-2026----" class="archive-title-link" data-i18n="blog_2"></a>
-                    </div>
+                <article class="archive-item">
+                    <h3><a href="./archive/20260428.html">2026 4/28</a></h3>
+                    <p>2026年05月03日 公開</p>
+                    <p>試験2</p>
+                </article>
 
-                    <div class="archive-item-container">
-                        <a href="./20260415.html" class="archive-date-link">2026.04.15</a>
-                        <a href="../blog/1-2026----" class="archive-title-link" data-i18n="blog_1"></a>
-                    </div>
-                </div>
-
-
-                <div class="archive-year-section">
-                    <h3>2025</h3>
-                    <div class="archive-item-container">
-                        <a href="./20251231.html" class="archive-date-link">2025.12.31</a>
-                        <a href="#" class="archive-title-link">過去の記事タイトル例</a>
-                    </div>
-                </div>
-            </div>
-            
-            <a href="../" class="back-home" data-i18n="nav_home"></a>
+            </div><br>
+            <p><a href="../index.html" data-i18n="backtohome">ホームに戻る</a></p>
         </section>
     </main>
 
@@ -159,5 +35,18 @@
     </footer>
 
     <script src="../script.js"></script>
+    <script>
+        window.onload = () => {
+            const theme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', theme);
+
+            const themeToggle = document.getElementById('themeToggle');
+            if(themeToggle) themeToggle.checked = theme === 'dark';
+
+            if(typeof updateLanguage === "function") {
+                updateLanguage(localStorage.getItem('lang') || 'ja');
+            }
+        };
+    </script>
 </body>
 </html>
