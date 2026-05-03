@@ -1,0 +1,171 @@
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xアカウントが乗っ取られた時の話 - 一樹 / Ituki Blog</title>
+    <link rel="stylesheet" href="../style.css">
+    <style>
+        .blog-article-body {
+            margin-top: 40px;
+            animation: fadeInUp 0.8s ease forwards;
+        }
+        .post-meta {
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 20px;
+        }
+        .article-content img {
+            max-width: 100%;
+            border-radius: 12px;
+            margin: 20px 0;
+            border: 1px solid var(--border-color);
+            display: block;
+        }
+        .back-to-blog {
+            display: inline-block;
+            margin-top: 50px;
+            font-size: 0.9rem;
+            color: var(--sub-text);
+            transition: color 0.3s;
+        }
+        .back-to-blog:hover { color: var(--text-color); }
+        
+        .article-content h2 { font-size: 1.2rem; margin-top: 40px; font-weight: 500; border-left: 3px solid var(--accent-color); padding-left: 15px; }
+        .article-content p { margin-bottom: 1rem; white-space: pre-wrap; }
+        
+        .download-box {
+            padding: 15px;
+            background: var(--bg-overlay);
+            border: 1px dashed var(--border-color);
+            border-radius: 8px;
+            margin: 20px 0;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+    <button class="menu-trigger" id="menuTrigger">
+        <span></span><span></span><span></span>
+    </button>
+    <div class="side-menu" id="sideMenu">
+        <div class="side-menu-header">
+            <button id="menuClose" class="menu-close">✕</button>
+        </div>
+        <nav class="side-nav">
+            <ul class="side-nav-links">
+                <li><a href="../index.html#home">Home</a></li>
+                <li><a href="../index.html#blog">Blog List</a></li>
+            </ul>
+        </nav>
+    </div>
+    <div class="overlay" id="overlay"></div>
+
+    <main>
+        <article class="blog-article-body">
+            <div class="post-meta">
+                <span class="post-date">2026.01.21 10:25</span>
+                <h1 style="text-transform: none; letter-spacing: normal; margin: 10px 0;">
+                    Xアカウントが乗っ取られた時の話
+                </h1>
+                <div class="post-tags-display">
+                    <span class="tag-label">#X</span><span class="tag-label">#乗っ取り</span><span class="tag-label">#セキュリティ</span>
+                </div>
+            </div>
+
+            <div class="article-content">
+                <p>こんにちは。一樹です。</p>
+                <p>突然の話ですが、誠にお恥ずかしいことながら、Xアカウントが乗っ取られました..</p>
+                <p>なんでそうなった、というところを細かく記載していきます、調べている人がいれば参考にしていただけたら良いなと思って書いています。そのため少しむつかしい話も含む可能性があるのでご了承ください。</p>
+
+                <p>時系列順に以下のとおりです。</p>
+                <p>・Xで乗っ取られたアカウントから誤報告をしてしまったとDMが来る
+・Discordの「masuyoshix」に連絡を取るように言われる、そしてフレンド追加
+・連絡する
+・メールアドレスを受け取る
+・自分のアカウントに付け替える
+・その後、Discordの「masuyoshix」に3万円要求される</p>
+                <p>これ以降は不明です。さすがの私でも詐欺だとやっとわかりました…</p>
+
+                <h2>目次</h2>
+                <p>・Xで乗っ取られたアカウントから誤報告をしてしまったとDMが来る
+・Discordの「masuyoshix」に連絡を取るように言われる、そしてフレンド追加
+・メールアドレスを受け取る
+・自分のアカウントに付け替える
+・その後、Discordの「masuyoshix」に3万円要求される
+・このあと起こることの個人的予測
+・結論
+・現在わかっている対処法</p>
+
+                <h2>・Xで乗っ取られたアカウントから誤報告をしてしまったとDMが来る</h2>
+                <p>Xにて、私は乗っ取られたアカウントのFFからDMが来ました、途中までスクショを撮っているので見ていってください</p>
+
+                <img src="https://assets.st-note.com/img/1768958034-vMAcSHZOdryqi0k4gGjfoTNK.png" alt="X DMスクショ">
+
+                <p>このあと最後に良いですよ的な文章が返ってきています。これ以降はアクセスできませんでした…</p>
+
+                <h2>・Discordの「masuyoshix」に連絡を取るように言われる、そしてフレンド追加</h2>
+                <p>先程のスクショの通り、Discordの人に案内されました、</p>
+
+                <div class="download-box">
+                    <a href="https://note.com/api/v2/attachments/download/b4df5abca9efed2fdbd5da05bc35aae9">discord 会話履歴 結合不備 個情削除有.zip</a><br>
+                    4.61 MB<br>
+
+                </div>
+
+                <h2>・メールアドレスを受け取る</h2>
+                <p>「masuyoshix」から以下のような形で「xrevokebanned+L_port8000@gmail.com」を受け取りました。（xrevokebanned@gmail.comのエイリアスのアドレスです、合計30個作成可能なもの。情報感謝します。)</p>
+
+                <h2>・自分のアカウントに付け替える</h2>
+                <p>そして、私は全く疑いもせずアドレスを付け替え、
+そのまま自分のアドレスにxrevokebanned+L_port8000@gmail.comを入力し相手から認証コードを受け取ります…</p>
+
+                <img src="https://assets.st-note.com/img/1768826197-zWwmHoGBTtYF8917RnOjiqUJ.png?width=1200" alt="メールアドレス設定画面">
+
+                <h2>・その後、Discordの「masuyoshix」に3万円要求される</h2>
+                <p>そして、勝手にアカウントが鍵垢になったと思ったら、
+アカウントのご報告の解除をするのに3万円が一時的に必要だと言われます。</p>
+
+                <p>流石にそんなわけ無いよなと思い、やっとXの知り合いにサブ垢で話し始めます、そしたらなんと全く同じ構文を伝えられているDMの写真が有るじゃないですか！！</p>
+                <p>おわった。と思いました、終わったんですが（）</p>
+
+                <h2>・このあと起こることの個人的予測</h2>
+                <p>私的には3万円取られてアカウントも帰ってこないのが落ちだと考えてます、というかそれ以外無いよなぁと思えます…</p>
+
+                <h2>・結論</h2>
+                <p>・極力知らない人とかかわらないほうが良いのかも
+・DMは仲良しでない限り慎重にいこう
+・長い文章に注意
+・つまり通常のネットリテラシー（）</p>
+
+                <h2>・現在わかっている対処法</h2>
+                <p>Xで私が信頼している人から頂いた情報ですが</p>
+
+                <p>1. Xのヘルプに乗っ取り被害報告をする。
+最近Xで広まっているのでサポートもしっかり対応しているらしく、復活することもあるそうです。以下のリンクをお試しください</p>
+
+                <p>X アカウントがハッキングされた、または乗っ取られた (<a href="https://t.co/yXiCEXX2MU" target="_blank" style="color: var(--accent-color);">https://t.co/yXiCEXX2MU</a>)</p>
+
+                <p>（おそらく、乗っ取られる以前のバックアップなどのようなもので復元するのかと？情報あったらください…）</p>
+
+                <p>という話でした。
+乗っ取られてから気づきましたが、結構広がっていたのに意外とおすすめにも流れてこなかったので気づかない人が多そうです、、、</p>
+                <p>というわけでXでいっても広まんないかもなーと思い、noteに書きました（）
+皆さんお気をつけください、、</p>
+
+                <div style="margin-top: 30px; font-size: 0.8rem; color: var(--sub-text);">
+                    #X #アカウント #DISCORD #Gmail #乗っ取り #乗っ取り対策 #乗っ取り被害 #xrevokebanned
+                </div>
+            </div>
+
+            <a href="../index.html#blog" class="back-to-blog">← 記事一覧に戻る</a>
+        </article>
+    </main>
+
+    <footer>
+        <p>© 2026 Regia:8000</p>
+    </footer>
+
+    <script src="../script.js"></script>
+</body>
+</html>
