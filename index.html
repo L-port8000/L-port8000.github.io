@@ -135,8 +135,8 @@
             <h1 data-i18n="mirror_title"></h1>
 　　　　　　<p><a href="https://l-ituki8000.f5.si">l-ituki8000.f5.si</a><br><a href="https://site.l-ituki8000.workers.dev">site.l-ituki8000.workers.dev</a></p>
 
-           <br><br>
-           <img src="https://count.getloli.com/@:L_port8000" alt=":L_port8000" />
+           <br><br><!--
+           <img src="https://count.getloli.com/@:L_port8000" alt=":L_port8000" /> -->
         </section>
 
         <section id="about" class="tab-content">
@@ -155,44 +155,54 @@
             <h3><a href="./tools/"></a></h3>
         </section>
 
-        <section id="blog" class="tab-content">
-        <h2 data-i18n="nav_blog">Blog</h2>
-
-        <div class="blog-controls">
-            <div class="search-wrapper">
-                <input type="text" id="blogSearch" placeholder="タイトルまたは #タグ で検索..." data-i18n-placeholder="search_placeholder">
-            </div>
-        
-            <div class="tag-filters" id="tagFilters">
-                <button class="tag-btn active" data-tag="all">All</button>
-                <button class="tag-btn" data-tag="Tech">#X</button>
-                <button class="tag-btn" data-tag="Diary">#Twitter</button>
-                <button class="tag-btn" data-tag="PC">#乗っ取り</button>
-            </div>
-        </div>
-
-        <div class="blog-grid" id="blogGrid">
-            <article class="blog-card" data-tags="Tech PC">
-                <div class="blog-card-content">
-                    <span class="post-date">2026.01.21</span>
-                    <h3 class="post-title"><a href="./blog/202601211.html">アカウントが乗っ取られた時の話</a></h3>
-                    <div class="post-tags-display">
-                        <span class="tag-label">#X</span><span class="tag-label">#Twitter</span><span class="tag-label">#乗っ取り</span>
-                    </div>
+    <section id="blog" class="tab-content">
+            <h2 data-i18n="nav_blog">Blog</h2>
+            <div class="blog-controls">
+                <div class="search-wrapper">
+                    <input type="text" id="blogSearch" placeholder="タイトルまたは #タグ で検索..." data-i18n-placeholder="search_placeholder">
                 </div>
-            </article>
-        
-            <article class="blog-card" data-tags="Diary">
-                <div class="blog-card-content">
-                    <span class="post-date">2026.01.25</span>
-                    <h3 class="post-title"><a href="./blog/202601251.html">アカウントが復元できた話</a></h3>
-                    <div class="post-tags-display">
-                        <span class="tag-label">#X</span><span class="tag-label">#Twitter</span><span class="tag-label">#乗っ取り</span>
-                    </div>
+    
+                <div class="tag-filters" id="tagFilters">
+                    <button class="tag-btn active" data-tag="all">All</button>
+                    <button class="tag-btn" data-tag="X">#X</button>
+                    <button class="tag-btn" data-tag="Twitter">#Twitter</button>
+                    <button class="tag-btn" data-tag="乗っ取り">#乗っ取り</button>
+                    <button class="tag-btn" data-tag="JP">#JP</button>
                 </div>
-            </article>
-        </div>
-    </section>
+            </div>
+            <div class="blog-grid" id="blogGrid">
+                <article class="blog-card" data-tags="X Twitter 乗っ取り JP">
+                    <div class="blog-card-content">
+                        <span class="post-date">2026.01.21</span>
+                        <h3 class="post-title"><a href="./blog/202601211.html">アカウントが乗っ取られた時の話</a></h3>
+                        <div class="post-tags-display">
+                            <span class="tag-label">#X</span><span class="tag-label">#Twitter</span><span class="tag-label">#乗っ取り</span><span class="tag-label">#JP</span>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="blog-card" data-tags="X Twitter 乗っ取り JP">
+                    <div class="blog-card-content">
+                        <span class="post-date">2026.01.25</span>
+                        <h3 class="post-title"><a href="./blog/202601251.html">アカウントが復元できた話</a></h3>
+                        <div class="post-tags-display">
+                            <span class="tag-label">#X</span><span class="tag-label">#Twitter</span><span class="tag-label">#乗っ取り</span><span class="tag-label">#JP</span>
+                        </div>
+                    </div>
+                </article>
+<!--
+                <article class="blog-card" data-tags="xxxxx">
+                    <div class="blog-card-content">
+                        <span class="post-date">0000.00.00</span>
+                        <h3 class="post-title"><a href="./blog/000000000.html">xxxxx</a></h3>
+                        <div class="post-tags-display">
+                            <span class="tag-label">#xxxxx</span>
+                        </div>
+                    </div>
+                </article>
+-->
+            </div>
+        </section>
        
         <section id="contact" class="tab-content">
             <h2 data-i18n="nav_contact"></h2>
@@ -219,7 +229,6 @@
            <a href="https://instagram.com/L_port8000">@L_port8000</a><br>
            <h2>Github</h2>
            <a href="https://github.com/L-port8000">@L_port8000</a><br>
-           <!-- 0570bdbac23a983562fe4125699d8ad51cce6328b2f58ffbcaa7aa10661cfbfc7a  -->
         </section>
         <section id="etc" class="tab-content">
            <p>まだ何もありません</p>
