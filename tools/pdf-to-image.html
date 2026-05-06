@@ -1,120 +1,272 @@
-<!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <title>解像度指定 PDF変換</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-    <style>
-        body { font-family: sans-serif; padding: 30px; background-color: #f8f9fa; color: #333; }
-        .card { max-width: 700px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
-        .control-group { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
-        label { font-size: 0.85rem; font-weight: bold; color: #555; display: block; margin-bottom: 5px; }
-        select, input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; background: #007bff; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        button:hover { background: #0056b3; }
-        button:disabled { background: #ccc; cursor: not-allowed; }
-        #status { margin: 15px 0; font-size: 0.9rem; text-align: center; color: #666; }
-        #result-area { text-align: center; border-top: 1px solid #eee; padding-top: 20px; margin-top: 20px; }
-        #output-image { max-width: 100%; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        .download-btn { background: #28a745; margin-top: 10px; text-decoration: none; display: none; }
-    </style>
+<meta charset="UTF-8">
+<title>PDF画像抽出</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+<style>
+body {
+    font-family: sans-serif;
+    padding: 30px;
+    background:#f8f9fa;
+    color:#333;
+}
+
+.card {
+    max-width: 700px;
+    margin:auto;
+    background:white;
+    padding:25px;
+    border-radius:12px;
+    box-shadow:0 4px 20px rgba(0,0,0,0.08);
+}
+
+.control-group {
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:15px;
+    margin-bottom:20px;
+}
+
+label {
+    font-size:0.85rem;
+    font-weight:bold;
+    margin-bottom:5px;
+    display:block;
+}
+
+select,input {
+    width:100%;
+    padding:10px;
+    border:1px solid #ddd;
+    border-radius:6px;
+}
+
+button {
+    width:100%;
+    padding:12px;
+    background:#007bff;
+    color:white;
+    border:none;
+    border-radius:6px;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+button:hover { background:#0056b3; }
+
+#status {
+    margin:15px 0;
+    text-align:center;
+    color:#666;
+}
+
+.image-row {
+    display:flex;
+    align-items:center;
+    margin-bottom:15px;
+    gap:10px;
+}
+
+.image-row img {
+    max-width:70%;
+    border:1px solid #ddd;
+    border-radius:6px;
+}
+
+.download-btn {
+    background:#28a745;
+}
+
+#bulk-download {
+    margin-top:20px;
+}
+</style>
 </head>
+
 <body>
 
 <div class="card">
-    <h2 style="margin-top:0">PDF画像変換</h2>
-    
-    <div class="control-group">
-        <div>
-            <label>PDFファイル</label>
-            <input type="file" id="pdf-upload" accept="application/pdf">
-        </div>
-        <div>
-            <label>ターゲット解像度（高さ）</label>
-            <select id="res-select">
-                <option value="720">720p (軽量・確認用)</option>
-                <option value="1080" selected>1080p (標準・フルHD相当)</option>
-                <option value="1440">1440p (高画質・2K相当)</option>
-                <option value="2160">2160p (最高画質・4K相当)</option>
-            </select>
-        </div>
+<h2>PDF画像抽出ツール</h2>
+
+<div class="control-group">
+    <div>
+        <label>PDFファイル</label>
+        <input type="file" id="file" accept="application/pdf">
     </div>
-
-    <button id="convert-btn" disabled>変換を実行</button>
-    
-    <div id="status">ファイルを選択してください</div>
-
-    <div id="result-area">
-        <img id="output-image">
-        <a id="download-link" class="download-btn">
-            <button style="background: #28a745;">画像を保存する</button>
-        </a>
+    <div>
+        <label>ターゲット解像度（フォールバック用）</label>
+        <select id="res-select">
+            <option value="720">720p</option>
+            <option value="1080" selected>1080p</option>
+            <option value="1440">1440p</option>
+            <option value="2160">2160p</option>
+        </select>
     </div>
 </div>
 
-<canvas id="pdf-canvas" style="display:none;"></canvas>
+<button id="extract">画像抽出</button>
+
+<div id="status">ファイルを選択してください</div>
+<div id="images"></div>
+
+<button id="bulk-download" style="display:none;">一括ダウンロード</button>
+</div>
 
 <script>
-    const pdfjsLib = window['pdfjs-dist/build/pdf'];
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+const pdfjsLib = window['pdfjs-dist/build/pdf'];
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-    const fileInput = document.getElementById('pdf-upload');
-    const resSelect = document.getElementById('res-select');
-    const convertBtn = document.getElementById('convert-btn');
-    const canvas = document.getElementById('pdf-canvas');
-    const outputImage = document.getElementById('output-image');
-    const downloadLink = document.getElementById('download-link');
-    const status = document.getElementById('status');
+const extractBtn = document.getElementById("extract");
+const fileInput = document.getElementById("file");
+const imagesDiv = document.getElementById("images");
+const status = document.getElementById("status");
+const bulkBtn = document.getElementById("bulk-download");
+const resSelect = document.getElementById("res-select");
 
-    fileInput.onchange = () => { if(fileInput.files.length) convertBtn.disabled = false; };
+let extractedImages = [];
 
-    convertBtn.onclick = async () => {
-        const file = fileInput.files[0];
-        const targetHeight = parseInt(resSelect.value);
-        
-        status.innerText = "PDFを解析中...";
-        convertBtn.disabled = true;
+extractBtn.onclick = async () => {
+    const file = fileInput.files[0];
+    if (!file) {
+        status.innerText = "ファイルを選択してください";
+        return;
+    }
 
-        const reader = new FileReader();
-        reader.onload = async function() {
-            try {
-                const pdfDoc = await pdfjsLib.getDocument(new Uint8Array(this.result)).promise;
-                const page = await pdfDoc.getPage(1);
-                
-                // 元のサイズ情報を取得
-                const baseViewport = page.getViewport({ scale: 1.0 });
-                
-                // 指定した高さ(720, 1080...)に合わせるための倍率を計算
-                // 計算式: ターゲット高さ / PDFの元の高さ
-                const scale = targetHeight / baseViewport.height;
-                
-                const viewport = page.getViewport({ scale: scale });
-                const context = canvas.getContext('2d');
-                canvas.height = viewport.height;
-                canvas.width = viewport.width;
+    const targetHeight = parseInt(resSelect.value);
 
-                status.innerText = `レンダリング中 (${canvas.width} x ${canvas.height})...`;
+    imagesDiv.innerHTML = "";
+    extractedImages = [];
+    bulkBtn.style.display = "none";
 
-                await page.render({ canvasContext: context, viewport: viewport }).promise;
+    status.innerText = "PDF解析中...";
 
-                // 読みやすさを考慮し、高画質設定の時はJPEG品質も高めに設定
-                const quality = targetHeight >= 1440 ? 0.95 : 0.85;
-                const imgData = canvas.toDataURL('image/jpeg', quality);
-                
-                outputImage.src = imgData;
-                downloadLink.href = imgData;
-                downloadLink.download = `pdf_output_${targetHeight}p.jpg`;
-                downloadLink.style.display = "block";
-                
-                status.innerText = `変換完了！ (${targetHeight}p)`;
-            } catch (e) {
-                status.innerText = "エラー: PDFを読み込めませんでした。";
-                console.error(e);
+    const reader = new FileReader();
+
+    reader.onload = async function() {
+        try {
+            const pdf = await pdfjsLib.getDocument(new Uint8Array(this.result)).promise;
+
+            for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                status.innerText = `ページ ${pageNum} 処理中...`;
+
+                let foundImage = false;
+
+                const page = await pdf.getPage(pageNum);
+                const ops = await page.getOperatorList();
+
+                for (let i = 0; i < ops.fnArray.length; i++) {
+
+                    if (ops.fnArray[i] === pdfjsLib.OPS.paintImageXObject) {
+
+                        try {
+                            const imgName = ops.argsArray[i][0];
+                            const img = await page.objs.get(imgName);
+
+                            const canvas = document.createElement("canvas");
+                            const ctx = canvas.getContext("2d");
+
+                            canvas.width = img.width;
+                            canvas.height = img.height;
+
+                            if (img instanceof ImageData) {
+                                ctx.putImageData(img, 0, 0);
+                            } else if (img.data) {
+                                const imageData = new ImageData(
+                                    new Uint8ClampedArray(img.data),
+                                    img.width,
+                                    img.height
+                                );
+                                ctx.putImageData(imageData, 0, 0);
+                            } else {
+                                continue;
+                            }
+
+                            const url = canvas.toDataURL("image/png");
+
+                            extractedImages.push(url);
+                            addImage(url, extractedImages.length);
+
+                            foundImage = true;
+
+                        } catch (e) {}
+                    }
+                }
+
+                if (!foundImage) {
+                    const baseViewport = page.getViewport({ scale: 1.0 });
+                    const scale = targetHeight / baseViewport.height;
+                    const viewport = page.getViewport({ scale });
+
+                    const canvas = document.createElement("canvas");
+                    const ctx = canvas.getContext("2d");
+
+                    canvas.width = viewport.width;
+                    canvas.height = viewport.height;
+
+                    await page.render({ canvasContext: ctx, viewport }).promise;
+
+                    const quality = targetHeight >= 1440 ? 0.95 : 0.85;
+                    const url = canvas.toDataURL("image/jpeg", quality);
+
+                    extractedImages.push(url);
+                    addImage(url, extractedImages.length);
+                }
             }
-            convertBtn.disabled = false;
-        };
-        reader.readAsArrayBuffer(file);
+
+            status.innerText = "完了！";
+            bulkBtn.style.display = "block";
+
+        } catch (e) {
+            console.error(e);
+            status.innerText = "エラー：PDFを処理できませんでした";
+        }
     };
+
+    reader.readAsArrayBuffer(file);
+};
+
+function addImage(src, index) {
+    const row = document.createElement("div");
+    row.className = "image-row";
+
+    const img = document.createElement("img");
+    img.src = src;
+
+    const btn = document.createElement("button");
+    btn.innerText = "ダウンロード";
+    btn.className = "download-btn";
+
+    btn.onclick = () => {
+        const a = document.createElement("a");
+        a.href = src;
+        a.download = `image_${index}.jpg`;
+        a.click();
+    };
+
+    row.appendChild(img);
+    row.appendChild(btn);
+    imagesDiv.appendChild(row);
+}
+
+bulkBtn.onclick = async () => {
+    const zip = new JSZip();
+
+    extractedImages.forEach((img, i) => {
+        const base64 = img.split(",")[1];
+        zip.file(`image_${i+1}.jpg`, base64, { base64: true });
+    });
+
+    const blob = await zip.generateAsync({ type: "blob" });
+
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "images.zip";
+    a.click();
+};
 </script>
 
 </body>
