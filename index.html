@@ -167,15 +167,43 @@
         <section id="projects" class="tab-content">
             <h2 data-i18n="nav_projects"></h2>
 
-            <h3><a href="./tools/IP">你的IP</a></h3>
-            <p data-i18n="project1_text"></p>
-
-            <h3><a href="./tools/pdf-to-image.html">PDF->Image</a></h3>
-            <p data-i18n="project2_text"></p>
+            <details class="project-group" open>
+                <summary class="group-header">
+                    <span data-i18n="web_tools"></span>
+                    <span class="toggle-icon"></span>
+                </summary>
+                <div class="group-content">
+                    <div class="project-item">
+                        <h3><a href="./tools/IP">你的IP</a></h3>
+                        <p data-i18n="project1_text"></p>
+                    </div>
+                    <div class="project-item">
+                        <h3><a href="./tools/pdf-to-image.html">PDF->Image</a></h3>
+                        <p data-i18n="project2_text"></p>
+                    </div>
 <!--
-            <h3><a href="./tools/"></a></h3>
-            <p data-i18n="project3_text"></p>
+                    <div class="project-item">
+                        <h3><a href="./tools/"></a></h3>
+                        <p data-i18n="project3_text"></p>
+                    </div>
 -->
+                </div>
+            </details>
+
+            <details class="project-group">
+                <summary class="group-header">
+                    <span data-i18n="app_tools"></span>
+                    <span class="toggle-icon"></span>
+                </summary>
+                <div class="group-content">
+<!--
+                    <div class="project-item">
+                        <h3><a href="#">Sample App</a></h3>
+                        <p data-i18n="app1_text">現在開発中のアプリケーションです。</p>
+                    </div>
+-->
+                </div>
+            </details>
         </section>
 
     <section id="blog" class="tab-content">
@@ -263,7 +291,6 @@
            <a href="https://github.com/L-port8000">@L_port8000</a><br>
 
            <!-- 0570bdbac23a983562fe4125699d8ad51cce6328b2f58ffbcaa7aa10661cfbfc7a -->
-    ！
         </section>
         <section id="etc" class="tab-content">
            <p>まだ何もありません</p>
