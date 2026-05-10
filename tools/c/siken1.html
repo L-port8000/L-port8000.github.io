@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
@@ -87,93 +86,34 @@
 
         .editor-placeholder { flex: 1; display: flex; align-items: center; justify-content: center; color: var(--text-sub); }
         .editor-content { display: none; flex-direction: column; height: 100%; }
-        .editor-header { display: flex; justify-content: space-between; margin-bottom: 15px; gap: 20px; }
+        .editor-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; gap: 15px; }
         #noteTitle { font-size: 24px; border: none; outline: none; width: 100%; font-weight: bold; }
-        #noteBody { flex: 1; resize: none; border: none; outline: none; font-size: 16px; line-height: 1.6; }
+        
+
+        #noteBody { 
+            flex: 1; 
+            border: none; 
+            outline: none; 
+            font-size: 16px; 
+            line-height: 1.6; 
+            overflow-y: auto;
+            word-break: break-all;
+        }
+        #noteBody img { max-width: 100%; height: auto; border-radius: 4px; margin: 10px 0; }
+
         #fileInput { display: none; }
 
-        /* モバイルレスポンシブ対応 */
+
         @media (max-width: 768px) {
-            :root {
-                --sidebar-width: 100vw;
-            }
+            :root { --sidebar-width: 85vw; }
+            .sidebar { position: absolute; left: 0; top: 0; height: 100%; z-index: 50; box-shadow: 2px 0 8px rgba(0,0,0,0.15); }
+            .sidebar.collapsed { transform: translateX(-100%); }
+            .resizer { display: none !important; }
+            .editor-content-wrapper { padding: 60px 20px 20px 20px; }
             
-            .sidebar { 
-                position: absolute;
-                left: 0;
-                top: 0;
-                height: 100%;
-                max-width: 100vw;
-                z-index: 50;
-                box-shadow: 2px 0 8px rgba(0,0,0,0.15);
-            }
 
-            .sidebar.collapsed {
-                transform: translateX(-100%);
-            }
-
-            .resizer {
-                display: none !important;
-            }
-
-            .editor-content-wrapper {
-                padding: 50px 20px 20px 20px;
-            }
-
-            .editor-header {
-                flex-direction: column;
-                gap: 10px;
-            }
-
-            #noteTitle {
-                font-size: 18px;
-            }
-
-            #noteBody {
-                font-size: 14px;
-            }
-
-            .sidebar-header {
-                min-width: auto;
-            }
-
-            .note-list {
-                min-width: auto;
-            }
-
-            .btn {
-                font-size: 12px;
-                padding: 10px 8px;
-            }
-
-            .file-controls button {
-                font-size: 10px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .editor-content-wrapper {
-                padding: 45px 15px 15px 15px;
-            }
-
-            #noteTitle {
-                font-size: 16px;
-                margin-bottom: 10px;
-            }
-
-            .editor-header {
-                flex-direction: column;
-            }
-
-            .btn {
-                font-size: 11px;
-                padding: 8px 6px;
-            }
-
-            .toggle-sidebar {
-                padding: 4px 6px;
-                font-size: 16px;
-            }
+            .editor-header { flex-direction: row; } 
+            #noteTitle { font-size: 18px; }
         }
     </style>
 </head>
@@ -204,78 +144,69 @@
                     <input type="text" id="noteTitle" placeholder="タイトルなし" oninput="updateCurrentNote()">
                     <button class="btn btn-danger" onclick="deleteCurrentNote()">削除</button>
                 </div>
-                <textarea id="noteBody" placeholder="内容を入力..." oninput="updateCurrentNote()"></textarea>
+
+                <div id="noteBody" contenteditable="true" oninput="updateCurrentNote()" placeholder="内容を入力（画像をペーストできます）..."></div>
             </div>
         </div>
     </div>
 </div>
 
 <script>
+
+    const DB_NAME = 'NotesAppDB';
+    const STORE_NAME = 'notes';
+    let db;
+
+    const initDB = () => {
+        return new Promise((resolve) => {
+            const request = indexedDB.open(DB_NAME, 1);
+            request.onupgradeneeded = (e) => {
+                const db = e.target.result;
+                db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+            };
+            request.onsuccess = (e) => {
+                db = e.target.result;
+                resolve();
+            };
+        });
+    };
+
+    const dbSaveAll = async (notesArray) => {
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        const store = tx.objectStore(STORE_NAME);
+        await store.clear();
+        for (const note of notesArray) {
+            store.put(note);
+        }
+    };
+
+    const dbGetAll = () => {
+        return new Promise((resolve) => {
+            const tx = db.transaction(STORE_NAME, 'readonly');
+            const store = tx.objectStore(STORE_NAME);
+            const request = store.getAll();
+            request.onsuccess = () => resolve(request.result);
+        });
+    };
+
     let notes = [];
     let currentNoteId = null;
-
     const sidebar = document.getElementById('sidebar');
     const resizer = document.getElementById('resizer');
     let isResizing = false;
 
-    function isMobileDevice() {
-        return window.innerWidth <= 768;
-    }
+    window.onload = async () => {
+        await initDB();
+        notes = await dbGetAll();
 
-    function toggleSidebar() {
-        sidebar.classList.toggle('collapsed');
-        resizer.style.display = sidebar.classList.contains('collapsed') ? 'none' : 'block';
-    }
-
-    resizer.addEventListener('mousedown', (e) => {
-        if (isMobileDevice()) return;
-        isResizing = true;
-        document.body.style.cursor = 'col-resize';
-    });
-
-    document.addEventListener('mousemove', (e) => {
-        if (!isResizing || isMobileDevice()) return;
-        let newWidth = e.clientX;
-        if (newWidth > 150 && newWidth < 600) {
-            document.documentElement.style.setProperty('--sidebar-width', newWidth + 'px');
-        }
-    });
-
-    document.addEventListener('mouseup', () => {
-        isResizing = false;
-        document.body.style.cursor = 'default';
-    });
-
-    document.addEventListener('click', (e) => {
-        if (isMobileDevice() && !sidebar.classList.contains('collapsed')) {
-            if (!sidebar.contains(e.target) && !document.querySelector('.toggle-sidebar').contains(e.target)) {
-                sidebar.classList.add('collapsed');
-            }
-        }
-    });
-
-    window.onload = () => {
-        const saved = localStorage.getItem('myLocalNotes');
-        if (saved) {
-            try {
-                notes = JSON.parse(saved);
-                if (!Array.isArray(notes)) notes = [];
-            } catch(e) { notes = []; }
-        }
+        notes.sort((a, b) => new Date(b.date) - new Date(a.date));
         renderList();
         
-        if (isMobileDevice()) {
-            sidebar.classList.add('collapsed');
-        }
+        if (window.innerWidth <= 768) sidebar.classList.add('collapsed');
     };
-
-    function saveToLocalStorage() {
-        localStorage.setItem('myLocalNotes', JSON.stringify(notes));
-    }
 
     function renderList() {
         const listEl = document.getElementById('noteList');
-        if (!listEl) return;
         listEl.innerHTML = '';
         notes.forEach(note => {
             const li = document.createElement('li');
@@ -289,7 +220,7 @@
         });
     }
 
-    function createNewNote() {
+    async function createNewNote() {
         const newNote = {
             id: Date.now().toString(),
             title: '',
@@ -297,53 +228,79 @@
             date: new Date().toLocaleString()
         };
         notes.unshift(newNote);
-        saveToLocalStorage();
+        await dbSaveAll(notes);
         selectNote(newNote.id);
-        
-        if (isMobileDevice()) {
-            sidebar.classList.add('collapsed');
-        }
+        if (window.innerWidth <= 768) sidebar.classList.add('collapsed');
     }
 
     function selectNote(id) {
         currentNoteId = id;
         const note = notes.find(n => n.id === id);
-        const placeholder = document.getElementById('editorPlaceholder');
-        const content = document.getElementById('editorContent');
-        if (note && placeholder && content) {
-            placeholder.style.display = 'none';
-            content.style.display = 'flex';
+        if (note) {
+            document.getElementById('editorPlaceholder').style.display = 'none';
+            document.getElementById('editorContent').style.display = 'flex';
             document.getElementById('noteTitle').value = note.title;
-            document.getElementById('noteBody').value = note.body;
+            document.getElementById('noteBody').innerHTML = note.body;
         }
         renderList();
-        
-        if (isMobileDevice()) {
-            sidebar.classList.add('collapsed');
-        }
+        if (window.innerWidth <= 768) sidebar.classList.add('collapsed');
     }
 
-    function updateCurrentNote() {
+    async function updateCurrentNote() {
         if (!currentNoteId) return;
         const idx = notes.findIndex(n => n.id === currentNoteId);
         if (idx > -1) {
             notes[idx].title = document.getElementById('noteTitle').value;
-            notes[idx].body = document.getElementById('noteBody').value;
+            notes[idx].body = document.getElementById('noteBody').innerHTML;
             notes[idx].date = new Date().toLocaleString();
-            saveToLocalStorage();
+            await dbSaveAll(notes);
             renderList();
         }
     }
 
-    function deleteCurrentNote() {
+    async function deleteCurrentNote() {
         if (!confirm('削除しますか？')) return;
         notes = notes.filter(n => n.id !== currentNoteId);
         currentNoteId = null;
-        saveToLocalStorage();
+        await dbSaveAll(notes);
         document.getElementById('editorPlaceholder').style.display = 'flex';
         document.getElementById('editorContent').style.display = 'none';
         renderList();
     }
+
+
+    function toggleSidebar() {
+        sidebar.classList.toggle('collapsed');
+        resizer.style.display = sidebar.classList.contains('collapsed') ? 'none' : 'block';
+    }
+
+    resizer.addEventListener('mousedown', () => { isResizing = true; document.body.style.cursor = 'col-resize'; });
+    document.addEventListener('mousemove', (e) => {
+        if (!isResizing || window.innerWidth <= 768) return;
+        let newWidth = e.clientX;
+        if (newWidth > 150 && newWidth < 600) document.documentElement.style.setProperty('--sidebar-width', newWidth + 'px');
+    });
+    document.addEventListener('mouseup', () => { isResizing = false; document.body.style.cursor = 'default'; });
+
+
+    document.getElementById('noteBody').addEventListener('paste', (e) => {
+        const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+        for (let item of items) {
+            if (item.kind === 'file') {
+                const blob = item.getAsFile();
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const img = document.createElement('img');
+                    img.src = event.target.result;
+
+                    document.execCommand('insertElement', false, img);
+                    updateCurrentNote();
+                };
+                reader.readAsDataURL(blob);
+            }
+        }
+    });
+
 
     function exportToFile() {
         if (notes.length === 0) return alert('メモがありません');
@@ -351,7 +308,7 @@
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `notes_backup.json`;
+        a.download = `notes_db_backup.json`;
         a.click();
         URL.revokeObjectURL(url);
     }
@@ -360,14 +317,14 @@
         const file = event.target.files[0];
         if (!file) return;
         const reader = new FileReader();
-        reader.onload = (e) => {
+        reader.onload = async (e) => {
             try {
                 const imported = JSON.parse(e.target.result);
                 if (Array.isArray(imported)) {
                     if (notes.length > 0 && !confirm('既存のメモを上書きしますか？（キャンセルで追加）')) {
                         notes = [...imported, ...notes];
                     } else { notes = imported; }
-                    saveToLocalStorage();
+                    await dbSaveAll(notes);
                     renderList();
                     alert('読み込み完了');
                 }
