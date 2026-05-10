@@ -1,4 +1,3 @@
-
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
@@ -6,6 +5,7 @@
     <title>ローカルメモ帳</title>
     <style>
         :root {
+
             --bg-color: #f5f5f5;
             --sidebar-bg: #ffffff;
             --editor-bg: #ffffff;
@@ -19,6 +19,7 @@
 
         @media (prefers-color-scheme: dark) {
             :root {
+
                 --bg-color: #121212;
                 --sidebar-bg: #1e1e1e;
                 --editor-bg: #1e1e1e;
@@ -39,129 +40,150 @@
 
         .container { display: flex; height: 100vh; position: relative; }
         
+
         .sidebar { 
             width: var(--sidebar-width); 
+            min-width: 50px;
             background-color: var(--sidebar-bg); 
             border-right: 1px solid var(--border-color); 
             display: flex; 
             flex-direction: column;
-            transition: transform 0.3s ease;
+            transition: width 0.2s ease;
             position: relative;
-            z-index: 200;
         }
-        .sidebar.collapsed { transform: translateX(-100%); position: absolute; height: 100%; }
+        .sidebar.collapsed { width: 0px; min-width: 0px; border-right: none; overflow: hidden; }
+        .sidebar-header { padding: 15px; border-bottom: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 10px; min-width: 250px; }
 
-        .sidebar-header { padding: 15px; border-bottom: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 10px; }
-        .note-list { flex: 1; overflow-y: auto; list-style: none; margin: 0; padding: 0; }
+
+        .btn { padding: 8px 12px; background-color: var(--primary); color: #000; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: bold; white-space: nowrap; }
+        @media (prefers-color-scheme: dark) { .btn { color: #121212; } }
+        .btn:hover { background-color: var(--primary-hover); }
+        .btn-outline { background-color: transparent; color: var(--text-main); border: 1px solid var(--border-color); }
+        .btn-danger { background-color: #f28b82; color: #121212; }
+
+
+        .note-list { flex: 1; overflow-y: auto; list-style: none; margin: 0; padding: 0; min-width: 250px; }
         .note-item { padding: 15px; border-bottom: 1px solid var(--border-color); cursor: pointer; }
+        .note-item:hover { background-color: rgba(255,255,255,0.05); }
         .note-item.active { background-color: rgba(138, 180, 248, 0.15); border-left: 4px solid var(--primary); }
+        .note-item-title { font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .note-item-date { font-size: 12px; color: var(--text-sub); }
 
-        .btn { padding: 8px 12px; background-color: var(--primary); color: #000; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        .btn-danger { background-color: #f28b82; }
+        .resizer { width: 4px; cursor: col-resize; background-color: transparent; transition: background-color 0.2s; z-index: 10; }
+        .resizer:hover { background-color: var(--primary); }
+
 
         .editor { flex: 1; display: flex; flex-direction: column; background: var(--editor-bg); position: relative; }
         
         .toggle-sidebar {
-            position: fixed; left: 10px; top: 10px; z-index: 300;
-            background: var(--primary); color: #000;
-            border: none; border-radius: 50%; width: 40px; height: 40px;
-            cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-            display: flex; align-items: center; justify-content: center; font-size: 20px;
+            position: absolute; left: 10px; top: 15px; z-index: 100;
+            background: var(--sidebar-bg); color: var(--text-main);
+            border: 1px solid var(--border-color); border-radius: 4px;
+            padding: 5px 8px; cursor: pointer;
         }
 
-        .editor-overlay {
-            display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.05); z-index: 100;
-        }
-        body:not(.sidebar-collapsed) .editor-overlay { display: block; }
 
         .editor-content-wrapper {
-            padding: 70px 40px 20px 40px; flex: 1;
-            display: flex; flex-direction: column; align-items: center; overflow-y: auto;
+            padding: 60px 5% 20px 5%;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-y: auto;
         }
 
-        .editor-content { display: none; flex-direction: column; width: 100%; max-width: 750px; height: 100%; }
+        .editor-content { 
+            display: none; 
+            flex-direction: column; 
+            width: 100%; 
+            max-width: 800px;
+            height: 100%;
+        }
 
+        .editor-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 15px; }
+        
         #noteTitle { 
             background: transparent; color: var(--text-main);
-            font-size: 24px; border: none; outline: none; width: 100%; font-weight: bold; margin-bottom: 20px;
+            font-size: 24px; border: none; outline: none; width: 100%; font-weight: bold; 
         }
 
         #noteBody { 
-            flex: 1; background: transparent; color: var(--text-main);
-            border: none; outline: none; font-size: 16px; line-height: 1.8; 
-            padding-right: 15px; padding-bottom: 200px;
+            flex: 1; 
+            background: transparent; color: var(--text-main);
+            border: none; outline: none; 
+            font-size: 16px; line-height: 1.8; 
+            min-height: 300px;
+            padding-bottom: 100px;
+            word-break: break-all;
         }
-        #noteBody img { max-width: 100%; height: auto; border-radius: 8px; display: block; margin: 10px 0; }
+        #noteBody img { max-width: 100%; height: auto; border-radius: 8px; margin: 10px 0; }
+        #noteBody:empty:before { content: attr(placeholder); color: var(--text-sub); }
+
+        .editor-placeholder { flex: 1; display: flex; align-items: center; justify-content: center; color: var(--text-sub); }
+
 
         @media (max-width: 768px) {
             :root { --sidebar-width: 80vw; }
-            .editor-content-wrapper { padding: 70px 20px 20px 20px; }
+            .sidebar { position: absolute; left: 0; top: 0; height: 100%; z-index: 150; box-shadow: 5px 0 15px rgba(0,0,0,0.3); }
+            .sidebar.collapsed { transform: translateX(-100%); }
+            .editor-content-wrapper { padding: 60px 20px 20px 20px; }
         }
     </style>
 </head>
-<body class="sidebar-collapsed">
+<body>
 
 <div class="container">
-    <button class="toggle-sidebar" onclick="toggleSidebar()">☰</button>
-
-    <div class="sidebar collapsed" id="sidebar">
+    <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <button class="btn" onclick="createNewNote()">＋ 新しいメモ</button>
-            <div style="display:flex; gap:5px;">
-                <button class="btn" style="flex:1; font-size:10px;" onclick="exportToFile()">JSON保存</button>
-                <button class="btn" style="flex:1; font-size:10px;" onclick="document.getElementById('fileInput').click()">読込</button>
+            <div class="file-controls">
+                <button class="btn btn-outline" onclick="exportToFile()">JSON保存</button>
+                <button class="btn btn-outline" onclick="document.getElementById('fileInput').click()">読込</button>
+                <input type="file" id="fileInput" accept=".json" onchange="importFromFile(event)">
             </div>
-            <input type="file" id="fileInput" accept=".json" style="display:none;" onchange="importFromFile(event)">
         </div>
         <ul class="note-list" id="noteList"></ul>
     </div>
 
+    <div class="resizer" id="resizer"></div>
+
     <div class="editor">
-        <div class="editor-overlay" onclick="toggleSidebar()"></div>
+        <button class="toggle-sidebar" onclick="toggleSidebar()">☰</button>
         <div class="editor-content-wrapper">
-            <div id="editorPlaceholder" style="color:var(--text-sub); margin-top:100px;">メモを選択してください</div>
+            <div class="editor-placeholder" id="editorPlaceholder">メモを選択してください</div>
             <div class="editor-content" id="editorContent">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <div class="editor-header">
                     <input type="text" id="noteTitle" placeholder="タイトル" oninput="updateCurrentNote()">
                     <button class="btn btn-danger" onclick="deleteCurrentNote()">削除</button>
                 </div>
-                <div id="noteBody" contenteditable="true" oninput="updateCurrentNote()" placeholder="内容を入力..."></div>
+                <div id="noteBody" contenteditable="true" oninput="updateCurrentNote()" placeholder="ここに内容を入力（画像をペースト可）..."></div>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-    const DB_NAME = 'NotesAppDB_V4';
+    const DB_NAME = 'NotesAppDB_V2';
     const STORE_NAME = 'notes';
-    let db, notes = [], currentNoteId = null;
+    let db;
+    let notes = [];
+    let currentNoteId = null;
 
-    // --- DB操作 (個別に保存するように最適化) ---
     const initDB = () => {
         return new Promise((resolve) => {
             const request = indexedDB.open(DB_NAME, 1);
-            request.onupgradeneeded = (e) => e.target.result.createObjectStore(STORE_NAME, { keyPath: 'id' });
+            request.onupgradeneeded = (e) => {
+                e.target.result.createObjectStore(STORE_NAME, { keyPath: 'id' });
+            };
             request.onsuccess = (e) => { db = e.target.result; resolve(); };
         });
     };
 
-    const dbSaveNote = async (note) => {
-        return new Promise((resolve) => {
-            const tx = db.transaction(STORE_NAME, 'readwrite');
-            const store = tx.objectStore(STORE_NAME);
-            const request = store.put(note);
-            request.onsuccess = () => resolve();
-        });
-    };
-
-    const dbDeleteNote = async (id) => {
-        return new Promise((resolve) => {
-            const tx = db.transaction(STORE_NAME, 'readwrite');
-            const store = tx.objectStore(STORE_NAME);
-            const request = store.delete(id);
-            request.onsuccess = () => resolve();
-        });
+    const dbSaveAll = async (notesArray) => {
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        const store = tx.objectStore(STORE_NAME);
+        await store.clear();
+        notesArray.forEach(n => store.put(n));
     };
 
     const dbGetAll = () => {
@@ -171,18 +193,12 @@
         });
     };
 
-
-    function toggleSidebar() {
-        const sidebar = document.getElementById('sidebar');
-        sidebar.classList.toggle('collapsed');
-        document.body.classList.toggle('sidebar-collapsed', sidebar.classList.contains('collapsed'));
-    }
-
     window.onload = async () => {
         await initDB();
         notes = await dbGetAll();
         notes.sort((a, b) => new Date(b.date) - new Date(a.date));
         renderList();
+        if (window.innerWidth <= 768) sidebar.classList.add('collapsed');
     };
 
     function renderList() {
@@ -192,7 +208,10 @@
             const li = document.createElement('li');
             li.className = `note-item ${note.id === currentNoteId ? 'active' : ''}`;
             li.onclick = () => selectNote(note.id);
-            li.innerHTML = `<div style="font-weight:bold;">${note.title || '（無題）'}</div><div style="font-size:11px; color:var(--text-sub)">${note.date}</div>`;
+            li.innerHTML = `
+                <div class="note-item-title">${note.title || '（無題）'}</div>
+                <div class="note-item-date">${note.date}</div>
+            `;
             listEl.appendChild(li);
         });
     }
@@ -200,9 +219,9 @@
     async function createNewNote() {
         const newNote = { id: Date.now().toString(), title: '', body: '', date: new Date().toLocaleString() };
         notes.unshift(newNote);
-        await dbSaveNote(newNote);
+        await dbSaveAll(notes);
         selectNote(newNote.id);
-        if (!document.body.classList.contains('sidebar-collapsed')) toggleSidebar();
+        if (window.innerWidth <= 768) sidebar.classList.add('collapsed');
     }
 
     function selectNote(id) {
@@ -215,64 +234,45 @@
             document.getElementById('noteBody').innerHTML = note.body;
         }
         renderList();
-        if (!document.body.classList.contains('sidebar-collapsed')) toggleSidebar();
+        if (window.innerWidth <= 768) sidebar.classList.add('collapsed');
     }
 
-
-    let timer;
     async function updateCurrentNote() {
         if (!currentNoteId) return;
-        clearTimeout(timer);
-        timer = setTimeout(async () => {
-            const idx = notes.findIndex(n => n.id === currentNoteId);
-            if (idx > -1) {
-                notes[idx].title = document.getElementById('noteTitle').value;
-                notes[idx].body = document.getElementById('noteBody').innerHTML;
-                notes[idx].date = new Date().toLocaleString();
-                await dbSaveNote(notes[idx]);
-                renderList();
-            }
-        }, 300);
+        const idx = notes.findIndex(n => n.id === currentNoteId);
+        if (idx > -1) {
+            notes[idx].title = document.getElementById('noteTitle').value;
+            notes[idx].body = document.getElementById('noteBody').innerHTML;
+            notes[idx].date = new Date().toLocaleString();
+            await dbSaveAll(notes);
+            renderList();
+        }
     }
 
     async function deleteCurrentNote() {
         if (!confirm('削除しますか？')) return;
-        await dbDeleteNote(currentNoteId);
         notes = notes.filter(n => n.id !== currentNoteId);
         currentNoteId = null;
-        document.getElementById('editorPlaceholder').style.display = 'block';
+        await dbSaveAll(notes);
+        document.getElementById('editorPlaceholder').style.display = 'flex';
         document.getElementById('editorContent').style.display = 'none';
         renderList();
     }
 
+    function toggleSidebar() {
+        sidebar.classList.toggle('collapsed');
+    }
 
-    document.getElementById('noteBody').addEventListener('paste', async (e) => {
+    document.getElementById('noteBody').addEventListener('paste', (e) => {
         const items = (e.clipboardData || e.originalEvent.clipboardData).items;
         for (let item of items) {
             if (item.kind === 'file') {
-                e.preventDefault);
                 const blob = item.getAsFile();
                 const reader = new FileReader();
-                reader.onload = async (event) => {
+                reader.onload = (event) => {
                     const img = document.createElement('img');
                     img.src = event.target.result;
-                    
-
-                    const selection = window.getSelection();
-                    if (selection.rangeCount) {
-                        const range = selection.getRangeAt(0);
-                        range.deleteContents();
-                        range.insertNode(img);
-
-                        const br = document.createElement('br');
-                        img.after(br);
-                        range.setStartAfter(br);
-                        range.collapse(true);
-                    } else {
-                        document.getElementById('noteBody').appendChild(img);
-                    }
-                    
-                    await updateCurrentNote();
+                    document.execCommand('insertElement', false, img);
                 };
                 reader.readAsDataURL(blob);
             }
@@ -290,8 +290,8 @@
         const reader = new FileReader();
         reader.onload = async (e) => {
             const imported = JSON.parse(e.target.result);
-            for(let n of imported) await dbSaveNote(n);
-            notes = await dbGetAll();
+            notes = confirm('既存のメモを消去して上書きしますか？') ? imported : [...imported, ...notes];
+            await dbSaveAll(notes);
             renderList();
         };
         reader.readAsText(event.target.files[0]);
