@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
@@ -7,6 +8,7 @@
         :root {
             --bg-color: #f5f5f5;
             --sidebar-bg: #ffffff;
+            --editor-bg: #ffffff;
             --border-color: #ddd;
             --primary: #1a73e8;
             --primary-hover: #1557b0;
@@ -14,14 +16,30 @@
             --text-sub: #666;
             --sidebar-width: 300px;
         }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #121212;
+                --sidebar-bg: #1e1e1e;
+                --editor-bg: #1e1e1e;
+                --border-color: #333;
+                --primary: #8ab4f8;
+                --primary-hover: #aecbfa;
+                --text-main: #e8eaed;
+                --text-sub: #9aa0a6;
+            }
+        }
+
         body, html {
             margin: 0; padding: 0; height: 100%;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background-color: var(--bg-color); color: var(--text-main);
             overflow: hidden;
         }
+
         .container { display: flex; height: 100vh; position: relative; }
         
+
         .sidebar { 
             width: var(--sidebar-width); 
             min-width: 50px;
@@ -29,145 +47,140 @@
             border-right: 1px solid var(--border-color); 
             display: flex; 
             flex-direction: column;
-            transition: width 0.2s ease;
+            transition: transform 0.3s ease, width 0.3s ease;
             position: relative;
+            z-index: 200;
         }
-    
-        .sidebar.collapsed {
-            width: 0px;
-            min-width: 0px;
-            border-right: none;
-            overflow: hidden;
-        }
+        .sidebar.collapsed { width: 0px; min-width: 0px; border-right: none; overflow: hidden; }
 
         .sidebar-header { padding: 15px; border-bottom: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 10px; min-width: 250px; }
-        .btn { padding: 8px 12px; background-color: var(--primary); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: bold; white-space: nowrap; }
-        .btn:hover { background-color: var(--primary-hover); }
-        .btn-outline { background-color: white; color: var(--text-main); border: 1px solid #ccc; }
-        .btn-danger { background-color: #dc3545; }
-        .file-controls { display: flex; gap: 5px; }
-        .file-controls button { flex: 1; font-size: 11px; }
-
         .note-list { flex: 1; overflow-y: auto; list-style: none; margin: 0; padding: 0; min-width: 250px; }
-        .note-item { padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; }
-        .note-item:hover { background-color: #f8f9fa; }
-        .note-item.active { background-color: #e8f0fe; border-left: 4px solid var(--primary); }
-        .note-item-title { font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .note-item-date { font-size: 12px; color: var(--text-sub); }
-        .resizer {
-            width: 4px;
-            cursor: col-resize;
-            background-color: transparent;
-            transition: background-color 0.2s;
-            z-index: 10;
-        }
-        .resizer:hover { background-color: var(--primary); }
-        .editor { flex: 1; display: flex; flex-direction: column; background: white; position: relative; }
+        .note-item { padding: 15px; border-bottom: 1px solid var(--border-color); cursor: pointer; }
+        .note-item.active { background-color: rgba(138, 180, 248, 0.15); border-left: 4px solid var(--primary); }
+
+
+        .btn { padding: 8px 12px; background-color: var(--primary); color: #000; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: bold; }
+        .btn-danger { background-color: #f28b82; }
+
+
+        .editor { flex: 1; display: flex; flex-direction: column; background: var(--editor-bg); position: relative; height: 100%; }
         
+
         .toggle-sidebar {
-            position: absolute;
-            left: 10px;
-            top: 15px;
-            z-index: 100;
-            background: white;
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            padding: 5px 8px;
+            position: fixed;
+            left: 10px; top: 10px; 
+            z-index: 300;
+            background: var(--primary); 
+            color: #000;
+            border: none; border-radius: 50%;
+            width: 40px; height: 40px;
             cursor: pointer;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px;
+        }
+
+
+        .editor-overlay {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.05);
+            z-index: 100;
+            cursor: not-allowed;
+        }
+
+        body:not(.sidebar-collapsed) .editor-overlay {
+            display: block;
         }
 
         .editor-content-wrapper {
-            padding: 60px 40px 20px 40px;
+            padding: 70px 40px 20px 40px;
             flex: 1;
             display: flex;
             flex-direction: column;
+            align-items: center;
+            overflow-y: auto;
         }
 
-        .editor-placeholder { flex: 1; display: flex; align-items: center; justify-content: center; color: var(--text-sub); }
-        .editor-content { display: none; flex-direction: column; height: 100%; }
-        .editor-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; gap: 15px; }
-        #noteTitle { font-size: 24px; border: none; outline: none; width: 100%; font-weight: bold; }
-        
+        .editor-content { 
+            display: none; flex-direction: column; 
+            width: 100%; max-width: 750px; height: 100%;
+        }
+
+        #noteTitle { 
+            background: transparent; color: var(--text-main);
+            font-size: 24px; border: none; outline: none; width: 100%; font-weight: bold; margin-bottom: 20px;
+        }
 
         #noteBody { 
-            flex: 1; 
-            border: none; 
-            outline: none; 
-            font-size: 16px; 
-            line-height: 1.6; 
-            overflow-y: auto;
-            word-break: break-all;
+            flex: 1; background: transparent; color: var(--text-main);
+            border: none; outline: none; font-size: 16px; line-height: 1.8; 
+            padding-right: 15px;
+            padding-bottom: 200px;
         }
-        #noteBody img { max-width: 100%; height: auto; border-radius: 4px; margin: 10px 0; }
+        #noteBody img { max-width: 100%; border-radius: 8px; }
 
-        #fileInput { display: none; }
-
-
+        /* モバイル対応 */
         @media (max-width: 768px) {
-            :root { --sidebar-width: 85vw; }
-            .sidebar { position: absolute; left: 0; top: 0; height: 100%; z-index: 50; box-shadow: 2px 0 8px rgba(0,0,0,0.15); }
-            .sidebar.collapsed { transform: translateX(-100%); }
-            .resizer { display: none !important; }
-            .editor-content-wrapper { padding: 60px 20px 20px 20px; }
-            
-
-            .editor-header { flex-direction: row; } 
-            #noteTitle { font-size: 18px; }
+            :root { --sidebar-width: 80vw; }
+            .sidebar { position: absolute; height: 100%; transform: translateX(0); }
+            .sidebar.collapsed { transform: translateX(-100%); width: 80vw; }
+            .editor-content-wrapper { padding: 70px 20px 20px 20px; }
         }
     </style>
 </head>
-<body>
+<body class="">
 
 <div class="container">
+    <button class="toggle-sidebar" onclick="toggleSidebar()">☰</button>
+
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
-            <button class="btn" onclick="createNewNote()">＋ 新しいメモを追加</button>
-            <div class="file-controls">
-                <button class="btn btn-outline" onclick="exportToFile()">保存(JSON)</button>
-                <button class="btn btn-outline" onclick="document.getElementById('fileInput').click()">読込(JSON)</button>
-                <input type="file" id="fileInput" accept=".json" onchange="importFromFile(event)">
+            <button class="btn" onclick="createNewNote()">＋ 新しいメモ</button>
+            <div style="display:flex; gap:5px;">
+                <button class="btn" style="flex:1; font-size:10px;" onclick="exportToFile()">JSON保存</button>
+                <button class="btn" style="flex:1; font-size:10px;" onclick="document.getElementById('fileInput').click()">読込</button>
             </div>
+            <input type="file" id="fileInput" accept=".json" style="display:none;" onchange="importFromFile(event)">
         </div>
         <ul class="note-list" id="noteList"></ul>
     </div>
 
-    <div class="resizer" id="resizer"></div>
-
     <div class="editor">
-        <button class="toggle-sidebar" onclick="toggleSidebar()" title="サイドバーの開閉">☰</button>
+
+        <div class="editor-overlay" onclick="toggleSidebar()"></div>
         
         <div class="editor-content-wrapper">
-            <div class="editor-placeholder" id="editorPlaceholder">メモを選択するか新規作成してください</div>
+            <div id="editorPlaceholder" style="color:var(--text-sub); margin-top:100px;">メモを選択してください</div>
             <div class="editor-content" id="editorContent">
-                <div class="editor-header">
-                    <input type="text" id="noteTitle" placeholder="タイトルなし" oninput="updateCurrentNote()">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <input type="text" id="noteTitle" placeholder="タイトル" oninput="updateCurrentNote()">
                     <button class="btn btn-danger" onclick="deleteCurrentNote()">削除</button>
                 </div>
-
-                <div id="noteBody" contenteditable="true" oninput="updateCurrentNote()" placeholder="内容を入力（画像をペーストできます）..."></div>
+                <div id="noteBody" contenteditable="true" oninput="updateCurrentNote()" placeholder="内容を入力..."></div>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-
-    const DB_NAME = 'NotesAppDB';
+    const DB_NAME = 'NotesAppDB_V3';
     const STORE_NAME = 'notes';
-    let db;
+    let db, notes = [], currentNoteId = null;
+
+
+    function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        sidebar.classList.toggle('collapsed');
+        document.body.classList.toggle('sidebar-collapsed', sidebar.classList.contains('collapsed'));
+    }
 
     const initDB = () => {
         return new Promise((resolve) => {
             const request = indexedDB.open(DB_NAME, 1);
-            request.onupgradeneeded = (e) => {
-                const db = e.target.result;
-                db.createObjectStore(STORE_NAME, { keyPath: 'id' });
-            };
-            request.onsuccess = (e) => {
-                db = e.target.result;
-                resolve();
-            };
+            request.onupgradeneeded = (e) => e.target.result.createObjectStore(STORE_NAME, { keyPath: 'id' });
+            request.onsuccess = (e) => { db = e.target.result; resolve(); };
         });
     };
 
@@ -175,34 +188,26 @@
         const tx = db.transaction(STORE_NAME, 'readwrite');
         const store = tx.objectStore(STORE_NAME);
         await store.clear();
-        for (const note of notesArray) {
-            store.put(note);
-        }
+        notesArray.forEach(n => store.put(n));
     };
 
     const dbGetAll = () => {
         return new Promise((resolve) => {
             const tx = db.transaction(STORE_NAME, 'readonly');
-            const store = tx.objectStore(STORE_NAME);
-            const request = store.getAll();
-            request.onsuccess = () => resolve(request.result);
+            tx.objectStore(STORE_NAME).getAll().onsuccess = (e) => resolve(e.target.result);
         });
     };
-
-    let notes = [];
-    let currentNoteId = null;
-    const sidebar = document.getElementById('sidebar');
-    const resizer = document.getElementById('resizer');
-    let isResizing = false;
 
     window.onload = async () => {
         await initDB();
         notes = await dbGetAll();
-
         notes.sort((a, b) => new Date(b.date) - new Date(a.date));
         renderList();
         
-        if (window.innerWidth <= 768) sidebar.classList.add('collapsed');
+
+        if (window.innerWidth <= 768) {
+            toggleSidebar(); 
+        }
     };
 
     function renderList() {
@@ -212,25 +217,17 @@
             const li = document.createElement('li');
             li.className = `note-item ${note.id === currentNoteId ? 'active' : ''}`;
             li.onclick = () => selectNote(note.id);
-            li.innerHTML = `
-                <div class="note-item-title">${note.title || '（無題）'}</div>
-                <div class="note-item-date">${note.date}</div>
-            `;
+            li.innerHTML = `<div style="font-weight:bold;">${note.title || '（無題）'}</div><div style="font-size:11px; color:var(--text-sub)">${note.date}</div>`;
             listEl.appendChild(li);
         });
     }
 
     async function createNewNote() {
-        const newNote = {
-            id: Date.now().toString(),
-            title: '',
-            body: '',
-            date: new Date().toLocaleString()
-        };
+        const newNote = { id: Date.now().toString(), title: '', body: '', date: new Date().toLocaleString() };
         notes.unshift(newNote);
         await dbSaveAll(notes);
         selectNote(newNote.id);
-        if (window.innerWidth <= 768) sidebar.classList.add('collapsed');
+        if (!document.body.classList.contains('sidebar-collapsed')) toggleSidebar();
     }
 
     function selectNote(id) {
@@ -243,7 +240,7 @@
             document.getElementById('noteBody').innerHTML = note.body;
         }
         renderList();
-        if (window.innerWidth <= 768) sidebar.classList.add('collapsed');
+        if (!document.body.classList.contains('sidebar-collapsed')) toggleSidebar();
     }
 
     async function updateCurrentNote() {
@@ -263,25 +260,10 @@
         notes = notes.filter(n => n.id !== currentNoteId);
         currentNoteId = null;
         await dbSaveAll(notes);
-        document.getElementById('editorPlaceholder').style.display = 'flex';
+        document.getElementById('editorPlaceholder').style.display = 'block';
         document.getElementById('editorContent').style.display = 'none';
         renderList();
     }
-
-
-    function toggleSidebar() {
-        sidebar.classList.toggle('collapsed');
-        resizer.style.display = sidebar.classList.contains('collapsed') ? 'none' : 'block';
-    }
-
-    resizer.addEventListener('mousedown', () => { isResizing = true; document.body.style.cursor = 'col-resize'; });
-    document.addEventListener('mousemove', (e) => {
-        if (!isResizing || window.innerWidth <= 768) return;
-        let newWidth = e.clientX;
-        if (newWidth > 150 && newWidth < 600) document.documentElement.style.setProperty('--sidebar-width', newWidth + 'px');
-    });
-    document.addEventListener('mouseup', () => { isResizing = false; document.body.style.cursor = 'default'; });
-
 
     document.getElementById('noteBody').addEventListener('paste', (e) => {
         const items = (e.clipboardData || e.originalEvent.clipboardData).items;
@@ -292,46 +274,28 @@
                 reader.onload = (event) => {
                     const img = document.createElement('img');
                     img.src = event.target.result;
-
                     document.execCommand('insertElement', false, img);
-                    updateCurrentNote();
                 };
                 reader.readAsDataURL(blob);
             }
         }
     });
 
-
     function exportToFile() {
-        if (notes.length === 0) return alert('メモがありません');
         const blob = new Blob([JSON.stringify(notes, null, 2)], {type: 'application/json'});
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.href = url;
-        a.download = `notes_db_backup.json`;
-        a.click();
-        URL.revokeObjectURL(url);
+        a.href = url; a.download = `notes_backup.json`; a.click();
     }
 
     function importFromFile(event) {
-        const file = event.target.files[0];
-        if (!file) return;
         const reader = new FileReader();
         reader.onload = async (e) => {
-            try {
-                const imported = JSON.parse(e.target.result);
-                if (Array.isArray(imported)) {
-                    if (notes.length > 0 && !confirm('既存のメモを上書きしますか？（キャンセルで追加）')) {
-                        notes = [...imported, ...notes];
-                    } else { notes = imported; }
-                    await dbSaveAll(notes);
-                    renderList();
-                    alert('読み込み完了');
-                }
-            } catch(err) { alert('エラー：ファイルの形式が正しくありません'); }
+            notes = JSON.parse(e.target.result);
+            await dbSaveAll(notes);
+            renderList();
         };
-        reader.readAsText(file);
-        event.target.value = '';
+        reader.readAsText(event.target.files[0]);
     }
 </script>
 </body>
