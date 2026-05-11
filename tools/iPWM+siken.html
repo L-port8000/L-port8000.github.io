@@ -1,314 +1,407 @@
-<!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>iPWM Secure</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <style>
-        :root {
-            --ios-bg: #000000;
-            --ios-card: #1c1c1e;
-            --ios-accent: #0a84ff;
-            --ios-text: #ffffff;
-            --ios-subtext: #8e8e93;
-            --ios-separator: #38383a;
-            --ios-red: #ff453a;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WebCrypto & Argon2 Password Manager</title>
+<script src="https://cdn.jsdelivr.net/npm/argon2-browser@1.18.0/dist/argon2-bundled.min.js"></script>
 
-        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: var(--ios-bg); color: var(--ios-text); margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; overflow-x: hidden; }
+<style>
+:root {
+    --bg: #0f172a; --panel: #1e293b; --text: #f8fafc; --text-muted: #94a3b8;
+    --accent: #3b82f6; --accent-hover: #2563eb; --danger: #ef4444; --border: #334155;
+    --success: #10b981; --success-hover: #059669;
+}
 
-        #authOverlay, #settingsView {
-            position: fixed; inset: 0; background: var(--ios-bg); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px;
-        }
+body {
+    font-family: system-ui, sans-serif; background: var(--bg); color: var(--text);
+    margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh;
+}
 
-        .auth-card { width: 100%; max-width: 300px; text-align: center; }
-        .pw-input { width: 100%; padding: 15px; background: var(--ios-card); border: 1px solid var(--ios-separator); border-radius: 12px; color: white; font-size: 18px; text-align: center; margin-bottom: 20px; box-sizing: border-box; outline: none; }
-        .unlock-btn { background: var(--ios-accent); color: white; border: none; padding: 12px 30px; border-radius: 20px; font-size: 16px; font-weight: 600; cursor: pointer; margin-bottom: 10px; width: 100%; text-decoration: none; display: inline-block; box-sizing: border-box; }
+.container {
+    width: 100%; max-width: 500px; background: var(--panel); padding: 2rem;
+    border-radius: 12px; box-sizing: border-box; display: none; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+}
 
-        .nav-bar { position: sticky; top: 0; display: flex; justify-content: space-between; align-items: center; padding: 10px 16px; background: rgba(28, 28, 30, 0.8); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-bottom: 0.5px solid var(--ios-separator); height: 44px; z-index: 100; }
-        .nav-title { font-weight: 600; font-size: 17px; position: absolute; left: 50%; transform: translateX(-50%); pointer-events: none; white-space: nowrap; }
-        .nav-btn { color: var(--ios-accent); background: none; border: none; font-size: 16px; cursor: pointer; min-width: 44px; padding: 5px 0; }
-        
-        .container { padding: 16px; max-width: 600px; margin: auto; }
-        .ios-list { background: var(--ios-card); border-radius: 10px; overflow: hidden; margin-bottom: 24px; animation: fadeIn 0.3s ease-out; }
-        .list-item { padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 0.5px solid var(--ios-separator); cursor: pointer; transition: background 0.2s; }
-        .list-item:active { background: #3a3a3c; }
+h2 { margin-top: 0; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
 
-        .input-group { background: var(--ios-card); border-radius: 10px; padding: 0 16px; margin-bottom: 20px; }
-        label { color: var(--ios-subtext); font-size: 12px; display: block; padding-top: 10px; }
-        input, textarea { width: 100%; background: transparent; border: none; color: white; font-size: 17px; padding: 12px 0; border-bottom: 0.5px solid var(--ios-separator); outline: none; }
-        
-        .fab { position: fixed; bottom: 30px; right: 24px; width: 56px; height: 56px; background: var(--ios-accent); border-radius: 28px; border: none; color: white; font-size: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); cursor: pointer; z-index: 90; }
-        .hidden { display: none !important; }
+#loading { text-align: center; color: var(--text-muted); font-size: 1.2rem; }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes shake { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(0.5deg); } 75% { transform: rotate(-0.5deg); } }
-        .edit-active { animation: shake 0.2s infinite; color: var(--ios-accent); border-left: 3px solid var(--ios-accent); }
-    </style>
+input, button {
+    width: 100%; padding: 10px; margin-top: 10px; border-radius: 6px; box-sizing: border-box;
+    border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 1rem;
+}
+
+input:focus { outline: none; border-color: var(--accent); }
+
+button {
+    background: var(--accent); color: white; border: none; cursor: pointer; font-weight: bold; margin-top: 15px;
+}
+button:hover { background: var(--accent-hover); }
+
+.btn-secondary { background: transparent; border: 1px solid var(--accent); color: var(--accent); }
+.btn-secondary:hover { background: rgba(59, 130, 246, 0.1); }
+.btn-danger { background: transparent; border: 1px solid var(--danger); color: var(--danger); }
+.btn-danger:hover { background: rgba(239, 68, 68, 0.1); }
+.btn-success { background: var(--success); border-color: var(--success); }
+.btn-success:hover { background: var(--success-hover); }
+
+.error-msg { color: var(--danger); display: none; margin-top: 5px; font-size: 0.85rem; }
+
+.vault-item { background: var(--bg); border: 1px solid var(--border); padding: 15px; border-radius: 6px; margin-top: 10px; }
+.flex-row { display: flex; gap: 10px; align-items: center; }
+</style>
 </head>
+
 <body>
 
-<div id="authOverlay">
-    <div class="auth-card">
-        <h2>iPWM Secure</h2>
-        <input type="password" id="masterPwInput" class="pw-input" placeholder="Password" autofocus>
-        <button class="unlock-btn" onclick="initApp()">Unlock</button>
-    </div>
+<div id="loading">Loading Argon2 & WebCrypto...</div>
+
+<div id="setup-view" class="container">
+    <h2>Set Master Password</h2>
+    <p style="font-size: 0.85rem; color: var(--text-muted);">初回セットアップ（Argon2id + AES-GCM 256bit）</p>
+    <input type="password" id="setup-pwd" placeholder="Master Password">
+    <input type="password" id="setup-pwd-confirm" placeholder="Confirm Password">
+    <div id="setup-error" class="error-msg"></div>
+    <button onclick="setupMaster()" id="btn-setup">Start Setup</button>
 </div>
 
-<div id="settingsView" class="hidden">
-    <div class="auth-card">
-        <h2>Settings</h2>
-        
-        <div style="margin-bottom: 30px;">
-            <p style="color:var(--ios-subtext); font-size:13px;">デスクトップ用のWindowsアプリ版をダウンロードします。</p>
-            <a href="./app/ipwm-secure.zip" download="ipwm-secure.zip" class="unlock-btn" style="background:#5856d6;">Windowsアプリ (.HTA) をダウンロード</a>
+<div id="login-view" class="container">
+    <h2>Unlock Vault</h2>
+    <input type="password" id="login-pwd" placeholder="Master Password" onkeydown="if(event.key==='Enter') login()">
+    <div id="login-error" class="error-msg">Unlock failed. Password incorrect or data corrupted.</div>
+    <button onclick="login()" id="btn-login">Unlock</button>
+    
+    <div style="margin-top: 30px; border-top: 1px solid var(--border); padding-top: 20px;">
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0;">データを復元する</p>
+        <button class="btn-secondary" onclick="document.getElementById('import-file').click()">Import JSON Backup</button>
+        <input type="file" id="import-file" style="display:none" accept=".json" onchange="importData(event)">
+    </div>
+
+</div>
+
+<div id="main-view" class="container" style="max-width: 600px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <h2>My Vault</h2>
+        <button class="btn-secondary" style="width: auto; padding: 5px 15px; margin: 0;" onclick="exportData()">Export</button>
+    </div>
+    
+    <input type="text" id="search-input" placeholder="🔍 Search App or Email..." oninput="renderVault()" style="margin-top: 0; margin-bottom: 20px;">
+    
+    <div id="item-form-container" style="background: var(--panel); border: 1px solid var(--border); padding: 15px; border-radius: 6px; margin-bottom: 20px; transition: border-color 0.3s;">
+        <label id="form-label" style="font-size: 0.85rem; color: var(--text-muted); font-weight: bold;">Add New Item</label>
+        <div class="flex-row">
+            <input type="text" id="new-app" placeholder="App Name">
+            <input type="text" id="new-email" placeholder="Email / User">
         </div>
-
-        <hr style="border:0; border-top:0.5px solid var(--ios-separator); margin-bottom:20px;">
-
-        <div style="margin-bottom: 30px;">
-            <p style="color:var(--ios-subtext); font-size:13px;">バックアップファイルを読み込み、現在のデータをすべて上書きします。</p>
-            <input type="file" id="importFile" class="hidden" accept=".txt" onchange="handleImport(this)">
-            <button class="unlock-btn" style="background:#32d74b;" onclick="document.getElementById('importFile').click()">Import from File</button>
+        <input type="text" id="new-pass" placeholder="Password (ex: mySecret123)" style="font-family: monospace;">
+        
+        <div class="flex-row" style="margin-top: 15px;">
+            <button id="btn-save-item" onclick="saveOrUpdateItem()" style="margin-top: 0; flex-grow: 1;">+ Add to Vault</button>
+            <button id="btn-cancel-edit" class="btn-secondary" onclick="cancelEdit()" style="display:none; margin-top: 0; width: auto; padding: 0 20px;">Cancel</button>
         </div>
-        
-        <hr style="border:0; border-top:0.5px solid var(--ios-separator); margin-bottom:20px;">
-        
-        <h2>Change Password</h2>
-        <input type="password" id="newPwInput" class="pw-input" placeholder="New Password">
-        <input type="password" id="confirmPwInput" class="pw-input" placeholder="Confirm">
-        <button class="unlock-btn" onclick="changeMasterPassword()">Update Password</button>
-        <button class="nav-btn" style="display:block; margin: 10px auto; color:var(--ios-red);" onclick="toggleSettings()">Close</button>
     </div>
-</div>
 
-<div class="nav-bar">
-    <div style="min-width:60px;">
-        <button id="backBtn" class="nav-btn hidden" onclick="goBack()">＜</button>
-        <button id="setBtn" class="nav-btn" onclick="toggleSettings()">⚙️</button>
-    </div>
-    <div id="viewTitle" class="nav-title">Vault</div>
-    <div style="min-width:60px; text-align:right;">
-        <button id="editBtn" class="nav-btn" onclick="toggleEditMode()">編集</button>
-        <button id="exportBtn" class="nav-btn" onclick="exportToTxt()">出力</button>
-    </div>
+    <div id="vault-list"></div>
 </div>
-
-<div class="container">
-    <div id="listView" class="ios-list"></div>
-    <div id="formView" class="hidden">
-        <div class="input-group" id="inputs"></div>
-        <button class="nav-btn" style="width:100%; font-size:18px; font-weight:600; margin-top:20px;" onclick="saveData()">完了</button>
-        <button id="deleteBtn" class="nav-btn" style="color:var(--ios-red); width:100%; margin-top:20px;" onclick="deleteItem()">削除</button>
-    </div>
-</div>
-
-<button id="addBtn" class="fab" onclick="showAddForm()">＋</button>
 
 <script>
-    let db = [];
-    let currentPath = []; 
-    let isEditMode = false;
-    let masterKey = "";
+let vault = {
+    items: [], folders: [], meta: { version: 1, created: Date.now() }
+};
 
-    function initApp() {
-        const pw = document.getElementById('masterPwInput').value;
-        if (!pw) return;
-        masterKey = pw;
-        const encryptedData = localStorage.getItem('pwm_secure_v1');
-        if (encryptedData) {
-            try {
-                const bytes = CryptoJS.AES.decrypt(encryptedData, masterKey);
-                const decryptedText = bytes.toString(CryptoJS.enc.Utf8);
-                if (!decryptedText) throw new Error();
-                db = JSON.parse(decryptedText);
-            } catch (e) { alert("パスワードが違います"); return; }
-        }
-        document.getElementById('authOverlay').classList.add('hidden');
-        render();
-    }
+let vaultKey = null;
+let editingId = null;
 
-    function toggleSettings() { document.getElementById('settingsView').classList.toggle('hidden'); }
+const enc = new TextEncoder();
+const dec = new TextDecoder();
 
-    function handleImport(input) {
-        const file = input.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const content = e.target.result;
-            try {
-                const newDb = parseBackupTxt(content);
-                if (newDb.length === 0) throw new Error("有効なデータが見つかりませんでした");
-                if (confirm("データを上書きしますか？現在のデータは消去されます。")) {
-                    db = newDb;
-                    saveDataToStorage();
-                    render();
-                    toggleSettings();
-                    alert("インポートが完了しました");
-                }
-            } catch (err) { alert("エラー: " + err.message); }
-            input.value = ""; 
-        };
-        reader.readAsText(file);
-    }
+window.onload = () => {
+    setTimeout(safeInit, 500);
+};
 
-    function parseBackupTxt(txt) {
-        const lines = txt.split('\n');
-        const newDb = [];
-        let currentMail = null;
-        let currentAlias = null;
+function safeInit() {
+    try {
+        const loading = document.getElementById('loading');
+        const cipher = localStorage.getItem('pm_cipher');
+        const salt = localStorage.getItem('pm_salt');
 
-        lines.forEach(line => {
-            const mailMatch = line.match(/\[Mail\]\s*(.+)/);
-            const aliasMatch = line.match(/Alias:\s*(.+)/);
-            const siteMatch = line.match(/Site:\s*(.+)/);
-            const idMatch = line.match(/ID:\s*(.+)/);
-            const pwMatch = line.match(/PW:\s*(.+)/);
+        if (loading) loading.style.display = 'none';
 
-            if (mailMatch) {
-                currentMail = { email: mailMatch[1].trim(), aliases: [] };
-                newDb.push(currentMail);
-            } else if (aliasMatch && currentMail) {
-                currentAlias = { alias: aliasMatch[1].trim(), sites: [] };
-                currentMail.aliases.push(currentAlias);
-            } else if (siteMatch && currentAlias) {
-                currentAlias.sites.push({ siteName: siteMatch[1].trim(), user: "", pass: "", memo: "" });
-            } else if (idMatch && currentAlias) {
-                const lastSite = currentAlias.sites[currentAlias.sites.length - 1];
-                if (lastSite) lastSite.user = idMatch[1].trim();
-            } else if (pwMatch && currentAlias) {
-                const lastSite = currentAlias.sites[currentAlias.sites.length - 1];
-                if (lastSite) lastSite.pass = pwMatch[1].trim();
-            }
-        });
-        return newDb;
-    }
-
-    function changeMasterPassword() {
-        const newPw = document.getElementById('newPwInput').value;
-        if (newPw !== document.getElementById('confirmPwInput').value) return alert("一致しません");
-        masterKey = newPw;
-        saveDataToStorage();
-        alert("更新しました");
-        toggleSettings();
-    }
-
-    function render() {
-        const lv = document.getElementById('listView');
-        const fv = document.getElementById('formView');
-        lv.innerHTML = ''; fv.classList.add('hidden'); lv.classList.remove('hidden');
-        document.getElementById('addBtn').classList.remove('hidden');
-        const depth = currentPath.length;
-        let list = getListAtCurrentDepth();
-        document.getElementById('setBtn').classList.toggle('hidden', depth > 0);
-        document.getElementById('exportBtn').classList.toggle('hidden', depth > 0 || isEditMode);
-        document.getElementById('backBtn').classList.toggle('hidden', depth === 0);
-        document.getElementById('editBtn').classList.toggle('hidden', depth === 3);
-
-        if (depth === 0) document.getElementById('viewTitle').innerText = "メール";
-        else if (depth === 1) document.getElementById('viewTitle').innerText = "エイリアス";
-        else document.getElementById('viewTitle').innerText = "アカウント";
-
-        list.forEach((item, index) => {
-            const div = document.createElement('div');
-            div.className = 'list-item' + (isEditMode ? ' edit-active' : '');
-            let name = (depth === 0) ? item.email : (depth === 1) ? item.alias : item.siteName;
-            div.innerHTML = `<span style="flex-grow:1">${name || "名称なし"}</span><span>${isEditMode ? 'Edit' : '＞'}</span>`;
-            div.onclick = () => {
-                if (isEditMode) showForm(index);
-                else { currentPath.push(index); if (currentPath.length === 3) showDetail(); else render(); }
-            };
-            lv.appendChild(div);
-        });
-    }
-
-    function getListAtCurrentDepth() {
-        if (currentPath.length === 0) return db;
-        if (currentPath.length === 1) return db[currentPath[0]].aliases || (db[currentPath[0]].aliases = []);
-        if (currentPath.length === 2) return db[currentPath[0]].aliases[currentPath[1]].sites || (db[currentPath[0]].aliases[currentPath[1]].sites = []);
-        return [];
-    }
-
-    function showAddForm() { isEditMode = false; showForm(null); }
-
-    function showForm(editIndex) {
-        document.getElementById('listView').classList.add('hidden');
-        document.getElementById('addBtn').classList.add('hidden');
-        document.getElementById('formView').classList.remove('hidden');
-        const inputs = document.getElementById('inputs');
-        inputs.dataset.editIndex = editIndex;
-        let list = getListAtCurrentDepth();
-        let data = (editIndex !== null) ? list[editIndex] : {};
-        let label = (currentPath.length === 0) ? "メールアドレス" : (currentPath.length === 1) ? "エイリアス名" : "サイト名";
-        inputs.innerHTML = `<label>${label}</label><input id="f1" value="${data.email || data.alias || data.siteName || ''}" autofocus>`;
-        document.getElementById('deleteBtn').classList.toggle('hidden', editIndex === null);
-    }
-
-    function showDetail() {
-        document.getElementById('listView').classList.add('hidden');
-        document.getElementById('addBtn').classList.add('hidden');
-        document.getElementById('formView').classList.remove('hidden');
-        const s = db[currentPath[0]].aliases[currentPath[1]].sites[currentPath[2]];
-        document.getElementById('inputs').innerHTML = `
-            <label>ユーザー名</label><input id="u" value="${s.user||''}">
-            <label>パスワード</label><input id="p" value="${s.pass||''}">
-            <label>メモ</label><textarea id="m" rows="4" style="width:100%; background:none; color:white; border:none; font-size:17px; padding:10px 0; outline:none;">${s.memo||''}</textarea>
-        `;
-        document.getElementById('inputs').dataset.editIndex = "detail";
-        document.getElementById('deleteBtn').classList.add('hidden');
-    }
-
-    function saveData() {
-        const idx = document.getElementById('inputs').dataset.editIndex;
-        let list = getListAtCurrentDepth();
-        if (idx === "detail") {
-            const s = db[currentPath[0]].aliases[currentPath[1]].sites[currentPath[2]];
-            s.user = document.getElementById('u').value; s.pass = document.getElementById('p').value; s.memo = document.getElementById('m').value;
+        if (cipher && salt) {
+            showView('login-view');
         } else {
-            const v = document.getElementById('f1').value;
-            if (idx !== "null") {
-                let item = list[idx];
-                if (currentPath.length === 0) item.email = v; else if (currentPath.length === 1) item.alias = v; else item.siteName = v;
-            } else {
-                if (currentPath.length === 0) db.push({ email: v, aliases: [] });
-                else if (currentPath.length === 1) list.push({ alias: v, sites: [] });
-                else list.push({ siteName: v, user: "", pass: "", memo: "" });
-            }
+            showView('setup-view');
         }
-        saveDataToStorage();
-        isEditMode = false; render();
+    } catch (e) {
+        console.error(e);
+        fallbackUI();
+    }
+}
+
+function fallbackUI() {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('setup-view').style.display = 'block';
+}
+
+function showView(id) {
+    document.querySelectorAll('.container').forEach(v => v.style.display = 'none');
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'block';
+    if (id === 'main-view') renderVault();
+}
+
+function toB64(buf) {
+    return btoa(String.fromCharCode(...new Uint8Array(buf)));
+}
+
+function fromB64(b64) {
+    if (!b64) return null;
+    return Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+}
+
+async function deriveKey(pwd, salt) {
+    const result = await argon2.hash({
+        pass: pwd, salt: salt, time: 3, mem: 1024 * 32, hashLen: 32, type: argon2.argon2id
+    });
+    return crypto.subtle.importKey("raw", result.hash, { name: "AES-GCM" }, false, ["encrypt", "decrypt"]);
+}
+
+async function saveVault() {
+    try {
+        if (!vaultKey) return;
+        const iv = crypto.getRandomValues(new Uint8Array(12));
+        const data = enc.encode(JSON.stringify(vault));
+        const cipher = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, vaultKey, data);
+        localStorage.setItem("pm_iv", toB64(iv));
+        localStorage.setItem("pm_cipher", toB64(cipher));
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+async function setupMaster() {
+    try {
+        const pwd = document.getElementById('setup-pwd').value;
+        const conf = document.getElementById('setup-pwd-confirm').value;
+        const err = document.getElementById('setup-error');
+        const btn = document.getElementById('btn-setup');
+
+        if (pwd.length < 4) { err.innerText = "too short"; err.style.display = "block"; return; }
+        if (pwd !== conf) { err.innerText = "not match"; err.style.display = "block"; return; }
+
+        btn.innerText = "Generating Key...";
+        btn.disabled = true;
+
+        const salt = crypto.getRandomValues(new Uint8Array(16));
+        localStorage.setItem("pm_salt", toB64(salt));
+
+        vaultKey = await deriveKey(pwd, salt);
+        vault = { items: [], folders: [], meta: { version: 1, created: Date.now() } };
+        await saveVault();
+        showView('main-view');
+
+    } catch (e) {
+        console.error(e);
+        fallbackUI();
+    }
+}
+
+async function login() {
+    const err = document.getElementById('login-error');
+    const btn = document.getElementById('btn-login');
+
+    try {
+        const pwd = document.getElementById('login-pwd').value;
+        const salt = fromB64(localStorage.getItem('pm_salt'));
+        const iv = fromB64(localStorage.getItem('pm_iv'));
+        const cipher = fromB64(localStorage.getItem('pm_cipher'));
+
+        if (!salt || !iv || !cipher) throw new Error("missing data");
+
+        btn.innerText = "Decrypting...";
+        btn.disabled = true;
+
+        const key = await deriveKey(pwd, salt);
+        const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, cipher);
+
+        vault = JSON.parse(dec.decode(plain));
+        vaultKey = key; 
+        
+        if (!vault.items) vault.items = [];
+        err.style.display = "none";
+        document.getElementById('login-pwd').value = ""; 
+        showView('main-view');
+
+    } catch (e) {
+        console.error(e);
+        err.style.display = "block";
+        btn.innerText = "Unlock";
+        btn.disabled = false;
+    }
+}
+
+async function saveOrUpdateItem() {
+    const app = document.getElementById('new-app').value;
+    const email = document.getElementById('new-email').value;
+    const pass = document.getElementById('new-pass').value;
+    
+    if(!app || !pass) return alert("App Name and Password are required!");
+    
+    if (editingId) {
+        const item = vault.items.find(v => v.id === editingId);
+        if (item) {
+            item.app = app;
+            item.email = email;
+            item.pass = pass;
+        }
+        cancelEdit();
+    } else {
+        vault.items.push({ id: Date.now(), app, email, pass });
+        
+        document.getElementById('new-app').value = "";
+        document.getElementById('new-email').value = "";
+        document.getElementById('new-pass').value = "";
     }
 
-    function deleteItem() {
-        if (!confirm("削除しますか？")) return;
-        getListAtCurrentDepth().splice(document.getElementById('inputs').dataset.editIndex, 1);
-        saveDataToStorage();
-        isEditMode = false; render();
+    await saveVault();
+    renderVault();
+}
+
+function startEdit(id) {
+    const item = vault.items.find(v => v.id === id);
+    if(!item) return;
+
+    editingId = id;
+    
+    document.getElementById('new-app').value = item.app || "";
+    document.getElementById('new-email').value = item.email || "";
+    document.getElementById('new-pass').value = item.pass || "";
+    
+    document.getElementById('form-label').innerText = "✏️ Edit Item";
+    document.getElementById('form-label').style.color = "var(--success)";
+    document.getElementById('item-form-container').style.borderColor = "var(--success)";
+    
+    const btnSave = document.getElementById('btn-save-item');
+    btnSave.innerText = "✓ Update Item";
+    btnSave.className = "btn-success";
+    
+    document.getElementById('btn-cancel-edit').style.display = "block";
+
+    document.getElementById('new-app').focus();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function cancelEdit() {
+    editingId = null;
+    
+    document.getElementById('new-app').value = "";
+    document.getElementById('new-email').value = "";
+    document.getElementById('new-pass').value = "";
+    
+    document.getElementById('form-label').innerText = "Add New Item";
+    document.getElementById('form-label').style.color = "var(--text-muted)";
+    document.getElementById('item-form-container').style.borderColor = "var(--border)";
+    
+    const btnSave = document.getElementById('btn-save-item');
+    btnSave.innerText = "+ Add to Vault";
+    btnSave.className = "";
+    
+    document.getElementById('btn-cancel-edit').style.display = "none";
+}
+
+function renderVault() {
+    const list = document.getElementById('vault-list');
+    const searchQuery = (document.getElementById('search-input').value || "").toLowerCase();
+    list.innerHTML = "";
+
+    const filteredItems = vault.items.filter(v => 
+        (v.app && v.app.toLowerCase().includes(searchQuery)) || 
+        (v.email && v.email.toLowerCase().includes(searchQuery))
+    );
+
+    if (filteredItems.length === 0) {
+        list.innerHTML = "<p style='text-align:center;color:#94a3b8;'>No items found</p>";
+        return;
     }
 
-    function saveDataToStorage() {
-        const cipher = CryptoJS.AES.encrypt(JSON.stringify(db), masterKey).toString();
-        localStorage.setItem('pwm_secure_v1', cipher);
-    }
+    [...filteredItems].reverse().forEach(v => {
+        const div = document.createElement("div");
+        div.className = "vault-item";
+        
+        const safeApp = escapeHTML(v.app);
+        const safeEmail = escapeHTML(v.email);
+        const safePass = escapeHTML(v.pass);
 
-    function goBack() { currentPath.pop(); isEditMode = false; render(); }
-    function toggleEditMode() { isEditMode = !isEditMode; render(); }
+        div.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                <strong style="font-size:1.1rem;">${safeApp}</strong>
+                <button class="btn-secondary" style="width:auto; padding:3px 12px; margin:0; font-size:0.85rem;" onclick="startEdit(${v.id})">✏️ Edit</button>
+            </div>
+            <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:10px;">${safeEmail}</div>
+            <div class="flex-row">
+                <input type="password" value="${safePass}" id="pwd-${v.id}" readonly style="margin:0; font-family:monospace; flex-grow:1;">
+                <button class="btn-secondary" style="width:auto; padding:8px 12px; margin:0;" onclick="toggleVis('pwd-${v.id}')">👁️</button>
+                <button class="btn-secondary" style="width:auto; padding:8px 12px; margin:0;" onclick="copyToClip('${safePass}')">Copy</button>
+            </div>
+        `;
+        list.appendChild(div);
+    });
+}
 
-    function exportToTxt() {
-        let txt = "--- iPWM Backup ---\n";
-        db.forEach(m => {
-            txt += `\n[Mail] ${m.email}`;
-            (m.aliases || []).forEach(a => {
-                txt += `\n  └ Alias: ${a.alias}`;
-                (a.sites || []).forEach(s => {
-                    txt += `\n    ├ Site: ${s.siteName}\n    │ ID: ${s.user}\n    │ PW: ${s.pass}`;
-                });
-            });
-        });
-        const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([txt])); a.download = 'pwm_backup.txt'; a.click();
-    }
+function toggleVis(id) {
+    const input = document.getElementById(id);
+    input.type = input.type === 'password' ? 'text' : 'password';
+}
+
+function copyToClip(str) {
+    navigator.clipboard.writeText(str).then(() => {
+        alert("クリップボードにコピーしました");
+    });
+}
+
+function escapeHTML(str) {
+    return (str||'').replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag]));
+}
+
+function exportData() {
+    const data = {
+        salt: localStorage.getItem('pm_salt'),
+        iv: localStorage.getItem('pm_iv'),
+        cipher: localStorage.getItem('pm_cipher')
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `vault_export_${new Date().getTime()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+function importData(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = ev => {
+        try {
+            const data = JSON.parse(ev.target.result);
+            if (data.salt && data.iv && data.cipher) {
+                localStorage.setItem('pm_salt', data.salt);
+                localStorage.setItem('pm_iv', data.iv);
+                localStorage.setItem('pm_cipher', data.cipher);
+                alert("データをインポートしました。マスターパスワードでロック解除してください。");
+                location.reload();
+            } else {
+                alert("無効なバックアップファイルです。");
+            }
+        } catch (err) {
+            alert("ファイルの読み込みエラー");
+        }
+    };
+    reader.readAsText(file);
+}
 </script>
+
 </body>
 </html>
