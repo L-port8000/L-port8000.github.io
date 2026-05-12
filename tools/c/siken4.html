@@ -175,16 +175,26 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Hiragino Kaku
       <div class="s-sec">
         <div class="s-lbl">先週の曜日別合計（分）※空欄=自動生成</div>
         <div class="s-card"><div class="w-grid" id="weeklyGrid"></div></div>
-      </div>
-      <div class="s-sec">
+      </div><div class="s-sec">
         <div class="s-lbl">アプリ（アイコン・名前・カテゴリ・使用分）</div>
         <div class="s-card" id="appSList"></div>
         <button class="add-btn" onclick="addApp()">＋ アプリを追加</button>
       </div>
+
+      <div class="s-sec">
+        <div class="s-lbl">データ管理</div>
+        <div class="s-card" style="padding:10px; display:flex; gap:10px;">
+          <button onclick="exportData()" style="flex:1; padding:8px; background:#3a3a3c; color:#fff; border:none; border-radius:8px; cursor:pointer; font-size:12px;">エクスポート(保存)</button>
+          <button onclick="document.getElementById('importFile').click()" style="flex:1; padding:8px; background:#3a3a3c; color:#fff; border:none; border-radius:8px; cursor:pointer; font-size:12px;">インポート(復元)</button>
+          <input type="file" id="importFile" style="display:none" accept=".json" onchange="importData(this)">
+        </div>
+      </div>
+
       <button class="apply-btn" onclick="applyAll()">適用する</button>
     </div>
   </div>
 </div>
+
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script>
@@ -519,6 +529,111 @@ function tick(){
 }
 tick();setInterval(tick,15000);
 setTimeout(()=>{switchTab('day');renderAll();},120);
+// --- IndexedDB 管理ロジック ---
+const DB_NAME = "ScreenTimeDB";
+const STORE_NAME = "settings";
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, 1);
+    request.onupgradeneeded = e => e.target.result.createObjectStore(STORE_NAME);
+    request.onsuccess = e => resolve(e.target.result);
+    request.onerror = e => reject(e.target.error);
+  });
+}
+
+async function saveToDB(data) {
+  const db = await openDB();
+  const tx = db.transaction(STORE_NAME, "readwrite");
+  tx.objectStore(STORE_NAME).put(data, "currentConfig");
+  return new Promise(resolve => tx.oncomplete = resolve);
+}
+
+async function loadFromDB() {
+  const db = await openDB();
+  const tx = db.transaction(STORE_NAME, "readonly");
+  return new Promise(resolve => {
+    const req = tx.objectStore(STORE_NAME).get("currentConfig");
+    req.onsuccess = () => resolve(req.result);
+  });
+}
+
+// --- インポート・エクスポート機能 ---
+function exportData() {
+  const blob = new Blob([JSON.stringify(S)], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `screentime_backup_${new Date().getTime()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importData(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      S = data;
+      await saveToDB(S);
+      alert("データを復元しました");
+      location.reload(); // 画面をリフレッシュして反映
+    } catch (err) {
+      alert("インポートに失敗しました。ファイル形式を確認してください。");
+    }
+  };
+  reader.readAsText(file);
+}
+
+// --- 既存の applyAll を拡張 ---
+const originalApplyAll = applyAll;
+applyAll = async function() {
+  // 元の処理を実行して S 変数を更新
+  // (もし元のapplyAllが関数宣言なら、中身を直接書き換えてもOK)
+  
+  // フォームから値を取得する既存ロジック
+  S.device = document.getElementById('cfg_device').value;
+  S.date = document.getElementById('cfg_date').value;
+  S.currentDay = parseInt(document.getElementById('cfg_day').value);
+  S.currentHour = parseInt(document.getElementById('cfg_hour').value);
+  S.update = document.getElementById('cfg_update').value;
+  for(let i=0;i<24;i++) S.hourly[i] = parseInt(document.getElementById('hh_'+i)?.value||0);
+  for(let i=0;i<7;i++){
+    const v = document.getElementById('ww_'+i)?.value;
+    S.weekly[i] = (v===''||v==null)?null:parseInt(v);
+  }
+  S.apps = S.apps.map((a,i)=>({
+    ...a,
+    name:document.getElementById('aname_'+i)?.value||a.name,
+    mins:parseInt(document.getElementById('amin_'+i)?.value||0),
+    cat:document.getElementById('acat_'+i)?.value||a.cat,
+  }));
+
+  // DBへ保存
+  await saveToDB(S);
+  
+  _cachedWeekly = null;
+  closeSettings();
+  renderAll();
+  console.log("DB Saved");
+};
+
+// --- 初期化処理の書き換え ---
+window.onload = async () => {
+  const saved = await loadFromDB();
+  if (saved) {
+    S = saved;
+    console.log("Loaded from DB");
+  }
+  tick();
+  setInterval(tick, 15000);
+  setTimeout(() => {
+    switchTab('day');
+    renderAll();
+  }, 120);
+};
 </script>
 </body>
 </html>
