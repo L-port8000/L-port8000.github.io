@@ -1,0 +1,123 @@
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="../icon.png">
+    <title>Web Tools - 一樹 / Ituki</title>
+    <link rel="stylesheet" href="../style.css">
+
+    <style>
+        .download-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .download-buttons .btn {
+            display: inline-flex;
+            align-items: center;
+            padding: 10px 16px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            border-radius: 6px;
+            color: #ffffff !important;
+            text-decoration: none !important;
+            transition: background-color 0.2s, transform 0.1s;
+            cursor: pointer;
+        }
+
+        .download-buttons .btn:active {
+            transform: scale(0.97);
+        }
+
+        .download-buttons .btn-icon {
+            margin-right: 8px;
+            font-size: 1.1rem;
+        }
+
+        .download-buttons .btn-win {
+            background-color: #0078d4;
+        }
+        .download-buttons .btn-win:hover {
+            background-color: #005a9e;
+        }
+
+        .download-buttons .btn-linux {
+            background-color: #e95420;
+        }
+        .download-buttons .btn-linux:hover {
+            background-color: #cf491b;
+        }
+
+        .download-buttons .btn-mac {
+            background-color: #1a1a1a;
+        }
+        .download-buttons .btn-mac:hover {
+            background-color: #000000;
+        }
+
+        html[data-theme="dark"] .download-buttons .btn-mac {
+            background-color: #f5f5f7;
+            color: #1a1a1a !important;
+        }
+        html[data-theme="dark"] .download-buttons .btn-mac:hover {
+            background-color: #e8e8ed;
+        }
+    </style>
+</head>
+<body>
+
+    <main>
+        <section class="archive-container">
+            <h2 data-i18n="archive_title"></h2>
+            <p data-i18n="archive_content"></p>
+
+            <div class="archive-list">
+                <article class="archive-item">
+                    <h3>QuickNAS</h3>
+                    <p>explain。</p>
+                    <div class="download-buttons">
+                        <a href="./downloads/QuickNAS.exe" class="btn btn-win" download>.exe</a>
+<!--
+                        <a href="./downloads/QuickNAS.pkg" class="btn btn-mac" download>.pkg / .dmg</a>
+                        <a href="./downloads/QuickNAS.deb" class="btn btn-linux" download>.deb</a>
+                    </div>
+                </article>
+-->
+<!--    
+                <article class="archive-item">
+                    <h3></h3>
+                    <p></p>
+                    <div class="download-buttons">
+                        <a href="./downloads/.exe" class="btn btn-win" download>.exe</a>
+                        <a href="./downloads/.pkg" class="btn btn-mac" download>.pkg / .dmg</a>
+                        <a href="./downloads/.deb" class="btn btn-linux" download>.deb</a>
+                    </div>
+                </article>
+-->
+            </div><br>
+            <p><a href="../index.html" data-i18n="backtohome">ホームに戻る</a></p>
+        </section>
+    </main>
+
+    <footer>
+        <p>© 2026 Regia:8000</p>
+    </footer>
+
+    <script src="../script.js"></script>
+    <script>
+        window.onload = () => {
+            const theme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', theme);
+
+            const themeToggle = document.getElementById('themeToggle');
+            if(themeToggle) themeToggle.checked = theme === 'dark';
+
+            if(typeof updateLanguage === "function") {
+                updateLanguage(localStorage.getItem('lang') || 'ja');
+            }
+        };
+    </script>
+</body>
+</html>
