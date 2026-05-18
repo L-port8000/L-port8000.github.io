@@ -9,8 +9,6 @@
 body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;background:#000;display:flex;justify-content:center;}
 :root{--bg:#000;--card:#1c1c1e;--card2:#2c2c2e;--sub:#ebebf5aa;--blue:#0a84ff;--sep:#3a3a3c;--red:#ff453a;}
 .phone{width:100%;max-width:393px;background:var(--bg);color:#fff;min-height:100vh;position:relative;overflow:hidden;}
-.sb{display:flex;justify-content:space-between;align-items:center;padding:15px 20px 4px;font-size:15px;font-weight:700;}
-.sb .ic{display:flex;gap:5px;align-items:center;font-size:13px;}
 .nav{display:flex;justify-content:space-between;align-items:center;padding:4px 16px 8px;}
 .bk{color:var(--blue);font-size:16px;display:flex;align-items:center;gap:2px;cursor:pointer;}
 .ti{font-size:17px;font-weight:600;text-align:center;flex:1;}
@@ -97,15 +95,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;bac
     <span>読み込み中...</span>
   </div>
 
-  <div class="sb">
-    <span id="clk">16:57</span>
-    <span class="ic">
-      <svg width="16" height="11" viewBox="0 0 16 11" fill="white"><rect x="0" y="3" width="2.5" height="8" rx=".8"/><rect x="4.3" y="1.5" width="2.5" height="9.5" rx=".8"/><rect x="8.6" y="0" width="2.5" height="11" rx=".8"/><rect x="12.9" y="0" width="2.5" height="11" rx=".8" opacity=".28"/></svg>
-      4G
-      <svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x=".5" y=".5" width="22" height="11" rx="2.5" stroke="white" stroke-opacity=".35"/><rect x="1.5" y="1.5" width="17" height="9" rx="1.8" fill="white"/><rect x="24" y="3.5" width="1.5" height="5" rx=".75" fill="white" opacity=".4"/></svg>
-    </span>
-  </div>
-  <div class="nav">
+  <div class="nav" style="padding-top:12px;">
     <div class="bk" onclick="openS()">
       <svg width="9" height="15" viewBox="0 0 9 15" fill="none"><path d="M7.5 1.5L1.5 7.5l6 6" stroke="#0a84ff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>設定
     </div>
@@ -168,8 +158,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;bac
 
   <!-- Settings -->
   <div class="sp2" id="sp2">
-    <div class="sb"><span id="sclk">16:57</span><span class="ic">4G</span></div>
-    <div class="nav">
+    <div class="nav" style="padding-top:12px;">
       <div class="bk" onclick="closeS()">
         <svg width="9" height="15" viewBox="0 0 9 15" fill="none"><path d="M7.5 1.5L1.5 7.5l6 6" stroke="#0a84ff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>戻る
       </div>
@@ -188,9 +177,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;bac
       </div></div>
 
       <div class="ss">
-        <div class="sl2">自動生成の乱数範囲</div>
-        <div class="sh2">週：当日合計 ± 分でランダム / 日：各時間 0〜最大分でランダム（合計はスケール調整）</div>
+        <div class="sl2">自動生成の設定</div>
+        <div class="sh2">週の過去曜日：基準値 ± 範囲内の完全ランダムで生成。空欄なら当日合計を基準に使用</div>
         <div class="sc2" style="margin-top:5px;">
+          <div class="sr"><label>週の基準値（分）</label><input type="number" min="0" id="c_base" placeholder="空欄=当日合計"></div>
           <div class="sr"><label>週（± 分以内）</label><input type="number" min="1" max="300" id="c_rng" value="30"></div>
           <div class="sr"><label>日（最大 分/時）</label><input type="number" min="1" max="60" id="c_hrRng" value="60"></div>
         </div>
@@ -223,7 +213,7 @@ const CATS=[
 ];
 const nc=c=>c||'other';
 let S={
-  device:'すべてのデバイス',date:'10月31日',upd:'今日 16:56',day:6,hr:16,rng:30,hrRng:60,
+  device:'すべてのデバイス',date:'10月31日',upd:'今日 16:56',day:6,hr:16,rng:30,hrRng:60,base:null,
   hourly:Array(24).fill(null),weekly:Array(7).fill(null),
   apps:[
     {name:'DQウォーク',mins:210,img:null,cat:'game'},
@@ -245,11 +235,12 @@ function ratios(){
   const r={};CATS.forEach(c=>r[c.k]=(bk[c.k]||0)/tm);return r;
 }
 
-// 週自動生成：当日 ± range 完全ランダム整数
+// 週自動生成：基準値（未設定なら当日合計）± range 完全ランダム整数
 const rnd=n=>Math.floor(Math.random()*(n*2+1))-n;
 function genWA(){
   const tm=totM(),cd=S.day,rg=S.rng||30;
-  return Array.from({length:7},(_,i)=>{if(i>cd)return 0;if(i===cd)return tm;return Math.max(10,tm+rnd(rg));});
+  const base=(S.base!==null&&S.base!==''&&!isNaN(S.base))?Number(S.base):tm;
+  return Array.from({length:7},(_,i)=>{if(i>cd)return 0;if(i===cd)return tm;return Math.max(10,base+rnd(rg));});
 }
 function resW(){
   if(!wA)wA=genWA();const tm=totM(),cd=S.day;
@@ -407,6 +398,7 @@ function buildS(){
   document.getElementById('c_day').value=String(S.day);document.getElementById('c_hr').value=String(S.hr);
   document.getElementById('c_upd').value=S.upd;document.getElementById('c_rng').value=String(S.rng||30);
   document.getElementById('c_hrRng').value=String(S.hrRng||60);
+  document.getElementById('c_base').value=(S.base!==null&&S.base!==undefined)?String(S.base):'';
   document.getElementById('hGrid').innerHTML=Array.from({length:24},(_,i)=>{
     const af=i>S.hr,v=S.hourly[i];
     return `<div class="hc"><label style="${af?'opacity:.3':''}">${i}時</label><input type="number" min="0" max="120" id="hh${i}" value="${(!af&&v!==null)?v:''}" placeholder="自動" ${af?'disabled':''}></div>`;
@@ -450,6 +442,8 @@ function applyAll(){
   S.upd=document.getElementById('c_upd').value;
   S.rng=Math.max(1,parseInt(document.getElementById('c_rng').value)||30);
   S.hrRng=Math.max(1,Math.min(60,parseInt(document.getElementById('c_hrRng').value)||60));
+  const bv=document.getElementById('c_base').value.trim();
+  S.base=(bv===''||bv==null)?null:parseInt(bv);
   for(let i=0;i<24;i++){const v=document.getElementById('hh'+i)?.value?.trim();S.hourly[i]=(v===''||v==null)?null:parseInt(v);}
   for(let i=0;i<7;i++){if(i>=S.day){S.weekly[i]=null;continue;}const v=document.getElementById('ww'+i)?.value?.trim();S.weekly[i]=(v===''||v==null)?null:parseInt(v);}
   S.apps=S.apps.map((a,i)=>({...a,name:document.getElementById('an'+i)?.value||a.name,mins:parseInt(document.getElementById('am'+i)?.value||0),cat:document.getElementById('ac'+i)?.value||a.cat}));
@@ -457,9 +451,6 @@ function applyAll(){
 }
 function openS(){buildS();document.getElementById('sp2').classList.add('open');}
 function closeS(){document.getElementById('sp2').classList.remove('open');}
-function tick(){const n=new Date(),h=String(n.getHours()).padStart(2,'0'),m=String(n.getMinutes()).padStart(2,'0'),t=h+':'+m;document.getElementById('clk').textContent=t;document.getElementById('sclk').textContent=t;}
-tick();setInterval(tick,15000);
-
 loadLocal();wA=genWA();hA=genHA();
 document.getElementById('ld').style.display='none';
 swTab('day');renderAll();
