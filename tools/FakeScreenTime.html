@@ -16,15 +16,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;bac
 /* pill tabs */
 .seg-wrap{margin:4px 16px 0;}
 .seg-bg{background:#2c2c2e;border-radius:100px;padding:3px;display:flex;}
-.sbt{flex:1;padding:6px 0;border:none;border-radius:100px;font-size:15px;font-weight:500;cursor:pointer;background:transparent;color:#8e8e93;transition:background .15s,color .15s;}
+.sbt{flex:1;padding:6px 0;border:none;border-radius:100px;font-size:15px;font-weight:600;cursor:pointer;background:transparent;color:#8e8e93;transition:background .15s,color .15s;}
 .sbt.on{background:#636366;color:#fff;}
 .sc{overflow-y:auto;padding-bottom:40px;}
 /* iOS section card */
-.icard{background:var(--card);border-radius:14px;margin:10px 16px 0;overflow:hidden;}
-.ch{padding:12px 16px 8px;}
-.ch .l{font-size:12px;color:var(--sub);}
+.icard{background:var(--card);border-radius:14px;margin:6px 16px 0;overflow:hidden;}
+.card-lbl{font-size:12px;color:var(--sub);padding:10px 16px 0;}
+.ch{padding:10px 16px 8px;}
 .ch .s{font-size:13px;color:var(--sub);margin-top:1px;}
-.ch .b{font-size:36px;font-weight:200;letter-spacing:-1px;line-height:1.15;margin-top:2px;}
+.ch .b{font-size:36px;font-weight:548;letter-spacing:-1px;line-height:1.15;margin-top:2px;}
 .cc{padding:2px 0 2px 8px;}
 .cdiv{height:.5px;background:var(--sep);}
 .cdivin{height:.5px;background:var(--sep);margin:0 10px;}
@@ -110,9 +110,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;bac
   <div class="sc">
     <!-- WEEK -->
     <div id="tW" style="display:none;">
+      <div class="card-lbl">スクリーンタイム</div>
       <div class="icard">
         <div class="ch">
-          <div class="l">スクリーンタイム</div>
           <div class="s" id="wSub">1日の平均</div>
           <div class="b" id="wBig">--</div>
         </div>
@@ -134,9 +134,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;bac
 
     <!-- DAY -->
     <div id="tD">
+      <div class="card-lbl">スクリーンタイム</div>
       <div class="icard">
         <div class="ch">
-          <div class="l">スクリーンタイム</div>
           <div class="s" id="todLbl">今日、--</div>
           <div class="b" id="dBig">--</div>
         </div>
@@ -165,6 +165,22 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;bac
       <div class="ti">スクリーンタイム設定</div><div></div>
     </div>
     <div>
+      <div class="ss"><div class="sl2">データ管理</div>
+        <div class="sc2">
+          <div class="sr" style="gap:8px;">
+            <label style="flex:1;font-size:13px;color:var(--sub);">エクスポート</label>
+            <button onclick="exportDB()" style="background:#0a84ff;color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:13px;cursor:pointer;flex-shrink:0;">JSONで保存</button>
+          </div>
+          <div class="sr" style="gap:8px;">
+            <label style="flex:1;font-size:13px;color:var(--sub);">インポート</label>
+            <label style="background:#3a3a3c;color:#fff;border-radius:8px;padding:6px 14px;font-size:13px;cursor:pointer;flex-shrink:0;">
+              JSONを読込
+              <input type="file" accept=".json,application/json" id="importFile" style="display:none;" onchange="importDB(this)">
+            </label>
+          </div>
+        </div>
+      </div>
+
       <div class="ss"><div class="sl2">デバイス名・日時</div><div class="sc2">
         <div class="sr"><label>デバイス名</label><input id="c_dev" value="すべてのデバイス"></div>
         <div class="sr"><label>今日の日付</label><input id="c_date" value="10月31日"></div>
@@ -306,7 +322,7 @@ function bldW(cid,wkly,avg,lid,bH,inter){
 }
 function updWH(wkly,avg){
   const sub=document.getElementById('wSub'),big=document.getElementById('wBig');if(!sub)return;
-  if(selDay===null){sub.textContent='1日の平均';big.textContent=fm(avg);}
+  if(selDay===null){sub.textContent='先週の平均';big.textContent=fm(avg);}
   else{sub.textContent=DAYS[selDay]+'曜日';big.textContent=fm(wkly[selDay]||0);}
 }
 function updWL(wkly){
@@ -451,6 +467,29 @@ function applyAll(){
 }
 function openS(){buildS();document.getElementById('sp2').classList.add('open');}
 function closeS(){document.getElementById('sp2').classList.remove('open');}
+
+function exportDB(){
+  const json=JSON.stringify(S,null,2);
+  const blob=new Blob([json],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download='screentime_data.json';a.click();
+  URL.revokeObjectURL(url);
+}
+function importDB(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const data=JSON.parse(e.target.result);
+      S={...S,...data};fixState();
+      wA=null;hA=null;selDay=null;
+      saveLocal();showT();closeS();renderAll();
+    }catch(err){alert('JSONの読み込みに失敗しました: '+err.message);}
+    input.value='';
+  };
+  reader.readAsText(file);
+}
 loadLocal();wA=genWA();hA=genHA();
 document.getElementById('ld').style.display='none';
 swTab('day');renderAll();
