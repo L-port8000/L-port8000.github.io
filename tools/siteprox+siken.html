@@ -1,0 +1,645 @@
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Free CGI Proxy List</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+
+:root{
+  --bg:#0b1020;
+  --panel:#111827;
+  --panel2:#1a2235;
+  --border:#263248;
+  --text:#f3f4f6;
+  --muted:#94a3b8;
+  --accent:#3b82f6;
+  --success:#22c55e;
+  --danger:#ef4444;
+}
+
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Inter',sans-serif;
+}
+
+header{
+  padding:28px 20px;
+  border-bottom:1px solid var(--border);
+  background:#0f172a;
+}
+
+header h1{
+  margin:0;
+  font-size:30px;
+  font-weight:600;
+}
+
+header p{
+  margin-top:8px;
+  color:var(--muted);
+  font-size:14px;
+}
+
+.container{
+  width:min(1600px,95%);
+  margin:auto;
+  padding:20px 0 40px;
+}
+
+.controls{
+  display:grid;
+  grid-template-columns:
+  repeat(auto-fit,minmax(170px,1fr));
+
+  gap:12px;
+
+  margin-bottom:18px;
+}
+
+input,select{
+  background:var(--panel);
+  border:1px solid var(--border);
+  color:white;
+  padding:12px 14px;
+  border-radius:10px;
+  outline:none;
+}
+
+input:focus,
+select:focus{
+  border-color:var(--accent);
+}
+
+.list{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.proxy-row{
+  display:grid;
+
+  grid-template-columns:
+  2fr
+  1fr
+  1.2fr
+  0.7fr
+  0.7fr
+  1fr
+  0.8fr
+  auto;
+
+  align-items:center;
+
+  gap:14px;
+
+  background:var(--panel);
+
+  border:1px solid var(--border);
+
+  padding:14px 16px;
+
+  border-radius:12px;
+
+  transition:0.2s;
+}
+
+.proxy-row:hover{
+  background:var(--panel2);
+}
+
+.domain{
+  font-weight:600;
+  word-break:break-word;
+}
+
+.type{
+  color:#93c5fd;
+}
+
+.speed{
+  color:#facc15;
+}
+
+.region{
+  color:var(--muted);
+  font-size:14px;
+}
+
+.youtube-ok{
+  color:#22c55e;
+  font-weight:600;
+}
+
+.youtube-mid{
+  color:#facc15;
+  font-weight:600;
+}
+
+.youtube-ng{
+  color:#ef4444;
+  font-weight:600;
+}
+
+.status-up{
+  color:var(--success);
+  font-weight:600;
+}
+
+.status-down{
+  color:var(--danger);
+  font-weight:600;
+}
+
+.actions{
+  display:flex;
+  gap:8px;
+}
+
+button{
+  border:none;
+  background:#1e293b;
+  color:white;
+  padding:9px 12px;
+  border-radius:8px;
+  cursor:pointer;
+  transition:0.2s;
+  font-size:13px;
+}
+
+button:hover{
+  background:#334155;
+}
+
+#overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.85);
+  display:none;
+  z-index:9999;
+  padding:20px;
+}
+
+#frameWrap{
+  width:100%;
+  height:100%;
+  background:white;
+  border-radius:14px;
+  overflow:hidden;
+  position:relative;
+}
+
+#frame{
+  width:100%;
+  height:100%;
+  border:none;
+}
+
+#closeBtn{
+  position:absolute;
+  top:12px;
+  right:12px;
+
+  width:40px;
+  height:40px;
+
+  border-radius:10px;
+
+  background:rgba(0,0,0,0.5);
+}
+
+.mobile-label{
+  display:none;
+}
+
+@media(max-width:1200px){
+
+  .proxy-row{
+    grid-template-columns:1fr;
+    gap:8px;
+  }
+
+  .mobile-label{
+    display:inline;
+    color:var(--muted);
+    margin-right:6px;
+  }
+
+  .actions{
+    margin-top:6px;
+  }
+
+}
+
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>Free CGI Proxy List</h1>
+  <p>free cgi proxies & site proxies</p>
+</header>
+
+<div class="container">
+
+<div class="controls">
+
+<input
+id="search"
+placeholder="Search domain or IP..."
+oninput="render()">
+
+<select id="typeFilter" onchange="render()">
+<option value="">All Types</option>
+</select>
+
+<select id="speedFilter" onchange="render()">
+<option value="">All Speeds</option>
+<option value="HIGH">HIGH</option>
+<option value="MEDIUM">MEDIUM</option>
+<option value="LOW">LOW</option>
+</select>
+
+<select id="youtubeFilter" onchange="render()">
+<option value="">Youtube All</option>
+<option value="○">○</option>
+<option value="△">△</option>
+<option value="✕">✕</option>
+</select>
+
+<select id="regionFilter" onchange="render()">
+<option value="">All Regions</option>
+</select>
+
+<select id="sort" onchange="render()">
+<option value="status">Status Priority</option>
+<option value="type">Type Sort</option>
+</select>
+
+</div>
+
+<div id="list" class="list"></div>
+
+</div>
+
+<div id="overlay">
+
+<div id="frameWrap">
+
+<button id="closeBtn" onclick="closeFrame()">
+✕
+</button>
+
+<iframe id="frame"></iframe>
+
+</div>
+
+</div>
+
+<script>
+
+const proxies=[
+
+...["pluralsight.gq","pluralsight.cf","udemy.gq","flipgrid.cf","achievementnetwork.cf","r.achievementnetwork.cf","coursera.gq","nitrotype.gq","rammerhead.eu.org","browser.rammerhead.org","shouldiboosttherammerheadserver.tk","achievementnetwork.tk","codewars.cf","r.codewars.cf","login.achievementnetwork.cf","coursera.cf","britannica.cf","absolutevalueequations.cf","platform.techsmart.gq","oldermillard.001-lab.space","tcpghe.tcp64.de","britannica.gq","keldkzk.lan64.de","myschools.fanclub.rocks","codeacademy.gq","monkeytype.tk","sentry.soraapp.gq","math.epivotp.xyz","pp.hamburger.ip-ddns.com","e.textbooks.is-great.net","platform.everfi.cf","rh.ajaxfnc.com","goxy.f5.si","hammerhead.iot64.de","googleclassroom.ipv64.net","r.outschool.gq","r.achievementnetwork.cf","membean.cf"].map(d=>({type:"Rammerhead",domain:d.replace(/^https?:\/\//,"").replace(/^www\./,""),ip:"15.204.239.204",region:"America - New York",speed:"LOW",youtube:"✕"})),
+
+...["unko.gorira.f5.si"].map(d=>({type:"Rammerhead",domain:d,ip:"208.87.240.79",region:"America - Los Angeles",speed:"LOW",youtube:"✕"})),
+
+...["nasubi314.mrco.giize.com","zisyouusotuki.f5.si","direct2.rammerhead.org","direct10.rammerhead.org","direct11.rammerhead.org","direct12.rammerhead.org","direct13.rammerhead.org"].map(d=>({type:"Rammerhead",domain:d,ip:"208.87.241.201",region:"America - Los Angeles",speed:"LOW",youtube:"✕"})),
+
+...["imgay.ofmdirect.com","damon.ndr.cl","jonahdaman.hillbrick.net","oh.zjhmz.cn","dreamofbonky.alptechflow.com","notsuchagoodideabro.quality-electronics.com","gym.clas.swork.networkindia.com","imwitboolymon.bad.mn","lyndonyay.darquemusic.com","burkholder.jake.eu"].map(d=>({type:"Rammerhead",domain:d,ip:"108.181.5.193",region:"America - Los Angeles",speed:"LOW",youtube:"✕"})),
+
+...["h.shuttlemath.com","h.shuttleproxy.com","tools.installgentoo.com","salsa.bellydancenetwork.com","cars.sudautos.cl","shuttlemathultra.0x44.info","survey.geoecon.info","calcmathwork.eminescusm.ro","ttst.mailbridge.xyz","classroomlearning.maxmirgidro.ru","bio.biologyscholar.org","wikipedialist.wikidelia.net","team.londonwhiteeagles.ca","edu.digitalminds.com.ar","static.99.207.216.95.clients.your-server.de","shuttle.bestspark.org","mathclassroom.reiman.club"].map(d=>({type:"Shuttle",domain:d,ip:"95.216.207.99",region:"Finland",speed:"MEDIUM",youtube:"○"})),
+
+...["55gms.com","55gms.me","55gms.app","algebra.learnnexus.xyz","biology.learnnexus.xyz","automagic.biz","bbqchickenalert.net","bodybiologyresources.info","flipbit.sbs","mathpoop.com","outsourcers4.biz","pantherpress.org","quizfox.sbs","tasktuna.sbs","testbolt.sbs"].map(d=>({type:"55gms",domain:d,ip:"152.53.37.155",region:"America - New York",speed:"MEDIUM",youtube:"○"})),
+
+...["decorous-mouth.surge.sh","bumpy-picture.surge.sh","best-dock.surge.sh"].map(d=>({type:"HyperTabs",domain:d,ip:"162.159.110.60",region:"Hong Kong",speed:"HIGH",youtube:"○"})),
+
+...["best-dock.surge.sh"].map(d=>({type:"HyperTabs",domain:d,ip:"172.68.119.63",region:"Hong Kong",speed:"HIGH",youtube:"○"})),
+
+...["webdico.com","ddelay.co.uk","schmidtb.de","rcdzapata.com","rcdzapata.ca","unrestrictor.com","proxy.lelouet.fr","navigationprivee.com","docoja.com","p.avaclan.net","fastp.org"].map(d=>({type:"Glype",domain:d,ip:"AUTO",region:"Various",speed:"HIGH",youtube:"✕"})),
+
+...["us1-web.getbehind.me","us2-web.getbehind.me"].map(d=>({type:"WebProxy",domain:d,ip:"199.119.137.169",region:"America - New York",speed:"LOW",youtube:"✕"})),
+
+...["sho-haihu-bydoragon.myclarevision.com","phantom.lol","alphaenglish.warna.ch","shadow.nana.abogaciadigital.ar","sdfgfdsdg.rodaroda.com.my","study.math.science.literature.homework.jskomplet.cz","easyhistory.synergy-force.com","nirbytesmgr.anteus.com","easycs.fiftytwo.ru","rapidbio.dazzos.com","chillenglish.spot.hk","heytherebud.videosatlas.com.ar","tophistory.gardenhk.co","sand.is.yummy.redijav.de","freshphysics.rojitmote.com.np","shadow.nana.sesaech.gob.mx","generalgrievous8181.malam.or.id","science.sinuabi.ee","hangouts.clients.ohbah.com","sophinaremi.djarvi.com","samuelabdoul.metropolitanstaffingsolutions.com","ooglyboogly.hbmc.net","shadow.lamplifesteal.xyz","megalogic.tomashirsch.cl","illuminatisduck.taxivoyage50.ru","epicstats.tejidosdedignidad.org","sharpliterature.aeroantenna.com","quickchem.cyberninja.ie","nirbytesprox.abwild.net","gdfyufguygufygufyw.bookworm.com.np","primemath.mrwheeler.uk","bull-learning.hoohaamelbourne.com.au","acephysics.fandoom.net"].map(d=>({type:"ShadowOS",domain:d,ip:"104.243.38.18",region:"America - Miami",speed:"MIDDLE",youtube:"✕"})),
+
+{type:"WebProxy",domain:"pc-freak.net",ip:"109.104.212.130",region:"Unknown",speed:"HIGH",youtube:"✕"},
+{type:"WebProxy",domain:"light-haihu-bynyanko.easterndns.com",ip:"172.93.102.108",region:"America - New York",speed:"LOW",youtube:"✕"},
+{type:"TRProxy",domain:"proxy.honorshard.com",ip:"40.76.224.31",region:"America - Virginia",speed:"HIGH",youtube:"✕"},
+{type:"ProxyCrime",domain:"proxycrime.com",ip:"199.231.184.74",region:"America - New Jersey",speed:"LOW",youtube:"✕"},
+{type:"UnblockProxy",domain:"stopcensoring.me",ip:"51.159.195.18",region:"France",speed:"LOW",youtube:"✕"},
+{type:"Lunar",domain:"pass.securly.eupla.com",ip:"172.93.102.108",region:"America - New York",speed:"LOW",youtube:"✕"},
+{type:"dogeub",domain:"deltamath.interdoge.cfd.cdn.cloudflare.net",ip:"172.96.141.252",region:"America - Los Angeles",speed:"LOW",youtube:"✕"}
+];
+
+const statusCache={};
+
+async function check(domain){
+
+try{
+
+await fetch(
+"https://"+domain,
+{mode:"no-cors"}
+);
+
+return "UP";
+
+}catch{
+
+return "DOWN";
+
+}
+
+}
+
+async function updateStatus(){
+
+for(const p of proxies){
+
+statusCache[p.domain]=
+await check(p.domain);
+
+}
+
+render();
+
+}
+
+function buildTypeFilter(){
+
+const select=
+document.getElementById("typeFilter");
+
+const types=
+[...new Set(
+proxies.map(p=>p.type)
+)].sort();
+
+types.forEach(t=>{
+
+const opt=
+document.createElement("option");
+
+opt.value=t;
+opt.textContent=t;
+
+select.appendChild(opt);
+
+});
+
+}
+
+function buildRegionFilter(){
+
+const select=
+document.getElementById("regionFilter");
+
+const regions=
+[...new Set(
+proxies.map(p=>p.region)
+)].sort();
+
+regions.forEach(r=>{
+
+const opt=
+document.createElement("option");
+
+opt.value=r;
+opt.textContent=r;
+
+select.appendChild(opt);
+
+});
+
+}
+
+function render(){
+
+const s=
+document
+.getElementById("search")
+.value
+.toLowerCase();
+
+const t=
+document
+.getElementById("typeFilter")
+.value;
+
+const sp=
+document
+.getElementById("speedFilter")
+.value;
+
+const yt=
+document
+.getElementById("youtubeFilter")
+.value;
+
+const rg=
+document
+.getElementById("regionFilter")
+.value;
+
+const sort=
+document
+.getElementById("sort")
+.value;
+
+let list=proxies.filter(p=>
+
+(p.domain.toLowerCase().includes(s)
+||
+p.ip.toLowerCase().includes(s))
+
+&&
+
+(t===""
+||
+p.type===t)
+
+&&
+
+(sp===""
+||
+p.speed===sp)
+
+&&
+
+(yt===""
+||
+p.youtube===yt)
+
+&&
+
+(rg===""
+||
+p.region===rg)
+
+);
+
+list.sort((a,b)=>{
+
+if(sort==="type"){
+
+return a.type.localeCompare(b.type);
+
+}
+
+return
+(statusCache[b.domain]==="UP"?1:0)
+-
+(statusCache[a.domain]==="UP"?1:0);
+
+});
+
+const el=
+document.getElementById("list");
+
+el.innerHTML="";
+
+list.forEach(p=>{
+
+const st=
+statusCache[p.domain]
+||
+"...";
+
+let ytClass="youtube-ng";
+
+if(p.youtube==="○"){
+  ytClass="youtube-ok";
+}else if(p.youtube==="△"){
+  ytClass="youtube-mid";
+}
+
+el.innerHTML+=`
+
+<div class="proxy-row">
+
+<div class="domain">
+${p.domain}
+</div>
+
+<div class="type">
+<span class="mobile-label">
+Type:
+</span>
+${p.type}
+</div>
+
+<div>
+<span class="mobile-label">
+IP:
+</span>
+${p.ip}
+</div>
+
+<div class="speed">
+<span class="mobile-label">
+Speed:
+</span>
+${p.speed}
+</div>
+
+<div class="${ytClass}">
+<span class="mobile-label">
+YT:
+</span>
+${p.youtube}
+</div>
+
+<div class="region">
+${p.region}
+</div>
+
+<div class="${
+st==="UP"
+?
+"status-up"
+:
+"status-down"
+}">
+${st}
+</div>
+
+<div class="actions">
+
+<button onclick="openFrame('${p.domain}')">
+iframe
+</button>
+
+<button onclick="openTab('${p.domain}')">
+tab
+</button>
+
+</div>
+
+</div>
+
+`;
+
+});
+
+}
+
+function openFrame(domain){
+
+document
+.getElementById("frame")
+.src="https://"+domain;
+
+document
+.getElementById("overlay")
+.style.display="block";
+
+}
+
+function closeFrame(){
+
+document
+.getElementById("overlay")
+.style.display="none";
+
+document
+.getElementById("frame")
+.src="";
+
+}
+
+function openTab(domain){
+
+window.open(
+"https://"+domain,
+"_blank"
+);
+
+}
+
+buildTypeFilter();
+buildRegionFilter();
+
+render();
+
+updateStatus();
+
+setInterval(updateStatus,15000);
+
+</script>
+
+</body>
+</html>
