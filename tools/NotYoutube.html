@@ -85,307 +85,680 @@
 <body>
 
     <header>
-        <div class="logo" onclick="showHome()">▶ Not Yourube</div>
+        <div class="logo" onclick="showHome()">▶ Not Youtube</div>
+
         <div class="search-container">
-            <button id="back-btn" onclick="returnToResults()"> ＜ 検索結果へ</button>
+
+            <button id="back-btn" onclick="returnToResults()">
+                ＜ 検索結果へ
+            </button>
+
             <select id="source-select">
-                <option value="naver">👑 NAVER (ネイバー・韓国)</option>
-                <option value="ecosia">🌱 Ecosia (環境型検索)</option>
+                <option value="naver">
+                    👑 NAVER (ネイバー・韓国)
+                </option>
+
+                <option value="ecosia">
+                    🌱 Ecosia (環境型検索)
+                </option>
             </select>
-            <input type="text" id="search-input" placeholder="検索キーワードを入力...">
-            <button id="search-btn">検索</button>
+
+            <input
+                type="text"
+                id="search-input"
+                placeholder="検索キーワードを入力..."
+            >
+
+            <button id="search-btn">
+                検索
+            </button>
+
         </div>
+
         <div style="width: 20px;"></div>
     </header>
 
     <div class="app-container">
+
         <aside class="sidebar">
-            <button id="nav-home" onclick="showHome()" class="active">🏠 ホーム</button>
-            <button id="nav-history" onclick="showHistory()">🕒 履歴</button>
+
+            <button
+                id="nav-home"
+                onclick="showHome()"
+                class="active"
+            >
+                🏠 ホーム
+            </button>
+
+            <button
+                id="nav-history"
+                onclick="showHistory()"
+            >
+                🕒 履歴
+            </button>
+
         </aside>
 
         <main class="main-content">
+
+            <!-- プレイヤー -->
             <div id="player-wrapper">
-                <div class="iframe-container" id="iframe-container"></div>
-                <h2 id="player-title" style="font-size:16px; margin:12px 0 6px 0;"></h2>
+
+                <div
+                    class="iframe-container"
+                    id="iframe-container"
+                ></div>
+
+                <h2
+                    id="player-title"
+                    style="font-size:16px; margin:12px 0 6px 0;"
+                ></h2>
+
             </div>
 
-            <div class="panel" id="helper-panel" style="display: none;">
-                <strong>📋 プロキシ制限を回避して確実に動画を抽出する手順:</strong>
-                <p style="margin: 5px 0; font-size: 13px; color: #ccc;">
-                    自動通信がブロックされた場合は、このリンクをクリック ➔ 
-                    <a id="direct-link" href="#" target="_blank">🔗 現在選択されているエンジンで直接検索結果を開く</a>
+            <!-- 手動解析パネル -->
+            <div
+                class="panel"
+                id="helper-panel"
+                style="display: none;"
+            >
+
+                <strong>
+                    📋 プロキシ制限を回避して確実に動画を抽出する手順:
+                </strong>
+
+                <p
+                    style="
+                        margin: 5px 0;
+                        font-size: 13px;
+                        color: #ccc;
+                    "
+                >
+
+                    自動通信がブロックされた場合は、このリンクをクリック ➔
+
+                    <a
+                        id="direct-link"
+                        href="#"
+                        target="_blank"
+                    >
+                        🔗 現在選択されているエンジンで直接検索結果を開く
+                    </a>
+
                 </p>
-                <span style="font-size: 12px; color: #aaa;">開いた検索結果画面で <b>Ctrl + U</b> を押し、ソースを丸ごとコピーして以下に貼り付けてください。</span>
-                <textarea id="html-textarea" placeholder="ここに検索サイトのソースコードをドサッと貼り付けてください..."></textarea>
-                <button class="parse-btn" onclick="processManualParse()">⚡ 貼り付けたソースから動画を即座に抽出</button>
+
+                <span
+                    style="
+                        font-size: 12px;
+                        color: #aaa;
+                    "
+                >
+
+                    開いた検索結果画面で
+                    <b>Ctrl + U</b>
+                    を押し、ソースを丸ごとコピーして以下に貼り付けてください。
+
+                </span>
+
+                <textarea
+                    id="html-textarea"
+                    placeholder="ここに検索サイトのソースコードをドサッと貼り付けてください..."
+                ></textarea>
+
+                <button
+                    class="parse-btn"
+                    onclick="processManualParse()"
+                >
+                    ⚡ 貼り付けたソースから動画を即座に抽出
+                </button>
+
             </div>
 
-            <div id="status-message" class="message">NAVERまたはEcosiaを選択し、キーワードを入力して「検索」を押してください。</div>
-            <div id="video-grid" class="grid"></div>
+            <!-- ステータス -->
+            <div
+                id="status-message"
+                class="message"
+            >
+                NAVERまたはEcosiaを選択し、
+                キーワードを入力して「検索」を押してください。
+            </div>
+
+            <!-- 動画一覧 -->
+            <div
+                id="video-grid"
+                class="grid"
+            ></div>
+
+            <!-- ▼ さらに読み込むボタン -->
+            <div
+                style="
+                    text-align:center;
+                    margin-top:20px;
+                    margin-bottom:40px;
+                "
+            >
+
+                <button
+                    id="load-more-btn"
+
+                    style="
+                        display:none;
+                        padding:12px 24px;
+                        background:#222;
+                        color:#fff;
+                        border:1px solid #444;
+                        border-radius:10px;
+                        cursor:pointer;
+                        font-size:14px;
+                        font-weight:bold;
+                        transition:0.2s;
+                    "
+
+                    onmouseover="
+                        this.style.background='#333'
+                    "
+
+                    onmouseout="
+                        this.style.background='#222'
+                    "
+                >
+
+                    ▼ さらに読み込む
+
+                </button>
+
+            </div>
+
         </main>
+
     </div>
 
     <script>
-        let viewingHistory = JSON.parse(localStorage.getItem('mytube_dual_v6_history')) || [];
-        let hasActiveSearch = false;
-        let currentPlayingId = null; // 現在再生中のIDを保持
+    let viewingHistory = JSON.parse(localStorage.getItem('mytube_dual_v6_history')) || [];
+    let hasActiveSearch = false;
+    let currentPlayingId = null;
 
-        const searchInput = document.getElementById('search-input');
-        const searchBtn = document.getElementById('search-btn');
-        const sourceSelect = document.getElementById('source-select');
-        const videoGrid = document.getElementById('video-grid');
-        const statusMessage = document.getElementById('status-message');
-        const playerWrapper = document.getElementById('player-wrapper');
-        const iframeContainer = document.getElementById('iframe-container');
-        const helperPanel = document.getElementById('helper-panel');
-        const htmlTextarea = document.getElementById('html-textarea');
-        const directLink = document.getElementById('direct-link');
-        const backBtn = document.getElementById('back-btn');
+    // 追加
+    let currentQuery = "";
+    let currentPage = 1;
+    let currentSource = "";
+    let allVideos = [];
 
-        searchBtn.addEventListener('click', handleSearch);
-        searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleSearch(); });
+    const searchInput = document.getElementById('search-input');
+    const searchBtn = document.getElementById('search-btn');
+    const sourceSelect = document.getElementById('source-select');
+    const videoGrid = document.getElementById('video-grid');
+    const statusMessage = document.getElementById('status-message');
+    const playerWrapper = document.getElementById('player-wrapper');
+    const iframeContainer = document.getElementById('iframe-container');
+    const helperPanel = document.getElementById('helper-panel');
+    const htmlTextarea = document.getElementById('html-textarea');
+    const directLink = document.getElementById('direct-link');
+    const backBtn = document.getElementById('back-btn');
+    const loadMoreBtn = document.getElementById('load-more-btn');
 
-        function setNavbarActive(id) {
-            document.querySelectorAll('.sidebar button').forEach(b => b.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
+    searchBtn.addEventListener('click', handleSearch);
+
+    searchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') handleSearch();
+    });
+
+    loadMoreBtn.addEventListener('click', loadMorePages);
+
+    function setNavbarActive(id) {
+        document.querySelectorAll('.sidebar button')
+            .forEach(b => b.classList.remove('active'));
+
+        document.getElementById(id).classList.add('active');
+    }
+
+    async function handleSearch() {
+
+        const query = searchInput.value.trim();
+
+        if (!query) return;
+
+        currentQuery = query;
+        currentPage = 3;
+        currentSource = sourceSelect.value;
+        allVideos = [];
+
+        videoGrid.innerHTML = '';
+
+        showViewMode('search');
+
+        if (!playerWrapper.classList.contains('mini-player')) {
+            playerWrapper.style.display = 'none';
         }
 
-        async function handleSearch() {
-            const query = searchInput.value.trim();
-            if (!query) return;
+        backBtn.style.display = 'none';
 
-            const source = sourceSelect.value;
-            showViewMode('search');
-            
-            // 検索時はミニプレイヤー化させず、一度プレイヤーを隠す（再生中ならミニプレイヤーとして維持する仕様にする場合はここを調整）
-            if(!playerWrapper.classList.contains('mini-player')) {
-                playerWrapper.style.display = 'none'; 
-            }
-            backBtn.style.display = 'none';
+        helperPanel.style.display = 'block';
+
+        statusMessage.innerHTML = `🔄 検索中...`;
+
+        await fetchPages(1, 3);
+
+        loadMoreBtn.style.display = 'inline-block';
+    }
+
+    async function fetchPages(startPage, endPage) {
+
+        for (let page = startPage; page <= endPage; page++) {
 
             let targetUrl = "";
-            const pureQ = encodeURIComponent(query);
+            const pureQ = encodeURIComponent(currentQuery);
 
-            if (source === "naver") {
-                targetUrl = `https://search.naver.com/search.naver?query=site:youtube.com+${pureQ}`;
-            } else if (source === "ecosia") {
-                targetUrl = `https://www.ecosia.org/search?q=site:youtube.com+${pureQ}`;
+            if (currentSource === "naver") {
+
+                if (page === 1) {
+
+                    targetUrl =
+                        `https://search.naver.com/search.naver?query=site:youtube.com+${pureQ}`;
+
+                } else {
+
+                    const startValue = ((page - 2) * 20) + 1;
+
+                    targetUrl =
+                        `https://search.naver.com/search.naver?query=site:youtube.com+${pureQ}&page=${page}&ssc=tab.ur.all&start=${startValue}`;
+                }
+
+            } else if (currentSource === "ecosia") {
+
+                targetUrl =
+                    `https://www.ecosia.org/search?q=site:youtube.com+${pureQ}&p=${page}`;
             }
 
             directLink.href = targetUrl;
-            helperPanel.style.display = 'block';
-            statusMessage.innerHTML = `🔄 自動解析中... [選択エンジン: ${source.toUpperCase()}]`;
 
-            const proxyRequestUrl = `https://api.codetabs.com/v1/proxy/?quest=${encodeURIComponent(targetUrl)}`;
+            const proxyRequestUrl =
+                `https://api.codetabs.com/v1/proxy/?quest=${encodeURIComponent(targetUrl)}`;
 
             try {
+
                 const response = await fetch(proxyRequestUrl);
-                if (!response.ok) throw new Error();
+
+                if (!response.ok) continue;
+
                 const responseText = await response.text();
-                parseSearchHTML(responseText, source);
-            } catch (error) {
-                statusMessage.innerHTML = `
-                    <div style="background: #252525; padding: 15px; border-radius: 6px; border-left: 4px solid #ff0000; font-size:13px;">
-                        <b>⚠️ 自動取得制限</b><br>
-                        取得に失敗した場合は、上のリンクから直接検索結果を開き、ソース（Ctrl+U）を丸ごと下の枠に貼り付けてください。
-                    </div>
-                `;
-                videoGrid.innerHTML = '';
+
+                parseSearchHTML(responseText, currentSource, false);
+
+            } catch (e) {
+
+                console.log("取得失敗:", page);
             }
         }
 
-        function processManualParse() {
-            const rawText = htmlTextarea.value.trim();
-            if (!rawText) return alert("ソースコードが空です。");
-            parseSearchHTML(rawText, '手動コピペ入力');
-            htmlTextarea.value = '';
+        renderVideos(allVideos, currentSource);
+    }
+
+    async function loadMorePages() {
+
+        loadMoreBtn.disabled = true;
+        loadMoreBtn.innerText = '読み込み中...';
+
+        const nextStart = currentPage + 1;
+        const nextEnd = currentPage + 2;
+
+        await fetchPages(nextStart, nextEnd);
+
+        currentPage += 2;
+
+        loadMoreBtn.disabled = false;
+        loadMoreBtn.innerText = '▼ さらに読み込む';
+    }
+
+    function processManualParse() {
+
+        const rawText = htmlTextarea.value.trim();
+
+        if (!rawText) {
+            return alert("ソースコードが空です。");
         }
 
-        function parseSearchHTML(htmlText, sourceName) {
-            videoGrid.innerHTML = '';
-            const videos = [];
-            const seenIds = new Set();
+        parseSearchHTML(rawText, '手動コピペ入力');
 
-            const regex = /<a[^>]*href="[^"]*?(?:v=|v%3D|embed\/|youtu\.be\/)([a-zA-Z0-9_-]{11})[^"]*"[^>]*>([\s\S]*?)<\/a>/gi;
-            let match;
-            while ((match = regex.exec(htmlText)) !== null) {
-                const videoId = match[1];
-                let title = match[2].replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
-                
-                if (title && title.length > 3 && !seenIds.has(videoId) && !title.includes('画像') && title !== 'YouTube' && !title.includes('キャッシュ')) {
-                    seenIds.add(videoId);
-                    const fakeLink = `https://yout-ube.com/watch?v=${videoId}`;
-                    videos.push({ videoId, title, fakeLink });
-                }
+        htmlTextarea.value = '';
+    }
+
+    function parseSearchHTML(htmlText, sourceName, renderNow = true) {
+
+        const videos = allVideos;
+
+        const existingIds = new Set(
+            allVideos.map(v => v.videoId)
+        );
+
+        const regex =
+            /<a[^>]*href="[^"]*?(?:v=|v%3D|embed\/|youtu\.be\/)([a-zA-Z0-9_-]{11})[^"]*"[^>]*>([\s\S]*?)<\/a>/gi;
+
+        let match;
+
+        while ((match = regex.exec(htmlText)) !== null) {
+
+            const videoId = match[1];
+
+            let title = match[2]
+                .replace(/<[^>]*>/g, '')
+                .replace(/\s+/g, ' ')
+                .trim();
+
+            if (
+                title &&
+                title.length > 3 &&
+                !existingIds.has(videoId) &&
+                !title.includes('画像') &&
+                title !== 'YouTube' &&
+                !title.includes('キャッシュ')
+            ) {
+
+                const fakeLink =
+                    `https://yout-ube.com/watch?v=${videoId}`;
+
+                videos.push({
+                    videoId,
+                    title,
+                    fakeLink
+                });
+
+                existingIds.add(videoId);
             }
+        }
+
+        if (renderNow) {
             renderVideos(videos, sourceName);
         }
+    }
 
-        function renderVideos(videos, sourceLabel) {
-            if (videos.length === 0) {
-                statusMessage.innerHTML = `⚠️ 動画が見つかりませんでした。別のワードでお試しください。`;
-                hasActiveSearch = false;
-                backBtn.style.display = 'none';
-                return;
-            }
+    function renderVideos(videos, sourceLabel) {
 
-            statusMessage.innerHTML = `<h3>🔍 抽出成功: ${videos.length}件 <span class="badge">エンジン: ${sourceLabel.toUpperCase()}</span></h3>`;
-            hasActiveSearch = true;
+        videoGrid.innerHTML = '';
 
-            videos.forEach(video => {
-                const card = document.createElement('div');
-                card.className = 'video-card';
-                card.innerHTML = `
-                    <div class="thumbnail-box" onclick="playVideo('${video.videoId}', \`${escapeHtml(video.title)}\`)">
-                        <img class="thumbnail" src="https://i.ytimg.com/vi/${video.videoId}/mqdefault.jpg" alt="thumbnail" loading="lazy">
-                    </div>
-                    <div class="video-info">
-                        <h3 class="video-title" onclick="playVideo('${video.videoId}', \`${escapeHtml(video.title)}\`)">${video.title}</h3>
-                        <div class="video-links">🔗 ${escapeHtml(video.fakeLink)}</div>
-                    </div>
-                `;
-                videoGrid.appendChild(card);
-            });
+        if (videos.length === 0) {
+
+            statusMessage.innerHTML =
+                `⚠️ 動画が見つかりませんでした。`;
+
+            hasActiveSearch = false;
+
+            backBtn.style.display = 'none';
+
+            return;
         }
 
-        function playVideo(videoId, title) {
-            // ミニプレイヤー状態だったら、通常の大画面モードに戻す
-            playerWrapper.classList.remove('mini-player');
-            playerWrapper.style.display = 'block';
+        statusMessage.innerHTML =
+            `<h3>🔍 抽出成功: ${videos.length}件 <span class="badge">エンジン: ${sourceLabel.toUpperCase()}</span></h3>`;
 
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth'
-            });
+        hasActiveSearch = true;
 
-            document.getElementById('player-title').innerText = title;
+        videos.forEach(video => {
 
-            // 同じ動画をクリックした場合は、リロードせずに大画面へ戻すだけに止める
-            if (currentPlayingId === videoId) {
-                if (hasActiveSearch) backBtn.style.display = 'inline-flex';
-                return;
-            }
+            const card = document.createElement('div');
 
-            currentPlayingId = videoId;
-            const targetSrc = `https://yout-ube.com/watch?v=${videoId}`;
+            card.className = 'video-card';
 
-            iframeContainer.innerHTML = `
-                <div class="video-loader" id="loader-${videoId}">
-                    <div class="spinner"></div>
-                    <div>動画を読み込み中...</div>
+            card.innerHTML = `
+                <div class="thumbnail-box"
+                    onclick="playVideo('${video.videoId}', \`${escapeHtml(video.title)}\`)">
+                    <img class="thumbnail"
+                        src="https://i.ytimg.com/vi/${video.videoId}/mqdefault.jpg"
+                        alt="thumbnail"
+                        loading="lazy">
                 </div>
-                <iframe
-                    id="iframe-${videoId}"
-                    src="${targetSrc}"
-                    title="Player"
-                    sandbox="
-                        allow-forms
-                        allow-modals
-                        allow-orientation-lock
-                        allow-pointer-lock
-                        allow-presentation
-                        allow-same-origin
-                        allow-scripts
-                        allow-storage-access-by-user-activation
-                        allow-popups
-                        allow-popups-to-escape-sandbox
-                    "
-                    referpolicy="no-referrer"
-                    allow="
-                        autoplay;
-                        encrypted-media;
-                        picture-in-picture;
-                        fullscreen
-                    "
-                    allowfullscreen
-                ></iframe>
+
+                <div class="video-info">
+
+                    <h3 class="video-title"
+                        onclick="playVideo('${video.videoId}', \`${escapeHtml(video.title)}\`)">
+                        ${video.title}
+                    </h3>
+
+                    <div class="video-links">
+                        🔗 ${escapeHtml(video.fakeLink)}
+                    </div>
+
+                </div>
             `;
 
-            const targetIframe = document.getElementById(`iframe-${videoId}`);
-            targetIframe.onload = function () {
-                const loader = document.getElementById(`loader-${videoId}`);
-                if (loader) loader.style.display = 'none';
-            };
+            videoGrid.appendChild(card);
+        });
+    }
+
+    function playVideo(videoId, title) {
+
+        playerWrapper.classList.remove('mini-player');
+
+        playerWrapper.style.display = 'block';
+
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+
+        document.getElementById('player-title').innerText = title;
+
+        if (currentPlayingId === videoId) {
 
             if (hasActiveSearch) {
                 backBtn.style.display = 'inline-flex';
             }
 
-            saveToHistory(videoId, title);
+            return;
         }
 
-        // 💡 検索結果に戻るときに、右下へ小さく表示化させる処理
-        function returnToResults() {
-            playerWrapper.classList.add('mini-player'); // 右下固定スタイルを付与
-            backBtn.style.display = 'none';
-            
-            const targetAnchor = document.getElementById('status-message');
-            if (targetAnchor) targetAnchor.scrollIntoView({ behavior: 'smooth' });
-        }
+        currentPlayingId = videoId;
 
-        function saveToHistory(videoId, title) {
-            viewingHistory = viewingHistory.filter(v => v.videoId !== videoId);
-            viewingHistory.unshift({ videoId, title, viewedAt: new Date().toLocaleString('ja-JP') });
-            if (viewingHistory.length > 50) viewingHistory.pop();
-            localStorage.setItem('mytube_dual_v6_history', JSON.stringify(viewingHistory));
-        }
+        const targetSrc =
+            `https://yout-ube.com/watch?v=${videoId}`;
 
-        function showHistory() {
-            setNavbarActive('nav-history');
-            showViewMode('history');
-            videoGrid.innerHTML = '';
-            helperPanel.style.display = 'none';
-            backBtn.style.display = 'none';
+        iframeContainer.innerHTML = `
+            <div class="video-loader" id="loader-${videoId}">
+                <div class="spinner"></div>
+                <div>動画を読み込み中...</div>
+            </div>
 
-            if (viewingHistory.length === 0) {
-                statusMessage.innerHTML = '視聴履歴はありません。';
-                return;
+            <iframe
+                id="iframe-${videoId}"
+                src="${targetSrc}"
+                title="Player"
+
+                sandbox="
+                    allow-forms
+                    allow-modals
+                    allow-orientation-lock
+                    allow-pointer-lock
+                    allow-presentation
+                    allow-same-origin
+                    allow-scripts
+                    allow-storage-access-by-user-activation
+                    allow-popups
+                    allow-popups-to-escape-sandbox
+                "
+
+                referrerpolicy="no-referrer"
+
+                allow="
+                    autoplay;
+                    encrypted-media;
+                    picture-in-picture;
+                    fullscreen
+                "
+
+                allowfullscreen
+            ></iframe>
+        `;
+
+        const targetIframe =
+            document.getElementById(`iframe-${videoId}`);
+
+        targetIframe.onload = function () {
+
+            const loader =
+                document.getElementById(`loader-${videoId}`);
+
+            if (loader) {
+                loader.style.display = 'none';
             }
+        };
 
-            statusMessage.innerHTML = '<h3>🕒 閲覧履歴</h3>';
-            viewingHistory.forEach(video => {
-                const card = document.createElement('div');
-                card.className = 'video-card';
-                card.innerHTML = `
-                    <div class="thumbnail-box" onclick="playVideo('${video.videoId}', \`${escapeHtml(video.title)}\`)">
-                        <img class="thumbnail" src="https://i.ytimg.com/vi/${video.videoId}/mqdefault.jpg" alt="thumbnail">
-                    </div>
-                    <div class="video-info">
-                        <h3 class="video-title" onclick="playVideo('${video.videoId}', \`${escapeHtml(video.title)}\`)">${video.title}</h3>
-                        <div class="video-links">🕒 ${video.viewedAt}</div>
-                    </div>
-                `;
-                videoGrid.appendChild(card);
+        if (hasActiveSearch) {
+            backBtn.style.display = 'inline-flex';
+        }
+
+        saveToHistory(videoId, title);
+    }
+
+    function returnToResults() {
+
+        playerWrapper.classList.add('mini-player');
+
+        backBtn.style.display = 'none';
+
+        const targetAnchor =
+            document.getElementById('status-message');
+
+        if (targetAnchor) {
+
+            targetAnchor.scrollIntoView({
+                behavior: 'smooth'
             });
         }
+    }
 
-        function showViewMode(mode) {
-            videoGrid.style.display = 'grid';
-            statusMessage.style.display = 'block';
-            if (mode !== 'search' && mode !== 'history') {
-                playerWrapper.classList.remove('mini-player');
-                playerWrapper.style.display = 'none';
-                helperPanel.style.display = 'none';
-                backBtn.style.display = 'none';
-                currentPlayingId = null;
-                iframeContainer.innerHTML = '';
-            }
+    function saveToHistory(videoId, title) {
+
+        viewingHistory =
+            viewingHistory.filter(v => v.videoId !== videoId);
+
+        viewingHistory.unshift({
+            videoId,
+            title,
+            viewedAt: new Date().toLocaleString('ja-JP')
+        });
+
+        if (viewingHistory.length > 50) {
+            viewingHistory.pop();
         }
 
-        function showHome() {
-            setNavbarActive('nav-home');
-            showViewMode('home');
-            statusMessage.innerHTML = 'NAVERまたはEcosiaを選択し、キーワードを入力して「検索」を押してください。';
-            videoGrid.innerHTML = '';
-            searchInput.value = '';
-            hasActiveSearch = false;
+        localStorage.setItem(
+            'mytube_dual_v6_history',
+            JSON.stringify(viewingHistory)
+        );
+    }
+
+    function showHistory() {
+
+        setNavbarActive('nav-history');
+
+        showViewMode('history');
+
+        videoGrid.innerHTML = '';
+
+        helperPanel.style.display = 'none';
+
+        backBtn.style.display = 'none';
+
+        if (viewingHistory.length === 0) {
+
+            statusMessage.innerHTML =
+                '視聴履歴はありません。';
+
+            return;
+        }
+
+        statusMessage.innerHTML =
+            '<h3>🕒 閲覧履歴</h3>';
+
+        viewingHistory.forEach(video => {
+
+            const card = document.createElement('div');
+
+            card.className = 'video-card';
+
+            card.innerHTML = `
+                <div class="thumbnail-box"
+                    onclick="playVideo('${video.videoId}', \`${escapeHtml(video.title)}\`)">
+
+                    <img class="thumbnail"
+                        src="https://i.ytimg.com/vi/${video.videoId}/mqdefault.jpg"
+                        alt="thumbnail">
+
+                </div>
+
+                <div class="video-info">
+
+                    <h3 class="video-title"
+                        onclick="playVideo('${video.videoId}', \`${escapeHtml(video.title)}\`)">
+
+                        ${video.title}
+
+                    </h3>
+
+                    <div class="video-links">
+                        🕒 ${video.viewedAt}
+                    </div>
+
+                </div>
+            `;
+
+            videoGrid.appendChild(card);
+        });
+    }
+
+    function showViewMode(mode) {
+
+        videoGrid.style.display = 'grid';
+
+        statusMessage.style.display = 'block';
+
+        if (mode !== 'search' && mode !== 'history') {
+
+            playerWrapper.classList.remove('mini-player');
+
+            playerWrapper.style.display = 'none';
+
+            helperPanel.style.display = 'none';
+
             backBtn.style.display = 'none';
-        }
 
-        function escapeHtml(str) {
-            return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;').replace(/`/g, '&#x60;');
+            currentPlayingId = null;
+
+            iframeContainer.innerHTML = '';
         }
-    </script>
+    }
+
+    function showHome() {
+
+        setNavbarActive('nav-home');
+
+        showViewMode('home');
+
+        statusMessage.innerHTML =
+            'NAVERまたはEcosiaを選択し、キーワードを入力して「検索」を押してください。';
+
+        videoGrid.innerHTML = '';
+
+        searchInput.value = '';
+
+        hasActiveSearch = false;
+
+        backBtn.style.display = 'none';
+
+        loadMoreBtn.style.display = 'none';
+    }
+
+    function escapeHtml(str) {
+
+        return str
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;')
+            .replace(/`/g, '&#x60;');
+    }
+</script>
 </body>
 </html>
