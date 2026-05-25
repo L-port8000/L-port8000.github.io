@@ -5,29 +5,29 @@
     <title>Not Youtube</title>
     <style>
         * { box-sizing: border-box; }
-        body { font-family: 'Roboto', Arial, sans-serif; margin: 0; background-color: #0f0f0f; color: #fff; }
+        body { font-family: 'Roboto', Arial, sans-serif; margin: 0; background-color: #0f0f0f; color: #fff; display: flex; flex-direction: column; height: 100vh; }
         
         header { display: flex; align-items: center; justify-content: space-between; padding: 10px 20px; background-color: #0f0f0f; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #222; gap: 15px; flex-wrap: wrap; }
         .logo { font-size: 20px; font-weight: bold; cursor: pointer; color: #ff0000; flex-shrink: 0; }
         
-        .search-container { display: flex; flex-grow: 1; max-width: 850px; align-items: center; gap: 5px; }
+        .search-container { display: flex; flex-grow: 1; max-width: 950px; align-items: center; gap: 0; }
         #source-select { padding: 10px; background: #222; color: white; border: 1px solid #303030; border-radius: 20px 0 0 20px; height: 41px; outline: none; font-size: 13px; cursor: pointer; min-width: 160px; }
-        #search-input { flex-grow: 1; padding: 10px 15px; border: 1px solid #303030; border-left: none; border-right: none; background-color: #121212; color: white; font-size: 16px; height: 41px; outline: none; }
-        #search-btn { padding: 10px 20px; background-color: #222222; border: 1px solid #303030; border-radius: 0 20px 20px 0; color: white; height: 41px; cursor: pointer; font-weight: bold; }
+        #proxy-select { padding: 10px; background: #222; color: white; border: 1px solid #303030; border-left: none; height: 41px; outline: none; font-size: 13px; cursor: pointer; min-width: 150px; }
+        #search-input { flex-grow: 1; padding: 10px 15px; border: 1px solid #303030; border-left: none; border-right: none; background-color: #121212; color: white; font-size: 16px; height: 41px; outline: none; width: 100%; }
+        #search-btn { padding: 10px 20px; background-color: #222222; border: 1px solid #303030; border-radius: 0 20px 20px 0; color: white; height: 41px; cursor: pointer; font-weight: bold; flex-shrink: 0; }
         #search-btn:hover { background-color: #303030; }
         
-        #back-btn { padding: 0 15px; background-color: #333; border: 1px solid #444; border-radius: 20px; color: #fff; height: 41px; cursor: pointer; font-size: 13px; font-weight: bold; display: none; align-items: center; justify-content: center; }
+        #back-btn { padding: 0 15px; background-color: #333; border: 1px solid #444; border-radius: 20px; color: #fff; height: 41px; cursor: pointer; font-size: 13px; font-weight: bold; display: none; align-items: center; justify-content: center; margin-right: 8px; flex-shrink: 0; }
         #back-btn:hover { background-color: #444; }
 
-        .app-container { display: flex; height: calc(100vh - 60px); }
-        .sidebar { width: 180px; padding: 10px; background-color: #0f0f0f; border-right: 1px solid #222; flex-shrink: 0; }
+        .app-container { display: flex; flex-grow: 1; overflow: hidden; }
+        .sidebar { width: 180px; padding: 10px; background-color: #0f0f0f; border-right: 1px solid #222; flex-shrink: 0; overflow-y: auto; }
         .sidebar button { display: block; width: 100%; padding: 12px 15px; background: none; border: none; color: white; text-align: left; font-size: 14px; cursor: pointer; border-radius: 10px; margin-bottom: 5px; }
         .sidebar button:hover { background-color: #272727; }
         .sidebar button.active { background-color: #272727; font-weight: bold; }
 
         .main-content { flex-grow: 1; padding: 20px; overflow-y: auto; }
         
-        /* 手動解析パネル */
         .panel { background: #161616; padding: 15px; border-radius: 8px; border: 1px solid #303030; margin-bottom: 20px; font-size: 14px; }
         .panel a { color: #3ea6ff; text-decoration: none; font-weight: bold; }
         .panel a:hover { text-decoration: underline; }
@@ -45,12 +45,10 @@
         .video-title { font-size: 14px; font-weight: 500; margin: 0 0 8px 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.4; color: #f1f1f1; }
         .video-links { margin-top: auto; font-size: 11px; color: #aaa; word-break: break-all; background: #222; padding: 4px; border-radius: 4px; }
 
-        /* 通常プレイヤー構造 */
         #player-wrapper { display: none; margin-bottom: 30px; max-width: 900px; transition: all 0.3s ease; }
         .iframe-container { position: relative; width: 100%; padding-bottom: 56.25%; border-radius: 10px; overflow: hidden; background: #000; border: 1px solid #333; }
         .iframe-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; z-index: 2; }
         
-        /* ✨ 右下ミニプレイヤーのスタイル定義 */
         #player-wrapper.mini-player {
             display: block !important;
             position: fixed;
@@ -65,700 +63,381 @@
             border: 1px solid #444;
             margin-bottom: 0;
         }
-        #player-wrapper.mini-player #player-title {
-            display: none; /* ミニプレイヤー時はタイトルを隠して省スペース化 */
-        }
-        #player-wrapper.mini-player .iframe-container {
-            border: none;
-            border-radius: 0;
-        }
+        #player-wrapper.mini-player #player-title { display: none; }
+        #player-wrapper.mini-player .iframe-container { border: none; border-radius: 0; }
 
-        /* 読込中インジケータ */
         .video-loader { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #111; color: #fff; font-size: 14px; z-index: 1; }
         .spinner { border: 4px solid #333; border-top: 4px solid #ff0000; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 10px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         .message { padding: 10px 0 20px 0; color: #aaa; font-size: 14px; line-height: 1.5; }
         .badge { background: #1c62b9; color: white; padding: 2px 6px; border-radius: 4px; font-size: 11px; margin-left: 5px; }
+
+        /* =========================================================
+           📱 スマホ（モバイル）向けレスポンシブ対応 CSS
+           ========================================================= */
+        @media (max-width: 768px) {
+            header { flex-direction: column; padding: 12px; gap: 10px; }
+            .logo { width: 100%; text-align: center; }
+            
+            .search-container { flex-wrap: wrap; width: 100%; gap: 6px; }
+            #back-btn { width: 100%; margin-right: 0; border-radius: 6px; margin-bottom: 4px; }
+            
+            /* プルダウンを2分割して並べる */
+            #source-select, #proxy-select { flex: 1 1 45%; min-width: 0; border-radius: 6px; border: 1px solid #303030; }
+            
+            /* 検索窓とボタンの調整 */
+            #search-input { flex: 1 1 60%; border-radius: 6px 0 0 6px; border: 1px solid #303030; }
+            #search-btn { flex: 0 0 70px; border-radius: 0 6px 6px 0; }
+
+            /* サイドバーを上部のタブメニューに変更 */
+            .app-container { flex-direction: column; }
+            .sidebar { width: 100%; display: flex; border-right: none; border-bottom: 1px solid #222; padding: 10px; overflow-x: auto; flex-shrink: 0; }
+            .sidebar button { flex: 1; text-align: center; margin-bottom: 0; margin-right: 8px; border-radius: 6px; white-space: nowrap; padding: 10px; }
+            .sidebar button:last-child { margin-right: 0; }
+
+            .main-content { padding: 10px; }
+            .grid { grid-template-columns: 1fr; gap: 15px; } /* スマホでは1列表示 */
+            
+            /* ミニプレイヤーのスマホ最適化 */
+            #player-wrapper.mini-player { width: calc(100% - 20px); right: 10px; bottom: 10px; }
+        }
     </style>
 </head>
 <body>
 
     <header>
         <div class="logo" onclick="showHome()">▶ Not Youtube</div>
-
         <div class="search-container">
-
-            <button id="back-btn" onclick="returnToResults()">
-                ＜ 検索結果へ
-            </button>
-
+            <button id="back-btn" onclick="returnToResults()"> ＜ 検索結果へ</button>
             <select id="source-select">
-                <option value="naver">
-                    👑 NAVER (ネイバー・韓国)
-                </option>
-
-                <option value="ecosia">
-                    🌱 Ecosia (環境型検索)
-                </option>
+                <option value="bing">Bing Videos (MS・動画検索)</option>
+                <option value="yahoo">Yahoo Video (海外・動画検索)</option>
+                <option value="naver">NAVER (ネイバー・韓国)</option>
             </select>
-
-            <input
-                type="text"
-                id="search-input"
-                placeholder="検索キーワードを入力..."
-            >
-
-            <button id="search-btn">
-                検索
-            </button>
-
+            <select id="proxy-select">
+                <option value="codetabs">🚀 Proxy: Codetabs</option>
+                <option value="allorigins">🌐 Proxy: AllOrigins</option>
+            </select>
+            <input type="text" id="search-input" placeholder="検索キーワードを入力...">
+            <button id="search-btn">検索</button>
         </div>
-
-        <div style="width: 20px;"></div>
     </header>
 
     <div class="app-container">
-
         <aside class="sidebar">
-
-            <button
-                id="nav-home"
-                onclick="showHome()"
-                class="active"
-            >
-                🏠 ホーム
-            </button>
-
-            <button
-                id="nav-history"
-                onclick="showHistory()"
-            >
-                🕒 履歴
-            </button>
-
+            <button id="nav-home" onclick="showHome()" class="active">■ ホーム</button>
+            <button id="nav-history" onclick="showHistory()">● 履歴</button>
         </aside>
 
         <main class="main-content">
-
-            <!-- プレイヤー -->
             <div id="player-wrapper">
-
-                <div
-                    class="iframe-container"
-                    id="iframe-container"
-                ></div>
-
-                <h2
-                    id="player-title"
-                    style="font-size:16px; margin:12px 0 6px 0;"
-                ></h2>
-
+                <div class="iframe-container" id="iframe-container"></div>
+                <h2 id="player-title" style="font-size:16px; margin:12px 0 6px 0;"></h2>
             </div>
 
-            <!-- 手動解析パネル -->
-            <div
-                class="panel"
-                id="helper-panel"
-                style="display: none;"
-            >
-
-                <strong>
-                    📋 プロキシ制限を回避して確実に動画を抽出する手順:
-                </strong>
-
-                <p
-                    style="
-                        margin: 5px 0;
-                        font-size: 13px;
-                        color: #ccc;
-                    "
-                >
-
-                    自動通信がブロックされた場合は、このリンクをクリック ➔
-
-                    <a
-                        id="direct-link"
-                        href="#"
-                        target="_blank"
-                    >
-                        🔗 現在選択されているエンジンで直接検索結果を開く
-                    </a>
-
+            <div class="panel" id="helper-panel" style="display: none;">
+                <strong>・プロキシ制限・CAPTCHAブロック時の手動抽出手順:</strong>
+                <p style="margin: 5px 0; font-size: 13px; color: #ccc;">
+                    動画が出ない、または「BLOCK」と出た場合はこのリンクをクリック ➔ 
+                    <a id="direct-link" href="#" target="_blank">🔗 現在のエンジンで直接検索結果を開く</a>
                 </p>
-
-                <span
-                    style="
-                        font-size: 12px;
-                        color: #aaa;
-                    "
-                >
-
-                    開いた検索結果画面で
-                    <b>Ctrl + U</b>
-                    を押し、ソースを丸ごとコピーして以下に貼り付けてください。
-
-                </span>
-
-                <textarea
-                    id="html-textarea"
-                    placeholder="ここに検索サイトのソースコードをドサッと貼り付けてください..."
-                ></textarea>
-
-                <button
-                    class="parse-btn"
-                    onclick="processManualParse()"
-                >
-                    ⚡ 貼り付けたソースから動画を即座に抽出
-                </button>
-
+                <span style="font-size: 12px; color: #aaa;">開いた検索結果画面で <b>Ctrl + U</b> を押し、ソースを丸ごとコピーして以下に貼り付けてください。</span>
+                <textarea id="html-textarea" placeholder="ここに検索サイトのソースコードをドサッと貼り付けてください..."></textarea>
+                <button class="parse-btn" onclick="processManualParse()">⚡ 貼り付けたソースから動画を即座に抽出</button>
             </div>
 
-            <!-- ステータス -->
-            <div
-                id="status-message"
-                class="message"
-            >
-                NAVERまたはEcosiaを選択し、
-                キーワードを入力して「検索」を押してください。
-            </div>
-
-            <!-- 動画一覧 -->
-            <div
-                id="video-grid"
-                class="grid"
-            ></div>
-
-            <!-- ▼ さらに読み込むボタン -->
-            <div
-                style="
-                    text-align:center;
-                    margin-top:20px;
-                    margin-bottom:40px;
-                "
-            >
-
-                <button
-                    id="load-more-btn"
-
-                    style="
-                        display:none;
-                        padding:12px 24px;
-                        background:#222;
-                        color:#fff;
-                        border:1px solid #444;
-                        border-radius:10px;
-                        cursor:pointer;
-                        font-size:14px;
-                        font-weight:bold;
-                        transition:0.2s;
-                    "
-
-                    onmouseover="
-                        this.style.background='#333'
-                    "
-
-                    onmouseout="
-                        this.style.background='#222'
-                    "
-                >
-
-                    ▼ さらに読み込む
-
-                </button>
-
-            </div>
-
+            <div id="status-message" class="message">検索エンジンとプロキシを選択し、キーワードを入力して「検索」を押してください。</div>
+            <div id="video-grid" class="grid"></div>
         </main>
-
     </div>
 
     <script>
-    let viewingHistory = JSON.parse(localStorage.getItem('mytube_dual_v6_history')) || [];
-    let hasActiveSearch = false;
-    let currentPlayingId = null;
+        let viewingHistory = JSON.parse(localStorage.getItem('mytube_dual_v6_history')) || [];
+        let hasActiveSearch = false;
+        let currentPlayingId = null;
 
-    // 追加
-    let currentQuery = "";
-    let currentPage = 1;
-    let currentSource = "";
-    let allVideos = [];
+        const searchInput = document.getElementById('search-input');
+        const searchBtn = document.getElementById('search-btn');
+        const sourceSelect = document.getElementById('source-select');
+        const proxySelect = document.getElementById('proxy-select');
+        const videoGrid = document.getElementById('video-grid');
+        const statusMessage = document.getElementById('status-message');
+        const playerWrapper = document.getElementById('player-wrapper');
+        const iframeContainer = document.getElementById('iframe-container');
+        const helperPanel = document.getElementById('helper-panel');
+        const htmlTextarea = document.getElementById('html-textarea');
+        const directLink = document.getElementById('direct-link');
+        const backBtn = document.getElementById('back-btn');
 
-    const searchInput = document.getElementById('search-input');
-    const searchBtn = document.getElementById('search-btn');
-    const sourceSelect = document.getElementById('source-select');
-    const videoGrid = document.getElementById('video-grid');
-    const statusMessage = document.getElementById('status-message');
-    const playerWrapper = document.getElementById('player-wrapper');
-    const iframeContainer = document.getElementById('iframe-container');
-    const helperPanel = document.getElementById('helper-panel');
-    const htmlTextarea = document.getElementById('html-textarea');
-    const directLink = document.getElementById('direct-link');
-    const backBtn = document.getElementById('back-btn');
-    const loadMoreBtn = document.getElementById('load-more-btn');
+        searchBtn.addEventListener('click', handleSearch);
+        searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleSearch(); });
 
-    searchBtn.addEventListener('click', handleSearch);
-
-    searchInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') handleSearch();
-    });
-
-    loadMoreBtn.addEventListener('click', loadMorePages);
-
-    function setNavbarActive(id) {
-        document.querySelectorAll('.sidebar button')
-            .forEach(b => b.classList.remove('active'));
-
-        document.getElementById(id).classList.add('active');
-    }
-
-    async function handleSearch() {
-
-        const query = searchInput.value.trim();
-
-        if (!query) return;
-
-        currentQuery = query;
-        currentPage = 3;
-        currentSource = sourceSelect.value;
-        allVideos = [];
-
-        videoGrid.innerHTML = '';
-
-        showViewMode('search');
-
-        if (!playerWrapper.classList.contains('mini-player')) {
-            playerWrapper.style.display = 'none';
+        function setNavbarActive(id) {
+            document.querySelectorAll('.sidebar button').forEach(b => b.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
         }
 
-        backBtn.style.display = 'none';
+        async function handleSearch() {
+            const query = searchInput.value.trim();
+            if (!query) return;
 
-        helperPanel.style.display = 'block';
-
-        statusMessage.innerHTML = `🔄 検索中...`;
-
-        await fetchPages(1, 3);
-
-        loadMoreBtn.style.display = 'inline-block';
-    }
-
-    async function fetchPages(startPage, endPage) {
-
-        for (let page = startPage; page <= endPage; page++) {
+            const source = sourceSelect.value;
+            showViewMode('search');
+            
+            if(!playerWrapper.classList.contains('mini-player')) {
+                playerWrapper.style.display = 'none'; 
+            }
+            backBtn.style.display = 'none';
 
             let targetUrl = "";
-            const pureQ = encodeURIComponent(currentQuery);
+            const pureQ = encodeURIComponent(query);
 
-            if (currentSource === "naver") {
-
-                if (page === 1) {
-
-                    targetUrl =
-                        `https://search.naver.com/search.naver?query=site:youtube.com+${pureQ}`;
-
-                } else {
-
-                    const startValue = ((page - 2) * 20) + 1;
-
-                    targetUrl =
-                        `https://search.naver.com/search.naver?query=site:youtube.com+${pureQ}&page=${page}&ssc=tab.ur.all&start=${startValue}`;
-                }
-
-            } else if (currentSource === "ecosia") {
-
-                targetUrl =
-                    `https://www.ecosia.org/search?q=site:youtube.com+${pureQ}&p=${page}`;
+            if (source === "bing") {
+                targetUrl = `https://bing.com/videos/search?q=${pureQ}`;
+            } else if (source === "yahoo") {
+                targetUrl = `https://video.search.yahoo.com/search/?p=${pureQ}`;
+            } else if (source === "naver") {
+                targetUrl = `https://search.naver.com/search.naver?query=site:youtube.com+${pureQ}`;
             }
 
             directLink.href = targetUrl;
+            helperPanel.style.display = 'block';
+            statusMessage.innerHTML = `自動解析中... [選択エンジン: ${source.toUpperCase()}]`;
 
-            const proxyRequestUrl =
-                `https://api.codetabs.com/v1/proxy/?quest=${encodeURIComponent(targetUrl)}`;
+            const proxyMode = proxySelect.value;
+            const proxyName = proxySelect.options[proxySelect.selectedIndex].text;
 
+            let htmlText = null;
             try {
-
-                const response = await fetch(proxyRequestUrl);
-
-                if (!response.ok) continue;
-
-                const responseText = await response.text();
-
-                parseSearchHTML(responseText, currentSource, false);
-
+                if (proxyMode === "allorigins") {
+                    const proxyRequestUrl = "https://api.allorigins.win/get?url=" + encodeURIComponent(targetUrl);
+                    const response = await fetch(proxyRequestUrl);
+                    const data = await response.json();
+                    htmlText = data.contents;
+                } else {
+                    const proxyRequestUrl = "https://api.codetabs.com/v1/proxy/?quest=" + encodeURIComponent(targetUrl);
+                    const response = await fetch(proxyRequestUrl);
+                    htmlText = await response.text();
+                }
             } catch (e) {
+                console.log(`Proxy fetch failed (${proxyName}):`, e);
+            }
 
-                console.log("取得失敗:", page);
+            if (htmlText) {
+                const badKeywords = ["cloudflare", "checking your browser", "captcha", "attention required", "enable javascript"];
+                const lowerHtml = htmlText.toLowerCase();
+                const isBlocked = badKeywords.some(kw => lowerHtml.includes(kw));
+
+                if (isBlocked) {
+                    statusMessage.innerHTML = `
+                        <div style="background: #252525; padding: 15px; border-radius: 6px; border-left: 4px solid #fbbf24; font-size:13px;">
+                            <b>⚠️ アクセスブロック (CAPTCHA等) 検知</b><br>
+                            検索エンジン側で自動通信が弾かれました。下の「手動抽出手順」に従ってソースを貼り付けてください。
+                        </div>
+                    `;
+                    videoGrid.innerHTML = '';
+                } else {
+                    parseSearchHTML(htmlText, `${source} (${proxyName.replace('Proxy: ', '')})`);
+                }
+            } else {
+                statusMessage.innerHTML = `
+                    <div style="background: #252525; padding: 15px; border-radius: 6px; border-left: 4px solid #ff0000; font-size:13px;">
+                        <b>❌ プロキシ通信エラー [${proxyName}]</b><br>
+                        このプロキシでの通信に失敗しました。上部で<b>別のプロキシに切り替えてもう一度「検索」を押す</b>か、下の「手動抽出手順」をお試しください。
+                    </div>
+                `;
+                videoGrid.innerHTML = '';
             }
         }
 
-        renderVideos(allVideos, currentSource);
-    }
-
-    async function loadMorePages() {
-
-        loadMoreBtn.disabled = true;
-        loadMoreBtn.innerText = '読み込み中...';
-
-        const nextStart = currentPage + 1;
-        const nextEnd = currentPage + 2;
-
-        await fetchPages(nextStart, nextEnd);
-
-        currentPage += 2;
-
-        loadMoreBtn.disabled = false;
-        loadMoreBtn.innerText = '▼ さらに読み込む';
-    }
-
-    function processManualParse() {
-
-        const rawText = htmlTextarea.value.trim();
-
-        if (!rawText) {
-            return alert("ソースコードが空です。");
+        function processManualParse() {
+            const rawText = htmlTextarea.value.trim();
+            if (!rawText) return alert("ソースコードが空です。");
+            parseSearchHTML(rawText, '手動コピペ入力');
+            htmlTextarea.value = '';
         }
 
-        parseSearchHTML(rawText, '手動コピペ入力');
+        function parseSearchHTML(htmlText, sourceName) {
+            videoGrid.innerHTML = '';
+            const videos = [];
+            const seenIds = new Set();
 
-        htmlTextarea.value = '';
-    }
+            const idRegex = /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|v%3D|v=)([a-zA-Z0-9_-]{11})/gi;
+            let idMatch;
+            const uniqueIds = [];
 
-    function parseSearchHTML(htmlText, sourceName, renderNow = true) {
+            while ((idMatch = idRegex.exec(htmlText)) !== null) {
+                const videoId = idMatch[1];
+                if (!seenIds.has(videoId)) {
+                    seenIds.add(videoId);
+                    uniqueIds.push(videoId);
+                }
+            }
 
-        const videos = allVideos;
-
-        const existingIds = new Set(
-            allVideos.map(v => v.videoId)
-        );
-
-        const regex =
-            /<a[^>]*href="[^"]*?(?:v=|v%3D|embed\/|youtu\.be\/)([a-zA-Z0-9_-]{11})[^"]*"[^>]*>([\s\S]*?)<\/a>/gi;
-
-        let match;
-
-        while ((match = regex.exec(htmlText)) !== null) {
-
-            const videoId = match[1];
-
-            let title = match[2]
-                .replace(/<[^>]*>/g, '')
-                .replace(/\s+/g, ' ')
-                .trim();
-
-            if (
-                title &&
-                title.length > 3 &&
-                !existingIds.has(videoId) &&
-                !title.includes('画像') &&
-                title !== 'YouTube' &&
-                !title.includes('キャッシュ')
-            ) {
-
-                const fakeLink =
-                    `https://yout-ube.com/watch?v=${videoId}`;
+            uniqueIds.forEach(videoId => {
+                let title = `YouTube 動画 [${videoId}]`; 
+                
+                const idx = htmlText.indexOf(videoId);
+                if (idx !== -1) {
+                    const snippet = htmlText.slice(Math.max(0, idx - 300), Math.min(htmlText.length, idx + 300));
+                    const titleMatch = snippet.match(/(?:"title"|title)\s*[:=]\s*"([^"]+)"/i) || snippet.match(/>([^<]{4,60})</);
+                                       
+                    if (titleMatch && titleMatch[1]) {
+                        const cleanTitle = titleMatch[1].replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+                        if (cleanTitle.length > 3 && !cleanTitle.toLowerCase().includes('youtube') && !cleanTitle.includes('http')) {
+                            title = cleanTitle;
+                        }
+                    }
+                }
 
                 videos.push({
                     videoId,
-                    title,
-                    fakeLink
+                    title: title,
+                    fakeLink: `https://yout-ube.com/watch?v=${videoId}`
                 });
+            });
 
-                existingIds.add(videoId);
-            }
-        }
-
-        if (renderNow) {
             renderVideos(videos, sourceName);
         }
-    }
 
-    function renderVideos(videos, sourceLabel) {
+        function renderVideos(videos, sourceLabel) {
+            if (videos.length === 0) {
+                statusMessage.innerHTML = `⚠️ 動画が見つかりませんでした。別の検索エンジンか手動解析をお試しください。`;
+                hasActiveSearch = false;
+                backBtn.style.display = 'none';
+                return;
+            }
 
-        videoGrid.innerHTML = '';
+            statusMessage.innerHTML = `<h3>🔍 抽出成功: ${videos.length}件 <span class="badge">エンジン: ${sourceLabel.toUpperCase()}</span></h3>`;
+            hasActiveSearch = true;
 
-        if (videos.length === 0) {
-
-            statusMessage.innerHTML =
-                `⚠️ 動画が見つかりませんでした。`;
-
-            hasActiveSearch = false;
-
-            backBtn.style.display = 'none';
-
-            return;
-        }
-
-        statusMessage.innerHTML =
-            `<h3>🔍 抽出成功: ${videos.length}件 <span class="badge">エンジン: ${sourceLabel.toUpperCase()}</span></h3>`;
-
-        hasActiveSearch = true;
-
-        videos.forEach(video => {
-
-            const card = document.createElement('div');
-
-            card.className = 'video-card';
-
-            card.innerHTML = `
-                <div class="thumbnail-box"
-                    onclick="playVideo('${video.videoId}', \`${escapeHtml(video.title)}\`)">
-                    <img class="thumbnail"
-                        src="https://i.ytimg.com/vi/${video.videoId}/mqdefault.jpg"
-                        alt="thumbnail"
-                        loading="lazy">
-                </div>
-
-                <div class="video-info">
-
-                    <h3 class="video-title"
-                        onclick="playVideo('${video.videoId}', \`${escapeHtml(video.title)}\`)">
-                        ${video.title}
-                    </h3>
-
-                    <div class="video-links">
-                        🔗 ${escapeHtml(video.fakeLink)}
+            videos.forEach(video => {
+                const card = document.createElement('div');
+                card.className = 'video-card';
+                card.innerHTML = `
+                    <div class="thumbnail-box" onclick="playVideo('${video.videoId}', \`${escapeHtml(video.title)}\`)">
+                        <img class="thumbnail" src="https://i.ytimg.com/vi/${video.videoId}/mqdefault.jpg" alt="thumbnail" loading="lazy">
                     </div>
-
-                </div>
-            `;
-
-            videoGrid.appendChild(card);
-        });
-    }
-
-    function playVideo(videoId, title) {
-
-        playerWrapper.classList.remove('mini-player');
-
-        playerWrapper.style.display = 'block';
-
-        window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
-        });
-
-        document.getElementById('player-title').innerText = title;
-
-        if (currentPlayingId === videoId) {
-
-            if (hasActiveSearch) {
-                backBtn.style.display = 'inline-flex';
-            }
-
-            return;
-        }
-
-        currentPlayingId = videoId;
-
-        const targetSrc =
-            `https://yout-ube.com/watch?v=${videoId}`;
-
-        iframeContainer.innerHTML = `
-            <div class="video-loader" id="loader-${videoId}">
-                <div class="spinner"></div>
-                <div>動画を読み込み中...</div>
-            </div>
-
-            <iframe
-                id="iframe-${videoId}"
-                src="${targetSrc}"
-                title="Player"
-
-                sandbox="
-                    allow-forms
-                    allow-modals
-                    allow-orientation-lock
-                    allow-pointer-lock
-                    allow-presentation
-                    allow-same-origin
-                    allow-scripts
-                    allow-storage-access-by-user-activation
-                    allow-popups
-                    allow-popups-to-escape-sandbox
-                "
-
-                referrerpolicy="no-referrer"
-
-                allow="
-                    autoplay;
-                    encrypted-media;
-                    picture-in-picture;
-                    fullscreen
-                "
-
-                allowfullscreen
-            ></iframe>
-        `;
-
-        const targetIframe =
-            document.getElementById(`iframe-${videoId}`);
-
-        targetIframe.onload = function () {
-
-            const loader =
-                document.getElementById(`loader-${videoId}`);
-
-            if (loader) {
-                loader.style.display = 'none';
-            }
-        };
-
-        if (hasActiveSearch) {
-            backBtn.style.display = 'inline-flex';
-        }
-
-        saveToHistory(videoId, title);
-    }
-
-    function returnToResults() {
-
-        playerWrapper.classList.add('mini-player');
-
-        backBtn.style.display = 'none';
-
-        const targetAnchor =
-            document.getElementById('status-message');
-
-        if (targetAnchor) {
-
-            targetAnchor.scrollIntoView({
-                behavior: 'smooth'
+                    <div class="video-info">
+                        <h3 class="video-title" onclick="playVideo('${video.videoId}', \`${escapeHtml(video.title)}\`)">${video.title}</h3>
+                        <div class="video-links">🔗 ${escapeHtml(video.fakeLink)}</div>
+                    </div>
+                `;
+                videoGrid.appendChild(card);
             });
         }
-    }
 
-    function saveToHistory(videoId, title) {
+        function playVideo(videoId, title) {
+            playerWrapper.classList.remove('mini-player');
+            playerWrapper.style.display = 'block';
 
-        viewingHistory =
-            viewingHistory.filter(v => v.videoId !== videoId);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            document.getElementById('player-title').innerText = title;
 
-        viewingHistory.unshift({
-            videoId,
-            title,
-            viewedAt: new Date().toLocaleString('ja-JP')
-        });
+            if (currentPlayingId === videoId) {
+                if (hasActiveSearch) backBtn.style.display = 'inline-flex';
+                return;
+            }
 
-        if (viewingHistory.length > 50) {
-            viewingHistory.pop();
-        }
+            currentPlayingId = videoId;
+            const targetSrc = `https://yout-ube.com/watch?v=${videoId}`;
 
-        localStorage.setItem(
-            'mytube_dual_v6_history',
-            JSON.stringify(viewingHistory)
-        );
-    }
-
-    function showHistory() {
-
-        setNavbarActive('nav-history');
-
-        showViewMode('history');
-
-        videoGrid.innerHTML = '';
-
-        helperPanel.style.display = 'none';
-
-        backBtn.style.display = 'none';
-
-        if (viewingHistory.length === 0) {
-
-            statusMessage.innerHTML =
-                '視聴履歴はありません。';
-
-            return;
-        }
-
-        statusMessage.innerHTML =
-            '<h3>🕒 閲覧履歴</h3>';
-
-        viewingHistory.forEach(video => {
-
-            const card = document.createElement('div');
-
-            card.className = 'video-card';
-
-            card.innerHTML = `
-                <div class="thumbnail-box"
-                    onclick="playVideo('${video.videoId}', \`${escapeHtml(video.title)}\`)">
-
-                    <img class="thumbnail"
-                        src="https://i.ytimg.com/vi/${video.videoId}/mqdefault.jpg"
-                        alt="thumbnail">
-
+            iframeContainer.innerHTML = `
+                <div class="video-loader" id="loader-${videoId}">
+                    <div class="spinner"></div>
+                    <div>動画を読み込み中...</div>
                 </div>
-
-                <div class="video-info">
-
-                    <h3 class="video-title"
-                        onclick="playVideo('${video.videoId}', \`${escapeHtml(video.title)}\`)">
-
-                        ${video.title}
-
-                    </h3>
-
-                    <div class="video-links">
-                        🕒 ${video.viewedAt}
-                    </div>
-
-                </div>
+                <iframe
+                    id="iframe-${videoId}"
+                    src="${targetSrc}"
+                    title="Player"
+                    sandbox="allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-presentation allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-popups allow-popups-to-escape-sandbox"
+                    referpolicy="no-referrer"
+                    allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+                    allowfullscreen
+                ></iframe>
             `;
 
-            videoGrid.appendChild(card);
-        });
-    }
+            const targetIframe = document.getElementById(`iframe-${videoId}`);
+            targetIframe.onload = function () {
+                const loader = document.getElementById(`loader-${videoId}`);
+                if (loader) loader.style.display = 'none';
+            };
 
-    function showViewMode(mode) {
+            if (hasActiveSearch) backBtn.style.display = 'inline-flex';
+            saveToHistory(videoId, title);
+        }
 
-        videoGrid.style.display = 'grid';
+        function returnToResults() {
+            playerWrapper.classList.add('mini-player'); 
+            backBtn.style.display = 'none';
+            const targetAnchor = document.getElementById('status-message');
+            if (targetAnchor) targetAnchor.scrollIntoView({ behavior: 'smooth' });
+        }
 
-        statusMessage.style.display = 'block';
+        function saveToHistory(videoId, title) {
+            viewingHistory = viewingHistory.filter(v => v.videoId !== videoId);
+            viewingHistory.unshift({ videoId, title, viewedAt: new Date().toLocaleString('ja-JP') });
+            if (viewingHistory.length > 50) viewingHistory.pop();
+            localStorage.setItem('mytube_dual_v6_history', JSON.stringify(viewingHistory));
+        }
 
-        if (mode !== 'search' && mode !== 'history') {
-
-            playerWrapper.classList.remove('mini-player');
-
-            playerWrapper.style.display = 'none';
-
+        function showHistory() {
+            setNavbarActive('nav-history');
+            showViewMode('history');
+            videoGrid.innerHTML = '';
             helperPanel.style.display = 'none';
-
             backBtn.style.display = 'none';
 
-            currentPlayingId = null;
+            if (viewingHistory.length === 0) {
+                statusMessage.innerHTML = '視聴履歴はありません。';
+                return;
+            }
 
-            iframeContainer.innerHTML = '';
+            statusMessage.innerHTML = '<h3>● 閲覧履歴</h3>';
+            viewingHistory.forEach(video => {
+                const card = document.createElement('div');
+                card.className = 'video-card';
+                card.innerHTML = `
+                    <div class="thumbnail-box" onclick="playVideo('${video.videoId}', \`${escapeHtml(video.title)}\`)">
+                        <img class="thumbnail" src="https://i.ytimg.com/vi/${video.videoId}/mqdefault.jpg" alt="thumbnail">
+                    </div>
+                    <div class="video-info">
+                        <h3 class="video-title" onclick="playVideo('${video.videoId}', \`${escapeHtml(video.title)}\`)">${video.title}</h3>
+                        <div class="video-links">● ${video.viewedAt}</div>
+                    </div>
+                `;
+                videoGrid.appendChild(card);
+            });
         }
-    }
 
-    function showHome() {
+        function showViewMode(mode) {
+            videoGrid.style.display = 'grid';
+            statusMessage.style.display = 'block';
+            if (mode !== 'search' && mode !== 'history') {
+                playerWrapper.classList.remove('mini-player');
+                playerWrapper.style.display = 'none';
+                helperPanel.style.display = 'none';
+                backBtn.style.display = 'none';
+                currentPlayingId = null;
+                iframeContainer.innerHTML = '';
+            }
+        }
 
-        setNavbarActive('nav-home');
+        function showHome() {
+            setNavbarActive('nav-home');
+            showViewMode('home');
+            statusMessage.innerHTML = '検索エンジンとプロキシを選択し、キーワードを入力して「検索」を押してください。';
+            videoGrid.innerHTML = '';
+            searchInput.value = '';
+            hasActiveSearch = false;
+            backBtn.style.display = 'none';
+        }
 
-        showViewMode('home');
-
-        statusMessage.innerHTML =
-            'NAVERまたはEcosiaを選択し、キーワードを入力して「検索」を押してください。';
-
-        videoGrid.innerHTML = '';
-
-        searchInput.value = '';
-
-        hasActiveSearch = false;
-
-        backBtn.style.display = 'none';
-
-        loadMoreBtn.style.display = 'none';
-    }
-
-    function escapeHtml(str) {
-
-        return str
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#039;')
-            .replace(/`/g, '&#x60;');
-    }
-</script>
+        function escapeHtml(str) {
+            return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;').replace(/`/g, '&#x60;');
+        }
+    </script>
 </body>
 </html>
