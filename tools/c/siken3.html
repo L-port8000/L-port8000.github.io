@@ -1,3 +1,5 @@
+
+<!doctype html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -59,6 +61,7 @@
   }
   .nav-item a:hover, .nav-item button:hover { background: var(--line); }
   .nav-item.active a, .nav-item.active button { font-weight: 800; }
+  .nav-item.active svg { fill: currentColor; }
   .nav-label { font-size: 20px; }
   .nav-badge { position: absolute; top: 6px; left: 34px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 9999px; background: var(--blue); color: #fff; border: 2px solid var(--black); display: none; align-items: center; justify-content: center; font-size: 11px; font-weight: 900; line-height: 1; }
   .nav-badge.show { display: inline-flex; }
@@ -157,6 +160,8 @@
 
   .tweet-card { padding: 12px 16px; border-bottom: 1px solid var(--line); display: flex; gap: 12px; cursor: pointer; transition: background .2s; position: relative; }
   .tweet-card:hover { background: rgba(127,127,127,.06); }
+  .tweet-card.detail-main { cursor: default; }
+  .tweet-card.detail-main .tweet-text { font-size: 22px; line-height: 1.5; margin-top: 10px; }
   .tweet-avatar { width: 48px; height: 48px; }
   .tweet-avatar.profile-link, .tweet-author-link { cursor: pointer; }
   .tweet-avatar.profile-link:hover, .tweet-author-link:hover { opacity: .82; }
@@ -275,10 +280,28 @@
   .user-list-item:hover { background: var(--line); }
   .user-list-avatar { width: 44px; height: 44px; border-radius: 50%; overflow: hidden; background: var(--line); flex-shrink: 0; }
   .user-list-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .notification-item { display: flex; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--line); cursor: pointer; transition: background .2s; }
+  .notification-item:hover { background: rgba(127,127,127,.06); }
+  .notification-icon { color: var(--blue); flex-shrink: 0; margin-top: 2px; }
+  .notification-avatars { display: flex; align-items: center; margin-bottom: 6px; min-height: 32px; }
+  .notification-avatar { width: 32px; height: 32px; border-radius: 50%; overflow: hidden; background: var(--line); border: 2px solid var(--black); margin-left: -8px; }
+  .notification-avatar:first-child { margin-left: 0; }
+  .notification-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .notification-text { font-size: 15px; line-height: 1.45; }
+  .notification-text strong { font-weight: 900; }
+  .notification-snippet { color: var(--muted); font-size: 14px; margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .image-viewer-modal { width: 100vw; height: 100vh; max-width: none; max-height: none; min-height: 100vh; border: 0; border-radius: 0; background: rgba(0,0,0,.94); display: flex; align-items: center; justify-content: center; position: relative; }
   .image-viewer-close { position: fixed; left: 18px; top: 18px; width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; background: rgba(255,255,255,.12); color: #fff; z-index: 2; }
   .image-viewer-close:hover { background: rgba(255,255,255,.2); }
   .image-viewer-img { max-width: 94vw; max-height: 92vh; object-fit: contain; border-radius: 8px; }
+  .crop-workspace { padding: 18px; display: flex; flex-direction: column; gap: 16px; }
+  .crop-frame { width: min(100%, 520px); height: 220px; margin: 0 auto; background: var(--panel2); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; position: relative; }
+  .crop-frame.avatar { width: min(78vw, 320px); height: min(78vw, 320px); border-radius: 50%; }
+  .crop-frame img { position: absolute; left: 50%; top: 50%; max-width: none; transform-origin: center; user-select: none; pointer-events: none; }
+  .crop-controls { display: grid; gap: 12px; }
+  .crop-control { display: grid; gap: 6px; }
+  .crop-control label { color: var(--muted); font-size: 13px; font-weight: 800; }
+  .crop-control input { width: 100%; accent-color: var(--blue); }
   .empty-state h2 { font-size: 24px; font-weight: 900; color: var(--text); margin-top: 16px; }
   #toast-container { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 9998; display: flex; flex-direction: column; gap: 8px; align-items: center; }
   .toast { background: var(--blue); color: #fff; padding: 10px 20px; border-radius: 8px; font-size: 15px; box-shadow: 0 4px 16px var(--shadow); animation: toastIn .3s ease; pointer-events: none; }
@@ -297,6 +320,8 @@
     .nav-list { width: 100%; height: 64px; flex-direction: row; align-items: center; justify-content: space-around; gap: 0; }
     #nav-bookmarks, #nav-profile, #nav-settings { display: none; }
     .nav-item a, .nav-item button { width: 44px; height: 44px; padding: 0; justify-content: center; gap: 0; border-radius: 50%; }
+    .nav-item a svg, .nav-item button svg { fill: none; stroke: currentColor; stroke-width: 2; }
+    .nav-item.active a svg, .nav-item.active button svg { fill: currentColor; stroke: currentColor; }
     .nav-badge { top: 1px; left: 27px; }
     .nav-label { display: none; }
     .mobile-home-avatar-btn { display: block; }
@@ -304,7 +329,7 @@
       position: fixed; right: 18px; bottom: 82px; width: 56px; height: 56px; margin: 0; padding: 0; border-radius: 50%;
       display: grid; place-items: center; box-shadow: 0 8px 24px var(--shadow); z-index: 60; font-size: 0;
     }
-    .post-btn::before { content: "+"; font-size: 32px; line-height: 1; color: #fff; transform: translateY(-1px); }
+    .post-btn::before { content: "+"; font-size: 32px; line-height: 1; color: #fff; transform: translateY(1px); }
     .feed-header { top: 0; }
     .feed-header-inner { height: 50px; }
     .compose-area { padding: 10px 14px; border-bottom-width: 1px; }
@@ -371,11 +396,8 @@
           <button class="mobile-menu-link" onclick="navigateFromMobileMenu('search')"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>検索</button>
           <button class="mobile-menu-link" onclick="navigateFromMobileMenu('bookmarks')"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>ブックマーク</button>
           <button class="mobile-menu-link" onclick="navigateFromMobileMenu('settings')"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 005 15.08a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 008.92 5a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019 8.92a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09A1.65 1.65 0 0019.4 15z"/></svg>設定</button>
-          <button class="mobile-menu-link" onclick="openAccountsFromMobileMenu()"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>アカウント管理</button>
+          <button class="mobile-menu-link" onclick="navigateFromMobileMenu('accounts')"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>アカウント管理</button>
         </div>
-        <div class="mobile-menu-account-title">アカウント切り替え</div>
-        <div id="mobile-menu-account-list"></div>
-        <button class="mobile-menu-link" onclick="openAddAccountFromMobileMenu()">新しいアカウントを追加</button>
       </aside>
     </div>
 
@@ -400,7 +422,7 @@
       </div>
 
       <div class="view" id="view-notifications"><div class="feed-header"><div class="feed-header-inner"><button class="mobile-home-avatar-btn" onclick="openMobileMenu(event)"><img id="mobile-notifications-avatar-img" src="" alt="avatar"></button><h1>通知</h1></div></div><div id="notifications-list" class="feed-list"></div></div>
-      <div class="view" id="view-bookmarks"><div class="feed-header"><div class="feed-header-inner"><h1>ブックマーク</h1></div></div><div id="bookmarks-list" class="feed-list"></div></div>
+      <div class="view" id="view-bookmarks"><div class="feed-header"><div class="feed-header-inner"><button onclick="navigate('home')" class="icon-btn" style="color:var(--text);" title="戻る"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button><h1>ブックマーク</h1></div></div><div id="bookmarks-list" class="feed-list"></div></div>
 
       <div class="view" id="view-post-detail">
         <div class="feed-header">
@@ -422,12 +444,18 @@
       </div>
 
       <div class="view" id="view-settings">
-        <div class="feed-header"><div class="feed-header-inner"><h1>設定</h1></div></div>
+        <div class="feed-header"><div class="feed-header-inner"><button onclick="navigate('home')" class="icon-btn" style="color:var(--text);" title="戻る"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button><h1>設定</h1></div></div>
         <div class="settings-row"><div><div style="font-weight:800;">ライトモード</div><div style="color:var(--muted);font-size:14px;margin-top:3px;">表示テーマを切り替えます</div></div><button id="theme-switch" class="switch" onclick="toggleTheme()" aria-label="ライトモード"><span></span></button></div>
-        <div class="settings-row"><div><div style="font-weight:800;">アカウント</div><div style="color:var(--muted);font-size:14px;margin-top:3px;">追加、切り替え、プロフィール編集</div></div><button class="btn-secondary" onclick="openAccountsModal()">管理</button></div>
+        <div class="settings-row"><div><div style="font-weight:800;">アカウント</div><div style="color:var(--muted);font-size:14px;margin-top:3px;">追加、切り替え、プロフィール編集</div></div><button class="btn-secondary" onclick="navigate('accounts')">管理</button></div>
         <div class="settings-row"><div><div style="font-weight:800;">エクスポート用パスワード</div><div style="color:var(--muted);font-size:14px;margin-top:3px;">オンにすると、出力データをAES-256で暗号化します</div></div><button id="export-password-switch" class="switch" onclick="toggleExportPassword()" aria-label="エクスポート用パスワード"><span></span></button></div>
         <div class="settings-row" id="export-password-row" style="display:none;"><div style="flex:1;"><div style="font-weight:800;margin-bottom:8px;">パスワード</div><input type="password" class="form-input" id="export-password-input" placeholder="出力時に使うパスワード"></div></div>
         <div class="settings-row"><div><div style="font-weight:800;">すべてのツイートデータを出力</div><div style="color:var(--muted);font-size:14px;margin-top:3px;">アカウント、ツイート、設定をJSONで保存します</div></div><button class="btn-secondary" onclick="exportAllData()">出力</button></div>
+        <div class="settings-row"><div><div style="font-weight:800;">データをインポート</div><div style="color:var(--muted);font-size:14px;margin-top:3px;">ついメモのJSONまたは暗号化JSONを読み込みます</div></div><label class="btn-secondary" style="cursor:pointer;"><input type="file" accept="application/json,.json" style="display:none" onchange="importDataSelected(this)">選択</label></div>
+      </div>
+
+      <div class="view" id="view-accounts">
+        <div class="feed-header"><div class="feed-header-inner"><h1>アカウント管理</h1></div></div>
+        <div id="accounts-page-list" class="feed-list"></div>
       </div>
     </main>
 
@@ -478,6 +506,21 @@
 
 <div class="modal-overlay hidden" id="image-viewer-modal"><div class="image-viewer-modal"><button class="image-viewer-close" onclick="closeModal('image-viewer-modal')" title="閉じる"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button><img id="image-viewer-img" class="image-viewer-img" src="" alt=""></div></div>
 
+<div class="modal-overlay hidden" id="crop-modal">
+  <div class="modal">
+    <div class="modal-header"><button class="modal-close" onclick="cancelCropModal()"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button><div class="modal-title" id="crop-title">画像を調整</div></div>
+    <div class="crop-workspace">
+      <div class="crop-frame" id="crop-frame"><img id="crop-img" src="" alt=""></div>
+      <div class="crop-controls">
+        <div class="crop-control"><label>大きさ</label><input type="range" id="crop-zoom" min="1" max="3" step="0.01" value="1" oninput="updateCropPreview()"></div>
+        <div class="crop-control"><label>横位置</label><input type="range" id="crop-x" min="-100" max="100" step="1" value="0" oninput="updateCropPreview()"></div>
+        <div class="crop-control"><label>縦位置</label><input type="range" id="crop-y" min="-100" max="100" step="1" value="0" oninput="updateCropPreview()"></div>
+      </div>
+      <div class="btn-row"><button class="btn-secondary" onclick="cancelCropModal()">キャンセル</button><button class="btn-primary" onclick="applyCropModal()">決定</button></div>
+    </div>
+  </div>
+</div>
+
 <script>
 const DB_NAME = 'tsuimemo_db';
 const DB_VERSION = 5;
@@ -512,6 +555,7 @@ function dbGetAll(store) { return new Promise((res, rej) => { const req = db.tra
 function dbPut(store, obj) { return new Promise((res, rej) => { const req = db.transaction(store, 'readwrite').objectStore(store).put(obj); req.onsuccess = () => res(req.result); req.onerror = e => rej(e); }); }
 function dbDelete(store, key) { return new Promise((res, rej) => { const req = db.transaction(store, 'readwrite').objectStore(store).delete(key); req.onsuccess = () => res(); req.onerror = e => rej(e); }); }
 function dbAdd(store, obj) { return new Promise((res, rej) => { const req = db.transaction(store, 'readwrite').objectStore(store).add(obj); req.onsuccess = () => res(req.result); req.onerror = e => rej(e); }); }
+function dbClear(store) { return new Promise((res, rej) => { const req = db.transaction(store, 'readwrite').objectStore(store).clear(); req.onsuccess = () => res(); req.onerror = e => rej(e); }); }
 
 let currentAccountId = null, currentAccount = null;
 let accounts = [], accountMap = new Map(), tweets = [];
@@ -524,7 +568,8 @@ let activityTweetId = null, activityCurrentTab = 'likes';
 let newAccountAvatarData = null, editAvatarData = null, editHeaderData = null;
 let currentView = 'home';
 let currentFeedTab = 'for-you';
-const TITLE_MAP = { home: 'ついメモ / ホーム', search: 'ついメモ / 話題を検索', notifications: 'ついメモ / 通知', bookmarks: 'ついメモ / ブックマーク', profile: 'ついメモ / プロフィール', settings: 'ついメモ / 設定', 'post-detail': 'ついメモ / ポスト' };
+let cropState = null;
+const TITLE_MAP = { home: 'ついメモ / ホーム', search: 'ついメモ / 話題を検索', notifications: 'ついメモ / 通知', bookmarks: 'ついメモ / ブックマーク', profile: 'ついメモ / プロフィール', settings: 'ついメモ / 設定', accounts: 'ついメモ / アカウント管理', 'post-detail': 'ついメモ / ポスト' };
 function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
 
 async function init() {
@@ -598,9 +643,8 @@ function setNotificationReadAt(accountId, ts = Date.now()) {
   localStorage.setItem('tsuimemo_notification_read_at', JSON.stringify(map));
 }
 function unreadNotificationCountForAccount(accountId) {
-  const ids = new Set(tweets.filter(t => String(t.accountId) === String(accountId)).map(t => t.id));
   const readAt = getNotificationReadAt(accountId);
-  return tweets.filter(t => t.replyTo && ids.has(t.replyTo) && (t.createdAt || 0) > readAt).length;
+  return notificationItemsForAccount(accountId).filter(item => (item.createdAt || 0) > readAt).length;
 }
 function notificationBadgeHTML(accountId) {
   const count = unreadNotificationCountForAccount(accountId);
@@ -640,6 +684,7 @@ function renderAll() {
   renderBookmarks();
   renderNotifications();
   renderAccountMenu();
+  renderAccountsPage();
   renderMobileMenu();
   renderSuggestedUsers();
   updateThemeSwitch();
@@ -671,7 +716,7 @@ function renderMobileMenu() {
   }
   created.textContent = formatAccountCreated(currentAccount.createdAt);
   const list = document.getElementById('mobile-menu-account-list');
-  list.innerHTML = accounts.map(a => `
+  if (list) list.innerHTML = accounts.map(a => `
     <button class="mobile-menu-account-item" onclick="switchAccountFromMobileMenu('${a.id}')">
       <div class="mobile-menu-account-avatar"><img src="${getAvatarSrc(a)}" alt=""></div>
       <div style="flex:1;min-width:0;"><div style="font-weight:800;">${escHtml(a.name)}</div><div class="account-menu-handle">@${escHtml(a.handle)}</div><div class="account-created">${formatAccountCreated(a.createdAt)}</div></div>
@@ -773,13 +818,54 @@ function renderBookmarks() {
 function renderNotifications() {
   const list = document.getElementById('notifications-list');
   if (!list) return;
-  const myTweetIds = new Set(tweets.filter(t => t.accountId === currentAccountId).map(t => t.id));
-  const replies = tweets.filter(t => t.replyTo && myTweetIds.has(t.replyTo)).sort((a, b) => b.createdAt - a.createdAt);
-  if (replies.length === 0) {
+  const items = notificationItemsForAccount(currentAccountId).sort((a, b) => b.createdAt - a.createdAt);
+  if (items.length === 0) {
     list.innerHTML = `<div class="empty-state"><p>まだ通知はありません。</p></div>`;
     return;
   }
-  list.innerHTML = replies.map(r => tweetCardHTML(r, { suffix: 'notification-', notification: true })).join('');
+  list.innerHTML = items.map(notificationHTML).join('');
+}
+function notificationItemsForAccount(accountId) {
+  const mine = tweets.filter(t => String(t.accountId) === String(accountId));
+  const items = [];
+  mine.forEach(t => {
+    const likers = (t.likesBy || []).filter(id => String(id) !== String(accountId));
+    const reposters = (t.retweetsBy || []).filter(id => String(id) !== String(accountId));
+    const quotes = tweets.filter(q => q.quotedId === t.id && String(q.accountId) !== String(accountId));
+    if (likers.length) items.push({ type: 'like', tweet: t, accountIds: likers, createdAt: t.createdAt + 3 });
+    if (reposters.length) items.push({ type: 'repost', tweet: t, accountIds: reposters, createdAt: t.createdAt + 2 });
+    if (quotes.length) items.push({ type: 'quote', tweet: t, accountIds: quotes.map(q => q.accountId), createdAt: Math.max(...quotes.map(q => q.createdAt)), quoteIds: quotes.map(q => q.id) });
+  });
+  tweets.filter(r => r.replyTo && mine.some(t => t.id === r.replyTo)).forEach(r => {
+    if (String(r.accountId) === String(accountId)) return;
+    const parent = tweets.find(t => t.id === r.replyTo);
+    items.push({ type: 'reply', tweet: parent, reply: r, accountIds: [r.accountId], createdAt: r.createdAt });
+  });
+  return items;
+}
+function notificationNames(ids) {
+  const unique = [...new Set(ids.map(String))].map(id => getAccount(id)).filter(Boolean);
+  const names = unique.slice(0, 2).map(a => escHtml(a.name));
+  const rest = Math.max(0, unique.length - 2);
+  return `${names.join('、')}${rest ? `、その他${rest}人` : ''}`;
+}
+function notificationAvatars(ids) {
+  const unique = [...new Set(ids.map(String))].slice(0, 5).map(id => getAccount(id));
+  return unique.map(a => `<span class="notification-avatar"><img src="${getAvatarSrc(a)}" alt=""></span>`).join('');
+}
+function notificationHTML(item) {
+  const labels = { like: 'がいいねしました', repost: 'がリポストしました', quote: 'が引用しました', reply: 'が返信しました' };
+  const icons = { like: iconHeart(24, true), repost: iconRepost(24), quote: iconReply(24), reply: iconReply(24) };
+  const targetId = item.type === 'reply' ? item.reply.id : (item.quoteIds ? item.quoteIds[0] : item.tweet.id);
+  const snippet = item.type === 'reply' ? item.reply.text : item.tweet.text;
+  return `<div class="notification-item" onclick="openPostDetail(${targetId},event)">
+    <div class="notification-icon">${icons[item.type]}</div>
+    <div style="flex:1;min-width:0;">
+      <div class="notification-avatars">${notificationAvatars(item.accountIds)}</div>
+      <div class="notification-text"><strong>${notificationNames(item.accountIds)}</strong>${labels[item.type]}</div>
+      <div class="notification-snippet">${escHtml(snippet || '')}</div>
+    </div>
+  </div>`;
 }
 async function renderAccountMenu() {
   if (!db) return;
@@ -810,6 +896,7 @@ function tweetCardHTML(t, options = {}) {
   const suffix = options.suffix || '';
   const openTarget = options.openTarget ?? t.id;
   const cardClick = options.staticCard ? '' : `onclick="openPostDetail(${openTarget},event)"`;
+  const detailClass = options.detailMain ? ' detail-main' : '';
   const imgHtml = t.image ? `<div class="tweet-image-wrap"><img src="${t.image}" alt="tweet image" loading="lazy"></div>` : '';
   const editedBadge = t.edited ? `<span style="color:var(--muted);font-size:12px;font-style:italic;margin-left:4px;">編集済</span>` : '';
   const detailTime = options.showDetailTime ? `<div class="tweet-detail-time">${formatDetailMinute(t.createdAt)}</div>` : '';
@@ -819,7 +906,7 @@ function tweetCardHTML(t, options = {}) {
   const replyNote = options.replyNote ? `<div class="thread-reply-note">返信先: <span>@${escHtml(options.replyNote.handle)}</span></div>` : '';
   return `
     ${repostLine}
-    <div class="tweet-card" id="tweet-${suffix}${t.id}" ${cardClick}>
+    <div class="tweet-card${detailClass}" id="tweet-${suffix}${t.id}" ${cardClick}>
       ${notificationMark}
       <div class="tweet-avatar profile-link" onclick="openProfile('${t.accountId}',event)"><img src="${avatarSrc}" alt=""></div>
       <div class="tweet-body">
@@ -880,6 +967,7 @@ function navigate(view) {
     updateNotificationBadges();
   }
   if (view === 'bookmarks') renderBookmarks();
+  if (view === 'accounts') renderAccountsPage();
   if (view !== 'home') closeMobileMenu();
   window.scrollTo({ top: 0, behavior: 'instant' });
 }
@@ -895,8 +983,7 @@ function openProfile(accountId, e) {
 }
 function isMobileLayout() { return window.matchMedia && window.matchMedia('(max-width: 700px)').matches; }
 function openAccountEntry() {
-  if (isMobileLayout()) openMobileMenu();
-  else openAccountsModal();
+  navigate('accounts');
 }
 function openMobileMenu(e) {
   if (e) e.stopPropagation();
@@ -966,7 +1053,7 @@ async function likeTweet(id, e) {
   const t = tweets.find(t => t.id === id); if (!t) return;
   t.likesBy = toggleInArray(t.likesBy || [], currentAccountId);
   t.likes = t.likesBy.length; t.liked = isLiked(t);
-  await dbPut('tweets', t); renderAll(); refreshDetailIfOpen(id);
+  await dbPut('tweets', t); renderAfterTweetChange(id);
 }
 async function retweetTweet(id, e) {
   e && e.stopPropagation();
@@ -974,15 +1061,25 @@ async function retweetTweet(id, e) {
   const t = tweets.find(t => t.id === id); if (!t) return;
   t.retweetsBy = toggleInArray(t.retweetsBy || [], currentAccountId);
   t.retweets = t.retweetsBy.length; t.retweeted = isRetweeted(t);
-  await dbPut('tweets', t); renderAll(); refreshDetailIfOpen(id);
+  await dbPut('tweets', t); renderAfterTweetChange(id);
   showToast(isRetweeted(t) ? 'リポストしました' : 'リポストを取り消しました');
 }
 async function bookmarkTweet(id, e) {
   e && e.stopPropagation();
   const t = tweets.find(t => t.id === id); if (!t) return;
   t.bookmarksBy = toggleInArray(t.bookmarksBy || [], currentAccountId);
-  await dbPut('tweets', t); renderAll(); refreshDetailIfOpen(id);
+  await dbPut('tweets', t); renderAfterTweetChange(id);
   showToast(isBookmarked(t) ? 'ブックマークしました' : 'ブックマークを外しました');
+}
+function renderAfterTweetChange(id) {
+  if (currentView === 'home') renderFeed();
+  if (currentView === 'profile') renderProfile();
+  if (currentView === 'bookmarks') renderBookmarks();
+  if (currentView === 'notifications') renderNotifications();
+  refreshDetailIfOpen(id);
+  renderAccountMenu();
+  renderMobileMenu();
+  updateNotificationBadges();
 }
 function toggleInArray(arr, value) { return arr.includes(value) ? arr.filter(x => x !== value) : [...arr, value]; }
 function shareTweet(id, e) {
@@ -1043,6 +1140,19 @@ function threadRepliesFor(rootId) {
   walk(rootId);
   return collected;
 }
+function ancestorChainFor(id) {
+  const chain = [];
+  let cur = tweets.find(t => t.id === id);
+  const seen = new Set();
+  while (cur && cur.replyTo && !seen.has(cur.replyTo)) {
+    seen.add(cur.replyTo);
+    const parent = tweets.find(t => t.id === cur.replyTo);
+    if (!parent) break;
+    chain.unshift(parent);
+    cur = parent;
+  }
+  return chain;
+}
 
 function openPostDetail(id, e, forceRefresh = false) {
   if (e) e.stopPropagation();
@@ -1066,7 +1176,10 @@ function renderPostDetailContent(id) {
     content.innerHTML = `<div class="empty-state"><p>このポストは見つかりませんでした。</p></div>`;
     return;
   }
-  const replies = threadRepliesFor(id);
+  const ancestors = ancestorChainFor(id);
+  const rootId = ancestors.length ? ancestors[0].id : id;
+  const replies = threadRepliesFor(rootId).filter(r => r.id !== id);
+  const ancestorCards = ancestors.map(a => tweetCardHTML(a, { suffix: 'detail-parent-', openTarget: a.id })).join('');
   const replyCards = replies.map(r => {
     const parent = tweets.find(p => p.id === r.replyTo);
     const parentAccount = parent ? getAccount(parent.accountId) : null;
@@ -1077,7 +1190,8 @@ function renderPostDetailContent(id) {
     });
   }).join('');
   content.innerHTML = `
-    ${tweetCardHTML(t, { suffix: 'detail-main-', staticCard: true, showDetailTime: true })}
+    ${ancestorCards}
+    ${tweetCardHTML(t, { suffix: 'detail-main-', staticCard: true, showDetailTime: true, detailMain: true })}
     <div class="thread-compose">
       <div class="tweet-avatar"><img src="${getAvatarSrc(currentAccount)}" alt=""></div>
       <div style="flex:1;min-width:0;">
@@ -1085,7 +1199,7 @@ function renderPostDetailContent(id) {
         <div style="display:flex;justify-content:flex-end;margin-top:6px;"><button class="tweet-submit-btn" id="detail-reply-btn" onclick="submitDetailReply(${t.id})" style="padding:6px 16px;font-size:14px;" disabled>返信する</button></div>
       </div>
     </div>
-    <div class="reply-thread">${replyCards || '<div class="thread-empty">まだ返信はありません。</div>'}</div>`;
+    <div class="reply-thread">${replyCards}</div>`;
 }
 function refreshDetailIfOpen(id) {
   if (currentView === 'post-detail') renderPostDetailContent(currentDetailPostId || id);
@@ -1216,15 +1330,21 @@ async function deleteCurrentAccount() {
   await switchAccount(remaining[0].id);
   showToast('アカウントを削除しました');
 }
-async function openAccountsModal() {
-  document.getElementById('accounts-modal-body').innerHTML = accounts.map(a => `
+function accountsListHTML() {
+  return accounts.map(a => `
     <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);">
       <div style="width:48px;height:48px;border-radius:50%;overflow:hidden;flex-shrink:0;"><img src="${getAvatarSrc(a)}" style="width:100%;height:100%;object-fit:cover;" alt=""></div>
       <div style="flex:1;"><div style="font-weight:800;">${escHtml(a.name)}</div><div style="color:var(--muted);font-size:13px;">@${escHtml(a.handle)}</div><div class="account-created">${formatAccountCreated(a.createdAt)}</div></div>
       ${notificationBadgeHTML(a.id)}
-      ${a.id === currentAccountId ? '<span style="color:var(--blue);font-size:13px;font-weight:800;">使用中</span>' : `<button class="btn-secondary" style="padding:6px 14px;font-size:13px;" onclick="switchAccount('${a.id}');closeModal('accounts-modal')">切替</button>`}
-    </div>`).join('') + `<div class="btn-row"><button class="btn-primary" onclick="closeModal('accounts-modal');openAddAccountModal()">新しいアカウントを追加</button></div>`;
-  openModal('accounts-modal');
+      ${a.id === currentAccountId ? '<span style="color:var(--blue);font-size:13px;font-weight:800;">使用中</span>' : `<button class="btn-secondary" style="padding:6px 14px;font-size:13px;" onclick="switchAccount('${a.id}')">切替</button>`}
+    </div>`).join('') + `<div class="btn-row" style="padding:16px;"><button class="btn-primary" onclick="openAddAccountModal()">新しいアカウントを追加</button></div>`;
+}
+function renderAccountsPage() {
+  const page = document.getElementById('accounts-page-list');
+  if (page) page.innerHTML = `<div style="padding:0 16px;">${accountsListHTML()}</div>`;
+}
+async function openAccountsModal() {
+  navigate('accounts');
 }
 
 function openEditProfileModal() {
@@ -1282,11 +1402,112 @@ function openProfileHeaderImage() {
 }
 function triggerAvatarUpload() { if (currentProfileAccountId !== currentAccountId) return; document.getElementById('avatar-upload').click(); }
 function triggerHeaderUpload() { if (currentProfileAccountId !== currentAccountId) return; document.getElementById('header-upload').click(); }
-function avatarImageSelected(input) { const file = input.files[0]; if (!file) return; readAsDataURL(file, async data => { currentAccount.avatar = data; await dbPut('accounts', currentAccount); await refreshData(); renderAll(); showToast('アイコンを更新しました！'); }); }
-function headerImageSelected(input) { const file = input.files[0]; if (!file) return; readAsDataURL(file, async data => { currentAccount.header = data; await dbPut('accounts', currentAccount); await refreshData(); renderAll(); showToast('ヘッダー画像を更新しました！'); }); }
-function editAvatarSelected(input) { const file = input.files[0]; if (!file) return; readAsDataURL(file, data => { editAvatarData = data; const p = document.getElementById('edit-avatar-preview'); p.src = data; p.style.display = 'block'; }); }
-function editHeaderSelected(input) { const file = input.files[0]; if (!file) return; readAsDataURL(file, data => { editHeaderData = data; const p = document.getElementById('edit-header-preview'); p.src = data; p.style.display = 'block'; }); }
-function newAccountAvatarSelected(input) { const file = input.files[0]; if (!file) return; readAsDataURL(file, data => { newAccountAvatarData = data; const p = document.getElementById('new-account-avatar-preview'); p.src = data; p.style.display = 'block'; }); }
+function avatarImageSelected(input) { const file = input.files[0]; input.value = ''; if (!file) return; openCropModal(file, { type: 'avatar', title: 'アイコンを調整', ratioW: 1, ratioH: 1, onApply: async data => { currentAccount.avatar = data; await dbPut('accounts', currentAccount); await refreshData(); renderAll(); showToast('アイコンを更新しました！'); } }); }
+function headerImageSelected(input) { const file = input.files[0]; input.value = ''; if (!file) return; openCropModal(file, { type: 'header', title: 'ヘッダーを調整', ratioW: 3, ratioH: 1, onApply: async data => { currentAccount.header = data; await dbPut('accounts', currentAccount); await refreshData(); renderAll(); showToast('ヘッダー画像を更新しました！'); } }); }
+function editAvatarSelected(input) { const file = input.files[0]; input.value = ''; if (!file) return; openCropModal(file, { type: 'avatar', title: 'アイコンを調整', ratioW: 1, ratioH: 1, onApply: data => { editAvatarData = data; const p = document.getElementById('edit-avatar-preview'); p.src = data; p.style.display = 'block'; } }); }
+function editHeaderSelected(input) { const file = input.files[0]; input.value = ''; if (!file) return; openCropModal(file, { type: 'header', title: 'ヘッダーを調整', ratioW: 3, ratioH: 1, onApply: data => { editHeaderData = data; const p = document.getElementById('edit-header-preview'); p.src = data; p.style.display = 'block'; } }); }
+function newAccountAvatarSelected(input) { const file = input.files[0]; input.value = ''; if (!file) return; openCropModal(file, { type: 'avatar', title: 'アイコンを調整', ratioW: 1, ratioH: 1, onApply: data => { newAccountAvatarData = data; const p = document.getElementById('new-account-avatar-preview'); p.src = data; p.style.display = 'block'; } }); }
+function openCropModal(file, options) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    const img = new Image();
+    img.onload = () => {
+      cropState = { ...options, src: reader.result, naturalW: img.width, naturalH: img.height, image: img };
+      document.getElementById('crop-title').textContent = options.title;
+      document.getElementById('crop-frame').className = 'crop-frame' + (options.type === 'avatar' ? ' avatar' : '');
+      document.getElementById('crop-img').src = reader.result;
+      document.getElementById('crop-zoom').value = 1;
+      document.getElementById('crop-x').value = 0;
+      document.getElementById('crop-y').value = 0;
+      openModal('crop-modal');
+      setTimeout(updateCropPreview, 30);
+    };
+    img.src = reader.result;
+  };
+  reader.readAsDataURL(file);
+}
+function updateCropPreview() {
+  if (!cropState) return;
+  const frame = document.getElementById('crop-frame');
+  const img = document.getElementById('crop-img');
+  const zoom = Number(document.getElementById('crop-zoom').value);
+  const x = Number(document.getElementById('crop-x').value);
+  const y = Number(document.getElementById('crop-y').value);
+  const coverScale = Math.max(frame.clientWidth / cropState.naturalW, frame.clientHeight / cropState.naturalH);
+  const scale = coverScale * zoom;
+  const width = cropState.naturalW * scale;
+  const height = cropState.naturalH * scale;
+  const maxX = Math.max(0, (width - frame.clientWidth) / 2);
+  const maxY = Math.max(0, (height - frame.clientHeight) / 2);
+  img.style.width = width + 'px';
+  img.style.height = height + 'px';
+  img.style.transform = `translate(calc(-50% + ${maxX * x / 100}px), calc(-50% + ${maxY * y / 100}px))`;
+}
+function renderCropToDataURL() {
+  if (!cropState) return '';
+  const frame = document.getElementById('crop-frame');
+  const zoom = Number(document.getElementById('crop-zoom').value);
+  const x = Number(document.getElementById('crop-x').value);
+  const y = Number(document.getElementById('crop-y').value);
+  const targetRatio = cropState.ratioW / cropState.ratioH;
+  const outW = cropState.type === 'avatar' ? 512 : 1500;
+  const outH = Math.round(outW / targetRatio);
+  const coverScale = Math.max(frame.clientWidth / cropState.naturalW, frame.clientHeight / cropState.naturalH) * zoom;
+  const drawnW = cropState.naturalW * coverScale;
+  const drawnH = cropState.naturalH * coverScale;
+  const maxX = Math.max(0, (drawnW - frame.clientWidth) / 2);
+  const maxY = Math.max(0, (drawnH - frame.clientHeight) / 2);
+  const offsetX = -maxX * x / 100;
+  const offsetY = -maxY * y / 100;
+  const sx = (drawnW / 2 - frame.clientWidth / 2 + offsetX) / coverScale;
+  const sy = (drawnH / 2 - frame.clientHeight / 2 + offsetY) / coverScale;
+  const sw = frame.clientWidth / coverScale;
+  const sh = frame.clientHeight / coverScale;
+  const canvas = document.createElement('canvas');
+  canvas.width = outW;
+  canvas.height = outH;
+  canvas.getContext('2d').drawImage(cropState.image, sx, sy, sw, sh, 0, 0, outW, outH);
+  return canvas.toDataURL('image/jpeg', .88);
+}
+async function applyCropModal() {
+  if (!cropState) return;
+  const data = renderCropToDataURL();
+  const cb = cropState.onApply;
+  cropState = null;
+  closeModal('crop-modal');
+  await cb(data);
+}
+function cancelCropModal() {
+  cropState = null;
+  closeModal('crop-modal');
+}
+function cropImageFile(file, ratioW, ratioH) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const targetRatio = ratioW / ratioH;
+        let sw = img.width, sh = img.height;
+        if (sw / sh > targetRatio) sw = sh * targetRatio;
+        else sh = sw / targetRatio;
+        const sx = (img.width - sw) / 2;
+        const sy = (img.height - sh) / 2;
+        const maxW = ratioW === ratioH ? 512 : 1500;
+        const canvas = document.createElement('canvas');
+        canvas.width = maxW;
+        canvas.height = Math.round(maxW / targetRatio);
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/jpeg', .88));
+      };
+      img.onerror = reject;
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
 
 function applySavedTheme() { document.body.classList.toggle('light', localStorage.getItem('tsuimemo_theme') === 'light'); }
 function toggleTheme() { const light = !document.body.classList.contains('light'); document.body.classList.toggle('light', light); localStorage.setItem('tsuimemo_theme', light ? 'light' : 'dark'); updateThemeSwitch(); }
@@ -1331,6 +1552,38 @@ async function exportAllData() {
   downloadBlob(new Blob([JSON.stringify(encrypted, null, 2)], { type: 'application/json' }), `tsuimemo-export-${stamp}.encrypted.json`);
   showToast('暗号化して出力しました');
 }
+function importDataSelected(input) {
+  const file = input.files[0];
+  input.value = '';
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async () => {
+    try {
+      let data = JSON.parse(reader.result);
+      if (data.encrypted) {
+        const password = prompt('インポート用パスワードを入力してください');
+        if (!password) return;
+        data = JSON.parse(await decryptExportText(data, password));
+      }
+      if (!Array.isArray(data.accounts) || !Array.isArray(data.tweets)) throw new Error('invalid');
+      if (!confirm('現在のデータを置き換えてインポートします。続けますか？')) return;
+      await dbClear('accounts');
+      await dbClear('tweets');
+      for (const a of data.accounts.map(normalizeAccount)) await dbPut('accounts', a);
+      for (const t of data.tweets.map(normalizeTweet)) await dbPut('tweets', t);
+      if (data.settings?.theme) localStorage.setItem('tsuimemo_theme', data.settings.theme);
+      if (data.settings?.notificationReadAt) localStorage.setItem('tsuimemo_notification_read_at', JSON.stringify(data.settings.notificationReadAt));
+      currentAccountId = data.settings?.currentAccountId || data.accounts[0].id;
+      await refreshData();
+      renderAll();
+      navigate('home');
+      showToast('データをインポートしました');
+    } catch (err) {
+      showToast('インポートに失敗しました');
+    }
+  };
+  reader.readAsText(file);
+}
 async function encryptExportText(text, password) {
   const enc = new TextEncoder();
   const salt = crypto.getRandomValues(new Uint8Array(16));
@@ -1355,10 +1608,31 @@ async function encryptExportText(text, password) {
     data: bytesToBase64(new Uint8Array(data))
   };
 }
+async function decryptExportText(payload, password) {
+  if (!window.crypto || !crypto.subtle) throw new Error('crypto unavailable');
+  const dec = new TextDecoder();
+  const enc = new TextEncoder();
+  const baseKey = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveKey']);
+  const key = await crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt: base64ToBytes(payload.salt), iterations: payload.iterations || 200000, hash: 'SHA-256' },
+    baseKey,
+    { name: 'AES-GCM', length: 256 },
+    false,
+    ['decrypt']
+  );
+  const plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: base64ToBytes(payload.iv) }, key, base64ToBytes(payload.data));
+  return dec.decode(plain);
+}
 function bytesToBase64(bytes) {
   let binary = '';
   for (let i = 0; i < bytes.length; i += 0x8000) binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
   return btoa(binary);
+}
+function base64ToBytes(text) {
+  const binary = atob(text);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
 }
 function downloadBlob(blob, filename) {
   const url = URL.createObjectURL(blob);
