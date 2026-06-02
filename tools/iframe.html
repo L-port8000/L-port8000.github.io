@@ -1,19 +1,22 @@
-<!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>o - Multi-Gateway Browser</title>
-<link rel="icon" href="../icon.png">
-<style>
+<title>o - Iframe Browser</title>
+<link rel="icon" href="data:image/svg+xml;utf8,%3Csvg%20width%3D%22256%22%20height%3D%22256%22%20viewBox%3D%220%200%20256%20256%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%20%20%3Cdefs%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22g1%22%20x1%3D%220%25%22%20y1%3D%220%25%22%20x2%3D%22100%25%22%20y2%3D%22100%25%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%2300C6FF%22%3E%3C%2Fstop%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%230078FF%22%3E%3C%2Fstop%3E%0A%20%20%20%20%3C%2FlinearGradient%3E%0A%0A%20%20%20%20%3ClinearGradient%20id%3D%22g2%22%20x1%3D%22100%25%22%20y1%3D%220%25%22%20x2%3D%220%25%22%20y2%3D%22100%25%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%2300E0A4%22%3E%3C%2Fstop%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%2300B3FF%22%3E%3C%2Fstop%3E%0A%20%20%20%20%3C%2FlinearGradient%3E%0A%20%20%3C%2Fdefs%3E%0A%0A%20%20%3C!--%20%E5%A4%96%E5%81%B4%E3%81%AE%E6%B8%A6%20--%3E%0A%20%20%3Cpath%20d%3D%22M128%2028%0A%20%20%20%20%20%20%20C185%2028%20228%2070%20228%20128%0A%20%20%20%20%20%20%20C228%20181%20190%20223%20137%20228%0A%20%20%20%20%20%20%20C181%20214%20203%20180%20203%20142%0A%20%20%20%20%20%20%20C203%2092%20168%2058%20118%2058%0A%20%20%20%20%20%20%20C92%2058%2070%2069%2054%2086%0A%20%20%20%20%20%20%20C69%2051%2096%2028%20128%2028Z%22%20fill%3D%22url(%23g1)%22%3E%3C%2Fpath%3E%0A%0A%20%20%3C!--%20%E5%86%85%E5%81%B4%E3%81%AE%E6%B8%A6%20--%3E%0A%20%20%3Cpath%20d%3D%22M52%2088%0A%20%20%20%20%20%20%20C37%20103%2028%20123%2028%20145%0A%20%20%20%20%20%20%20C28%20202%2074%20228%20124%20228%0A%20%20%20%20%20%20%20C158%20228%20188%20212%20205%20186%0A%20%20%20%20%20%20%20C191%20196%20174%20202%20155%20202%0A%20%20%20%20%20%20%20C110%20202%2076%20170%2076%20129%0A%20%20%20%20%20%20%20C76%20109%2084%2091%2098%2078%0A%20%20%20%20%20%20%20C83%2079%2066%2082%2052%2088Z%22%20fill%3D%22url(%23g2)%22%3E%3C%2Fpath%3E%0A%0A%20%20%3C!--%20%E4%B8%AD%E5%A4%AE%20--%3E%0A%20%20%3Ccircle%20cx%3D%22128%22%20cy%3D%22128%22%20r%3D%2242%22%20fill%3D%22white%22%3E%3C%2Fcircle%3E%0A%3C%2Fsvg%3E">
+<!-- iPhone用 -->
+<link rel="apple-touch-icon" href="data:image/svg+xml;utf8,%3Csvg%20width%3D%22256%22%20height%3D%22256%22%20viewBox%3D%220%200%20256%20256%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%20%20%3Cdefs%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22g1%22%20x1%3D%220%25%22%20y1%3D%220%25%22%20x2%3D%22100%25%22%20y2%3D%22100%25%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%2300C6FF%22%3E%3C%2Fstop%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%230078FF%22%3E%3C%2Fstop%3E%0A%20%20%20%20%3C%2FlinearGradient%3E%0A%0A%20%20%20%20%3ClinearGradient%20id%3D%22g2%22%20x1%3D%22100%25%22%20y1%3D%220%25%22%20x2%3D%220%25%22%20y2%3D%22100%25%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%2300E0A4%22%3E%3C%2Fstop%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%2300B3FF%22%3E%3C%2Fstop%3E%0A%20%20%20%20%3C%2FlinearGradient%3E%0A%20%20%3C%2Fdefs%3E%0A%0A%20%20%3C!--%20%E5%A4%96%E5%81%B4%E3%81%AE%E6%B8%A6%20--%3E%0A%20%20%3Cpath%20d%3D%22M128%2028%0A%20%20%20%20%20%20%20C185%2028%20228%2070%20228%20128%0A%20%20%20%20%20%20%20C228%20181%20190%20223%20137%20228%0A%20%20%20%20%20%20%20C181%20214%20203%20180%20203%20142%0A%20%20%20%20%20%20%20C203%2092%20168%2058%20118%2058%0A%20%20%20%20%20%20%20C92%2058%2070%2069%2054%2086%0A%20%20%20%20%20%20%20C69%2051%2096%2028%20128%2028Z%22%20fill%3D%22url(%23g1)%22%3E%3C%2Fpath%3E%0A%0A%20%20%3C!--%20%E5%86%85%E5%81%B4%E3%81%AE%E6%B8%A6%20--%3E%0A%20%20%3Cpath%20d%3D%22M52%2088%0A%20%20%20%20%20%20%20C37%20103%2028%20123%2028%20145%0A%20%20%20%20%20%20%20C28%20202%2074%20228%20124%20228%0A%20%20%20%20%20%20%20C158%20228%20188%20212%20205%20186%0A%20%20%20%20%20%20%20C191%20196%20174%20202%20155%20202%0A%20%20%20%20%20%20%20C110%20202%2076%20170%2076%20129%0A%20%20%20%20%20%20%20C76%20109%2084%2091%2098%2078%0A%20%20%20%20%20%20%20C83%2079%2066%2082%2052%2088Z%22%20fill%3D%22url(%23g2)%22%3E%3C%2Fpath%3E%0A%0A%20%20%3C!--%20%E4%B8%AD%E5%A4%AE%20--%3E%0A%20%20%3Ccircle%20cx%3D%22128%22%20cy%3D%22128%22%20r%3D%2242%22%20fill%3D%22white%22%3E%3C%2Fcircle%3E%0A%3C%2Fsvg%3E">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Iframe"><style>
 :root { --bg-color: #f0f0f4; --toolbar-bg: #f9f9fb; --text-color: #000; --border-color: #d0d0d7; --accent: #0060df; --warning: #f39c12; }
 body.dark-mode { --bg-color: #1c1b22; --toolbar-bg: #2b2a33; --text-color: #fbfbfe; --border-color: #52525e; --accent: #00ddff; --warning: #ffb444; }
 body { margin: 0; font-family: system-ui, sans-serif; background: var(--bg-color); color: var(--text-color); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
 
+/* ---- プログレス ---- */
 #progress-container { position: absolute; top: 0; left: 0; width: 100%; height: 2px; z-index: 1000; pointer-events: none; }
 #progress-bar { width: 0%; height: 100%; background: var(--accent); transition: width 0.3s ease; }
 
-
-
+/* ---- タブバー ---- */
 #tabs-bar { display: flex; background: var(--bg-color); padding: 5px 5px 0 5px; gap: 4px; border-bottom: 1px solid var(--border-color); overflow-x: auto; min-height: 35px; scrollbar-width: none; }
 #tabs-bar::-webkit-scrollbar { display: none; }
 .tab { padding: 6px 12px; background: rgba(0,0,0,0.05); border-radius: 8px 8px 0 0; cursor: pointer; min-width: 140px; max-width: 200px; display: flex; align-items: center; font-size: 11px; border: 1px solid var(--border-color); border-bottom: none; white-space: nowrap; transition: 0.2s; }
@@ -22,6 +25,8 @@ body { margin: 0; font-family: system-ui, sans-serif; background: var(--bg-color
 .tab-title { flex: 1; overflow: hidden; text-overflow: ellipsis; }
 .close-btn { margin-left: 8px; opacity: 0.3; font-size: 14px; }
 .close-btn:hover { color: red; opacity: 1; }
+
+/* ---- クロム ---- */
 #chrome { background: var(--toolbar-bg); border-bottom: 1px solid var(--border-color); padding: 8px; display: flex; gap: 8px; align-items: center; z-index: 10; }
 #url { flex: 1; padding: 8px 15px; border-radius: 20px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-color); font-size: 13px; }
 #bookmark-bar { background: var(--toolbar-bg); padding: 4px 10px; display: flex; gap: 10px; border-bottom: 1px solid var(--border-color); font-size: 11px; overflow-x: auto; min-height: 20px; }
@@ -30,10 +35,16 @@ body { margin: 0; font-family: system-ui, sans-serif; background: var(--bg-color
 .bm-item img { width: 12px; height: 12px; }
 .star-btn { font-size: 20px; cursor: pointer; color: #ccc; }
 .star-btn.active { color: #f1c40f; }
+#view-mode-btn svg { width: 18px; height: 18px; fill: currentColor; }
+#view-mode-btn.embed-mode { color: var(--warning); border-color: var(--warning); background: rgba(243,156,18,0.1); }
+
+/* ---- メインビュー ---- */
 #main-container { display: flex; flex: 1; overflow: hidden; position: relative; }
 #view { flex: 1; background: white; position: relative; }
 .page-element { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; display: none; background: white; }
 .page-element.active { display: block; }
+
+/* ---- 設定ページ ---- */
 .settings-page { padding: 40px 20px; overflow-y: auto; box-sizing: border-box; background: var(--bg-color) !important; }
 .card { background: var(--toolbar-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); max-width: 600px; margin: 0 auto 20px; color: var(--text-color); }
 .proxy-item { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border-color); }
@@ -42,21 +53,104 @@ button { padding: 6px 12px; cursor: pointer; border-radius: 4px; border: 1px sol
 button:disabled { opacity: 0.3; cursor: default; }
 select, input[type="text"] { padding: 8px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-color); }
 
-#view-mode-btn svg { width: 18px; height: 18px; fill: currentColor; }
-#view-mode-btn.embed-mode { color: var(--warning); border-color: var(--warning); background: rgba(243,156,18,0.1); }
-
+/* ---- 全画面ボタン ---- */
 #fs-close-btn { position: fixed; top: 15px; right: 15px; z-index: 9999; width: 32px; height: 32px; background: rgba(0,0,0,0.3); color: white; border: none; border-radius: 50%; cursor: pointer; display: none; opacity: 0.2; transition: 0.3s; font-size: 18px; line-height: 1; }
 #fs-close-btn:hover { opacity: 1; background: rgba(220,53,69,0.9); }
 :fullscreen #tabs-bar, :fullscreen #chrome, :fullscreen #bookmark-bar { display: none !important; }
 :fullscreen #fs-close-btn { display: flex; align-items: center; justify-content: center; }
 
-/* プロファイル作成ダイアログ */
-#profile-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 2000; align-items: center; justify-content: center; }
-#profile-modal.open { display: flex; }
-#profile-modal-box { background: var(--toolbar-bg); padding: 24px; border-radius: 12px; border: 1px solid var(--border-color); min-width: 300px; color: var(--text-color); }
-#profile-modal-box h3 { margin: 0 0 16px; }
-#profile-modal-box input { width: 100%; box-sizing: border-box; margin-bottom: 12px; }
-#profile-modal-box .modal-btns { display: flex; gap: 8px; justify-content: flex-end; }
+/* ====================================================
+   ニュータブページ
+==================================================== */
+.newtab-page {
+    background: var(--bg-color) !important;
+    overflow-y: auto;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 36px 20px 40px;
+}
+.nt-header { text-align: center; margin-bottom: 28px; }
+.nt-clock { font-size: 60px; font-weight: 200; letter-spacing: 3px; line-height: 1; margin-bottom: 6px; }
+.nt-date  { font-size: 13px; opacity: 0.45; }
+.nt-search-row { display: flex; gap: 8px; width: 100%; max-width: 520px; margin: 0 auto 36px; align-self: center; }
+.nt-search-row input {
+    flex: 1; padding: 11px 20px; border-radius: 24px;
+    border: 1px solid var(--border-color); background: var(--toolbar-bg);
+    color: var(--text-color); font-size: 14px; outline: none;
+}
+.nt-search-row input:focus { border-color: var(--accent); }
+.nt-search-row button {
+    padding: 11px 22px; border-radius: 24px;
+    background: var(--accent); color: #fff; border: none; font-size: 13px;
+}
+
+.nt-body { width: 100%; max-width: 920px; }
+.nt-top-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+.nt-top-bar h3 { margin: 0; font-size: 13px; font-weight: 600; opacity: 0.5; text-transform: uppercase; letter-spacing: 1px; }
+.nt-edit-btn { font-size: 12px; gap: 4px; }
+.nt-edit-btn.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+.nt-categories { display: flex; flex-direction: column; gap: 22px; }
+.nt-cat { }
+.nt-cat-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.nt-cat-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; opacity: 0.4; flex: 1; }
+.nt-cat-del-btn { font-size: 11px; color: #e74; border-color: #e74; display: none; }
+.nt-edit-mode .nt-cat-del-btn { display: flex; }
+
+.nt-links { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.nt-link {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 20px; border-radius: 8px; border: 1px solid var(--border-color);
+    background: var(--toolbar-bg); cursor: pointer; font-size: 13px;
+    transition: border-color 0.15s, background 0.15s; position: relative;
+    white-space: nowrap;
+}
+.nt-link:hover { border-color: var(--accent); }
+.nt-link img { width: 14px; height: 14px; flex-shrink: 0; }
+.nt-link .nt-x {
+    display: none; position: absolute; top: -7px; right: -7px;
+    width: 17px; height: 17px; border-radius: 50%;
+    background: #e74c3c; color: #fff; font-size: 10px;
+    align-items: center; justify-content: center; cursor: pointer;
+    border: 2px solid var(--bg-color); line-height: 1; z-index: 2;
+}
+.nt-edit-mode .nt-link .nt-x { display: flex; }
+
+.nt-add-link {
+    display: flex; align-items: center; gap: 6px;
+    padding: 7px 14px; border-radius: 8px;
+    border: 1px dashed var(--border-color); background: transparent;
+    cursor: pointer; font-size: 13px; color: var(--text-color);
+    opacity: 0; pointer-events: none; transition: opacity 0.15s;
+}
+.nt-edit-mode .nt-add-link { opacity: 0.55; pointer-events: auto; }
+.nt-add-link:hover { opacity: 1 !important; border-color: var(--accent); color: var(--accent); }
+
+.nt-add-cat-row { margin-top: 20px; }
+.nt-add-cat-row button { font-size: 12px; opacity: 0; pointer-events: none; transition: opacity 0.15s; }
+.nt-edit-mode .nt-add-cat-row button { opacity: 0.55; pointer-events: auto; }
+.nt-edit-mode .nt-add-cat-row button:hover { opacity: 1; }
+
+/* ====================================================
+   モーダル共通
+==================================================== */
+.modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.45); z-index: 2000;
+    align-items: center; justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal-box {
+    background: var(--toolbar-bg); padding: 24px; border-radius: 14px;
+    border: 1px solid var(--border-color); min-width: 300px; max-width: 380px;
+    width: 90%; color: var(--text-color);
+}
+.modal-box h3 { margin: 0 0 16px; font-size: 15px; }
+.modal-box input, .modal-box select { width: 100%; box-sizing: border-box; margin-bottom: 12px; }
+.modal-btns { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
+.modal-ok { background: var(--accent) !important; color: #fff !important; border-color: var(--accent) !important; }
 </style>
 </head>
 <body>
@@ -64,14 +158,40 @@ select, input[type="text"] { padding: 8px; border-radius: 4px; border: 1px solid
 <div id="progress-container"><div id="progress-bar"></div></div>
 <button id="fs-close-btn" onclick="exitFullscreen()">×</button>
 
-<!-- プロファイルモーダル -->
-<div id="profile-modal">
-  <div id="profile-modal-box">
+<!-- ===== プロファイルモーダル ===== -->
+<div id="profile-modal" class="modal-overlay">
+  <div class="modal-box">
     <h3>新規プロファイル</h3>
     <input id="profile-name-input" type="text" placeholder="プロファイル名">
     <div class="modal-btns">
       <button onclick="closeProfileModal()">キャンセル</button>
-      <button onclick="confirmCreateProfile()" style="background:var(--accent);color:#fff;border-color:var(--accent);">作成</button>
+      <button class="modal-ok" onclick="confirmCreateProfile()">作成</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== リンク追加モーダル ===== -->
+<div id="link-modal" class="modal-overlay">
+  <div class="modal-box">
+    <h3>リンクを追加</h3>
+    <input id="lm-title" type="text" placeholder="タイトル (省略可)">
+    <input id="lm-url" type="text" placeholder="https://...">
+    <select id="lm-cat"></select>
+    <div class="modal-btns">
+      <button onclick="closeLinkModal()">キャンセル</button>
+      <button class="modal-ok" onclick="confirmAddLink()">追加</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== カテゴリ追加モーダル ===== -->
+<div id="cat-modal" class="modal-overlay">
+  <div class="modal-box">
+    <h3>カテゴリを追加</h3>
+    <input id="cm-name" type="text" placeholder="カテゴリ名">
+    <div class="modal-btns">
+      <button onclick="closeCatModal()">キャンセル</button>
+      <button class="modal-ok" onclick="confirmAddCat()">追加</button>
     </div>
   </div>
 </div>
@@ -85,7 +205,7 @@ select, input[type="text"] { padding: 8px; border-radius: 4px; border: 1px solid
     <span id="star-btn" class="star-btn" onclick="toggleBookmark()">★</span>
     <input id="url" placeholder="URLを入力してEnter">
     <button onclick="go()">Go</button>
-    <button id="view-mode-btn" onclick="toggleViewMode()" title="表示モード切替 (iframe / embed)">
+    <button id="view-mode-btn" onclick="toggleViewMode()" title="iframeモード (通常)">
         <svg viewBox="0 0 24 24"><path d="M3 13h12v-2H3v2zm0 4h12v-2H3v2zm0-8h12V7H3v2zm14 8l5-5-5-5v10z"/></svg>
     </button>
     <button onclick="toggleFullscreen()">⛶</button>
@@ -99,7 +219,7 @@ select, input[type="text"] { padding: 8px; border-radius: 4px; border: 1px solid
 
 <script>
 /* ======================================================
-   プロキシ定義
+   定数
 ====================================================== */
 const PROXIES = {
     1:  { name: "55games - 1",  url: "https://55gms.com/embed.html#",  info: "US - NY elite" },
@@ -120,18 +240,32 @@ const PROXIES = {
     16: { name: "Workers - 11", url: "https://proxy.rdr.workers.dev/-----",         info: "US - SF Non-anony" },
     17: { name: "Workers - 12", url: "https://proxy.thiruhostinger.workers.dev/?url=", info: "US - SF Non-anony" },
     18: { name: "Workers - 13", url: "https://lucky-mountain-6e91.networkfreedom.workers.dev/-----", info: "US - SF Non-anony" },
-    19: { name: "Workers - 14", url: "https://tohyotalk.habataku.workers.dev/-----",info: "US - SF Non-anony" },
+    19: { name: "Workers - 14", url: "https://tohyotalk.habataku.workers.dev/-----", info: "US - SF Non-anony" },
     20: { name: "Workers - 15", url: "https://little-credit-fc7d.sfzanghao.workers.dev/-----", info: "US - SF Non-anony" },
     21: { name: "Workers - 16", url: "https://proxy.thiruhostinger.workers.dev/?url=", info: "US - SF Non-anony" }
 };
+const SANDBOX = "allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-presentation allow-same-origin allow-scripts allow-storage-access-by-user-activation";
+const SPECIAL_URLS = ["settings://", "newtab://"];
 
-const SANDBOX_SETTINGS = "allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-presentation allow-same-origin allow-scripts allow-storage-access-by-user-activation";
+const DEFAULT_NT_LINKS = () => ([
+
+  {
+    id: 1,
+    name: "検索サイト",
+    links: [
+      { id: 101, title: "google", url: "https://google.com/?igu=1" },
+      { id: 102, title: "google AI", url: "https://google.com/?igu=1&udm=50" },
+      { id: 103, title: "bing", url: "https://bing.com/search?q=L_port8000" },
+      { id: 104, title: "Copilot search", url: "https://bing.com/copilotsearch" },
+    ]
+  }
+]);
 
 /* ======================================================
-   プロファイル管理
+   プロファイル
 ====================================================== */
-const DEFAULT_PROFILE_SETTINGS = () => ({
-    homeUrl: "https://google.com/?igu=1",
+const DEFAULT_SETTINGS = () => ({
+    homeUrl: "newtab://",
     darkMode: false,
     bookmarks: [],
     viewMode: "iframe",
@@ -142,68 +276,42 @@ function loadProfiles() {
     try { return JSON.parse(localStorage.getItem('profiles')) || [{ id: 1, name: "デフォルト" }]; }
     catch(e) { return [{ id: 1, name: "デフォルト" }]; }
 }
-function saveProfiles() {
-    localStorage.setItem('profiles', JSON.stringify(profiles));
-}
-function getActiveProfileId() {
-    return parseInt(localStorage.getItem('active-profile-id')) || profiles[0].id;
-}
-function setActiveProfileId(id) {
-    localStorage.setItem('active-profile-id', id);
-}
+function saveProfiles() { localStorage.setItem('profiles', JSON.stringify(profiles)); }
+function getActiveProfileId() { return parseInt(localStorage.getItem('active-profile-id')) || profiles[0].id; }
+function setActiveProfileId(id) { localStorage.setItem('active-profile-id', String(id)); }
 
 let profiles = loadProfiles();
 let activeProfileId = getActiveProfileId();
+if (!profiles.find(p => p.id === activeProfileId)) { activeProfileId = profiles[0].id; setActiveProfileId(activeProfileId); }
 
-// 存在しないプロファイルIDが保存されていた場合のフォールバック
-if (!profiles.find(p => p.id === activeProfileId)) {
-    activeProfileId = profiles[0].id;
-    setActiveProfileId(activeProfileId);
-}
-
-/* ---- プロファイルキー生成ヘルパー ---- */
 function pk(key) { return `p${activeProfileId}-${key}`; }
 
-/* ======================================================
-   設定 (アクティブプロファイルスコープ)
-====================================================== */
-let settings = DEFAULT_PROFILE_SETTINGS();
-
+let settings = DEFAULT_SETTINGS();
 function loadSettings() {
     const saved = localStorage.getItem(pk('settings'));
-    if (saved) settings = { ...DEFAULT_PROFILE_SETTINGS(), ...JSON.parse(saved) };
-    else settings = DEFAULT_PROFILE_SETTINGS();
+    settings = saved ? { ...DEFAULT_SETTINGS(), ...JSON.parse(saved) } : DEFAULT_SETTINGS();
 }
 function saveState() {
     localStorage.setItem(pk('settings'), JSON.stringify(settings));
     localStorage.setItem(pk('sessions'), JSON.stringify(tabs.map(t => ({
-        id: t.id, url: t.url, title: t.title,
-        history: t.history, historyIndex: t.historyIndex
+        id: t.id, url: t.url, title: t.title, history: t.history, historyIndex: t.historyIndex
     }))));
     localStorage.setItem(pk('last-active'), activeTabId);
 }
 
-/* ======================================================
-   プロファイルUI
-====================================================== */
-function renderProfileBar() {}
-
+/* ---- プロファイルモーダル ---- */
 function openProfileModal() {
     document.getElementById('profile-name-input').value = '';
     document.getElementById('profile-modal').classList.add('open');
     setTimeout(() => document.getElementById('profile-name-input').focus(), 50);
 }
-function closeProfileModal() {
-    document.getElementById('profile-modal').classList.remove('open');
-}
+function closeProfileModal() { document.getElementById('profile-modal').classList.remove('open'); }
 function confirmCreateProfile() {
     const name = document.getElementById('profile-name-input').value.trim();
     if (!name) return;
     const newId = Date.now();
     profiles.push({ id: newId, name });
-    saveProfiles();
-    closeProfileModal();
-    switchProfile(newId);
+    saveProfiles(); closeProfileModal(); switchProfile(newId);
 }
 document.getElementById('profile-name-input').addEventListener('keydown', e => {
     if (e.key === 'Enter') confirmCreateProfile();
@@ -212,53 +320,63 @@ document.getElementById('profile-name-input').addEventListener('keydown', e => {
 
 function deleteProfile(id) {
     if (profiles.length <= 1) return;
-    if (!confirm(`プロファイル「${profiles.find(p=>p.id===id)?.name}」を削除しますか？`)) return;
-    // ストレージ削除
+    if (!confirm(`「${profiles.find(p=>p.id===id)?.name}」を削除しますか？`)) return;
     ['settings','sessions','last-active'].forEach(k => localStorage.removeItem(`p${id}-${k}`));
     profiles = profiles.filter(p => p.id !== id);
     saveProfiles();
-    if (activeProfileId === id) {
-        activeProfileId = profiles[0].id;
-        setActiveProfileId(activeProfileId);
-    }
+    if (activeProfileId === id) { activeProfileId = profiles[0].id; setActiveProfileId(activeProfileId); }
     initProfile();
 }
-
 function switchProfile(id) {
     if (id === activeProfileId) return;
-    // 現在のタブをリセット
     tabs.forEach(t => { if(t.element) t.element.remove(); });
-    tabs = [];
-    activeTabId = null;
+    tabs = []; activeTabId = null;
     document.getElementById('view').innerHTML = '';
-
-    activeProfileId = id;
-    setActiveProfileId(id);
+    activeProfileId = id; setActiveProfileId(id);
     initProfile();
 }
 
 /* ======================================================
    ブラウザエンジン
 ====================================================== */
-let tabs = [];
-let activeTabId = null;
+let tabs = [], activeTabId = null;
 
-function setProgress(percent) {
+function setProgress(p) {
     const bar = document.getElementById('progress-bar');
-    bar.style.width = percent + "%";
-    if (percent >= 100) setTimeout(() => { bar.style.width = "0%"; }, 400);
+    bar.style.width = p + "%";
+    if (p >= 100) setTimeout(() => { bar.style.width = "0%"; }, 400);
+}
+
+function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
 function getIconUrl(url) {
     if (url === "settings://") return "https://gstatic.com/images/branding/product/1x/settings_32dp.png";
-    try { const domain = new URL(url).hostname; return `https://icons.duckduckgo.com/ip3/${domain}.ico`; }
+    if (url === "newtab://") return "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='18' font-size='16'>🏠</text></svg>";
+    try { return `https://icons.duckduckgo.com/ip3/${new URL(url).hostname}.ico`; }
     catch(e) { return "https://icons.duckduckgo.com/ip3/example.com.ico"; }
 }
 
 function getEffectiveUrl(url) {
-    if (url === "settings://") return url;
+    if (SPECIAL_URLS.includes(url)) return url;
     return !settings.activeProxyId ? url : PROXIES[settings.activeProxyId].url + url;
 }
+
+/* ---- 特殊URLを開く関数 ---- */
+/**
+ * openInNewTab(url) — 指定URLを新しいタブで開く (公開API)
+ * ニュータブページや設定ページのリンクから呼び出し可能
+ */
+window.openInNewTab = function(url) {
+    createNewTab(url);
+};
+/** openInNewTabBg(url) — バックグラウンドで新しいタブを作成 */
+window.openInNewTabBg = function(url) {
+    createTabObject(url);
+    renderTabsUI();
+    saveState();
+};
 
 function createTabObject(url, id = Date.now(), title = "読み込み中...", history = null, hIndex = 0) {
     const tab = { id, url, title, history: history || [url], historyIndex: hIndex, element: null };
@@ -276,17 +394,20 @@ function updateTabElement(tab) {
         el = document.createElement('div');
         el.className = "page-element settings-page";
         renderSettingsInto(el);
+    } else if (tab.url === "newtab://") {
+        el = document.createElement('div');
+        el.className = "page-element newtab-page";
+        tab.title = "新しいタブ";
+        renderNewtabInto(el);
     } else {
         const finalUrl = getEffectiveUrl(tab.url);
         if (settings.viewMode === "iframe") {
             el = document.createElement('iframe');
             el.src = finalUrl;
-            el.setAttribute("sandbox", SANDBOX_SETTINGS);
+            el.setAttribute("sandbox", SANDBOX);
         } else {
             el = document.createElement(settings.viewMode === "object" ? "object" : "embed");
-            el.src = finalUrl;
-            el.data = finalUrl;
-            el.type = "text/html";
+            el.src = finalUrl; el.data = finalUrl; el.type = "text/html";
         }
         el.className = "page-element";
         setProgress(30);
@@ -311,6 +432,7 @@ function switchTab(id) {
         if (active) {
             document.getElementById('url').value = t.url;
             if (t.url === "settings://") renderSettingsInto(t.element);
+            if (t.url === "newtab://") renderNewtabInto(t.element);
         }
     });
     updateNavButtons(); updateStarUI(); renderTabsUI(); saveState();
@@ -322,21 +444,20 @@ function renderTabsUI() {
     tabs.forEach(t => {
         const div = document.createElement('div');
         div.className = `tab ${t.id === activeTabId ? 'active' : ''}`;
-        div.innerHTML = `<img src="${getIconUrl(t.url)}"><span class="tab-title">${t.title}</span><span class="close-btn" data-tid="${t.id}">×</span>`;
+        div.innerHTML = `<img src="${getIconUrl(t.url)}"><span class="tab-title">${esc(t.title)}</span><span class="close-btn" data-tid="${t.id}">×</span>`;
         div.querySelector('.close-btn').addEventListener('click', e => { e.stopPropagation(); closeTab(t.id); });
         div.addEventListener('click', () => switchTab(t.id));
         bar.appendChild(div);
     });
     const add = document.createElement('button');
-    add.textContent = "+";
-    add.style = "height:28px; margin-top:5px;";
-    add.onclick = () => createNewTab();
+    add.textContent = "+"; add.style = "height:28px; margin-top:5px;";
+    add.onclick = () => createNewTab('newtab://');
     bar.appendChild(add);
 }
 
 function go() {
-    let url = document.getElementById('url').value;
-    if (url !== "settings://" && !url.startsWith('http')) url = "https://" + url;
+    let url = document.getElementById('url').value.trim();
+    if (!SPECIAL_URLS.includes(url) && !url.startsWith('http')) url = "https://" + url;
     const tab = tabs.find(t => t.id === activeTabId);
     if (tab.url !== url) {
         tab.history = tab.history.slice(0, tab.historyIndex + 1);
@@ -355,29 +476,28 @@ function navForward() {
 }
 function navReload() { const t = tabs.find(x => x.id === activeTabId); if(t) updateTabElement(t); }
 function openSettings() { document.getElementById('url').value = "settings://"; go(); }
-function goHome() { document.getElementById('url').value = settings.homeUrl; go(); }
-
+function goHome() { document.getElementById('url').value = "newtab://"; go(); }
 function closeTab(id) {
     if (tabs.length === 1) return;
     const idx = tabs.findIndex(t => t.id === id);
     tabs[idx].element.remove(); tabs.splice(idx, 1);
     switchTab(tabs[Math.max(0, idx - 1)].id);
 }
-function createNewTab(url = settings.homeUrl) { switchTab(createTabObject(url).id); }
+function createNewTab(url = 'newtab://') { switchTab(createTabObject(url).id); }
 function updateStarUI() {
     const t = tabs.find(x => x.id === activeTabId);
-    const isB = settings.bookmarks.some(b => b.url === (t ? t.url : ""));
+    const bookmarkable = t && !SPECIAL_URLS.includes(t.url);
+    const isB = bookmarkable && settings.bookmarks.some(b => b.url === t.url);
     document.getElementById('star-btn').classList.toggle('active', isB);
 }
 function updateNavButtons() {
-    const t = tabs.find(x => x.id === activeTabId);
-    if (!t) return;
-    document.getElementById('btn-back').disabled = (t.historyIndex <= 0);
+    const t = tabs.find(x => x.id === activeTabId); if (!t) return;
+    document.getElementById('btn-back').disabled    = (t.historyIndex <= 0);
     document.getElementById('btn-forward').disabled = (t.historyIndex >= t.history.length - 1);
 }
 function toggleBookmark() {
     const tab = tabs.find(t => t.id === activeTabId);
-    if (tab.url === "settings://") return;
+    if (!tab || SPECIAL_URLS.includes(tab.url)) return;
     const idx = settings.bookmarks.findIndex(b => b.url === tab.url);
     if (idx > -1) settings.bookmarks.splice(idx, 1);
     else settings.bookmarks.push({ title: tab.title, url: tab.url });
@@ -387,113 +507,228 @@ function renderBookmarkBar() {
     const bar = document.getElementById('bookmark-bar'); bar.innerHTML = '';
     settings.bookmarks.forEach(bm => {
         const div = document.createElement('div'); div.className = 'bm-item';
-        div.innerHTML = `<img src="${getIconUrl(bm.url)}"><span>${bm.title}</span>`;
+        div.innerHTML = `<img src="${getIconUrl(bm.url)}"><span>${esc(bm.title)}</span>`;
         div.onclick = () => { document.getElementById('url').value = bm.url; go(); };
         bar.appendChild(div);
     });
 }
 
+/* ======================================================
+   ニュータブページ
+====================================================== */
+let ntEditMode = false;
+let clockTimer  = null;
+
+function renderNewtabInto(container) {
+    // 時計
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+    const dateStr = now.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+
+    // カテゴリHTML
+    let catsHtml = '';
+    for (const cat of DEFAULT_NT_LINKS()) {
+        let linksHtml = '';
+        for (const link of cat.links) {
+            linksHtml += `
+            <div class="nt-link" onclick="window.ntOpen(${cat.id},${link.id})">
+                <img src="https://icons.duckduckgo.com/ip3/${(() => { try { return new URL(link.url).hostname; } catch(e) { return 'example.com'; }})()}.ico" onerror="this.style.display='none'">
+                <span>${esc(link.title)}</span>
+            </div>`;
+        }
+        catsHtml += `
+        <div class="nt-cat" data-catid="${cat.id}">
+            <div class="nt-cat-header">
+                <span class="nt-cat-label">${esc(cat.name)}</span>
+            </div>
+            <div class="nt-links">
+                ${linksHtml}
+            </div>
+        </div>`;
+    }
+
+    container.innerHTML = `
+        <div class="nt-header">
+            <div class="nt-clock" id="nt-clock">${timeStr}</div>
+            <div class="nt-date"  id="nt-date">${dateStr}</div>
+        </div>
+        <div class="nt-search-row">
+            <input id="nt-search" type="text" placeholder="ツールを検索...">
+            <button onclick="window.ntSearch()">検索</button>
+        </div>
+        <div class="nt-body">
+            <div class="nt-top-bar">
+                <h3>ツール &amp; リンク</h3>
+            </div>
+            <div class="nt-categories">${catsHtml}</div>
+        </div>`;
+
+    // 時計更新
+    startClock();
+
+    // 検索イベント: 入力時とEnterキー時に検索を実行
+    const si = container.querySelector('#nt-search');
+    if (si) {
+        si.addEventListener('input', window.ntSearch);
+        si.addEventListener('keydown', e => { if (e.key === 'Enter') window.ntSearch(); });
+    }
+}
+
+function startClock() {
+    if (clockTimer) clearInterval(clockTimer);
+    clockTimer = setInterval(() => {
+        const c = document.getElementById('nt-clock');
+        const d = document.getElementById('nt-date');
+        if (!c) { clearInterval(clockTimer); clockTimer = null; return; }
+        const now = new Date();
+        c.textContent = now.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+        if (d) d.textContent = now.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+    }, 1000);
+}
+
+/* ---- ニュータブ グローバル関数 ---- */
+window.ntOpen = function(catId, linkId) {
+    const cat  = DEFAULT_NT_LINKS().find(c => c.id === catId);
+    const link = cat && cat.links.find(l => l.id === linkId);
+    if (link) openInNewTab(link.url);
+};
+
+/**
+ * ツールの検索機能
+ * 入力された文字列に基づいてリストのリンクをフィルタリングする
+ */
+window.ntSearch = function() {
+    const input = document.getElementById('nt-search');
+    if (!input) return;
+    
+    const query = input.value.toLowerCase();
+    const categories = document.querySelectorAll('.nt-cat');
+
+    categories.forEach(cat => {
+        const links = cat.querySelectorAll('.nt-link');
+        let visibleCount = 0;
+
+        links.forEach(link => {
+            const titleSpan = link.querySelector('span');
+            if (titleSpan) {
+                const title = titleSpan.textContent.toLowerCase();
+                if (title.includes(query)) {
+                    link.style.display = 'flex'; // 表示
+                    visibleCount++;
+                } else {
+                    link.style.display = 'none';  // 非表示
+                }
+            }
+        });
+
+        // カテゴリ内に表示するリンクがなくなった場合はカテゴリごと非表示
+        cat.style.display = visibleCount > 0 ? 'block' : 'none';
+    });
+};
+
+
+/* ======================================================
+   設定ページ
+====================================================== */
 function renderSettingsInto(container) {
-    let proxyHtml = "";
+    let proxyHtml = '';
     for (const id in PROXIES) {
-        const p = PROXIES[id]; const isC = settings.activeProxyId == id;
-        proxyHtml += `
-        <div class="proxy-item">
-            <div><strong>${p.name}</strong><br><small>${p.info}</small></div>
+        const p = PROXIES[id], isC = settings.activeProxyId == id;
+        proxyHtml += `<div class="proxy-item">
+            <div><strong>${esc(p.name)}</strong><br><small>${esc(p.info)}</small></div>
             <div>${isC ? '<span class="status-connected">接続中</span>' : ''}
             <button onclick="toggleProxy(${id})">${isC ? '切断' : '接続'}</button></div>
         </div>`;
     }
 
-    let profileHtml = profiles.map(p => `
+    const profileHtml = profiles.map(p => `
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-            <span>${p.id === activeProfileId ? '▶ ' : ''}<strong>${p.name}</strong>${p.id === activeProfileId ? ' (現在)' : ''}</span>
+            <span>${p.id === activeProfileId ? '▶ ' : ''}<strong>${esc(p.name)}</strong>${p.id === activeProfileId ? ' (現在)' : ''}</span>
             <div style="display:flex; gap:6px;">
                 ${p.id !== activeProfileId ? `<button onclick="switchProfile(${p.id})">切替</button>` : ''}
                 ${profiles.length > 1 ? `<button onclick="deleteProfile(${p.id})" style="color:#c00; border-color:#c00;">削除</button>` : ''}
             </div>
         </div>`).join('');
 
+    const bmsHtml = settings.bookmarks.length === 0
+        ? '<p style="opacity:0.5">なし</p>'
+        : settings.bookmarks.map((b,i) => `
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <span><img src="${getIconUrl(b.url)}" style="width:12px; margin-right:5px;">${esc(b.title)}</span>
+            <button onclick="settings.bookmarks.splice(${i},1);saveState();renderSettingsInto(document.querySelector('.settings-page'));renderBookmarkBar();">削除</button>
+          </div>`).join('');
+
     container.innerHTML = `
         <div class="card"><h3>👤 プロファイル管理</h3>
             ${profileHtml}
-            <button onclick="openProfileModal()" style="margin-top:8px;">+ 新規プロファイル</button>
+            <button onclick="openProfileModal()" style="margin-top:8px;">＋ 新規プロファイル</button>
         </div>
-        <div class="card"><h3>★ ブックマーク</h3>
-            ${settings.bookmarks.length === 0 ? '<p style="opacity:0.5">なし</p>' :
-              settings.bookmarks.map((b,i) => `
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                <span><img src="${getIconUrl(b.url)}" style="width:12px; margin-right:5px;">${b.title}</span>
-                <button onclick="settings.bookmarks.splice(${i},1);saveState();renderSettingsInto(document.querySelector('.settings-page'));renderBookmarkBar();">削除</button>
-              </div>`).join('')}
-        </div>
+        <div class="card"><h3>★ ブックマーク</h3>${bmsHtml}</div>
         <div class="card"><h3>🌓 表示・モード</h3>
             <button onclick="settings.darkMode=!settings.darkMode; document.body.classList.toggle('dark-mode'); saveState(); renderSettingsInto(document.querySelector('.settings-page'));">ダークモード切替</button>
             <div style="margin-top:10px;">
                 表示方式:
                 <select onchange="settings.viewMode=this.value; updateViewModeButton(); saveState();" style="margin-left:10px;">
-                    <option value="iframe" ${settings.viewMode==='iframe'?'selected':''}>iframe (通常)</option>
-                    <option value="embed" ${settings.viewMode==='embed'?'selected':''}>embed (回避モード)</option>
-                    <option value="object" ${settings.viewMode==='object'?'selected':''}>object</option>
+                    <option value="iframe"  ${settings.viewMode==='iframe' ?'selected':''}>iframe (通常)</option>
+                    <option value="embed"   ${settings.viewMode==='embed'  ?'selected':''}>embed (回避モード)</option>
+                    <option value="object"  ${settings.viewMode==='object' ?'selected':''}>object</option>
                 </select>
             </div>
         </div>
-        <div class="card"><h3>🌐 プロキシ設定</h3>${proxyHtml}</div>
-    `;
+        <div class="card"><h3>🌐 プロキシ設定</h3>${proxyHtml}</div>`;
 }
 
 window.toggleProxy = (id) => {
     settings.activeProxyId = (settings.activeProxyId == id) ? null : id; saveState();
     const t = tabs.find(x => x.id === activeTabId);
-    if (t && t.url !== "settings://") updateTabElement(t);
+    if (t && !SPECIAL_URLS.includes(t.url)) updateTabElement(t);
     renderSettingsInto(document.querySelector('.settings-page'));
 };
 
+/* ======================================================
+   表示モード / 全画面
+====================================================== */
 function toggleViewMode() {
     settings.viewMode = settings.viewMode === "iframe" ? "embed" : "iframe";
     updateViewModeButton(); saveState();
     const t = tabs.find(x => x.id === activeTabId);
-    if (t && t.url !== "settings://") updateTabElement(t);
+    if (t && !SPECIAL_URLS.includes(t.url)) updateTabElement(t);
 }
 function updateViewModeButton() {
     const btn = document.getElementById('view-mode-btn');
     if (settings.viewMode === "embed") {
-        btn.classList.add('embed-mode');
-        btn.title = "embedモード (ポップアップ制限回避中)";
+        btn.classList.add('embed-mode'); btn.title = "embedモード (回避中)";
     } else {
-        btn.classList.remove('embed-mode');
-        btn.title = "iframeモード (通常)";
+        btn.classList.remove('embed-mode'); btn.title = "iframeモード (通常)";
     }
 }
-
 function toggleFullscreen() {
-    if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(err => console.error(err));
-    } else { exitFullscreen(); }
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(e=>console.error(e));
+    else exitFullscreen();
 }
 function exitFullscreen() { if (document.exitFullscreen) document.exitFullscreen(); }
 
+/* ======================================================
+   初期化
+====================================================== */
 function initProfile() {
     loadSettings();
-    if (settings.darkMode) document.body.classList.add('dark-mode');
-    else document.body.classList.remove('dark-mode');
+    document.body.classList.toggle('dark-mode', !!settings.darkMode);
     updateViewModeButton();
+    ntEditMode = false;
 
     const savedTabs = localStorage.getItem(pk('sessions'));
     if (savedTabs) {
         JSON.parse(savedTabs).forEach(t => createTabObject(t.url, t.id, t.title, t.history, t.historyIndex));
         const lastActive = parseInt(localStorage.getItem(pk('last-active')));
-        const target = tabs.find(t => t.id === lastActive) || tabs[0];
-        switchTab(target.id);
+        switchTab((tabs.find(t => t.id === lastActive) || tabs[0]).id);
     } else {
-        createNewTab(settings.homeUrl);
+        createNewTab('newtab://');
     }
-    renderProfileBar();
     renderBookmarkBar();
 }
 
 document.getElementById("url").addEventListener("keydown", e => { if (e.key === "Enter") go(); });
-
 initProfile();
 </script>
 </body>
