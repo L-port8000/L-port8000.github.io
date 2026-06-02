@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>Firefox Mobile Multi-Gateway</title>
+    <link rel="icon" href="data:image/svg+xml;utf8,%3Csvg%20width%3D%22256%22%20height%3D%22256%22%20viewBox%3D%220%200%20256%20256%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22g1%22%20x1%3D%220%25%22%20y1%3D%220%25%22%20x2%3D%22100%25%22%20y2%3D%22100%25%22%3E%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%2300C6FF%22%2F%3E%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%230078FF%22%2F%3E%3C%2FlinearGradient%3E%3ClinearGradient%20id%3D%22g2%22%20x1%3D%22100%25%22%20y1%3D%220%25%22%20x2%3D%220%25%22%20y2%3D%22100%25%22%3E%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%2300E0A4%22%2F%3E%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%2300B3FF%22%2F%3E%3C%2FlinearGradient%3E%3C%2Fdefs%3E%3Cpath%20d%3D%22M128%2028%20C185%2028%20228%2070%20228%20128%20C228%20181%20190%20223%20137%20228%20C181%20214%20203%20180%20203%20142%20C203%2092%20168%2058%20118%2058%20C92%2058%2070%2069%2054%2086%20C69%2051%2096%2028%20128%2028Z%22%20fill%3D%22url(%23g1)%22%2F%3E%3Cpath%20d%3D%22M52%2088%20C37%20103%2028%20123%2028%20145%20C28%20202%2074%20228%20124%20228%20C158%20228%20188%20212%20205%20186%20C191%20196%20174%20202%20155%20202%20C110%20202%2076%20170%2076%20129%20C76%20109%2084%2091%2098%2078%20C83%2079%2066%2082%2052%2088Z%22%20fill%3D%22url(%23g2)%22%2F%3E%3Ccircle%20cx%3D%22128%22%20cy%3D%22128%22%20r%3D%2242%22%20fill%3D%22white%22%2F%3E%3C%2Fsvg%3E">
+    <link rel="apple-touch-icon" href="data:image/svg+xml;utf8,%3Csvg%20width%3D%22256%22%20height%3D%22256%22%20viewBox%3D%220%200%20256%20256%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22g1%22%20x1%3D%220%25%22%20y1%3D%220%25%22%20x2%3D%22100%25%22%20y2%3D%22100%25%22%3E%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%2300C6FF%22%2F%3E%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%230078FF%22%2F%3E%3C%2FlinearGradient%3E%3ClinearGradient%20id%3D%22g2%22%20x1%3D%22100%25%22%20y1%3D%220%25%22%20x2%3D%220%25%22%20y2%3D%22100%25%22%3E%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%2300E0A4%22%2F%3E%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%2300B3FF%22%2F%3E%3C%2FlinearGradient%3E%3C%2Fdefs%3E%3Cpath%20d%3D%22M128%2028%20C185%2028%20228%2070%20228%20128%20C228%20181%20190%20223%20137%20228%20C181%20214%20203%20180%20203%20142%20C203%2092%20168%2058%20118%2058%20C92%2058%2070%2069%2054%2086%20C69%2051%2096%2028%20128%2028Z%22%20fill%3D%22url(%23g1)%22%2F%3E%3Cpath%20d%3D%22M52%2088%20C37%20103%2028%20123%2028%20145%20C28%20202%2074%20228%20124%20228%20C158%20228%20188%20212%20205%20186%20C191%20196%20174%20202%20155%20202%20C110%20202%2076%20170%2076%20129%20C76%20109%2084%2091%2098%2078%20C83%2079%2066%2082%2052%2088Z%22%20fill%3D%22url(%23g2)%22%2F%3E%3Ccircle%20cx%3D%22128%22%20cy%3D%22128%22%20r%3D%2242%22%20fill%3D%22white%22%2F%3E%3C%2Fsvg%3E">
+    <meta name="apple-mobile-web-app-title" content="Browser">
+    <style>
+        :root {
+            --bg-color: #f9f9fb;
+            --toolbar-bg: #ffffff;
+            --text-color: #15141a;
+            --border-color: #cfcfd8;
+            --accent: #0060df;
+            --tor-color: #7d4698;
+            --tab-card-bg: #ffffff;
+            --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+            --safe-area-top: env(safe-area-inset-top, 0px);
+        }
+        body.dark-mode {
+            --bg-color: #1c1b22;
+            --toolbar-bg: #2b2a33;
+            --text-color: #fbfbfe;
+            --border-color: #52525e;
+            --accent: #00ddff;
+            --tor-color: #9d66b8;
+            --tab-card-bg: #42414d;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* ---- プログレスバー ---- */
+        #progress-container { position: absolute; top: 0; left: 0; width: 100%; height: 3px; z-index: 1000; pointer-events: none; }
+        #progress-bar { width: 0%; height: 100%; background: var(--accent); transition: width 0.3s ease; }
+
+        /* ---- メインコンテナ ---- */
+        #main-container { flex: 1; position: relative; overflow: hidden; }
+        .page-element { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; display: none; background: white; }
+        .page-element.active { display: block; }
+
+        /* ---- ブックマークバー ---- */
+        #bookmark-bar {
+            background: var(--toolbar-bg);
+            border-top: 1px solid var(--border-color);
+            padding: 8px 12px;
+            display: none;
+            gap: 12px;
+            overflow-x: auto;
+            white-space: nowrap;
+            scrollbar-width: none;
+            z-index: 90;
+        }
+        #bookmark-bar.visible { display: flex; }
+        #bookmark-bar::-webkit-scrollbar { display: none; }
+        .bm-item {
+            display: flex; align-items: center; gap: 6px;
+            background: rgba(128,128,128,0.1);
+            padding: 6px 12px; border-radius: 16px;
+            font-size: 13px; cursor: pointer; flex-shrink: 0;
+        }
+        .bm-item img { width: 14px; height: 14px; border-radius: 2px; }
+
+        /* ---- ツールバー ---- */
+        #toolbar {
+            background: var(--toolbar-bg);
+            border-top: 1px solid var(--border-color);
+            padding: 8px 12px calc(8px + var(--safe-area-bottom));
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 100;
+        }
+        #url-container {
+            flex: 1;
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            padding: 8px 16px;
+        }
+        #url {
+            flex: 1; border: none; background: transparent;
+            color: var(--text-color); font-size: 15px; outline: none; width: 100%;
+        }
+        .icon-btn {
+            background: transparent; border: none; color: var(--text-color);
+            font-size: 20px; cursor: pointer; padding: 4px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .icon-btn:disabled { opacity: 0.3; }
+        #tab-count-btn {
+            border: 2px solid var(--text-color);
+            border-radius: 6px;
+            width: 24px; height: 24px;
+            font-size: 13px; font-weight: bold;
+        }
+
+        /* ---- メニューオーバーレイ ---- */
+        #menu-overlay {
+            position: fixed;
+            bottom: calc(70px + var(--safe-area-bottom));
+            right: 12px;
+            background: var(--toolbar-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+            display: none;
+            flex-direction: column;
+            width: 220px;
+            z-index: 200;
+            overflow: hidden;
+        }
+        .menu-item {
+            padding: 14px 16px; display: flex; align-items: center; gap: 12px;
+            font-size: 15px; cursor: pointer; border-bottom: 1px solid var(--border-color);
+        }
+        .menu-item:last-child { border-bottom: none; }
+        .menu-item:active { background: rgba(128,128,128,0.1); }
+        .star-active { color: #f1c40f; }
+
+        /* ---- タブスイッチャー ---- */
+        #tab-switcher {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-color); z-index: 1000;
+            display: none; flex-direction: column;
+        }
+        #tab-switcher.active { display: flex; }
+        #tab-switcher-header {
+            padding: 16px; display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid var(--border-color); background: var(--toolbar-bg);
+            padding-top: calc(16px + var(--safe-area-top));
+        }
+        #tab-grid {
+            flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+            padding: 16px; overflow-y: auto;
+        }
+        .tab-card {
+            background: var(--tab-card-bg); border: 1px solid var(--border-color); border-radius: 12px;
+            aspect-ratio: 3/4; display: flex; flex-direction: column; overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05); position: relative;
+        }
+        .tab-card.active { border: 2px solid var(--accent); }
+        .tab-card-header {
+            padding: 8px 10px; display: flex; align-items: center; gap: 6px;
+            font-size: 12px; border-bottom: 1px solid var(--border-color); background: var(--toolbar-bg);
+        }
+        .tab-card-header img { width: 14px; height: 14px; }
+        .tab-card-header span { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .tab-close-x { font-size: 20px; padding: 0 4px; color: var(--text-color); cursor: pointer; }
+        .tab-card-body {
+            flex: 1; background: rgba(128,128,128,0.05);
+            display: flex; align-items: center; justify-content: center;
+            color: #888; font-size: 10px; cursor: pointer;
+        }
+
+        /* ---- 設定・特殊ページ共通 ---- */
+        .settings-page {
+            padding: 20px; overflow-y: auto;
+            background: var(--bg-color) !important;
+            color: var(--text-color);
+        }
+        .newtab-page {
+            background: var(--bg-color) !important;
+            overflow-y: auto;
+            display: flex; flex-direction: column; align-items: center;
+            padding: 32px 16px 80px;
+        }
+        .card { background: var(--toolbar-bg); padding: 16px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 16px; }
+        .card h3 { margin-top: 0; margin-bottom: 12px; font-size: 16px; color: var(--accent); border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
+        .proxy-item { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border-color); }
+        .proxy-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+        .status-connected { color: #28a745; font-weight: bold; font-size: 12px; margin-right: 8px; }
+        .status-tor { color: var(--tor-color); font-weight: bold; font-size: 12px; margin-right: 8px; }
+        select, input[type="text"] { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-color); font-size: 14px; margin-bottom: 8px; }
+        button.btn { padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border-color); background: rgba(128,128,128,0.1); color: inherit; font-size: 14px; cursor: pointer; }
+        button.btn-primary { background: var(--accent); color: white; border: none; width: 100%; padding: 12px; font-weight: bold; border-radius: 8px; margin-top: 10px; cursor: pointer; }
+        button.btn-danger { border-color: #c00; color: #c00; }
+        .preset-group { display: flex; flex-wrap: wrap; gap: 8px; }
+
+        /* ---- ニュータブ ---- */
+        .nt-header { text-align: center; margin-bottom: 24px; width: 100%; }
+        .nt-clock { font-size: 56px; font-weight: 200; letter-spacing: 2px; line-height: 1; margin-bottom: 4px; }
+        .nt-date { font-size: 13px; opacity: 0.45; }
+        .nt-search-row {
+            display: flex; gap: 8px; width: 100%; max-width: 480px;
+            margin: 0 auto 28px; align-self: center;
+        }
+        .nt-search-row input {
+            flex: 1; padding: 12px 18px; border-radius: 24px;
+            border: 1px solid var(--border-color); background: var(--toolbar-bg);
+            color: var(--text-color); font-size: 14px; outline: none;
+            -webkit-appearance: none;
+        }
+        .nt-search-row input:focus { border-color: var(--accent); }
+        .nt-search-row button {
+            padding: 12px 20px; border-radius: 24px;
+            background: var(--accent); color: #fff; border: none;
+            font-size: 13px; cursor: pointer; white-space: nowrap;
+        }
+        .nt-body { width: 100%; max-width: 600px; }
+        .nt-top-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+        .nt-top-bar h3 { margin: 0; font-size: 12px; font-weight: 600; opacity: 0.45; text-transform: uppercase; letter-spacing: 1px; }
+        .nt-categories { display: flex; flex-direction: column; gap: 18px; }
+        .nt-cat { }
+        .nt-cat-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+        .nt-cat-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; opacity: 0.4; flex: 1; }
+        .nt-cat-del-btn { font-size: 11px; color: #e74; border: 1px solid #e74; background: transparent; border-radius: 6px; padding: 2px 8px; cursor: pointer; display: none; }
+        .nt-edit-mode .nt-cat-del-btn { display: flex; }
+        .nt-links { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+        .nt-link {
+            display: flex; align-items: center; gap: 8px;
+            padding: 10px 16px; border-radius: 8px; border: 1px solid var(--border-color);
+            background: var(--toolbar-bg); cursor: pointer; font-size: 13px;
+            transition: border-color 0.15s; position: relative; white-space: nowrap;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .nt-link:active { border-color: var(--accent); background: rgba(0,96,223,0.05); }
+        .nt-link img { width: 14px; height: 14px; flex-shrink: 0; }
+        .nt-link .nt-x {
+            display: none; position: absolute; top: -7px; right: -7px;
+            width: 17px; height: 17px; border-radius: 50%;
+            background: #e74c3c; color: #fff; font-size: 10px;
+            align-items: center; justify-content: center; cursor: pointer;
+            border: 2px solid var(--bg-color); line-height: 1; z-index: 2;
+        }
+        .nt-edit-mode .nt-link .nt-x { display: flex; }
+        .nt-add-link {
+            display: flex; align-items: center; gap: 6px;
+            padding: 8px 14px; border-radius: 8px;
+            border: 1px dashed var(--border-color); background: transparent;
+            cursor: pointer; font-size: 13px; color: var(--text-color);
+            opacity: 0; pointer-events: none; transition: opacity 0.15s;
+        }
+        .nt-edit-mode .nt-add-link { opacity: 0.6; pointer-events: auto; }
+        .nt-add-cat-row { margin-top: 16px; }
+        .nt-add-cat-row button {
+            font-size: 12px; opacity: 0; pointer-events: none;
+            transition: opacity 0.15s; padding: 8px 14px;
+            border-radius: 8px; border: 1px dashed var(--border-color);
+            background: transparent; color: var(--text-color); cursor: pointer;
+        }
+        .nt-edit-mode .nt-add-cat-row button { opacity: 0.6; pointer-events: auto; }
+        .nt-edit-btn {
+            font-size: 12px; padding: 6px 12px; border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: rgba(128,128,128,0.1); color: var(--text-color); cursor: pointer;
+            display: flex; align-items: center; gap: 4px;
+        }
+        .nt-edit-btn.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+        /* ---- モーダル共通 ---- */
+        .modal-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.5); z-index: 3000;
+            align-items: center; justify-content: center;
+        }
+        .modal-overlay.open { display: flex; }
+        .modal-box {
+            background: var(--toolbar-bg); padding: 24px; border-radius: 16px;
+            border: 1px solid var(--border-color); min-width: 280px; max-width: 360px;
+            width: 90%; color: var(--text-color);
+        }
+        .modal-box h3 { margin: 0 0 16px; font-size: 15px; }
+        .modal-box input, .modal-box select { width: 100%; margin-bottom: 12px; }
+        .modal-btns { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
+        .modal-ok { background: var(--accent) !important; color: #fff !important; border-color: var(--accent) !important; }
+
+        /* ---- フルスクリーン ---- */
+        #fs-close-btn {
+            position: fixed; top: 15px; right: 15px; z-index: 9999;
+            width: 40px; height: 40px; background: rgba(0,0,0,0.5); color: white;
+            border: none; border-radius: 50%; display: none;
+            font-size: 24px; line-height: 1; justify-content: center; align-items: center; cursor: pointer;
+        }
+        :fullscreen #bookmark-bar, :fullscreen #toolbar,
+        :-webkit-full-screen #bookmark-bar, :-webkit-full-screen #toolbar,
+        .pseudo-fullscreen #bookmark-bar, .pseudo-fullscreen #toolbar { display: none !important; }
+        :fullscreen #fs-close-btn,
+        :-webkit-full-screen #fs-close-btn,
+        .pseudo-fullscreen #fs-close-btn { display: flex; }
+    </style>
+</head>
+<body>
+
+<div id="progress-container"><div id="progress-bar"></div></div>
+<button id="fs-close-btn" onclick="exitFullscreen()">×</button>
+
+<!-- ===== プロファイルモーダル ===== -->
+<div id="profile-modal" class="modal-overlay">
+    <div class="modal-box">
+        <h3>新規プロファイル</h3>
+        <input id="profile-name-input" type="text" placeholder="プロファイル名">
+        <div class="modal-btns">
+            <button class="btn" onclick="closeProfileModal()">キャンセル</button>
+            <button class="btn modal-ok" onclick="confirmCreateProfile()">作成</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== リンク追加モーダル ===== -->
+<div id="link-modal" class="modal-overlay">
+    <div class="modal-box">
+        <h3>リンクを追加</h3>
+        <input id="lm-title" type="text" placeholder="タイトル (省略可)">
+        <input id="lm-url" type="text" placeholder="https://...">
+        <select id="lm-cat"></select>
+        <div class="modal-btns">
+            <button class="btn" onclick="closeLinkModal()">キャンセル</button>
+            <button class="btn modal-ok" onclick="confirmAddLink()">追加</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== カテゴリ追加モーダル ===== -->
+<div id="cat-modal" class="modal-overlay">
+    <div class="modal-box">
+        <h3>カテゴリを追加</h3>
+        <input id="cm-name" type="text" placeholder="カテゴリ名">
+        <div class="modal-btns">
+            <button class="btn" onclick="closeCatModal()">キャンセル</button>
+            <button class="btn modal-ok" onclick="confirmAddCat()">追加</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== タブスイッチャー ===== -->
+<div id="tab-switcher">
+    <div id="tab-switcher-header">
+        <button class="icon-btn" onclick="toggleTabSwitcher()">✕</button>
+        <span style="font-weight: bold; font-size: 16px;">開いているタブ</span>
+        <button class="icon-btn" onclick="createNewTab(); toggleTabSwitcher();">＋</button>
+    </div>
+    <div id="tab-grid"></div>
+</div>
+
+<!-- ===== メインコンテナ ===== -->
+<div id="main-container">
+    <div id="view"></div>
+</div>
+
+<!-- ===== メニューオーバーレイ ===== -->
+<div id="menu-overlay">
+    <div class="menu-item" onclick="navForward(); toggleMenu();">
+        <span style="width:24px;text-align:center;">▶</span> 進む
+    </div>
+    <div class="menu-item" onclick="navReload(); toggleMenu();">
+        <span style="width:24px;text-align:center;">⟳</span> 更新
+    </div>
+    <div class="menu-item" onclick="goHome(); toggleMenu();">
+        <span style="width:24px;text-align:center;">🏠</span> ホーム
+    </div>
+    <div class="menu-item" onclick="toggleBookmark(); toggleMenu();">
+        <span id="menu-star" style="width:24px;text-align:center;font-size:20px;">★</span> ブックマーク
+    </div>
+    <div class="menu-item" onclick="toggleFullscreen(); toggleMenu();">
+        <span style="width:24px;text-align:center;">⛶</span> フルスクリーン
+    </div>
+    <div class="menu-item" onclick="openSettings(); toggleMenu();">
+        <span style="width:24px;text-align:center;">⚙️</span> 設定
+    </div>
+    <div class="menu-item" onclick="toggleDarkMode(); toggleMenu();">
+        <span style="width:24px;text-align:center;">🌓</span> ダークモード
+    </div>
+</div>
+
+<!-- ===== ブックマークバー ===== -->
+<div id="bookmark-bar"></div>
+
+<!-- ===== ツールバー ===== -->
+<div id="toolbar">
+    <button class="icon-btn" onclick="navBack()" id="btn-back">◀</button>
+    <div id="url-container">
+        <input id="url" type="text" placeholder="検索またはアドレス入力" inputmode="url" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+    </div>
+    <button id="tab-count-btn" class="icon-btn" onclick="toggleTabSwitcher()">1</button>
+    <button class="icon-btn" onclick="toggleMenu()">⋮</button>
+</div>
+
+<script>
+/* ======================================================
+   定数
+====================================================== */
+const PROXIES = {
+    1:  { name: "55games - 1",  url: "https://55gms.com/embed.html#", info: "US - NY elite" },
+    2:  { name: "55games - 2",  url: "https://55gms.me/embed.html#", info: "US - NY elite" },
+    3:  { name: "55games - 3",  url: "https://55gms.app/embed.html#", info: "US - NY elite" },
+    4:  { name: "55games - 4",  url: "https://algebra.learnnexus.xyz/embed.html#", info: "US - NY elite" },
+    5:  { name: "55games - 5",  url: "https://biology.learnnexus.xyz/embed.html#", info: "US - NY elite" },
+    6:  { name: "Workers - 1",  url: "https://sk.skkatoo.workers.dev/-----", info: "US - SF Non-anony" },
+    7:  { name: "Workers - 2",  url: "https://black-resonance-5407.cvfr.workers.dev/-----", info: "US - SF Non-anony" },
+    8:  { name: "Workers - 3",  url: "https://loli.loli12.workers.dev/-----", info: "US - SF Non-anony" },
+    9:  { name: "Workers - 4",  url: "https://loli.xianyu1.workers.dev/-----", info: "US - SF Non-anony" },
+    10: { name: "Workers - 5",  url: "https://lucky-mountain-6e91.networkfreedom.workers.dev/-----", info: "US - SF Non-anony" },
+    11: { name: "Workers - 6",  url: "https://proxy.dijkstra.workers.dev/-----", info: "US - SF Non-anony" },
+    12: { name: "Workers - 7",  url: "https://b.007.workers.dev/-----", info: "US - SF Non-anony" },
+    13: { name: "Workers - 8",  url: "https://1.wv1.workers.dev/-----", info: "US - SF Non-anony" },
+    14: { name: "Workers - 9",  url: "https://proxy.fan.workers.dev/-----", info: "US - SF Non-anony" },
+    15: { name: "Workers - 10", url: "https://jsproxy1.jimmytinsley.workers.dev/-----", info: "US - SF Non-anony" },
+    16: { name: "Workers - 11", url: "https://proxy.rdr.workers.dev/-----", info: "US - SF Non-anony" },
+    17: { name: "Workers - 12", url: "https://proxy.thiruhostinger.workers.dev/?url=", info: "US - SF Non-anony" },
+    18: { name: "Workers - 13", url: "https://lucky-mountain-6e91.networkfreedom.workers.dev/-----", info: "US - SF Non-anony" },
+    19: { name: "Workers - 14", url: "https://tohyotalk.habataku.workers.dev/-----", info: "US - SF Non-anony" },
+    20: { name: "Workers - 15", url: "https://little-credit-fc7d.sfzanghao.workers.dev/-----", info: "US - SF Non-anony" },
+    21: { name: "Workers - 16", url: "https://proxy.thiruhostinger.workers.dev/?url=", info: "US - SF Non-anony" },
+    22: { name: "Freeplace Tor", url: "https://freeplace.in/proxy/browse.php?u=", info: "Tor Proxy low Security" },
+    23: { name: "dogeub",        url: "https://learn.teaching.za.com/scramjet/", info: "siken" },
+    24: { name: "vapor",         url: "https://lesson-plans1.vapor.my.cdn.cloudflare.net/vpr/go/", info: "siken" },
+    25: { name: "Blank",         url: "https://", info: "Blank" }
+};
+
+const SANDBOX_SETTINGS = "allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-presentation allow-same-origin allow-scripts allow-storage-access-by-user-activation";
+const SPECIAL_URLS = ["settings://", "newtab://"];
+
+const PRESETS = [
+    { name: "Google",     url: "https://google.com/?igu=1" },
+    { name: "OffiDocs",   url: "https://offidocs.com" },
+    { name: "nation",     url: "https://nation.online" },
+    { name: "StartPage",  url: "https://startpagel6srwcjlue4zgq3zevrujfaow726kjytqbbjyrswwmjzcqd.onion" }
+];
+
+const DEFAULT_NT_LINKS = () => ([
+    {
+        id: 1,
+        name: "検索サイト",
+        links: [
+            { id: 101, title: "google",        url: "https://google.com/?igu=1" },
+            { id: 102, title: "google AI",     url: "https://google.com/?igu=1&udm=50" },
+            { id: 103, title: "bing",          url: "https://bing.com/search?q=L_port8000" },
+            { id: 104, title: "Copilot search",url: "https://bing.com/copilotsearch" }
+        ]
+    }
+]);
+
+/* ======================================================
+   プロファイル管理
+====================================================== */
+function loadProfiles() {
+    try { return JSON.parse(localStorage.getItem('profiles')) || [{ id: 1, name: "デフォルト" }]; }
+    catch(e) { return [{ id: 1, name: "デフォルト" }]; }
+}
+function saveProfiles() { localStorage.setItem('profiles', JSON.stringify(profiles)); }
+function getActiveProfileId() { return parseInt(localStorage.getItem('active-profile-id')) || profiles[0].id; }
+function setActiveProfileId(id) { localStorage.setItem('active-profile-id', String(id)); }
+
+let profiles = loadProfiles();
+let activeProfileId = getActiveProfileId();
+if (!profiles.find(p => p.id === activeProfileId)) { activeProfileId = profiles[0].id; setActiveProfileId(activeProfileId); }
+
+function pk(key) { return `p${activeProfileId}-${key}`; }
+
+const DEFAULT_SETTINGS = () => ({
+    homeUrl: "newtab://",
+    darkMode: false,
+    bookmarks: [],
+    viewMode: "iframe",
+    activeProxyId: null,
+    torEnabled: false,
+    torGateway: ".tor.lc",
+    ntLinks: null
+});
+
+let settings = DEFAULT_SETTINGS();
+
+function loadSettings() {
+    const saved = localStorage.getItem(pk('settings'));
+    settings = saved ? { ...DEFAULT_SETTINGS(), ...JSON.parse(saved) } : DEFAULT_SETTINGS();
+    if (!settings.ntLinks) settings.ntLinks = DEFAULT_NT_LINKS();
+}
+
+function saveState() {
+    localStorage.setItem(pk('settings'), JSON.stringify(settings));
+    localStorage.setItem(pk('sessions'), JSON.stringify(
+        tabs.map(t => ({ id: t.id, url: t.url, title: t.title, history: t.history, historyIndex: t.historyIndex }))
+    ));
+    localStorage.setItem(pk('last-active'), activeTabId);
+    document.getElementById('tab-count-btn').textContent = tabs.length;
+}
+
+/* ---- プロファイルモーダル ---- */
+function openProfileModal() {
+    document.getElementById('profile-name-input').value = '';
+    document.getElementById('profile-modal').classList.add('open');
+    setTimeout(() => document.getElementById('profile-name-input').focus(), 50);
+}
+function closeProfileModal() { document.getElementById('profile-modal').classList.remove('open'); }
+function confirmCreateProfile() {
+    const name = document.getElementById('profile-name-input').value.trim();
+    if (!name) return;
+    const newId = Date.now();
+    profiles.push({ id: newId, name });
+    saveProfiles(); closeProfileModal(); switchProfile(newId);
+}
+document.getElementById('profile-name-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') confirmCreateProfile();
+    if (e.key === 'Escape') closeProfileModal();
+});
+
+function deleteProfile(id) {
+    if (profiles.length <= 1) return;
+    if (!confirm(`「${profiles.find(p => p.id === id)?.name}」を削除しますか？`)) return;
+    ['settings', 'sessions', 'last-active'].forEach(k => localStorage.removeItem(`p${id}-${k}`));
+    profiles = profiles.filter(p => p.id !== id);
+    saveProfiles();
+    if (activeProfileId === id) { activeProfileId = profiles[0].id; setActiveProfileId(activeProfileId); }
+    initProfile();
+}
+function switchProfile(id) {
+    if (id === activeProfileId) return;
+    tabs.forEach(t => { if (t.element) t.element.remove(); });
+    tabs = []; activeTabId = null;
+    document.getElementById('view').innerHTML = '';
+    activeProfileId = id; setActiveProfileId(id);
+    initProfile();
+}
+
+/* ======================================================
+   ブラウザエンジン
+====================================================== */
+let tabs = [], activeTabId = null;
+let clockTimer = null;
+
+function setProgress(p) {
+    const bar = document.getElementById('progress-bar');
+    bar.style.width = p + "%";
+    if (p >= 100) setTimeout(() => { bar.style.width = "0%"; }, 400);
+}
+
+function esc(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function getIconUrl(url) {
+    if (url === "settings://") return "https://gstatic.com/images/branding/product/1x/settings_32dp.png";
+    if (url === "newtab://") return "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='18' font-size='16'>🏠</text></svg>";
+    try { const domain = new URL(url).hostname; return `https://icons.duckduckgo.com/ip3/${domain}.ico`; }
+    catch(e) { return "https://icons.duckduckgo.com/ip3/example.com.ico"; }
+}
+
+function normalizeTorUrl(url) {
+    if (settings.torEnabled && url.includes(".onion")) {
+        return url.replace(".onion", settings.torGateway);
+    }
+    return url;
+}
+
+function getEffectiveUrl(url) {
+    if (SPECIAL_URLS.includes(url)) return url;
+    let target = normalizeTorUrl(url);
+    return !settings.activeProxyId ? target : PROXIES[settings.activeProxyId].url + target;
+}
+
+function createTabObject(url, id = Date.now(), title = "読み込み中...", history = null, hIndex = 0) {
+    if (url === "newtab://") title = "新しいタブ";
+    const tab = { id, url, title, history: history || [url], historyIndex: hIndex, element: null };
+    updateTabElement(tab);
+    tabs.push(tab);
+    return tab;
+}
+
+function updateTabElement(tab) {
+    if (tab.element) tab.element.remove();
+    const viewArea = document.getElementById('view');
+    let el;
+
+    if (tab.url === "settings://") {
+        el = document.createElement('div');
+        el.className = "page-element settings-page";
+        renderSettingsInto(el);
+    } else if (tab.url === "newtab://") {
+        el = document.createElement('div');
+        el.className = "page-element newtab-page";
+        tab.title = "新しいタブ";
+        renderNewtabInto(el);
+    } else {
+        const finalUrl = getEffectiveUrl(tab.url);
+        if (settings.viewMode === "iframe") {
+            el = document.createElement('iframe');
+            el.src = finalUrl;
+            el.setAttribute("sandbox", SANDBOX_SETTINGS);
+        } else {
+            el = document.createElement(settings.viewMode === "object" ? "object" : "embed");
+            el.src = finalUrl; el.data = finalUrl; el.type = "text/html";
+        }
+        el.className = "page-element";
+        setProgress(30);
+        el.onload = () => {
+            setProgress(100);
+            try { tab.title = el.contentDocument.title || new URL(tab.url).hostname; }
+            catch(e) { tab.title = tab.url.replace(/https?:\/\//, '').split('/')[0]; }
+            updateStarUI(); saveState();
+            if (document.getElementById('tab-switcher').classList.contains('active')) renderTabGrid();
+        };
+    }
+    el.id = `page-${tab.id}`;
+    if (tab.id === activeTabId) el.classList.add('active');
+    viewArea.appendChild(el);
+    tab.element = el;
+}
+
+function switchTab(id) {
+    activeTabId = id;
+    tabs.forEach(t => {
+        const active = t.id === id;
+        t.element.classList.toggle('active', active);
+        if (active) {
+            document.getElementById('url').value = t.url;
+        }
+    });
+    updateNavButtons(); updateStarUI(); saveState();
+}
+
+function go() {
+    let url = document.getElementById('url').value.trim();
+    if (SPECIAL_URLS.includes(url)) {
+        /* そのまま（正規化不要） */
+    } else if (!url.startsWith('http')) {
+        if (url.includes('.') && !url.includes(' ')) url = "https://" + url;
+        else url = "https://www.google.com/search?q=" + encodeURIComponent(url);
+    }
+    const tab = tabs.find(t => t.id === activeTabId);
+    // 同じURLでもSPECIAL_URLsなら強制再描画、それ以外は変化があった時だけ遷移
+    if (tab.url !== url || SPECIAL_URLS.includes(url)) {
+        if (tab.url !== url) {
+            tab.history = tab.history.slice(0, tab.historyIndex + 1);
+            tab.history.push(url); tab.historyIndex++; tab.url = url;
+        }
+        updateTabElement(tab); switchTab(tab.id);
+    }
+    document.getElementById('url').blur();
+}
+
+document.getElementById("url").addEventListener("keydown", e => { if (e.key === "Enter") go(); });
+
+function navBack() {
+    const t = tabs.find(x => x.id === activeTabId);
+    if (t && t.historyIndex > 0) { t.historyIndex--; t.url = t.history[t.historyIndex]; updateTabElement(t); switchTab(t.id); }
+}
+function navForward() {
+    const t = tabs.find(x => x.id === activeTabId);
+    if (t && t.historyIndex < t.history.length - 1) { t.historyIndex++; t.url = t.history[t.historyIndex]; updateTabElement(t); switchTab(t.id); }
+}
+function navReload() { const t = tabs.find(x => x.id === activeTabId); if (t) updateTabElement(t); }
+function openSettings() { document.getElementById('url').value = "settings://"; go(); }
+function goHome() { document.getElementById('url').value = settings.homeUrl; go(); }
+
+function updateNavButtons() {
+    const t = tabs.find(x => x.id === activeTabId); if (!t) return;
+    document.getElementById('btn-back').disabled = (t.historyIndex <= 0);
+}
+
+function createNewTab(url) {
+    if (!url) url = settings.homeUrl || "newtab://";
+    switchTab(createTabObject(url).id);
+    saveState();
+}
+
+function closeTab(id, e) {
+    if (e) e.stopPropagation();
+    if (tabs.length === 1) {
+        tabs[0].url = settings.homeUrl || "newtab://";
+        tabs[0].history = [tabs[0].url];
+        tabs[0].historyIndex = 0;
+        updateTabElement(tabs[0]);
+        switchTab(tabs[0].id);
+        renderTabGrid();
+        return;
+    }
+    const idx = tabs.findIndex(t => t.id === id);
+    tabs[idx].element.remove(); tabs.splice(idx, 1);
+    switchTab(tabs[Math.max(0, idx - 1)].id);
+    renderTabGrid(); saveState();
+}
+
+/* ======================================================
+   タブスイッチャー
+====================================================== */
+function toggleTabSwitcher() {
+    const switcher = document.getElementById('tab-switcher');
+    const isActive = switcher.classList.toggle('active');
+    if (isActive) renderTabGrid();
+}
+
+function renderTabGrid() {
+    const grid = document.getElementById('tab-grid');
+    grid.innerHTML = '';
+    tabs.forEach(t => {
+        const card = document.createElement('div');
+        card.className = `tab-card ${t.id === activeTabId ? 'active' : ''}`;
+        card.innerHTML = `
+            <div class="tab-card-header">
+                <img src="${getIconUrl(t.url)}" onerror="this.style.display='none'">
+                <span>${esc(t.title)}</span>
+                <div class="tab-close-x" onclick="closeTab(${t.id}, event)">×</div>
+            </div>
+            <div class="tab-card-body" onclick="switchTab(${t.id}); toggleTabSwitcher();">
+                ${t.url === "settings://" ? "⚙️ 設定" : t.url === "newtab://" ? "🏠 ホーム" : "ページ"}
+            </div>`;
+        grid.appendChild(card);
+    });
+}
+
+/* ======================================================
+   ブックマーク
+====================================================== */
+function renderBookmarkBar() {
+    const bar = document.getElementById('bookmark-bar');
+    bar.innerHTML = '';
+    if (settings.bookmarks.length === 0) {
+        bar.classList.remove('visible'); return;
+    }
+    bar.classList.add('visible');
+    settings.bookmarks.forEach(bm => {
+        const div = document.createElement('div'); div.className = 'bm-item';
+        div.innerHTML = `<img src="${getIconUrl(bm.url)}" onerror="this.style.display='none'"><span>${esc(bm.title)}</span>`;
+        div.onclick = () => { document.getElementById('url').value = bm.url; go(); };
+        bar.appendChild(div);
+    });
+}
+
+function updateStarUI() {
+    const t = tabs.find(x => x.id === activeTabId);
+    const bookmarkable = t && !SPECIAL_URLS.includes(t.url);
+    const isB = bookmarkable && settings.bookmarks.some(b => b.url === t.url);
+    const menuStar = document.getElementById('menu-star');
+    if (isB) menuStar.classList.add('star-active');
+    else menuStar.classList.remove('star-active');
+}
+
+function toggleBookmark() {
+    const tab = tabs.find(t => t.id === activeTabId);
+    if (!tab || SPECIAL_URLS.includes(tab.url)) return;
+    const idx = settings.bookmarks.findIndex(b => b.url === tab.url);
+    if (idx > -1) settings.bookmarks.splice(idx, 1);
+    else settings.bookmarks.push({ title: tab.title, url: tab.url });
+    updateStarUI(); renderBookmarkBar(); saveState();
+}
+
+/* ======================================================
+   ニュータブページ
+====================================================== */
+let ntEditMode = false;
+
+function renderNewtabInto(container) {
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+    const dateStr = now.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+
+    const cats = settings.ntLinks || DEFAULT_NT_LINKS();
+    let catsHtml = '';
+    for (const cat of cats) {
+        let linksHtml = cat.links.map(link => {
+            const hostname = (() => { try { return new URL(link.url).hostname; } catch(e) { return 'example.com'; } })();
+            return `<div class="nt-link" onclick="window.ntOpen(${cat.id},${link.id})">
+                <img src="https://icons.duckduckgo.com/ip3/${esc(hostname)}.ico" onerror="this.style.display='none'">
+                <span>${esc(link.title)}</span>
+                <div class="nt-x" onclick="event.stopPropagation(); window.ntRemoveLink(${cat.id},${link.id})">×</div>
+            </div>`;
+        }).join('');
+        catsHtml += `
+        <div class="nt-cat" data-catid="${cat.id}">
+            <div class="nt-cat-header">
+                <span class="nt-cat-label">${esc(cat.name)}</span>
+                <button class="nt-cat-del-btn" onclick="window.ntRemoveCat(${cat.id})">削除</button>
+            </div>
+            <div class="nt-links">
+                ${linksHtml}
+                <div class="nt-add-link" onclick="window.ntOpenLinkModal(${cat.id})">＋ 追加</div>
+            </div>
+        </div>`;
+    }
+
+    container.innerHTML = `
+        <div class="nt-header">
+            <div class="nt-clock" id="nt-clock">${timeStr}</div>
+            <div class="nt-date" id="nt-date">${dateStr}</div>
+        </div>
+        <div class="nt-search-row">
+            <input id="nt-search" type="text" placeholder="ツールを検索...">
+            <button onclick="window.ntSearch()">検索</button>
+        </div>
+        <div class="nt-body">
+            <div class="nt-top-bar">
+                <h3>ツール &amp; リンク</h3>
+                <button class="nt-edit-btn ${ntEditMode ? 'on' : ''}" onclick="window.ntToggleEdit()">
+                    ${ntEditMode ? '✓ 完了' : '✎ 編集'}
+                </button>
+            </div>
+            <div class="nt-categories ${ntEditMode ? 'nt-edit-mode' : ''}">${catsHtml}</div>
+            <div class="nt-add-cat-row nt-categories ${ntEditMode ? 'nt-edit-mode' : ''}">
+                <button onclick="window.ntOpenCatModal()">＋ カテゴリを追加</button>
+            </div>
+        </div>`;
+
+    startClock();
+
+    const si = container.querySelector('#nt-search');
+    if (si) {
+        si.addEventListener('input', window.ntSearch);
+        si.addEventListener('keydown', e => { if (e.key === 'Enter') window.ntSearch(); });
+    }
+}
+
+function startClock() {
+    if (clockTimer) clearInterval(clockTimer);
+    clockTimer = setInterval(() => {
+        const c = document.getElementById('nt-clock');
+        const d = document.getElementById('nt-date');
+        if (!c) { clearInterval(clockTimer); clockTimer = null; return; }
+        const now = new Date();
+        c.textContent = now.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+        if (d) d.textContent = now.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+    }, 1000);
+}
+
+/* ---- ニュータブ グローバル関数 ---- */
+window.ntOpen = function(catId, linkId) {
+    const cats = settings.ntLinks || DEFAULT_NT_LINKS();
+    const cat = cats.find(c => c.id === catId);
+    const link = cat && cat.links.find(l => l.id === linkId);
+    if (link) { document.getElementById('url').value = link.url; go(); }
+};
+
+window.ntSearch = function() {
+    const input = document.getElementById('nt-search');
+    if (!input) return;
+    const query = input.value.toLowerCase();
+    document.querySelectorAll('.nt-cat').forEach(cat => {
+        const links = cat.querySelectorAll('.nt-link');
+        let visible = 0;
+        links.forEach(link => {
+            const span = link.querySelector('span');
+            const match = span && span.textContent.toLowerCase().includes(query);
+            link.style.display = match ? 'flex' : 'none';
+            if (match) visible++;
+        });
+        cat.style.display = visible > 0 ? 'block' : 'none';
+    });
+};
+
+window.ntToggleEdit = function() {
+    ntEditMode = !ntEditMode;
+    const t = tabs.find(x => x.id === activeTabId);
+    if (t && t.url === "newtab://") renderNewtabInto(t.element);
+};
+
+window.ntRemoveLink = function(catId, linkId) {
+    if (!settings.ntLinks) settings.ntLinks = DEFAULT_NT_LINKS();
+    const cat = settings.ntLinks.find(c => c.id === catId);
+    if (cat) cat.links = cat.links.filter(l => l.id !== linkId);
+    saveState();
+    const t = tabs.find(x => x.id === activeTabId);
+    if (t && t.url === "newtab://") renderNewtabInto(t.element);
+};
+
+window.ntRemoveCat = function(catId) {
+    if (!confirm('このカテゴリを削除しますか？')) return;
+    if (!settings.ntLinks) settings.ntLinks = DEFAULT_NT_LINKS();
+    settings.ntLinks = settings.ntLinks.filter(c => c.id !== catId);
+    saveState();
+    const t = tabs.find(x => x.id === activeTabId);
+    if (t && t.url === "newtab://") renderNewtabInto(t.element);
+};
+
+/* ---- リンク追加モーダル ---- */
+let _linkModalCatId = null;
+window.ntOpenLinkModal = function(catId) {
+    _linkModalCatId = catId;
+    document.getElementById('lm-title').value = '';
+    document.getElementById('lm-url').value = '';
+    const sel = document.getElementById('lm-cat');
+    sel.innerHTML = '';
+    const cats = settings.ntLinks || DEFAULT_NT_LINKS();
+    cats.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.id; opt.textContent = c.name;
+        if (c.id === catId) opt.selected = true;
+        sel.appendChild(opt);
+    });
+    document.getElementById('link-modal').classList.add('open');
+    setTimeout(() => document.getElementById('lm-url').focus(), 50);
+};
+window.closeLinkModal = function() { document.getElementById('link-modal').classList.remove('open'); };
+window.confirmAddLink = function() {
+    let url = document.getElementById('lm-url').value.trim();
+    if (!url) return;
+    if (!url.startsWith('http')) url = 'https://' + url;
+    const title = document.getElementById('lm-title').value.trim() ||
+        (() => { try { return new URL(url).hostname; } catch(e) { return url; } })();
+    const catId = parseInt(document.getElementById('lm-cat').value);
+    if (!settings.ntLinks) settings.ntLinks = DEFAULT_NT_LINKS();
+    const cat = settings.ntLinks.find(c => c.id === catId);
+    if (cat) { cat.links.push({ id: Date.now(), title, url }); }
+    saveState();
+    window.closeLinkModal();
+    const t = tabs.find(x => x.id === activeTabId);
+    if (t && t.url === "newtab://") renderNewtabInto(t.element);
+};
+
+/* ---- カテゴリ追加モーダル ---- */
+window.ntOpenCatModal = function() {
+    document.getElementById('cm-name').value = '';
+    document.getElementById('cat-modal').classList.add('open');
+    setTimeout(() => document.getElementById('cm-name').focus(), 50);
+};
+window.closeCatModal = function() { document.getElementById('cat-modal').classList.remove('open'); };
+window.confirmAddCat = function() {
+    const name = document.getElementById('cm-name').value.trim();
+    if (!name) return;
+    if (!settings.ntLinks) settings.ntLinks = DEFAULT_NT_LINKS();
+    settings.ntLinks.push({ id: Date.now(), name, links: [] });
+    saveState();
+    window.closeCatModal();
+    const t = tabs.find(x => x.id === activeTabId);
+    if (t && t.url === "newtab://") renderNewtabInto(t.element);
+};
+
+/* モーダルのEnterキー対応 */
+document.getElementById('lm-url').addEventListener('keydown', e => { if (e.key === 'Enter') window.confirmAddLink(); if (e.key === 'Escape') window.closeLinkModal(); });
+document.getElementById('cm-name').addEventListener('keydown', e => { if (e.key === 'Enter') window.confirmAddCat(); if (e.key === 'Escape') window.closeCatModal(); });
+
+/* ======================================================
+   設定ページ
+====================================================== */
+function renderSettingsInto(container) {
+    let proxyHtml = '';
+    for (const id in PROXIES) {
+        const p = PROXIES[id]; const isC = settings.activeProxyId == id;
+        proxyHtml += `<div class="proxy-item">
+            <div><strong>${esc(p.name)}</strong><br><small style="color:#888;">${esc(p.info)}</small></div>
+            <div>${isC ? '<span class="status-connected">接続中</span>' : ''}
+            <button class="btn" onclick="toggleProxy(${id})">${isC ? '切断' : '接続'}</button></div>
+        </div>`;
+    }
+
+    const profileHtml = profiles.map(p => `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid var(--border-color);">
+            <span style="font-size:14px;">${p.id === activeProfileId ? '▶ ' : ''}<strong>${esc(p.name)}</strong>${p.id === activeProfileId ? '<small style="opacity:0.5;"> (現在)</small>' : ''}</span>
+            <div style="display:flex; gap:6px;">
+                ${p.id !== activeProfileId ? `<button class="btn" onclick="switchProfile(${p.id})">切替</button>` : ''}
+                ${profiles.length > 1 ? `<button class="btn btn-danger" onclick="deleteProfile(${p.id})">削除</button>` : ''}
+            </div>
+        </div>`).join('');
+
+    const bmsHtml = settings.bookmarks.length === 0
+        ? '<p style="opacity:0.5; font-size:14px;">なし</p>'
+        : settings.bookmarks.map((b, i) => `
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; font-size:14px;">
+            <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:70%;">
+              <img src="${getIconUrl(b.url)}" style="width:14px; margin-right:6px; vertical-align:middle;" onerror="this.style.display='none'">${esc(b.title)}
+            </span>
+            <button class="btn" onclick="settings.bookmarks.splice(${i},1);saveState();renderSettingsInto(document.querySelector('.settings-page'));renderBookmarkBar();">削除</button>
+          </div>`).join('');
+
+    container.innerHTML = `
+        <h2 style="margin-top:0;">⚙️ 設定</h2>
+
+        <div class="card">
+            <h3>👤 プロファイル管理</h3>
+            ${profileHtml}
+            <div style="margin-top:4px;">
+                <button class="btn" onclick="openProfileModal()" style="margin-top:4px;">＋ 新規プロファイル</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>★ ブックマーク管理</h3>
+            ${bmsHtml}
+        </div>
+
+        <div class="card">
+            <h3>🏠 ホーム設定</h3>
+            <input type="text" id="set-home" value="${esc(settings.homeUrl)}">
+            <button class="btn btn-primary" onclick="settings.homeUrl=document.getElementById('set-home').value;saveState();alert('保存しました')">ホームURLを保存</button>
+            <p style="font-size:14px; margin-top:16px; margin-bottom:8px;">プリセット:</p>
+            <div class="preset-group" id="plist"></div>
+        </div>
+
+        <div class="card">
+            <h3>表示設定</h3>
+            <label style="font-size:14px; font-weight:bold;">レンダリングモード</label>
+            <select onchange="settings.viewMode=this.value; saveState();" style="margin-top:8px;">
+                <option value="iframe"  ${settings.viewMode === 'iframe'  ? 'selected' : ''}>iframe (推奨)</option>
+                <option value="object"  ${settings.viewMode === 'object'  ? 'selected' : ''}>object</option>
+                <option value="embed"   ${settings.viewMode === 'embed'   ? 'selected' : ''}>embed</option>
+            </select>
+        </div>
+
+        <div class="card"><h3>🌐 プロキシ設定</h3>${proxyHtml}</div>
+
+        <br><br><br>`;
+
+    PRESETS.forEach(p => {
+        const b = document.createElement('button'); b.className = 'btn'; b.textContent = p.name;
+        b.onclick = () => { document.getElementById('set-home').value = p.url; settings.homeUrl = p.url; saveState(); };
+        container.querySelector('#plist').appendChild(b);
+    });
+}
+
+window.toggleTor = () => {
+    settings.torEnabled = !settings.torEnabled; saveState();
+    const t = tabs.find(x => x.id === activeTabId);
+    if (t && t.url.includes(".onion")) updateTabElement(t);
+    const sp = document.querySelector('.settings-page');
+    if (sp) renderSettingsInto(sp);
+};
+window.toggleProxy = (id) => {
+    settings.activeProxyId = (settings.activeProxyId == id) ? null : id; saveState();
+    const t = tabs.find(x => x.id === activeTabId);
+    if (t && !SPECIAL_URLS.includes(t.url)) updateTabElement(t);
+    const sp = document.querySelector('.settings-page');
+    if (sp) renderSettingsInto(sp);
+};
+
+/* ======================================================
+   メニュー
+====================================================== */
+function toggleMenu() {
+    const menu = document.getElementById('menu-overlay');
+    menu.style.display = (menu.style.display === 'flex') ? 'none' : 'flex';
+}
+
+function toggleDarkMode() {
+    settings.darkMode = !settings.darkMode;
+    document.body.classList.toggle('dark-mode');
+    saveState();
+    const sp = document.querySelector('.settings-page');
+    if (sp) renderSettingsInto(sp);
+}
+
+/* ======================================================
+   フルスクリーン
+====================================================== */
+function toggleFullscreen() {
+    const docEl = document.documentElement;
+    const requestFS = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.mozRequestFullScreen || docEl.msRequestFullscreen;
+    if (requestFS) {
+        if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+            requestFS.call(docEl).catch(() => fallbackPseudoFullscreen());
+        } else { exitFullscreen(); }
+    } else { fallbackPseudoFullscreen(); }
+}
+function fallbackPseudoFullscreen() { document.body.classList.add('pseudo-fullscreen'); }
+function exitFullscreen() {
+    const exitFS = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
+    if (exitFS && (document.fullscreenElement || document.webkitFullscreenElement)) exitFS.call(document);
+    document.body.classList.remove('pseudo-fullscreen');
+}
+
+/* 画面外クリックでメニューを閉じる */
+document.addEventListener('click', e => {
+    const menu = document.getElementById('menu-overlay');
+    if (menu.style.display === 'flex' && !menu.contains(e.target) && !e.target.closest('#toolbar')) {
+        menu.style.display = 'none';
+    }
+});
+
+/* ======================================================
+   初期化
+====================================================== */
+function initProfile() {
+    loadSettings();
+    document.body.classList.toggle('dark-mode', !!settings.darkMode);
+
+    const savedTabs = localStorage.getItem(pk('sessions'));
+    if (savedTabs && JSON.parse(savedTabs).length > 0) {
+        JSON.parse(savedTabs).forEach(t => createTabObject(t.url, t.id, t.title, t.history, t.historyIndex));
+        const lastActive = parseInt(localStorage.getItem(pk('last-active')));
+        switchTab((tabs.find(t => t.id === lastActive) || tabs[0]).id);
+    } else {
+        createNewTab(settings.homeUrl || "newtab://");
+    }
+    renderBookmarkBar();
+}
+
+initProfile();
+</script>
+</body>
+</html>
