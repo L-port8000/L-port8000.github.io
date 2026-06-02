@@ -1,0 +1,29 @@
+  <svg width="256" height="256" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+
+    <defs>
+
+      <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%">
+
+        <stop offset="0%" stop-color="#00C6FF" />
+
+        <stop offset="100%" stop-color="#0078FF" />
+
+      </linearGradient>
+
+      <linearGradient id="g2" x1="100%" y1="0%" x2="0%" y2="100%">
+
+        <stop offset="0%" stop-color="#00E0A4" />
+
+        <stop offset="100%" stop-color="#00B3FF" />
+
+      </linearGradient>
+
+    </defs>
+
+    <path d="M128 28 C185 28 228 70 228 128 C228 181 190 223 137 228 C181 214 203 180 203 142 C203 92 168 58 118 58 C92 58 70 69 54 86 C69 51 96 28 128 28Z" fill="url(#g1)" />
+
+    <path d="M52 88 C37 103 28 123 28 145 C28 202 74 228 124 228 C158 228 188 212 205 186 C191 196 174 202 155 202 C110 202 76 170 76 129 C76 109 84 91 98 78 C83 79 66 82 52 88Z" fill="url(#g2)" />
+
+    <circle cx="128" cy="128" r="42" fill="white" />
+
+  </svg>
