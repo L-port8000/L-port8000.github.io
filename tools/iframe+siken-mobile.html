@@ -535,12 +535,67 @@ function loadSettings() {
 }
 
 function saveState() {
+    // 保存直前に各iframeの実際のsrcをtab.urlに同期する
+    tabs.forEach(t => {
+        if (t.element && t.element.tagName === 'IFRAME') {
+            const actualSrc = t.element.src;
+            if (actualSrc && actualSrc !== 'about:blank' && actualSrc !== '') {
+                // プロキシプレフィックスを除去して元のURLを復元
+                const rawUrl = stripProxy(actualSrc);
+                if (rawUrl && rawUrl !== t.url) {
+                    // historyに追記
+                    t.history = t.history.slice(0, t.historyIndex + 1);
+                    if (t.history[t.history.length - 1] !== rawUrl) {
+                        t.history.push(rawUrl);
+                        t.historyIndex++;
+                    }
+                    t.url = rawUrl;
+                }
+            }
+        }
+    });
     localStorage.setItem(pk('settings'), JSON.stringify(settings));
     localStorage.setItem(pk('sessions'), JSON.stringify(
         tabs.map(t => ({ id: t.id, url: t.url, title: t.title, history: t.history, historyIndex: t.historyIndex }))
     ));
     localStorage.setItem(pk('last-active'), activeTabId);
     document.getElementById('tab-count-btn').textContent = tabs.length;
+}
+
+// プロキシURLから元のURLを取り出す
+function stripProxy(src) {
+    if (!src) return src;
+    for (const id in PROXIES) {
+        const prefix = PROXIES[id].url;
+        if (src.startsWith(prefix)) {
+            return src.slice(prefix.length);
+        }
+    }
+    return src;
+}
+
+// iframeの内部遷移を定期監視してURLバー・保存を更新する
+function startIframePoller() {
+    setInterval(() => {
+        const activeTab = tabs.find(t => t.id === activeTabId);
+        if (!activeTab || !activeTab.element || activeTab.element.tagName !== 'IFRAME') return;
+        const el = activeTab.element;
+        const actualSrc = el.src;
+        if (!actualSrc || actualSrc === 'about:blank') return;
+        const rawUrl = stripProxy(actualSrc);
+        if (rawUrl && rawUrl !== activeTab.url) {
+            // URL変化を検知 → tab.url更新・URLバー更新・保存
+            activeTab.history = activeTab.history.slice(0, activeTab.historyIndex + 1);
+            if (activeTab.history[activeTab.history.length - 1] !== rawUrl) {
+                activeTab.history.push(rawUrl);
+                activeTab.historyIndex++;
+            }
+            activeTab.url = rawUrl;
+            document.getElementById('url').value = rawUrl;
+            updateNavButtons();
+            saveState();
+        }
+    }, 500);
 }
 
 /* ---- プロファイルモーダル ---- */
@@ -658,9 +713,17 @@ function buildTabElement(tab) {
         setProgress(30);
         el.onload = () => {
             setProgress(100);
-            try { tab.title = el.contentDocument.title || new URL(tab.url).hostname; }
-            catch(e) { tab.title = tab.url.replace(/https?:\/\//, '').split('/')[0]; }
-            updateStarUI(); saveState();
+            // iframe内遷移で src が変わっている場合も追跡して保存
+            try {
+                const actualSrc = el.src && el.src !== 'about:blank' ? el.src : null;
+                const docTitle = el.contentDocument && el.contentDocument.title;
+                if (docTitle) tab.title = docTitle;
+                else if (actualSrc) tab.title = new URL(actualSrc).hostname;
+            } catch(e) {
+                try { if (el.src && el.src !== 'about:blank') tab.title = new URL(el.src).hostname; } catch(e2) {}
+            }
+            updateStarUI();
+            saveState();  // ロード完了の瞬間に即保存
             if (document.getElementById('tab-switcher').classList.contains('active')) renderTabGrid();
         };
     }
@@ -705,9 +768,15 @@ function updateTabElement(tab) {
         setProgress(30);
         el.onload = () => {
             setProgress(100);
-            try { tab.title = el.contentDocument.title || new URL(tab.url).hostname; }
-            catch(e) { tab.title = tab.url.replace(/https?:\/\//, '').split('/')[0]; }
-            updateStarUI(); saveState();
+            try {
+                const docTitle = el.contentDocument && el.contentDocument.title;
+                if (docTitle) tab.title = docTitle;
+                else tab.title = new URL(tab.url).hostname;
+            } catch(e) {
+                try { tab.title = new URL(tab.url).hostname; } catch(e2) {}
+            }
+            updateStarUI();
+            saveState();  // ロード完了の瞬間に即保存
             if (document.getElementById('tab-switcher').classList.contains('active')) renderTabGrid();
         };
         el.src = finalUrl;
@@ -737,18 +806,13 @@ function go() {
         else url = "https://www.google.com/search?q=" + encodeURIComponent(url);
     }
     const tab = tabs.find(t => t.id === activeTabId);
-    const sameSpecial = SPECIAL_URLS.includes(url) && tab.url === url;
 
     if (tab.url !== url) {
         tab.history = tab.history.slice(0, tab.historyIndex + 1);
         tab.history.push(url); tab.historyIndex++; tab.url = url;
+        saveState();  // URL確定の瞬間に即保存
     }
-    // 同じ特殊URLなら再描画のみ、それ以外は updateTabElement
-    if (sameSpecial) {
-        updateTabElement(tab);
-    } else {
-        updateTabElement(tab);
-    }
+    updateTabElement(tab);
     switchTab(tab.id);
     document.getElementById('url').blur();
 }
@@ -759,6 +823,7 @@ function navBack() {
     const t = tabs.find(x => x.id === activeTabId);
     if (t && t.historyIndex > 0) {
         t.historyIndex--; t.url = t.history[t.historyIndex];
+        saveState();  // 即保存
         updateTabElement(t); switchTab(t.id);
     }
 }
@@ -766,6 +831,7 @@ function navForward() {
     const t = tabs.find(x => x.id === activeTabId);
     if (t && t.historyIndex < t.history.length - 1) {
         t.historyIndex++; t.url = t.history[t.historyIndex];
+        saveState();  // 即保存
         updateTabElement(t); switchTab(t.id);
     }
 }
@@ -1242,7 +1308,14 @@ function initProfile() {
 }
 
 initProfile();
+startIframePoller();
+
+// ページを閉じる・タブ切替・バックグラウンド移行の直前に必ず保存（iOS pagehide 対応）
+window.addEventListener('pagehide',           () => saveState());
+window.addEventListener('beforeunload',       () => saveState());
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') saveState();
+});
 </script>
 </body>
 </html>
-
