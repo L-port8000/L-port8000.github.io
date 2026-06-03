@@ -1,14 +1,15 @@
+<!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>o - IBrowser</title>
-<link rel="icon" href="../images/browser.png">
-<!-- iPhone用 -->
-<link rel="apple-touch-icon" href="https://site.l-ituki8000.workers.dev/images/browser.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="o - IBrowser">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>o - I Browser</title>
+    <link rel="icon" href="../images/browser.png">
+    <link rel="apple-touch-icon" href="site.l-ituki8000.workers.dev/images/browser.png">
+    <meta name="apple-mobile-web-app-title" content="IBrowser">
     <style>
         :root {
             --bg-color: #f9f9fb;
@@ -40,27 +41,6 @@
             flex-direction: column;
             height: 100vh;
             overflow: hidden;
-        }
-
-        /* ---- ツールバーを上に置くモード ---- */
-        body.toolbar-top {
-            flex-direction: column-reverse;
-        }
-        /* toolbar-top 時のツールバー border を反転 */
-        body.toolbar-top #toolbar {
-            border-top: none;
-            border-bottom: 1px solid var(--border-color);
-            padding: calc(8px + var(--safe-area-top)) 12px 8px;
-        }
-        body.toolbar-top #bookmark-bar {
-            border-top: none;
-            border-bottom: 1px solid var(--border-color);
-        }
-        /* toolbar-top 時のメニューを下から表示 */
-        body.toolbar-top #menu-overlay {
-            bottom: auto;
-            top: calc(60px + var(--safe-area-top));
-            right: 12px;
         }
 
         /* ---- プログレスバー ---- */
@@ -101,7 +81,7 @@
             padding: 8px 12px calc(8px + var(--safe-area-bottom));
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
             z-index: 100;
         }
         #url-container {
@@ -111,12 +91,11 @@
             border-radius: 24px;
             display: flex;
             align-items: center;
-            padding: 8px 14px;
-            min-width: 0;
+            padding: 8px 16px;
         }
         #url {
             flex: 1; border: none; background: transparent;
-            color: var(--text-color); font-size: 15px; outline: none; width: 100%; min-width: 0;
+            color: var(--text-color); font-size: 15px; outline: none; width: 100%;
         }
         .icon-btn {
             background: transparent; border: none; color: var(--text-color);
@@ -132,36 +111,6 @@
             font-size: 13px; font-weight: bold;
         }
 
-        /* ---- iframe トグルボタン ---- */
-        #iframe-toggle-btn {
-            flex-shrink: 0;
-            font-size: 11px;
-            font-weight: bold;
-            padding: 4px 8px;
-            border-radius: 12px;
-            border: 1.5px solid var(--border-color);
-            background: transparent;
-            color: var(--text-color);
-            cursor: pointer;
-            white-space: nowrap;
-            transition: background 0.15s, color 0.15s;
-            line-height: 1.2;
-        }
-        #iframe-toggle-btn.on {
-            background: var(--accent);
-            color: #fff;
-            border-color: var(--accent);
-        }
-        #iframe-toggle-btn.off {
-            background: rgba(180,60,60,0.12);
-            color: #c0392b;
-            border-color: #c0392b;
-        }
-        body.dark-mode #iframe-toggle-btn.off {
-            color: #ff6b6b;
-            border-color: #ff6b6b;
-        }
-
         /* ---- メニューオーバーレイ ---- */
         #menu-overlay {
             position: fixed;
@@ -173,7 +122,7 @@
             box-shadow: 0 4px 16px rgba(0,0,0,0.2);
             display: none;
             flex-direction: column;
-            width: 230px;
+            width: 220px;
             z-index: 200;
             overflow: hidden;
         }
@@ -220,67 +169,228 @@
             color: #888; font-size: 10px; cursor: pointer;
         }
 
-        /* ---- 設定・特殊ページ共通 ---- */
+        /* ---- 設定ページ ---- */
         .settings-page {
             padding: 20px; overflow-y: auto;
             background: var(--bg-color) !important;
             color: var(--text-color);
         }
+
+        /* =====================================================
+           NEW TAB PAGE  
+        ===================================================== */
         .newtab-page {
             background: var(--bg-color) !important;
             overflow-y: auto;
-            display: flex; flex-direction: column; align-items: center;
-            padding: 32px 16px 80px;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0;
+            position: relative;
         }
-        .card { background: var(--toolbar-bg); padding: 16px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 16px; }
-        .card h3 { margin-top: 0; margin-bottom: 12px; font-size: 16px; color: var(--accent); border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
-        .proxy-item { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border-color); }
-        .proxy-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
-        .status-connected { color: #28a745; font-weight: bold; font-size: 12px; margin-right: 8px; }
-        select, input[type="text"] { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-color); font-size: 14px; margin-bottom: 8px; }
-        button.btn { padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border-color); background: rgba(128,128,128,0.1); color: inherit; font-size: 14px; cursor: pointer; }
-        button.btn-primary { background: var(--accent); color: white; border: none; width: 100%; padding: 12px; font-weight: bold; border-radius: 8px; margin-top: 10px; cursor: pointer; }
-        button.btn-danger { border-color: #c00; color: #c00; }
-        .preset-group { display: flex; flex-wrap: wrap; gap: 8px; }
 
-        /* ---- ニュータブ ---- */
-        .nt-header { text-align: center; margin-bottom: 24px; width: 100%; }
-        .nt-clock { font-size: 56px; font-weight: 200; letter-spacing: 2px; line-height: 1; margin-bottom: 4px; }
-        .nt-date { font-size: 13px; opacity: 0.45; }
-        .nt-search-row {
-            display: flex; gap: 8px; width: 100%; max-width: 480px;
-            margin: 0 auto 28px; align-self: center;
+        /* 背景グラデーション */
+        .nt-bg-deco {
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 280px;
+            pointer-events: none; z-index: 0; overflow: hidden;
         }
-        .nt-search-row input {
-            flex: 1; padding: 12px 18px; border-radius: 24px;
-            border: 1px solid var(--border-color); background: var(--toolbar-bg);
-            color: var(--text-color); font-size: 14px; outline: none;
-            -webkit-appearance: none;
+        .nt-bg-deco::before {
+            content: '';
+            position: absolute;
+            top: -80px; left: 50%; transform: translateX(-50%);
+            width: 500px; height: 300px;
+            background: radial-gradient(ellipse at center, rgba(0,96,223,0.1) 0%, transparent 70%);
         }
-        .nt-search-row input:focus { border-color: var(--accent); }
-        .nt-search-row button {
-            padding: 12px 20px; border-radius: 24px;
+        body.dark-mode .nt-bg-deco::before {
+            background: radial-gradient(ellipse at center, rgba(0,221,255,0.09) 0%, transparent 70%);
+        }
+
+        /* 時計・日付 */
+        .nt-header {
+            text-align: center;
+            padding: 32px 20px 0;
+            width: 100%;
+            position: relative;
+            z-index: 1;
+        }
+        .nt-clock {
+            font-size: clamp(52px, 14vw, 76px);
+            font-weight: 200;
+            letter-spacing: -1px;
+            line-height: 1;
+            color: var(--text-color);
+            font-variant-numeric: tabular-nums;
+        }
+        .nt-clock-sep {
+            animation: ntBlink 1s step-end infinite;
+            display: inline-block;
+        }
+        @keyframes ntBlink { 50% { opacity: 0.15; } }
+        .nt-date {
+            font-size: 13px;
+            opacity: 0.42;
+            margin-top: 7px;
+            letter-spacing: 0.3px;
+        }
+
+        /* 検索バー */
+        .nt-search-wrap {
+            width: 100%;
+            max-width: 500px;
+            padding: 22px 16px 0;
+            position: relative; z-index: 1;
+        }
+        .nt-search-box {
+            display: flex; align-items: center;
+            background: var(--toolbar-bg);
+            border: 1.5px solid var(--border-color);
+            border-radius: 28px;
+            padding: 4px 6px 4px 16px;
+            gap: 6px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .nt-search-box:focus-within {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(0,96,223,0.1), 0 2px 10px rgba(0,0,0,0.06);
+        }
+        body.dark-mode .nt-search-box:focus-within {
+            box-shadow: 0 0 0 3px rgba(0,221,255,0.11), 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .nt-search-icon { font-size: 15px; opacity: 0.38; flex-shrink: 0; }
+        .nt-search-input {
+            flex: 1; border: none; background: transparent;
+            color: var(--text-color); font-size: 15px; outline: none;
+            padding: 10px 0; min-width: 0;
+        }
+        .nt-search-input::placeholder { opacity: 0.38; }
+        .nt-search-btn {
             background: var(--accent); color: #fff; border: none;
-            font-size: 13px; cursor: pointer; white-space: nowrap;
+            border-radius: 22px; padding: 9px 18px;
+            font-size: 13px; font-weight: 600; cursor: pointer;
+            flex-shrink: 0; white-space: nowrap;
+            transition: opacity 0.15s, transform 0.1s;
         }
-        .nt-body { width: 100%; max-width: 600px; }
-        .nt-top-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
-        .nt-top-bar h3 { margin: 0; font-size: 12px; font-weight: 600; opacity: 0.45; text-transform: uppercase; letter-spacing: 1px; }
-        .nt-categories { display: flex; flex-direction: column; gap: 18px; }
-        .nt-cat { }
-        .nt-cat-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-        .nt-cat-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; opacity: 0.4; flex: 1; }
-        .nt-cat-del-btn { font-size: 11px; color: #e74; border: 1px solid #e74; background: transparent; border-radius: 6px; padding: 2px 8px; cursor: pointer; display: none; }
-        .nt-edit-mode .nt-cat-del-btn { display: flex; }
-        .nt-links { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-        .nt-link {
-            display: flex; align-items: center; gap: 8px;
-            padding: 10px 16px; border-radius: 8px; border: 1px solid var(--border-color);
-            background: var(--toolbar-bg); cursor: pointer; font-size: 13px;
-            transition: border-color 0.15s; position: relative; white-space: nowrap;
+        .nt-search-btn:active { opacity: 0.8; transform: scale(0.97); }
+
+        /* コンテンツエリア */
+        .nt-content {
+            width: 100%; max-width: 600px;
+            padding: 22px 16px 100px;
+            position: relative; z-index: 1;
+        }
+
+        /* セクションヘッダー */
+        .nt-section-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 10px; margin-top: 22px;
+        }
+        .nt-section-header:first-child { margin-top: 0; }
+        .nt-section-label {
+            font-size: 10px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 1.4px; opacity: 0.35;
+        }
+        .nt-edit-btn {
+            font-size: 11px; padding: 5px 11px; border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: rgba(128,128,128,0.08); color: var(--text-color);
+            cursor: pointer; display: flex; align-items: center; gap: 4px;
+            transition: background 0.15s;
+        }
+        .nt-edit-btn.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+        /* お気に入りグリッド */
+        .nt-fav-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+        @media (max-width: 360px) { .nt-fav-grid { grid-template-columns: repeat(3, 1fr); } }
+
+        .nt-fav-item {
+            display: flex; flex-direction: column; align-items: center;
+            gap: 6px; padding: 12px 6px 10px;
+            border-radius: 14px; border: 1px solid var(--border-color);
+            background: var(--toolbar-bg); cursor: pointer;
+            position: relative;
+            transition: border-color 0.15s, transform 0.1s;
             -webkit-tap-highlight-color: transparent;
         }
-        .nt-link:active { border-color: var(--accent); background: rgba(0,96,223,0.05); }
+        .nt-fav-item:active { transform: scale(0.94); border-color: var(--accent); }
+        .nt-fav-icon {
+            width: 40px; height: 40px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px; overflow: hidden;
+            background: rgba(128,128,128,0.06); flex-shrink: 0;
+        }
+        .nt-fav-icon img { width: 28px; height: 28px; object-fit: contain; }
+        .nt-fav-label {
+            font-size: 11px; text-align: center;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            max-width: 100%; opacity: 0.68; width: 100%;
+        }
+        .nt-fav-del {
+            display: none; position: absolute; top: -7px; right: -7px;
+            width: 20px; height: 20px; border-radius: 50%;
+            background: #e74c3c; color: #fff; font-size: 11px;
+            align-items: center; justify-content: center; cursor: pointer;
+            border: 2px solid var(--bg-color); z-index: 2; line-height: 1;
+        }
+        .nt-edit-mode .nt-fav-del { display: flex; }
+        .nt-edit-mode .nt-fav-item {
+            animation: ntWiggle 0.4s ease infinite alternate;
+        }
+        @keyframes ntWiggle {
+            from { transform: rotate(-0.7deg); }
+            to   { transform: rotate(0.7deg); }
+        }
+        .nt-edit-mode .nt-fav-item:active { animation: none; transform: scale(0.94); }
+
+        /* お気に入り追加ボタン */
+        .nt-fav-add {
+            display: flex; flex-direction: column; align-items: center;
+            gap: 6px; padding: 12px 6px 10px;
+            border-radius: 14px; border: 1.5px dashed var(--border-color);
+            background: transparent; cursor: pointer;
+            color: var(--text-color); font-size: 11px;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.2s;
+        }
+        .nt-edit-mode .nt-fav-add { opacity: 0.5; pointer-events: auto; }
+        .nt-fav-add-icon {
+            width: 40px; height: 40px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px; background: rgba(128,128,128,0.06);
+        }
+
+        /* カテゴリ */
+        .nt-cat-section { margin-top: 18px; }
+        .nt-cat-header-row {
+            display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+        }
+        .nt-cat-label {
+            font-size: 10px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 1.4px; opacity: 0.35; flex: 1;
+        }
+        .nt-cat-del-btn {
+            font-size: 11px; color: #e74; border: 1px solid #e74;
+            background: transparent; border-radius: 6px; padding: 2px 8px;
+            cursor: pointer; display: none;
+        }
+        .nt-edit-mode .nt-cat-del-btn { display: flex; }
+        .nt-links-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+        .nt-link {
+            display: flex; align-items: center; gap: 8px;
+            padding: 9px 14px; border-radius: 10px;
+            border: 1px solid var(--border-color);
+            background: var(--toolbar-bg); cursor: pointer; font-size: 13px;
+            position: relative; white-space: nowrap;
+            transition: border-color 0.15s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .nt-link:active { border-color: var(--accent); }
         .nt-link img { width: 14px; height: 14px; flex-shrink: 0; }
         .nt-link .nt-x {
             display: none; position: absolute; top: -7px; right: -7px;
@@ -292,28 +402,35 @@
         .nt-edit-mode .nt-link .nt-x { display: flex; }
         .nt-add-link {
             display: flex; align-items: center; gap: 6px;
-            padding: 8px 14px; border-radius: 8px;
-            border: 1px dashed var(--border-color); background: transparent;
+            padding: 8px 14px; border-radius: 10px;
+            border: 1.5px dashed var(--border-color); background: transparent;
             cursor: pointer; font-size: 13px; color: var(--text-color);
             opacity: 0; pointer-events: none; transition: opacity 0.15s;
         }
-        .nt-edit-mode .nt-add-link { opacity: 0.6; pointer-events: auto; }
-        .nt-add-cat-row { margin-top: 16px; }
-        .nt-add-cat-row button {
-            font-size: 12px; opacity: 0; pointer-events: none;
-            transition: opacity 0.15s; padding: 8px 14px;
-            border-radius: 8px; border: 1px dashed var(--border-color);
-            background: transparent; color: var(--text-color); cursor: pointer;
+        .nt-edit-mode .nt-add-link { opacity: 0.5; pointer-events: auto; }
+        .nt-add-cat-row {
+            margin-top: 16px; opacity: 0; pointer-events: none; transition: opacity 0.15s;
         }
-        .nt-edit-mode .nt-add-cat-row button { opacity: 0.6; pointer-events: auto; }
-        .nt-edit-btn {
-            font-size: 12px; padding: 6px 12px; border-radius: 8px;
-            border: 1px solid var(--border-color);
-            background: rgba(128,128,128,0.1); color: var(--text-color); cursor: pointer;
+        .nt-edit-mode .nt-add-cat-row { opacity: 0.5; pointer-events: auto; }
+        .nt-add-cat-btn {
+            font-size: 12px; padding: 8px 14px; border-radius: 10px;
+            border: 1.5px dashed var(--border-color); background: transparent;
+            color: var(--text-color); cursor: pointer;
         }
-        .nt-edit-btn.on { background: var(--accent); color: #fff; border-color: var(--accent); }
 
-        /* ---- モーダル共通 ---- */
+        /* ---- 設定・共通カード ---- */
+        .card { background: var(--toolbar-bg); padding: 16px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 16px; }
+        .card h3 { margin-top: 0; margin-bottom: 12px; font-size: 16px; color: var(--accent); border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
+        .proxy-item { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border-color); }
+        .proxy-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+        .status-connected { color: #28a745; font-weight: bold; font-size: 12px; margin-right: 8px; }
+        select, input[type="text"] { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-color); font-size: 14px; margin-bottom: 8px; }
+        button.btn { padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border-color); background: rgba(128,128,128,0.1); color: inherit; font-size: 14px; cursor: pointer; }
+        button.btn-primary { background: var(--accent); color: white; border: none; width: 100%; padding: 12px; font-weight: bold; border-radius: 8px; margin-top: 10px; cursor: pointer; }
+        button.btn-danger { border-color: #c00; color: #c00; }
+        .preset-group { display: flex; flex-wrap: wrap; gap: 8px; }
+
+        /* ---- モーダル ---- */
         .modal-overlay {
             display: none; position: fixed; inset: 0;
             background: rgba(0,0,0,0.5); z-index: 3000;
@@ -340,8 +457,7 @@
         :fullscreen #bookmark-bar, :fullscreen #toolbar,
         :-webkit-full-screen #bookmark-bar, :-webkit-full-screen #toolbar,
         .pseudo-fullscreen #bookmark-bar, .pseudo-fullscreen #toolbar { display: none !important; }
-        :fullscreen #fs-close-btn,
-        :-webkit-full-screen #fs-close-btn,
+        :fullscreen #fs-close-btn, :-webkit-full-screen #fs-close-btn,
         .pseudo-fullscreen #fs-close-btn { display: flex; }
     </style>
 </head>
@@ -350,7 +466,7 @@
 <div id="progress-container"><div id="progress-bar"></div></div>
 <button id="fs-close-btn" onclick="exitFullscreen()">×</button>
 
-<!-- ===== プロファイルモーダル ===== -->
+<!-- プロファイルモーダル -->
 <div id="profile-modal" class="modal-overlay">
     <div class="modal-box">
         <h3>新規プロファイル</h3>
@@ -362,7 +478,7 @@
     </div>
 </div>
 
-<!-- ===== リンク追加モーダル ===== -->
+<!-- リンク追加モーダル -->
 <div id="link-modal" class="modal-overlay">
     <div class="modal-box">
         <h3>リンクを追加</h3>
@@ -376,7 +492,7 @@
     </div>
 </div>
 
-<!-- ===== カテゴリ追加モーダル ===== -->
+<!-- カテゴリ追加モーダル -->
 <div id="cat-modal" class="modal-overlay">
     <div class="modal-box">
         <h3>カテゴリを追加</h3>
@@ -388,22 +504,36 @@
     </div>
 </div>
 
-<!-- ===== タブスイッチャー ===== -->
+<!-- お気に入り追加モーダル -->
+<div id="fav-modal" class="modal-overlay">
+    <div class="modal-box">
+        <h3>⭐ お気に入りを追加</h3>
+        <input id="fm-title" type="text" placeholder="タイトル (省略可)">
+        <input id="fm-url" type="text" placeholder="https://...">
+        <input id="fm-emoji" type="text" placeholder="絵文字アイコン (省略可)  例: 🎮 📺">
+        <div class="modal-btns">
+            <button class="btn" onclick="closeFavModal()">キャンセル</button>
+            <button class="btn modal-ok" onclick="confirmAddFav()">追加</button>
+        </div>
+    </div>
+</div>
+
+<!-- タブスイッチャー -->
 <div id="tab-switcher">
     <div id="tab-switcher-header">
         <button class="icon-btn" onclick="toggleTabSwitcher()">✕</button>
-        <span style="font-weight:bold;font-size:16px;">開いているタブ</span>
+        <span style="font-weight: bold; font-size: 16px;">開いているタブ</span>
         <button class="icon-btn" onclick="createNewTab(); toggleTabSwitcher();">＋</button>
     </div>
     <div id="tab-grid"></div>
 </div>
 
-<!-- ===== メインコンテナ ===== -->
+<!-- メインコンテナ -->
 <div id="main-container">
     <div id="view"></div>
 </div>
 
-<!-- ===== メニューオーバーレイ ===== -->
+<!-- メニューオーバーレイ -->
 <div id="menu-overlay">
     <div class="menu-item" onclick="navForward(); toggleMenu();">
         <span style="width:24px;text-align:center;">▶</span> 進む
@@ -428,15 +558,14 @@
     </div>
 </div>
 
-<!-- ===== ブックマークバー ===== -->
+<!-- ブックマークバー -->
 <div id="bookmark-bar"></div>
 
-<!-- ===== ツールバー ===== -->
+<!-- ツールバー -->
 <div id="toolbar">
     <button class="icon-btn" onclick="navBack()" id="btn-back">◀</button>
     <div id="url-container">
-        <input id="url" type="text" placeholder="検索またはアドレス入力" inputmode="url"
-               autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+        <input id="url" type="text" placeholder="検索またはアドレス入力" inputmode="url" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
     </div>
     <button id="tab-count-btn" class="icon-btn" onclick="toggleTabSwitcher()">1</button>
     <button class="icon-btn" onclick="toggleMenu()">⋮</button>
@@ -478,11 +607,13 @@ const SANDBOX_SETTINGS = "allow-forms allow-modals allow-orientation-lock allow-
 const SPECIAL_URLS = ["settings://", "newtab://"];
 
 const PRESETS = [
-    { name: "Google",    url: "https://google.com/?igu=1" },
-    { name: "OffiDocs",  url: "https://offidocs.com" },
-    { name: "nation",    url: "https://nation.online" },
-    { name: "StartPage", url: "https://startpagel6srwcjlue4zgq3zevrujfaow726kjytqbbjyrswwmjzcqd.onion" }
+    { name: "Google",     url: "https://google.com/?igu=1" },
+    { name: "OffiDocs",   url: "https://offidocs.com" },
+    { name: "nation",     url: "https://nation.online" },
 ];
+
+/* デフォルトのお気に入りサイト */
+const DEFAULT_NT_FAVS = () => ([]);
 
 const DEFAULT_NT_LINKS = () => ([
     {
@@ -490,9 +621,8 @@ const DEFAULT_NT_LINKS = () => ([
         name: "検索サイト",
         links: [
             { id: 101, title: "google",         url: "https://google.com/?igu=1" },
-            { id: 102, title: "google AI",      url: "https://google.com/?igu=1&udm=50" },
-            { id: 103, title: "bing",           url: "https://bing.com/search?q=L_port8000" },
-            { id: 104, title: "Copilot search", url: "https://bing.com/copilotsearch" }
+            { id: 102, title: "bing",           url: "https://bing.com/search?q=L_port8000" },
+            { id: 103, title: "Copilot search", url: "https://bing.com/copilotsearch" }
         ]
     }
 ]);
@@ -518,12 +648,12 @@ const DEFAULT_SETTINGS = () => ({
     homeUrl: "newtab://",
     darkMode: false,
     bookmarks: [],
-    viewMode: "iframe",       // "iframe" | "embed"
-    toolbarTop: false,
+    viewMode: "iframe",
     activeProxyId: null,
     torEnabled: false,
     torGateway: ".tor.lc",
-    ntLinks: null
+    ntLinks: null,
+    ntFavs: null
 });
 
 let settings = DEFAULT_SETTINGS();
@@ -532,28 +662,10 @@ function loadSettings() {
     const saved = localStorage.getItem(pk('settings'));
     settings = saved ? { ...DEFAULT_SETTINGS(), ...JSON.parse(saved) } : DEFAULT_SETTINGS();
     if (!settings.ntLinks) settings.ntLinks = DEFAULT_NT_LINKS();
+    if (!settings.ntFavs)  settings.ntFavs  = DEFAULT_NT_FAVS();
 }
 
 function saveState() {
-    // 保存直前に各iframeの実際のsrcをtab.urlに同期する
-    tabs.forEach(t => {
-        if (t.element && t.element.tagName === 'IFRAME') {
-            const actualSrc = t.element.src;
-            if (actualSrc && actualSrc !== 'about:blank' && actualSrc !== '') {
-                // プロキシプレフィックスを除去して元のURLを復元
-                const rawUrl = stripProxy(actualSrc);
-                if (rawUrl && rawUrl !== t.url) {
-                    // historyに追記
-                    t.history = t.history.slice(0, t.historyIndex + 1);
-                    if (t.history[t.history.length - 1] !== rawUrl) {
-                        t.history.push(rawUrl);
-                        t.historyIndex++;
-                    }
-                    t.url = rawUrl;
-                }
-            }
-        }
-    });
     localStorage.setItem(pk('settings'), JSON.stringify(settings));
     localStorage.setItem(pk('sessions'), JSON.stringify(
         tabs.map(t => ({ id: t.id, url: t.url, title: t.title, history: t.history, historyIndex: t.historyIndex }))
@@ -562,43 +674,7 @@ function saveState() {
     document.getElementById('tab-count-btn').textContent = tabs.length;
 }
 
-// プロキシURLから元のURLを取り出す
-function stripProxy(src) {
-    if (!src) return src;
-    for (const id in PROXIES) {
-        const prefix = PROXIES[id].url;
-        if (src.startsWith(prefix)) {
-            return src.slice(prefix.length);
-        }
-    }
-    return src;
-}
-
-// iframeの内部遷移を定期監視してURLバー・保存を更新する
-function startIframePoller() {
-    setInterval(() => {
-        const activeTab = tabs.find(t => t.id === activeTabId);
-        if (!activeTab || !activeTab.element || activeTab.element.tagName !== 'IFRAME') return;
-        const el = activeTab.element;
-        const actualSrc = el.src;
-        if (!actualSrc || actualSrc === 'about:blank') return;
-        const rawUrl = stripProxy(actualSrc);
-        if (rawUrl && rawUrl !== activeTab.url) {
-            // URL変化を検知 → tab.url更新・URLバー更新・保存
-            activeTab.history = activeTab.history.slice(0, activeTab.historyIndex + 1);
-            if (activeTab.history[activeTab.history.length - 1] !== rawUrl) {
-                activeTab.history.push(rawUrl);
-                activeTab.historyIndex++;
-            }
-            activeTab.url = rawUrl;
-            document.getElementById('url').value = rawUrl;
-            updateNavButtons();
-            saveState();
-        }
-    }, 500);
-}
-
-/* ---- プロファイルモーダル ---- */
+/* プロファイルモーダル */
 function openProfileModal() {
     document.getElementById('profile-name-input').value = '';
     document.getElementById('profile-modal').classList.add('open');
@@ -659,9 +735,7 @@ function getIconUrl(url) {
 }
 
 function normalizeTorUrl(url) {
-    if (settings.torEnabled && url.includes(".onion")) {
-        return url.replace(".onion", settings.torGateway);
-    }
+    if (settings.torEnabled && url.includes(".onion")) return url.replace(".onion", settings.torGateway);
     return url;
 }
 
@@ -671,22 +745,16 @@ function getEffectiveUrl(url) {
     return !settings.activeProxyId ? target : PROXIES[settings.activeProxyId].url + target;
 }
 
-/* ----------------------------------------------------------
-   createTabObject / updateTabElement
-   ★ iframeは破棄せず src だけ書き換えて再利用する
----------------------------------------------------------- */
 function createTabObject(url, id = Date.now(), title = "読み込み中...", history = null, hIndex = 0) {
     if (url === "newtab://") title = "新しいタブ";
     const tab = { id, url, title, history: history || [url], historyIndex: hIndex, element: null };
-    buildTabElement(tab);   // 初回だけ DOM を生成
+    updateTabElement(tab);
     tabs.push(tab);
     return tab;
 }
 
-/**
- * buildTabElement — 初回のみ DOM 要素を生成して #view に追加する
- */
-function buildTabElement(tab) {
+function updateTabElement(tab) {
+    if (tab.element) tab.element.remove();
     const viewArea = document.getElementById('view');
     let el;
 
@@ -706,24 +774,16 @@ function buildTabElement(tab) {
             el.src = finalUrl;
             el.setAttribute("sandbox", SANDBOX_SETTINGS);
         } else {
-            el = document.createElement('embed');
-            el.src = finalUrl; el.type = "text/html";
+            el = document.createElement(settings.viewMode === "object" ? "object" : "embed");
+            el.src = finalUrl; el.data = finalUrl; el.type = "text/html";
         }
         el.className = "page-element";
         setProgress(30);
         el.onload = () => {
             setProgress(100);
-            // iframe内遷移で src が変わっている場合も追跡して保存
-            try {
-                const actualSrc = el.src && el.src !== 'about:blank' ? el.src : null;
-                const docTitle = el.contentDocument && el.contentDocument.title;
-                if (docTitle) tab.title = docTitle;
-                else if (actualSrc) tab.title = new URL(actualSrc).hostname;
-            } catch(e) {
-                try { if (el.src && el.src !== 'about:blank') tab.title = new URL(el.src).hostname; } catch(e2) {}
-            }
-            updateStarUI();
-            saveState();  // ロード完了の瞬間に即保存
+            try { tab.title = el.contentDocument.title || new URL(tab.url).hostname; }
+            catch(e) { tab.title = tab.url.replace(/https?:\/\//, '').split('/')[0]; }
+            updateStarUI(); saveState();
             if (document.getElementById('tab-switcher').classList.contains('active')) renderTabGrid();
         };
     }
@@ -731,62 +791,6 @@ function buildTabElement(tab) {
     if (tab.id === activeTabId) el.classList.add('active');
     viewArea.appendChild(el);
     tab.element = el;
-}
-
-/**
- * updateTabElement — URL が変わったときに既存要素を再利用 or 再生成する
- * - 通常ページ(iframe/embed)は src だけ差し替えてコンテンツを保持
- * - settings:// / newtab:// / viewMode 変更 は要素を作り直す
- */
-function updateTabElement(tab) {
-    const el = tab.element;
-
-    // 特殊ページ同士の遷移 or 特殊→通常 or 通常→特殊 → 作り直し
-    const wasSpecial = el && (el.classList.contains('settings-page') || el.classList.contains('newtab-page'));
-    const isSpecial  = SPECIAL_URLS.includes(tab.url);
-
-    if (isSpecial) {
-        // 特殊ページは毎回 innerHTML だけ更新（DOM 要素は再利用）
-        if (el && tab.url === "settings://" && el.classList.contains('settings-page')) {
-            renderSettingsInto(el); return;
-        }
-        if (el && tab.url === "newtab://"   && el.classList.contains('newtab-page')) {
-            renderNewtabInto(el); return;
-        }
-        // 種類が変わる場合は作り直し
-        if (el) el.remove();
-        tab.element = null;
-        buildTabElement(tab);
-        return;
-    }
-
-    // 通常ページ：既存の iframe/embed を再利用して src だけ書き換える
-    if (el && !wasSpecial &&
-        ((settings.viewMode === "iframe" && el.tagName === "IFRAME") ||
-         (settings.viewMode !== "iframe" && el.tagName === "EMBED"))) {
-        const finalUrl = getEffectiveUrl(tab.url);
-        setProgress(30);
-        el.onload = () => {
-            setProgress(100);
-            try {
-                const docTitle = el.contentDocument && el.contentDocument.title;
-                if (docTitle) tab.title = docTitle;
-                else tab.title = new URL(tab.url).hostname;
-            } catch(e) {
-                try { tab.title = new URL(tab.url).hostname; } catch(e2) {}
-            }
-            updateStarUI();
-            saveState();  // ロード完了の瞬間に即保存
-            if (document.getElementById('tab-switcher').classList.contains('active')) renderTabGrid();
-        };
-        el.src = finalUrl;
-        return;
-    }
-
-    // viewMode 切替など → 作り直し
-    if (el) el.remove();
-    tab.element = null;
-    buildTabElement(tab);
 }
 
 function switchTab(id) {
@@ -801,19 +805,20 @@ function switchTab(id) {
 
 function go() {
     let url = document.getElementById('url').value.trim();
-    if (!SPECIAL_URLS.includes(url) && !url.startsWith('http')) {
+    if (SPECIAL_URLS.includes(url)) {
+        /* そのまま */
+    } else if (!url.startsWith('http')) {
         if (url.includes('.') && !url.includes(' ')) url = "https://" + url;
         else url = "https://www.google.com/search?q=" + encodeURIComponent(url);
     }
     const tab = tabs.find(t => t.id === activeTabId);
-
-    if (tab.url !== url) {
-        tab.history = tab.history.slice(0, tab.historyIndex + 1);
-        tab.history.push(url); tab.historyIndex++; tab.url = url;
-        saveState();  // URL確定の瞬間に即保存
+    if (tab.url !== url || SPECIAL_URLS.includes(url)) {
+        if (tab.url !== url) {
+            tab.history = tab.history.slice(0, tab.historyIndex + 1);
+            tab.history.push(url); tab.historyIndex++; tab.url = url;
+        }
+        updateTabElement(tab); switchTab(tab.id);
     }
-    updateTabElement(tab);
-    switchTab(tab.id);
     document.getElementById('url').blur();
 }
 
@@ -821,34 +826,15 @@ document.getElementById("url").addEventListener("keydown", e => { if (e.key === 
 
 function navBack() {
     const t = tabs.find(x => x.id === activeTabId);
-    if (t && t.historyIndex > 0) {
-        t.historyIndex--; t.url = t.history[t.historyIndex];
-        saveState();  // 即保存
-        updateTabElement(t); switchTab(t.id);
-    }
+    if (t && t.historyIndex > 0) { t.historyIndex--; t.url = t.history[t.historyIndex]; updateTabElement(t); switchTab(t.id); }
 }
 function navForward() {
     const t = tabs.find(x => x.id === activeTabId);
-    if (t && t.historyIndex < t.history.length - 1) {
-        t.historyIndex++; t.url = t.history[t.historyIndex];
-        saveState();  // 即保存
-        updateTabElement(t); switchTab(t.id);
-    }
+    if (t && t.historyIndex < t.history.length - 1) { t.historyIndex++; t.url = t.history[t.historyIndex]; updateTabElement(t); switchTab(t.id); }
 }
-function navReload() {
-    const t = tabs.find(x => x.id === activeTabId);
-    if (!t) return;
-    if (SPECIAL_URLS.includes(t.url)) { updateTabElement(t); return; }
-    // 通常ページのリロード: src を一度空にしてから戻す
-    const el = t.element;
-    if (el && (el.tagName === 'IFRAME' || el.tagName === 'EMBED')) {
-        const cur = el.src;
-        el.src = 'about:blank';
-        setTimeout(() => { el.src = cur; }, 50);
-    }
-}
+function navReload() { const t = tabs.find(x => x.id === activeTabId); if (t) updateTabElement(t); }
 function openSettings() { document.getElementById('url').value = "settings://"; go(); }
-function goHome()        { document.getElementById('url').value = settings.homeUrl; go(); }
+function goHome() { document.getElementById('url').value = settings.homeUrl; go(); }
 
 function updateNavButtons() {
     const t = tabs.find(x => x.id === activeTabId); if (!t) return;
@@ -864,68 +850,18 @@ function createNewTab(url) {
 function closeTab(id, e) {
     if (e) e.stopPropagation();
     if (tabs.length === 1) {
-        const t = tabs[0];
-        t.url = settings.homeUrl || "newtab://";
-        t.history = [t.url]; t.historyIndex = 0;
-        updateTabElement(t); switchTab(t.id);
-        renderTabGrid(); return;
+        tabs[0].url = settings.homeUrl || "newtab://";
+        tabs[0].history = [tabs[0].url];
+        tabs[0].historyIndex = 0;
+        updateTabElement(tabs[0]);
+        switchTab(tabs[0].id);
+        renderTabGrid();
+        return;
     }
     const idx = tabs.findIndex(t => t.id === id);
     tabs[idx].element.remove(); tabs.splice(idx, 1);
     switchTab(tabs[Math.max(0, idx - 1)].id);
     renderTabGrid(); saveState();
-}
-
-/* ======================================================
-   iframe ON/OFF トグル
-====================================================== */
-function toggleIframeMode() {
-    settings.viewMode = (settings.viewMode === "iframe") ? "embed" : "iframe";
-    saveState();
-    updateIframeToggleBtn();
-    // 全タブの通常ページ要素を作り直す
-    tabs.forEach(t => {
-        if (!SPECIAL_URLS.includes(t.url)) {
-            const wasActive = t.id === activeTabId;
-            if (t.element) t.element.remove();
-            t.element = null;
-            buildTabElement(t);
-            if (wasActive) t.element.classList.add('active');
-        }
-    });
-}
-
-function updateIframeToggleBtn() {
-    const btn = document.getElementById('iframe-toggle-btn');
-    if (settings.viewMode === "iframe") {
-        btn.textContent = "iframe";
-        btn.className = "on";
-    } else {
-        btn.textContent = "embed";
-        btn.className = "off";
-    }
-}
-
-/* ======================================================
-   ツールバー上下移動
-====================================================== */
-function toggleToolbarPosition() {
-    settings.toolbarTop = !settings.toolbarTop;
-    applyToolbarPosition();
-    saveState();
-}
-
-function applyToolbarPosition() {
-    document.body.classList.toggle('toolbar-top', !!settings.toolbarTop);
-    const icon  = document.getElementById('menu-toolbar-pos-icon');
-    const label = document.getElementById('menu-toolbar-pos-label');
-    if (settings.toolbarTop) {
-        icon.textContent  = '⬇️';
-        label.textContent = 'ツールバーを下へ';
-    } else {
-        icon.textContent  = '⬆️';
-        label.textContent = 'ツールバーを上へ';
-    }
 }
 
 /* ======================================================
@@ -976,7 +912,9 @@ function updateStarUI() {
     const t = tabs.find(x => x.id === activeTabId);
     const bookmarkable = t && !SPECIAL_URLS.includes(t.url);
     const isB = bookmarkable && settings.bookmarks.some(b => b.url === t.url);
-    document.getElementById('menu-star').classList.toggle('star-active', isB);
+    const menuStar = document.getElementById('menu-star');
+    if (isB) menuStar.classList.add('star-active');
+    else menuStar.classList.remove('star-active');
 }
 
 function toggleBookmark() {
@@ -989,18 +927,38 @@ function toggleBookmark() {
 }
 
 /* ======================================================
-   ニュータブページ
+   ニュータブページ（リデザイン版）
 ====================================================== */
 let ntEditMode = false;
 
 function renderNewtabInto(container) {
     const now = new Date();
-    const timeStr = now.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+    const h = String(now.getHours()).padStart(2, '0');
+    const m = String(now.getMinutes()).padStart(2, '0');
     const dateStr = now.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
 
+    // お気に入りグリッドHTML
+    const favs = settings.ntFavs || DEFAULT_NT_FAVS();
+    const fallbackIcon = "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='18' font-size='16'>🌐</text></svg>";
+    let favsHtml = favs.map(fav => {
+        const hostname = (() => { try { return new URL(fav.url).hostname; } catch(e) { return 'example.com'; } })();
+        const iconHtml = fav.emoji
+            ? `<span style="font-size:22px;line-height:1;">${esc(fav.emoji)}</span>`
+            : `<img src="https://icons.duckduckgo.com/ip3/${esc(hostname)}.ico" onerror="this.onerror=null;this.src='${fallbackIcon}'">`;
+        return `<div class="nt-fav-item" onclick="window.ntFavOpen(${fav.id})">
+            <div class="nt-fav-del" onclick="event.stopPropagation();window.ntRemoveFav(${fav.id})">×</div>
+            <div class="nt-fav-icon">${iconHtml}</div>
+            <div class="nt-fav-label">${esc(fav.title)}</div>
+        </div>`;
+    }).join('');
+    favsHtml += `<div class="nt-fav-add" onclick="window.ntOpenFavModal()">
+        <div class="nt-fav-add-icon">＋</div>
+        <span>追加</span>
+    </div>`;
+
+    // カテゴリHTML
     const cats = settings.ntLinks || DEFAULT_NT_LINKS();
-    let catsHtml = '';
-    for (const cat of cats) {
+    let catsHtml = cats.map(cat => {
         const linksHtml = cat.links.map(link => {
             const hostname = (() => { try { return new URL(link.url).hostname; } catch(e) { return 'example.com'; } })();
             return `<div class="nt-link" onclick="window.ntOpen(${cat.id},${link.id})">
@@ -1009,47 +967,50 @@ function renderNewtabInto(container) {
                 <div class="nt-x" onclick="event.stopPropagation();window.ntRemoveLink(${cat.id},${link.id})">×</div>
             </div>`;
         }).join('');
-        catsHtml += `
-        <div class="nt-cat" data-catid="${cat.id}">
-            <div class="nt-cat-header">
+        return `<div class="nt-cat-section" data-catid="${cat.id}">
+            <div class="nt-cat-header-row">
                 <span class="nt-cat-label">${esc(cat.name)}</span>
                 <button class="nt-cat-del-btn" onclick="window.ntRemoveCat(${cat.id})">削除</button>
             </div>
-            <div class="nt-links">
+            <div class="nt-links-row">
                 ${linksHtml}
                 <div class="nt-add-link" onclick="window.ntOpenLinkModal(${cat.id})">＋ 追加</div>
             </div>
         </div>`;
-    }
+    }).join('');
 
     container.innerHTML = `
+        <div class="nt-bg-deco"></div>
+
         <div class="nt-header">
-            <div class="nt-clock" id="nt-clock">${timeStr}</div>
-            <div class="nt-date"  id="nt-date">${dateStr}</div>
+            <div class="nt-clock" id="nt-clock">${h}<span class="nt-clock-sep">:</span>${m}</div>
+            <div class="nt-date" id="nt-date">${dateStr}</div>
         </div>
-        <div class="nt-search-row">
-            <input id="nt-search" type="text" placeholder="ツールを検索...">
-            <button onclick="window.ntSearch()">検索</button>
-        </div>
-        <div class="nt-body">
-            <div class="nt-top-bar">
-                <h3>ツール &amp; リンク</h3>
+
+
+        <div class="nt-content">
+
+            <div class="nt-section-header">
+                <span class="nt-section-label">⭐ お気に入り</span>
                 <button class="nt-edit-btn ${ntEditMode ? 'on' : ''}" onclick="window.ntToggleEdit()">
                     ${ntEditMode ? '✓ 完了' : '✎ 編集'}
                 </button>
             </div>
-            <div class="nt-categories ${ntEditMode ? 'nt-edit-mode' : ''}">${catsHtml}</div>
-            <div class="nt-add-cat-row nt-categories ${ntEditMode ? 'nt-edit-mode' : ''}">
-                <button onclick="window.ntOpenCatModal()">＋ カテゴリを追加</button>
+            <div class="nt-fav-grid ${ntEditMode ? 'nt-edit-mode' : ''}">${favsHtml}</div>
+
+            <div class="${ntEditMode ? 'nt-edit-mode' : ''}">
+                ${catsHtml}
+                <div class="nt-add-cat-row">
+                    <button class="nt-add-cat-btn" onclick="window.ntOpenCatModal()">＋ カテゴリを追加</button>
+                </div>
             </div>
+
         </div>`;
 
     startClock();
-    const si = container.querySelector('#nt-search');
-    if (si) {
-        si.addEventListener('input', window.ntSearch);
-        si.addEventListener('keydown', e => { if (e.key === 'Enter') window.ntSearch(); });
-    }
+
+    const si = container.querySelector('#nt-search-input');
+    if (si) si.addEventListener('keydown', e => { if (e.key === 'Enter') window.ntDoSearch(); });
 }
 
 function startClock() {
@@ -1059,32 +1020,43 @@ function startClock() {
         const d = document.getElementById('nt-date');
         if (!c) { clearInterval(clockTimer); clockTimer = null; return; }
         const now = new Date();
-        c.textContent = now.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+        const h = String(now.getHours()).padStart(2, '0');
+        const m = String(now.getMinutes()).padStart(2, '0');
+        c.innerHTML = `${h}<span class="nt-clock-sep">:</span>${m}`;
         if (d) d.textContent = now.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
     }, 1000);
 }
 
-window.ntOpen = function(catId, linkId) {
-    const cats = settings.ntLinks || DEFAULT_NT_LINKS();
-    const cat  = cats.find(c => c.id === catId);
-    const link = cat && cat.links.find(l => l.id === linkId);
-    if (link) { document.getElementById('url').value = link.url; go(); }
+/* ---- ニュータブ グローバル関数 ---- */
+
+window.ntDoSearch = function() {
+    const input = document.getElementById('nt-search-input');
+    if (!input) return;
+    const query = input.value.trim();
+    if (!query) return;
+    document.getElementById('url').value = "https://www.google.com/search?igu=1&q=" + encodeURIComponent(query);
+    go();
 };
 
-window.ntSearch = function() {
-    const input = document.getElementById('nt-search'); if (!input) return;
-    const query = input.value.toLowerCase();
-    document.querySelectorAll('.nt-cat').forEach(cat => {
-        const links = cat.querySelectorAll('.nt-link');
-        let visible = 0;
-        links.forEach(link => {
-            const span = link.querySelector('span');
-            const match = span && span.textContent.toLowerCase().includes(query);
-            link.style.display = match ? 'flex' : 'none';
-            if (match) visible++;
-        });
-        cat.style.display = visible > 0 ? 'block' : 'none';
-    });
+window.ntFavOpen = function(favId) {
+    if (ntEditMode) return;
+    const fav = (settings.ntFavs || DEFAULT_NT_FAVS()).find(f => f.id === favId);
+    if (fav) { document.getElementById('url').value = fav.url; go(); }
+};
+
+window.ntRemoveFav = function(favId) {
+    if (!settings.ntFavs) settings.ntFavs = DEFAULT_NT_FAVS();
+    settings.ntFavs = settings.ntFavs.filter(f => f.id !== favId);
+    saveState();
+    const t = tabs.find(x => x.id === activeTabId);
+    if (t && t.url === "newtab://") renderNewtabInto(t.element);
+};
+
+window.ntOpen = function(catId, linkId) {
+    if (ntEditMode) return;
+    const cat = (settings.ntLinks || DEFAULT_NT_LINKS()).find(c => c.id === catId);
+    const link = cat && cat.links.find(l => l.id === linkId);
+    if (link) { document.getElementById('url').value = link.url; go(); }
 };
 
 window.ntToggleEdit = function() {
@@ -1111,12 +1083,38 @@ window.ntRemoveCat = function(catId) {
     if (t && t.url === "newtab://") renderNewtabInto(t.element);
 };
 
+/* お気に入り追加モーダル */
+window.ntOpenFavModal = function() {
+    document.getElementById('fm-title').value = '';
+    document.getElementById('fm-url').value = '';
+    document.getElementById('fm-emoji').value = '';
+    document.getElementById('fav-modal').classList.add('open');
+    setTimeout(() => document.getElementById('fm-url').focus(), 50);
+};
+window.closeFavModal = function() { document.getElementById('fav-modal').classList.remove('open'); };
+window.confirmAddFav = function() {
+    let url = document.getElementById('fm-url').value.trim();
+    if (!url) return;
+    if (!url.startsWith('http')) url = 'https://' + url;
+    const title = document.getElementById('fm-title').value.trim() ||
+        (() => { try { return new URL(url).hostname; } catch(e) { return url; } })();
+    const emoji = document.getElementById('fm-emoji').value.trim();
+    if (!settings.ntFavs) settings.ntFavs = DEFAULT_NT_FAVS();
+    settings.ntFavs.push({ id: Date.now(), title, url, emoji });
+    saveState();
+    window.closeFavModal();
+    const t = tabs.find(x => x.id === activeTabId);
+    if (t && t.url === "newtab://") renderNewtabInto(t.element);
+};
+
+/* リンク追加モーダル */
 let _linkModalCatId = null;
 window.ntOpenLinkModal = function(catId) {
     _linkModalCatId = catId;
     document.getElementById('lm-title').value = '';
     document.getElementById('lm-url').value = '';
-    const sel = document.getElementById('lm-cat'); sel.innerHTML = '';
+    const sel = document.getElementById('lm-cat');
+    sel.innerHTML = '';
     const cats = settings.ntLinks || DEFAULT_NT_LINKS();
     cats.forEach(c => {
         const opt = document.createElement('option');
@@ -1129,7 +1127,8 @@ window.ntOpenLinkModal = function(catId) {
 };
 window.closeLinkModal = function() { document.getElementById('link-modal').classList.remove('open'); };
 window.confirmAddLink = function() {
-    let url = document.getElementById('lm-url').value.trim(); if (!url) return;
+    let url = document.getElementById('lm-url').value.trim();
+    if (!url) return;
     if (!url.startsWith('http')) url = 'https://' + url;
     const title = document.getElementById('lm-title').value.trim() ||
         (() => { try { return new URL(url).hostname; } catch(e) { return url; } })();
@@ -1137,28 +1136,34 @@ window.confirmAddLink = function() {
     if (!settings.ntLinks) settings.ntLinks = DEFAULT_NT_LINKS();
     const cat = settings.ntLinks.find(c => c.id === catId);
     if (cat) cat.links.push({ id: Date.now(), title, url });
-    saveState(); window.closeLinkModal();
+    saveState();
+    window.closeLinkModal();
     const t = tabs.find(x => x.id === activeTabId);
     if (t && t.url === "newtab://") renderNewtabInto(t.element);
 };
 
+/* カテゴリ追加モーダル */
 window.ntOpenCatModal = function() {
     document.getElementById('cm-name').value = '';
     document.getElementById('cat-modal').classList.add('open');
     setTimeout(() => document.getElementById('cm-name').focus(), 50);
 };
-window.closeCatModal  = function() { document.getElementById('cat-modal').classList.remove('open'); };
-window.confirmAddCat  = function() {
-    const name = document.getElementById('cm-name').value.trim(); if (!name) return;
+window.closeCatModal = function() { document.getElementById('cat-modal').classList.remove('open'); };
+window.confirmAddCat = function() {
+    const name = document.getElementById('cm-name').value.trim();
+    if (!name) return;
     if (!settings.ntLinks) settings.ntLinks = DEFAULT_NT_LINKS();
     settings.ntLinks.push({ id: Date.now(), name, links: [] });
-    saveState(); window.closeCatModal();
+    saveState();
+    window.closeCatModal();
     const t = tabs.find(x => x.id === activeTabId);
     if (t && t.url === "newtab://") renderNewtabInto(t.element);
 };
 
-document.getElementById('lm-url').addEventListener('keydown',  e => { if (e.key==='Enter') window.confirmAddLink(); if (e.key==='Escape') window.closeLinkModal(); });
-document.getElementById('cm-name').addEventListener('keydown', e => { if (e.key==='Enter') window.confirmAddCat();  if (e.key==='Escape') window.closeCatModal(); });
+/* Enterキー */
+document.getElementById('lm-url').addEventListener('keydown', e => { if (e.key === 'Enter') window.confirmAddLink(); if (e.key === 'Escape') window.closeLinkModal(); });
+document.getElementById('cm-name').addEventListener('keydown', e => { if (e.key === 'Enter') window.confirmAddCat(); if (e.key === 'Escape') window.closeCatModal(); });
+document.getElementById('fm-url').addEventListener('keydown', e => { if (e.key === 'Enter') window.confirmAddFav(); if (e.key === 'Escape') window.closeFavModal(); });
 
 /* ======================================================
    設定ページ
@@ -1195,18 +1200,12 @@ function renderSettingsInto(container) {
 
     container.innerHTML = `
         <h2 style="margin-top:0;">⚙️ 設定</h2>
-
         <div class="card">
             <h3>👤 プロファイル管理</h3>
             ${profileHtml}
             <button class="btn" onclick="openProfileModal()" style="margin-top:4px;">＋ 新規プロファイル</button>
         </div>
-
-        <div class="card">
-            <h3>★ ブックマーク管理</h3>
-            ${bmsHtml}
-        </div>
-
+        <div class="card"><h3>★ ブックマーク管理</h3>${bmsHtml}</div>
         <div class="card">
             <h3>🏠 ホーム設定</h3>
             <input type="text" id="set-home" value="${esc(settings.homeUrl)}">
@@ -1214,24 +1213,16 @@ function renderSettingsInto(container) {
             <p style="font-size:14px;margin-top:16px;margin-bottom:8px;">プリセット:</p>
             <div class="preset-group" id="plist"></div>
         </div>
-
         <div class="card">
             <h3>表示設定</h3>
             <label style="font-size:14px;font-weight:bold;">レンダリングモード</label>
             <select onchange="settings.viewMode=this.value;saveState();" style="margin-top:8px;">
-                <option value="iframe" ${settings.viewMode==='iframe'?'selected':''}>iframe (推奨)</option>
-                <option value="embed"  ${settings.viewMode==='embed' ?'selected':''}>embed (回避モード)</option>
+                <option value="iframe"  ${settings.viewMode === 'iframe'  ? 'selected' : ''}>iframe (推奨)</option>
+                <option value="object"  ${settings.viewMode === 'object'  ? 'selected' : ''}>object</option>
+                <option value="embed"   ${settings.viewMode === 'embed'   ? 'selected' : ''}>embed</option>
             </select>
-            <div style="margin-top:14px;display:flex;justify-content:space-between;align-items:center;">
-                <span style="font-size:14px;font-weight:bold;">ツールバーの位置</span>
-                <button class="btn" onclick="toggleToolbarPosition();renderSettingsInto(document.querySelector('.settings-page'));">
-                    現在: ${settings.toolbarTop ? '上' : '下'} → ${settings.toolbarTop ? '下' : '上'}に移動
-                </button>
-            </div>
         </div>
-
         <div class="card"><h3>🌐 プロキシ設定</h3>${proxyHtml}</div>
-
         <br><br><br>`;
 
     PRESETS.forEach(p => {
@@ -1241,6 +1232,13 @@ function renderSettingsInto(container) {
     });
 }
 
+window.toggleTor = () => {
+    settings.torEnabled = !settings.torEnabled; saveState();
+    const t = tabs.find(x => x.id === activeTabId);
+    if (t && t.url.includes(".onion")) updateTabElement(t);
+    const sp = document.querySelector('.settings-page');
+    if (sp) renderSettingsInto(sp);
+};
 window.toggleProxy = (id) => {
     settings.activeProxyId = (settings.activeProxyId == id) ? null : id; saveState();
     const t = tabs.find(x => x.id === activeTabId);
@@ -1250,7 +1248,7 @@ window.toggleProxy = (id) => {
 };
 
 /* ======================================================
-   メニュー / ダークモード / フルスクリーン
+   メニュー
 ====================================================== */
 function toggleMenu() {
     const menu = document.getElementById('menu-overlay');
@@ -1265,13 +1263,15 @@ function toggleDarkMode() {
     if (sp) renderSettingsInto(sp);
 }
 
+/* ======================================================
+   フルスクリーン
+====================================================== */
 function toggleFullscreen() {
     const docEl = document.documentElement;
     const requestFS = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.mozRequestFullScreen || docEl.msRequestFullscreen;
     if (requestFS) {
-        if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-            requestFS.call(docEl).catch(() => fallbackPseudoFullscreen());
-        } else { exitFullscreen(); }
+        if (!document.fullscreenElement && !document.webkitFullscreenElement) requestFS.call(docEl).catch(() => fallbackPseudoFullscreen());
+        else exitFullscreen();
     } else { fallbackPseudoFullscreen(); }
 }
 function fallbackPseudoFullscreen() { document.body.classList.add('pseudo-fullscreen'); }
@@ -1294,7 +1294,6 @@ document.addEventListener('click', e => {
 function initProfile() {
     loadSettings();
     document.body.classList.toggle('dark-mode', !!settings.darkMode);
-    applyToolbarPosition();
 
     const savedTabs = localStorage.getItem(pk('sessions'));
     if (savedTabs && JSON.parse(savedTabs).length > 0) {
@@ -1308,14 +1307,6 @@ function initProfile() {
 }
 
 initProfile();
-startIframePoller();
-
-// ページを閉じる・タブ切替・バックグラウンド移行の直前に必ず保存（iOS pagehide 対応）
-window.addEventListener('pagehide',           () => saveState());
-window.addEventListener('beforeunload',       () => saveState());
-document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'hidden') saveState();
-});
 </script>
 </body>
 </html>
