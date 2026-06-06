@@ -3,243 +3,229 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>o - Iframe Browser</title>
-<link rel="icon" href="../images/browser.png">
-<!-- iPhone用 -->
-<link rel="apple-touch-icon" href="https://site.l-ituki8000.workers.dev/images/browser.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="o - Iframe Browser">
-<style>
-:root { --bg-color: #f0f0f4; --toolbar-bg: #f9f9fb; --text-color: #000; --border-color: #d0d0d7; --accent: #0060df; --warning: #f39c12; }
-body.dark-mode { --bg-color: #1c1b22; --toolbar-bg: #2b2a33; --text-color: #fbfbfe; --border-color: #52525e; --accent: #00ddff; --warning: #ffb444; }
-body { margin: 0; font-family: system-ui, sans-serif; background: var(--bg-color); color: var(--text-color); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+<link rel="icon" href="https://site.l-ituki8000.workers.dev/images/browser.png">
+    <link rel="apple-touch-icon" href="https://site.l-ituki8000.workers.dev/images/browser.png">
+    <meta name="apple-mobile-web-app-title" content="IBrowser">
+    <style>
+        :root {
+            --bg-color: #f9f9fb;
+            --toolbar-bg: #ffffff;
+            --text-color: #15141a;
+            --border-color: #cfcfd8;
+            --accent: #0060df;
+            --tor-color: #7d4698;
+            --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+            --safe-area-top: env(safe-area-inset-top, 0px);
+        }
+        body.dark-mode {
+            --bg-color: #1c1b22;
+            --toolbar-bg: #2b2a33;
+            --text-color: #fbfbfe;
+            --border-color: #52525e;
+            --accent: #00ddff;
+            --tor-color: #9d66b8;
+            --tab-card-bg: #42414d;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
 
-/* ---- プログレス ---- */
-#progress-container { position: absolute; top: 0; left: 0; width: 100%; height: 2px; z-index: 1000; pointer-events: none; }
-#progress-bar { width: 0%; height: 100%; background: var(--accent); transition: width 0.3s ease; }
+        /* ---- プログレスバー ---- */
+        #progress-container { position: absolute; top: 0; left: 0; width: 100%; height: 3px; z-index: 1000; pointer-events: none; }
+        #progress-bar { width: 0%; height: 100%; background: var(--accent); transition: width 0.3s ease; }
 
-/* ---- タブバー ---- */
-#tabs-bar { display: flex; background: var(--bg-color); padding: 5px 5px 0 5px; gap: 4px; border-bottom: 1px solid var(--border-color); overflow-x: auto; min-height: 35px; scrollbar-width: none; }
-#tabs-bar::-webkit-scrollbar { display: none; }
-.tab { padding: 6px 12px; background: rgba(0,0,0,0.05); border-radius: 8px 8px 0 0; cursor: pointer; min-width: 140px; max-width: 200px; display: flex; align-items: center; font-size: 11px; border: 1px solid var(--border-color); border-bottom: none; white-space: nowrap; transition: 0.2s; }
-.tab.active { background: var(--toolbar-bg); font-weight: bold; border-top: 2px solid var(--accent); }
-.tab img { width: 14px; height: 14px; margin-right: 6px; border-radius: 2px; }
-.tab-title { flex: 1; overflow: hidden; text-overflow: ellipsis; }
-.close-btn { margin-left: 8px; opacity: 0.3; font-size: 14px; }
-.close-btn:hover { color: red; opacity: 1; }
+        /* ---- タブバー ---- */
+        #tabs-bar { display: flex; background: var(--bg-color); padding: 5px 5px 0 5px; gap: 4px; border-bottom: 1px solid var(--border-color); overflow-x: auto; min-height: 35px; scrollbar-width: none; }
+        #tabs-bar::-webkit-scrollbar { display: none; }
+        .tab { padding: 6px 12px; background: rgba(0,0,0,0.05); border-radius: 8px 8px 0 0; cursor: pointer; min-width: 140px; max-width: 200px; display: flex; align-items: center; font-size: 11px; border: 1px solid var(--border-color); border-bottom: none; white-space: nowrap; transition: 0.2s; }
+        .tab.active { background: var(--toolbar-bg); font-weight: bold; border-top: 2px solid var(--accent); }
+        .tab img { width: 14px; height: 14px; margin-right: 6px; border-radius: 2px; }
+        .tab-title { flex: 1; overflow: hidden; text-overflow: ellipsis; }
+        .close-btn { margin-left: 8px; opacity: 0.3; font-size: 14px; cursor: pointer; }
+        .close-btn:hover { color: red; opacity: 1; }
 
-/* ---- クロム ---- */
-#chrome { background: var(--toolbar-bg); border-bottom: 1px solid var(--border-color); padding: 8px; display: flex; gap: 8px; align-items: center; z-index: 10; }
-#url { width: 100%; box-sizing: border-box; padding: 8px 15px; border-radius: 20px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-color); font-size: 13px; }
-#bookmark-bar { background: var(--toolbar-bg); padding: 4px 10px; display: flex; gap: 10px; border-bottom: 1px solid var(--border-color); font-size: 11px; overflow-x: auto; min-height: 20px; }
-.bm-item { display: flex; align-items: center; gap: 4px; cursor: pointer; padding: 4px 8px; border-radius: 4px; white-space: nowrap; max-width: 150px; }
-.bm-item:hover { background: rgba(0,0,0,0.05); }
-.bm-item img { width: 12px; height: 12px; }
-.star-btn { font-size: 20px; cursor: pointer; color: #ccc; }
-.star-btn.active { color: #f1c40f; }
-#view-mode-btn svg { width: 18px; height: 18px; fill: currentColor; }
-#view-mode-btn.embed-mode { color: var(--warning); border-color: var(--warning); background: rgba(243,156,18,0.1); }
+        /* ---- クロム ---- */
+        #chrome { background: var(--toolbar-bg); border-bottom: 1px solid var(--border-color); padding: 8px; display: flex; gap: 8px; align-items: center; z-index: 10; }
+        #chrome button { padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border-color); background: transparent; color: inherit; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        #chrome button:disabled { opacity: 0.3; cursor: default; }
+        #url { width: 100%; box-sizing: border-box; padding: 8px 15px; border-radius: 20px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-color); font-size: 13px; }
 
-/* ---- URLサジェスト ---- */
-#url-suggestions {
-    position: absolute; top: 100%; left: 0; right: 0;
-    background: var(--toolbar-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 0 0 12px 12px;
-    max-height: 300px; overflow-y: auto;
-    display: none; z-index: 500;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
-}
-#url-suggestions.show { display: block; }
-.url-suggestion {
-    display: flex; align-items: center; gap: 8px;
-    padding: 8px 12px; cursor: pointer; font-size: 13px;
-    border-bottom: 1px solid var(--border-color);
-}
-.url-suggestion:last-child { border-bottom: none; }
-.url-suggestion:hover, .url-suggestion.highlighted { background: rgba(128,128,128,0.1); }
-.url-suggestion img { width: 14px; height: 14px; flex-shrink: 0; }
-.url-suggestion .sug-title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.url-suggestion .sug-url { font-size: 11px; opacity: 0.5; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        /* ---- ブックマークバー ---- */
+        #bookmark-bar { background: var(--toolbar-bg); padding: 4px 10px; display: flex; gap: 10px; border-bottom: 1px solid var(--border-color); font-size: 11px; overflow-x: auto; min-height: 20px; display: none; }
+        #bookmark-bar.visible { display: flex; }
+        .bm-item { display: flex; align-items: center; gap: 4px; cursor: pointer; padding: 4px 8px; border-radius: 4px; white-space: nowrap; max-width: 150px; }
+        .bm-item:hover { background: rgba(0,0,0,0.05); }
+        .bm-item img { width: 12px; height: 12px; }
 
-/* ---- メインビュー ---- */
-#main-container { display: flex; flex: 1; overflow: hidden; position: relative; }
-#view { flex: 1; background: white; position: relative; }
-.page-element { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; display: none; background: white; }
-.page-element.active { display: block; }
+        /* ---- スター/表示モード ---- */
+        .star-btn { font-size: 20px; cursor: pointer; color: #ccc; }
+        .star-btn.active { color: #f1c40f; }
+        #view-mode-btn svg { width: 18px; height: 18px; fill: currentColor; }
+        #view-mode-btn.embed-mode { color: #f39c12; border-color: #f39c12; background: rgba(243,156,18,0.1); }
 
-/* ---- 設定ページ ---- */
-.settings-page { padding: 40px 20px; overflow-y: auto; box-sizing: border-box; background: var(--bg-color) !important; }
-.card { background: var(--toolbar-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); max-width: 600px; margin: 0 auto 20px; color: var(--text-color); }
-.proxy-item { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border-color); }
-.status-connected { color: #28a745; font-weight: bold; font-size: 13px; margin-right: 8px; }
-button { padding: 6px 12px; cursor: pointer; border-radius: 4px; border: 1px solid var(--border-color); background: rgba(0,0,0,0.05); color: inherit; display: flex; align-items: center; justify-content: center; }
-button:disabled { opacity: 0.3; cursor: default; }
-select, input[type="text"] { padding: 8px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-color); }
+        /* ---- URLサジェスト ---- */
+        #url-suggestions {
+            position: absolute; top: 100%; left: 0; right: 0;
+            background: var(--toolbar-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 0 0 12px 12px;
+            max-height: 250px; overflow-y: auto;
+            display: none; z-index: 500;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        }
+        #url-suggestions.show { display: block; }
+        .url-suggestion {
+            display: flex; align-items: center; gap: 8px;
+            padding: 10px 12px; cursor: pointer; font-size: 14px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .url-suggestion:last-child { border-bottom: none; }
+        .url-suggestion:hover, .url-suggestion.highlighted { background: rgba(128,128,128,0.1); }
+        .url-suggestion img { width: 14px; height: 14px; flex-shrink: 0; }
+        .url-suggestion .sug-title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
+        .url-suggestion .sug-url { font-size: 11px; opacity: 0.5; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-/* ---- 全画面ボタン ---- */
-#fs-close-btn { position: fixed; top: 15px; right: 15px; z-index: 9999; width: 32px; height: 32px; background: rgba(0,0,0,0.3); color: white; border: none; border-radius: 50%; cursor: pointer; display: none; opacity: 0.2; transition: 0.3s; font-size: 18px; line-height: 1; }
-#fs-close-btn:hover { opacity: 1; background: rgba(220,53,69,0.9); }
-:fullscreen #tabs-bar, :fullscreen #chrome, :fullscreen #bookmark-bar { display: none !important; }
-:fullscreen #fs-close-btn { display: flex; align-items: center; justify-content: center; }
+        /* ---- メインコンテナ ---- */
+        #main-container { flex: 1; position: relative; overflow: hidden; }
+        .page-element { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; display: none; background: white; }
+        .page-element.active { display: block; }
 
-/* ====================================================
-   ニュータブページ
-==================================================== */
-.newtab-page {
-    background: var(--bg-color) !important;
-    overflow-y: auto;
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 36px 20px 40px;
-}
-.nt-header { text-align: center; margin-bottom: 28px; }
-.nt-clock { font-size: 60px; font-weight: 200; letter-spacing: 3px; line-height: 1; margin-bottom: 6px; }
-.nt-date  { font-size: 13px; opacity: 0.45; }
-.nt-search-row { display: flex; gap: 8px; width: 100%; max-width: 520px; margin: 0 auto 36px; align-self: center; }
-.nt-search-row input {
-    flex: 1; padding: 11px 20px; border-radius: 24px;
-    border: 1px solid var(--border-color); background: var(--toolbar-bg);
-    color: var(--text-color); font-size: 14px; outline: none;
-}
-.nt-search-row input:focus { border-color: var(--accent); }
-.nt-search-row button {
-    padding: 11px 22px; border-radius: 24px;
-    background: var(--accent); color: #fff; border: none; font-size: 13px;
-}
+        /* ---- 設定ページ ---- */
+        .settings-page {
+            padding: 20px; overflow-y: auto;
+            background: var(--bg-color) !important;
+            color: var(--text-color);
+        }
 
-.nt-body { width: 100%; max-width: 920px; }
-.nt-top-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
-.nt-top-bar h3 { margin: 0; font-size: 13px; font-weight: 600; opacity: 0.5; text-transform: uppercase; letter-spacing: 1px; }
-.nt-edit-btn { font-size: 12px; gap: 4px; }
-.nt-edit-btn.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+        /* ---- ニュータブページ ---- */
+        .newtab-page {
+            background: var(--bg-color) !important;
+            overflow-y: auto;
+            box-sizing: border-box;
+            flex-direction: column;
+            align-items: center;
+            padding: 36px 20px 40px;
+        }
+        .page-element.newtab-page.active { display: flex; }
+        .nt-header { text-align: center; margin-bottom: 28px; }
+        .nt-clock { font-size: 60px; font-weight: 200; letter-spacing: 3px; line-height: 1; margin-bottom: 6px; }
+        .nt-date  { font-size: 13px; opacity: 0.45; }
+        .nt-search-row { display: flex; gap: 8px; width: 100%; max-width: 520px; margin: 0 auto 36px; align-self: center; }
+        .nt-search-row input {
+            flex: 1; padding: 11px 20px; border-radius: 24px;
+            border: 1px solid var(--border-color); background: var(--toolbar-bg);
+            color: var(--text-color); font-size: 14px; outline: none;
+        }
+        .nt-search-row input:focus { border-color: var(--accent); }
+        .nt-search-row button {
+            padding: 11px 22px; border-radius: 24px;
+            background: var(--accent); color: #fff; border: none; font-size: 13px;
+        }
+        .nt-body { width: 100%; max-width: 920px; }
+        .nt-top-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+        .nt-top-bar h3 { margin: 0; font-size: 13px; font-weight: 600; opacity: 0.5; text-transform: uppercase; letter-spacing: 1px; }
+        .nt-categories { display: flex; flex-direction: column; gap: 22px; }
+        .nt-cat-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .nt-cat-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; opacity: 0.4; flex: 1; }
+        .nt-links { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+        .nt-link {
+            display: flex; align-items: center; gap: 8px;
+            padding: 10px 20px; border-radius: 8px; border: 1px solid var(--border-color);
+            background: var(--toolbar-bg); cursor: pointer; font-size: 13px;
+            transition: border-color 0.15s, background 0.15s; position: relative;
+            white-space: nowrap;
+        }
+        .nt-link:hover { border-color: var(--accent); }
+        .nt-link img { width: 14px; height: 14px; flex-shrink: 0; }
 
-.nt-categories { display: flex; flex-direction: column; gap: 22px; }
-.nt-cat { }
-.nt-cat-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-.nt-cat-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; opacity: 0.4; flex: 1; }
-.nt-cat-del-btn { font-size: 11px; color: #e74; border-color: #e74; display: none; }
-.nt-edit-mode .nt-cat-del-btn { display: flex; }
+        /* ---- 設定・共通カード ---- */
+        .card { background: var(--toolbar-bg); padding: 16px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 16px; }
+        .card h3 { margin-top: 0; margin-bottom: 12px; font-size: 16px; color: var(--accent); border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
+        .proxy-item { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border-color); }
+        .proxy-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+        .status-connected { color: #28a745; font-weight: bold; font-size: 12px; margin-right: 8px; }
+        select, input[type="text"] { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-color); font-size: 14px; margin-bottom: 8px; }
+        button.btn { padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border-color); background: rgba(128,128,128,0.1); color: inherit; font-size: 14px; cursor: pointer; }
+        button.btn-primary { background: var(--accent); color: white; border: none; width: 100%; padding: 12px; font-weight: bold; border-radius: 8px; margin-top: 10px; cursor: pointer; }
+        button.btn-danger { border-color: #c00; color: #c00; }
+        .preset-group { display: flex; flex-wrap: wrap; gap: 8px; }
 
-.nt-links { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-.nt-link {
-    display: flex; align-items: center; gap: 8px;
-    padding: 10px 20px; border-radius: 8px; border: 1px solid var(--border-color);
-    background: var(--toolbar-bg); cursor: pointer; font-size: 13px;
-    transition: border-color 0.15s, background 0.15s; position: relative;
-    white-space: nowrap;
-}
-.nt-link:hover { border-color: var(--accent); }
-.nt-link img { width: 14px; height: 14px; flex-shrink: 0; }
-.nt-link .nt-x {
-    display: none; position: absolute; top: -7px; right: -7px;
-    width: 17px; height: 17px; border-radius: 50%;
-    background: #e74c3c; color: #fff; font-size: 10px;
-    align-items: center; justify-content: center; cursor: pointer;
-    border: 2px solid var(--bg-color); line-height: 1; z-index: 2;
-}
-.nt-edit-mode .nt-link .nt-x { display: flex; }
+        /* ---- モーダル ---- */
+        .modal-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.5); z-index: 3000;
+            align-items: center; justify-content: center;
+        }
+        .modal-overlay.open { display: flex; }
+        .modal-box {
+            background: var(--toolbar-bg); padding: 24px; border-radius: 16px;
+            border: 1px solid var(--border-color); min-width: 280px; max-width: 360px;
+            width: 90%; color: var(--text-color);
+        }
+        .modal-box h3 { margin: 0 0 16px; font-size: 15px; }
+        .modal-box input, .modal-box select { width: 100%; margin-bottom: 12px; }
+        .modal-btns { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
+        .modal-ok { background: var(--accent) !important; color: #fff !important; border-color: var(--accent) !important; }
 
-.nt-add-link {
-    display: flex; align-items: center; gap: 6px;
-    padding: 7px 14px; border-radius: 8px;
-    border: 1px dashed var(--border-color); background: transparent;
-    cursor: pointer; font-size: 13px; color: var(--text-color);
-    opacity: 0; pointer-events: none; transition: opacity 0.15s;
-}
-.nt-edit-mode .nt-add-link { opacity: 0.55; pointer-events: auto; }
-.nt-add-link:hover { opacity: 1 !important; border-color: var(--accent); color: var(--accent); }
-
-.nt-add-cat-row { margin-top: 20px; }
-.nt-add-cat-row button { font-size: 12px; opacity: 0; pointer-events: none; transition: opacity 0.15s; }
-.nt-edit-mode .nt-add-cat-row button { opacity: 0.55; pointer-events: auto; }
-.nt-edit-mode .nt-add-cat-row button:hover { opacity: 1; }
-
-/* ====================================================
-   モーダル共通
-==================================================== */
-.modal-overlay {
-    display: none; position: fixed; inset: 0;
-    background: rgba(0,0,0,0.45); z-index: 2000;
-    align-items: center; justify-content: center;
-}
-.modal-overlay.open { display: flex; }
-.modal-box {
-    background: var(--toolbar-bg); padding: 24px; border-radius: 14px;
-    border: 1px solid var(--border-color); min-width: 300px; max-width: 380px;
-    width: 90%; color: var(--text-color);
-}
-.modal-box h3 { margin: 0 0 16px; font-size: 15px; }
-.modal-box input, .modal-box select { width: 100%; box-sizing: border-box; margin-bottom: 12px; }
-.modal-btns { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
-.modal-ok { background: var(--accent) !important; color: #fff !important; border-color: var(--accent) !important; }
-</style>
+        /* ---- フルスクリーン ---- */
+        #fs-close-btn {
+            position: fixed; top: 15px; right: 15px; z-index: 9999;
+            width: 40px; height: 40px; background: rgba(0,0,0,0.5); color: white;
+            border: none; border-radius: 50%; display: none;
+            font-size: 24px; line-height: 1; justify-content: center; align-items: center; cursor: pointer;
+        }
+        :fullscreen #tabs-bar, :fullscreen #chrome, :fullscreen #bookmark-bar,
+        :-webkit-full-screen #tabs-bar, :-webkit-full-screen #chrome, :-webkit-full-screen #bookmark-bar,
+        .pseudo-fullscreen #tabs-bar, .pseudo-fullscreen #chrome, .pseudo-fullscreen #bookmark-bar { display: none !important; }
+        :fullscreen #fs-close-btn, :-webkit-full-screen #fs-close-btn,
+        .pseudo-fullscreen #fs-close-btn { display: flex; }
+    </style>
 </head>
 <body>
 
 <div id="progress-container"><div id="progress-bar"></div></div>
 <button id="fs-close-btn" onclick="exitFullscreen()">×</button>
 
-<!-- ===== プロファイルモーダル ===== -->
+<!-- プロファイルモーダル -->
 <div id="profile-modal" class="modal-overlay">
-  <div class="modal-box">
-    <h3>新規プロファイル</h3>
-    <input id="profile-name-input" type="text" placeholder="プロファイル名">
-    <div class="modal-btns">
-      <button onclick="closeProfileModal()">キャンセル</button>
-      <button class="modal-ok" onclick="confirmCreateProfile()">作成</button>
+    <div class="modal-box">
+        <h3>新規プロファイル</h3>
+        <input id="profile-name-input" type="text" placeholder="プロファイル名">
+        <div class="modal-btns">
+            <button class="btn" onclick="closeProfileModal()">キャンセル</button>
+            <button class="btn modal-ok" onclick="confirmCreateProfile()">作成</button>
+        </div>
     </div>
-  </div>
 </div>
 
-<!-- ===== リンク追加モーダル ===== -->
-<div id="link-modal" class="modal-overlay">
-  <div class="modal-box">
-    <h3>リンクを追加</h3>
-    <input id="lm-title" type="text" placeholder="タイトル (省略可)">
-    <input id="lm-url" type="text" placeholder="https://...">
-    <select id="lm-cat"></select>
-    <div class="modal-btns">
-      <button onclick="closeLinkModal()">キャンセル</button>
-      <button class="modal-ok" onclick="confirmAddLink()">追加</button>
-    </div>
-  </div>
-</div>
-
-<!-- ===== スクリーンショットモーダル ===== -->
+<!-- スクリーンショットモーダル -->
 <div id="screenshot-modal" class="modal-overlay">
-  <div class="modal-box">
-    <h3>📷 スクリーンショット</h3>
-    <p style="font-size:13px;margin-bottom:16px;opacity:0.7;">キャプチャ方法を選択</p>
-    <button class="modal-ok" onclick="takeViewportScreenshot()" style="width:100%;margin-bottom:8px;padding:12px;font-size:14px;">🖥 現在表示中の画面</button>
-    <button class="btn" onclick="takeFullScreenshot()" style="width:100%;padding:12px;font-size:14px;">📄 iframeサイト全体</button>
-  </div>
+    <div class="modal-box">
+        <h3>📷 スクリーンショット</h3>
+        <p style="font-size:13px;margin-bottom:16px;opacity:0.7;">キャプチャ方法を選択</p>
+        <button class="btn modal-ok" onclick="takeViewportScreenshot()" style="width:100%;margin-bottom:8px;padding:12px;font-size:14px;">🖥 現在表示中の画面</button>
+        <button class="btn" onclick="takeFullScreenshot()" style="width:100%;padding:12px;font-size:14px;">📄 iframeサイト全体</button>
+    </div>
 </div>
 
-<!-- ===== ブックマーク名編集モーダル ===== -->
+<!-- ブックマーク名編集モーダル -->
 <div id="bookmark-modal" class="modal-overlay">
-  <div class="modal-box">
-    <h3>ブックマーク名を編集</h3>
-    <input id="bm-name-input" type="text" placeholder="ブックマーク名">
-    <div class="modal-btns">
-      <button onclick="closeBookmarkModal()">キャンセル</button>
-      <button class="modal-ok" onclick="confirmBookmark()">保存</button>
+    <div class="modal-box">
+        <h3>ブックマーク名を編集</h3>
+        <input id="bm-name-input" type="text" placeholder="ブックマーク名">
+        <div class="modal-btns">
+            <button class="btn" onclick="closeBookmarkModal()">キャンセル</button>
+            <button class="btn modal-ok" onclick="confirmBookmark()">保存</button>
+        </div>
     </div>
-  </div>
-</div>
-
-<!-- ===== カテゴリ追加モーダル ===== -->
-<div id="cat-modal" class="modal-overlay">
-  <div class="modal-box">
-    <h3>カテゴリを追加</h3>
-    <input id="cm-name" type="text" placeholder="カテゴリ名">
-    <div class="modal-btns">
-      <button onclick="closeCatModal()">キャンセル</button>
-      <button class="modal-ok" onclick="confirmAddCat()">追加</button>
-    </div>
-  </div>
 </div>
 
 <div id="tabs-bar"></div>
@@ -258,7 +244,7 @@ select, input[type="text"] { padding: 8px; border-radius: 4px; border: 1px solid
         <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>
     </button>
     <button id="view-mode-btn" onclick="toggleViewMode()" title="iframeモード (通常)">
-        <svg viewBox="0 0 24 24"><path d="M3 13h12v-2H3v2zm0 4h12v-2H3v2zm0-8h12V7H3v2zm14 8l5-5-5-5v10z"/></svg>
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M3 13h12v-2H3v2zm0 4h12v-2H3v2zm0-8h12V7H3v2zm14 8l5-5-5-5v10z"/></svg>
     </button>
     <button onclick="toggleFullscreen()">⛶</button>
     <button onclick="openSettings()">⚙️</button>
@@ -274,28 +260,33 @@ select, input[type="text"] { padding: 8px; border-radius: 4px; border: 1px solid
    定数
 ====================================================== */
 const PROXIES = {
-    1:  { name: "55games - 1",  url: "https://55gms.com/embed.html#",  info: "US - NY elite" },
-    2:  { name: "55games - 2",  url: "https://55gms.me/embed.html#",   info: "US - NY elite" },
-    3:  { name: "55games - 3",  url: "https://55gms.app/embed.html#",  info: "US - NY elite" },
-    4:  { name: "55games - 4",  url: "https://algebra.learnnexus.xyz/embed.html#",  info: "US - NY elite" },
-    5:  { name: "55games - 5",  url: "https://biology.learnnexus.xyz/embed.html#",  info: "US - NY elite" },
-    6:  { name: "Workers - 1",  url: "https://sk.skkatoo.workers.dev/-----",        info: "US - SF Non-anony" },
+    1:  { name: "55games - 1",  url: "https://55gms.com/embed.html#", info: "US - NY elite" },
+    2:  { name: "55games - 2",  url: "https://55gms.me/embed.html#", info: "US - NY elite" },
+    3:  { name: "55games - 3",  url: "https://55gms.app/embed.html#", info: "US - NY elite" },
+    4:  { name: "55games - 4",  url: "https://algebra.learnnexus.xyz/embed.html#", info: "US - NY elite" },
+    5:  { name: "55games - 5",  url: "https://biology.learnnexus.xyz/embed.html#", info: "US - NY elite" },
+    6:  { name: "Workers - 1",  url: "https://sk.skkatoo.workers.dev/-----", info: "US - SF Non-anony" },
     7:  { name: "Workers - 2",  url: "https://black-resonance-5407.cvfr.workers.dev/-----", info: "US - SF Non-anony" },
-    8:  { name: "Workers - 3",  url: "https://loli.loli12.workers.dev/-----",       info: "US - SF Non-anony" },
-    9:  { name: "Workers - 4",  url: "https://loli.xianyu1.workers.dev/-----",      info: "US - SF Non-anony" },
+    8:  { name: "Workers - 3",  url: "https://loli.loli12.workers.dev/-----", info: "US - SF Non-anony" },
+    9:  { name: "Workers - 4",  url: "https://loli.xianyu1.workers.dev/-----", info: "US - SF Non-anony" },
     10: { name: "Workers - 5",  url: "https://lucky-mountain-6e91.networkfreedom.workers.dev/-----", info: "US - SF Non-anony" },
-    11: { name: "Workers - 6",  url: "https://proxy.dijkstra.workers.dev/-----",    info: "US - SF Non-anony" },
-    12: { name: "Workers - 7",  url: "https://b.007.workers.dev/-----",             info: "US - SF Non-anony" },
-    13: { name: "Workers - 8",  url: "https://1.wv1.workers.dev/-----",             info: "US - SF Non-anony" },
-    14: { name: "Workers - 9",  url: "https://proxy.fan.workers.dev/-----",         info: "US - SF Non-anony" },
+    11: { name: "Workers - 6",  url: "https://proxy.dijkstra.workers.dev/-----", info: "US - SF Non-anony" },
+    12: { name: "Workers - 7",  url: "https://b.007.workers.dev/-----", info: "US - SF Non-anony" },
+    13: { name: "Workers - 8",  url: "https://1.wv1.workers.dev/-----", info: "US - SF Non-anony" },
+    14: { name: "Workers - 9",  url: "https://proxy.fan.workers.dev/-----", info: "US - SF Non-anony" },
     15: { name: "Workers - 10", url: "https://jsproxy1.jimmytinsley.workers.dev/-----", info: "US - SF Non-anony" },
-    16: { name: "Workers - 11", url: "https://proxy.rdr.workers.dev/-----",         info: "US - SF Non-anony" },
+    16: { name: "Workers - 11", url: "https://proxy.rdr.workers.dev/-----", info: "US - SF Non-anony" },
     17: { name: "Workers - 12", url: "https://proxy.thiruhostinger.workers.dev/?url=", info: "US - SF Non-anony" },
     18: { name: "Workers - 13", url: "https://lucky-mountain-6e91.networkfreedom.workers.dev/-----", info: "US - SF Non-anony" },
     19: { name: "Workers - 14", url: "https://tohyotalk.habataku.workers.dev/-----", info: "US - SF Non-anony" },
     20: { name: "Workers - 15", url: "https://little-credit-fc7d.sfzanghao.workers.dev/-----", info: "US - SF Non-anony" },
-    21: { name: "Workers - 16", url: "https://proxy.thiruhostinger.workers.dev/?url=", info: "US - SF Non-anony" }
+    21: { name: "Workers - 16", url: "https://proxy.thiruhostinger.workers.dev/?url=", info: "US - SF Non-anony" },
+    22: { name: "Freeplace Tor", url: "https://freeplace.in/proxy/browse.php?u=", info: "Tor Proxy low Security" },
+    23: { name: "dogeub",        url: "https://learn.teaching.za.com/scramjet/", info: "siken" },
+    24: { name: "vapor",         url: "https://lesson-plans1.vapor.my.cdn.cloudflare.net/vpr/go/", info: "siken" },
+    25: { name: "Blank",         url: "https://", info: "Blank" }
 };
+
 function getSandbox() {
     let s = "allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-presentation allow-same-origin allow-scripts allow-storage-access-by-user-activation";
     if (!settings.blockDownloads) s += " allow-downloads";
@@ -516,35 +507,27 @@ async function takeFullScreenshot() {
 
 const SPECIAL_URLS = ["settings://", "newtab://", "history://", "cookie://"];
 
-const DEFAULT_NT_LINKS = () => ([
+const PRESETS = [
+    { name: "Google",     url: "https://google.com/?igu=1" },
+    { name: "OffiDocs",   url: "https://offidocs.com" },
+    { name: "nation",     url: "https://nation.online" },
+];
 
-  {
-    id: 1,
-    name: "検索サイト",
-    links: [
-      { id: 101, title: "google", url: "https://google.com/?igu=1" },
-      { id: 102, title: "google AI", url: "https://google.com/?igu=1&udm=50" },
-      { id: 103, title: "bing", url: "https://bing.com/search?q=L_port8000" },
-      { id: 104, title: "Copilot search", url: "https://bing.com/copilotsearch" },
-    ]
-  }
+const DEFAULT_NT_LINKS = () => ([
+    {
+        id: 1,
+        name: "検索サイト",
+        links: [
+            { id: 101, title: "google",         url: "https://google.com/?igu=1" },
+            { id: 102, title: "bing",           url: "https://bing.com/search?q=L_port8000" },
+            { id: 103, title: "Copilot search", url: "https://bing.com/copilotsearch" }
+        ]
+    }
 ]);
 
 /* ======================================================
-   プロファイル
+   プロファイル管理
 ====================================================== */
-const DEFAULT_SETTINGS = () => ({
-    homeUrl: "newtab://",
-    darkMode: false,
-    bookmarks: [],
-    viewMode: "iframe",
-    activeProxyId: null,
-    blockDownloads: true,
-    blockPopups: true,
-    adBlock: true,
-    history: []
-});
-
 function loadProfiles() {
     try { return JSON.parse(localStorage.getItem('profiles')) || [{ id: 1, name: "デフォルト" }]; }
     catch(e) { return [{ id: 1, name: "デフォルト" }]; }
@@ -559,20 +542,38 @@ if (!profiles.find(p => p.id === activeProfileId)) { activeProfileId = profiles[
 
 function pk(key) { return `p${activeProfileId}-${key}`; }
 
+const DEFAULT_SETTINGS = () => ({
+    homeUrl: "newtab://",
+    darkMode: false,
+    bookmarks: [],
+    viewMode: "iframe",
+    activeProxyId: null,
+    torEnabled: false,
+    torGateway: ".tor.lc",
+    blockDownloads: true,
+    blockPopups: true,
+    adBlock: true,
+    toolbarPos: 'top',
+    autoLoadTabs: true,
+    history: []
+});
+
 let settings = DEFAULT_SETTINGS();
+
 function loadSettings() {
     const saved = localStorage.getItem(pk('settings'));
     settings = saved ? { ...DEFAULT_SETTINGS(), ...JSON.parse(saved) } : DEFAULT_SETTINGS();
 }
+
 function saveState() {
     localStorage.setItem(pk('settings'), JSON.stringify(settings));
-    localStorage.setItem(pk('sessions'), JSON.stringify(tabs.map(t => ({
-        id: t.id, url: t.url, title: t.title, history: t.history, historyIndex: t.historyIndex
-    }))));
+    localStorage.setItem(pk('sessions'), JSON.stringify(
+        tabs.map(t => ({ id: t.id, url: t.url, title: t.title, history: t.history, historyIndex: t.historyIndex }))
+    ));
     localStorage.setItem(pk('last-active'), activeTabId);
 }
 
-/* ---- プロファイルモーダル ---- */
+/* プロファイルモーダル */
 function openProfileModal() {
     document.getElementById('profile-name-input').value = '';
     document.getElementById('profile-modal').classList.add('open');
@@ -593,8 +594,8 @@ document.getElementById('profile-name-input').addEventListener('keydown', e => {
 
 function deleteProfile(id) {
     if (profiles.length <= 1) return;
-    if (!confirm(`「${profiles.find(p=>p.id===id)?.name}」を削除しますか？`)) return;
-    ['settings','sessions','last-active'].forEach(k => localStorage.removeItem(`p${id}-${k}`));
+    if (!confirm(`「${profiles.find(p => p.id === id)?.name}」を削除しますか？`)) return;
+    ['settings', 'sessions', 'last-active'].forEach(k => localStorage.removeItem(`p${id}-${k}`));
     profiles = profiles.filter(p => p.id !== id);
     saveProfiles();
     if (activeProfileId === id) { activeProfileId = profiles[0].id; setActiveProfileId(activeProfileId); }
@@ -602,7 +603,7 @@ function deleteProfile(id) {
 }
 function switchProfile(id) {
     if (id === activeProfileId) return;
-    tabs.forEach(t => { if(t.element) t.element.remove(); });
+    tabs.forEach(t => { if (t.element) t.element.remove(); });
     tabs = []; activeTabId = null;
     document.getElementById('view').innerHTML = '';
     activeProfileId = id; setActiveProfileId(id);
@@ -613,6 +614,7 @@ function switchProfile(id) {
    ブラウザエンジン
 ====================================================== */
 let tabs = [], activeTabId = null;
+let clockTimer = null;
 
 function setProgress(p) {
     const bar = document.getElementById('progress-bar');
@@ -621,37 +623,29 @@ function setProgress(p) {
 }
 
 function esc(s) {
-    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
 function getIconUrl(url) {
     if (url === "settings://") return "https://gstatic.com/images/branding/product/1x/settings_32dp.png";
     if (url === "newtab://") return "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='18' font-size='16'>🏠</text></svg>";
-    try { return `https://icons.duckduckgo.com/ip3/${new URL(url).hostname}.ico`; }
+    try { const domain = new URL(url).hostname; return `https://icons.duckduckgo.com/ip3/${domain}.ico`; }
     catch(e) { return "https://icons.duckduckgo.com/ip3/example.com.ico"; }
+}
+
+function normalizeTorUrl(url) {
+    if (settings.torEnabled && url.includes(".onion")) return url.replace(".onion", settings.torGateway);
+    return url;
 }
 
 function getEffectiveUrl(url) {
     if (SPECIAL_URLS.includes(url)) return url;
-    return !settings.activeProxyId ? url : PROXIES[settings.activeProxyId].url + url;
+    let target = normalizeTorUrl(url);
+    return !settings.activeProxyId ? target : PROXIES[settings.activeProxyId].url + target;
 }
 
-/* ---- 特殊URLを開く関数 ---- */
-/**
- * openInNewTab(url) — 指定URLを新しいタブで開く (公開API)
- * ニュータブページや設定ページのリンクから呼び出し可能
- */
-window.openInNewTab = function(url) {
-    createNewTab(url);
-};
-/** openInNewTabBg(url) — バックグラウンドで新しいタブを作成 */
-window.openInNewTabBg = function(url) {
-    createTabObject(url);
-    renderTabsUI();
-    saveState();
-};
-
 function createTabObject(url, id = Date.now(), title = "読み込み中...", history = null, hIndex = 0) {
+    if (url === "newtab://") title = "新しいタブ";
     const tab = { id, url, title, history: history || [url], historyIndex: hIndex, element: null };
     updateTabElement(tab);
     tabs.push(tab);
@@ -698,8 +692,8 @@ function updateTabElement(tab) {
         el.onload = () => {
             setProgress(100);
             try { tab.title = el.contentDocument.title || new URL(tab.url).hostname; }
-            catch(e) { tab.title = tab.url.replace(/https?:\/\//,'').split('/')[0]; }
-            renderTabsUI(); updateStarUI();
+            catch(e) { tab.title = tab.url.replace(/https?:\/\//, '').split('/')[0]; }
+            updateStarUI(); saveState(); renderTabsUI();
         };
     }
     el.id = `page-${tab.id}`;
@@ -709,18 +703,139 @@ function updateTabElement(tab) {
 }
 
 function switchTab(id) {
+    const prev = tabs.find(t => t.id === activeTabId);
+    if (prev && prev.element) prev.element._st = prev.element.scrollTop;
     activeTabId = id;
     tabs.forEach(t => {
         const active = t.id === id;
         t.element.classList.toggle('active', active);
         if (active) {
             document.getElementById('url').value = t.url;
-            if (t.url === "settings://") renderSettingsInto(t.element);
-            if (t.url === "newtab://") renderNewtabInto(t.element);
+            requestAnimationFrame(() => { if (t.element) t.element.scrollTop = t.element._st || 0; });
         }
     });
     updateNavButtons(); updateStarUI(); renderTabsUI(); saveState();
 }
+
+function go() {
+    let url = document.getElementById('url').value.trim();
+    if (SPECIAL_URLS.includes(url)) {
+    } else if (!url.startsWith('http')) {
+        if (url.includes('.') && !url.includes(' ')) url = "https://" + url;
+        else url = "https://www.google.com/search?q=" + encodeURIComponent(url);
+    }
+    const tab = tabs.find(t => t.id === activeTabId);
+    if (tab.url !== url || SPECIAL_URLS.includes(url)) {
+        if (tab.url !== url) {
+            tab.history = tab.history.slice(0, tab.historyIndex + 1);
+            tab.history.push(url); tab.historyIndex++; tab.url = url;
+            if (isAdUrl(url)) { alert('広告サイトのためブロックしました: ' + url); tab.url = tab.history[tab.historyIndex - 1] || tab.url; updateTabElement(tab); switchTab(tab.id); return; }
+            addHistory(url, tab.title);
+        }
+        updateTabElement(tab); switchTab(tab.id);
+    }
+}
+
+document.getElementById("url").addEventListener("input", updateSuggestions);
+document.getElementById("url").addEventListener("focus", updateSuggestions);
+document.getElementById("url").addEventListener("keydown", e => {
+    const container = document.getElementById('url-suggestions');
+    const items = container.querySelectorAll('.url-suggestion');
+    if (e.key === "Enter") {
+        if (suggestionIndex >= 0 && items[suggestionIndex]) {
+            e.preventDefault();
+            items[suggestionIndex].click();
+        } else {
+            go();
+        }
+        container.classList.remove('show');
+    } else if (e.key === "ArrowDown") {
+        e.preventDefault();
+        suggestionIndex = Math.min(suggestionIndex + 1, items.length - 1);
+        items.forEach((el, i) => el.classList.toggle('highlighted', i === suggestionIndex));
+    } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        suggestionIndex = Math.max(suggestionIndex - 1, -1);
+        items.forEach((el, i) => el.classList.toggle('highlighted', i === suggestionIndex));
+    } else if (e.key === "Escape") {
+        container.classList.remove('show');
+        suggestionIndex = -1;
+    }
+});
+
+function navBack() {
+    const t = tabs.find(x => x.id === activeTabId);
+    if (t && t.historyIndex > 0) { t.historyIndex--; t.url = t.history[t.historyIndex]; updateTabElement(t); switchTab(t.id); }
+}
+function navForward() {
+    const t = tabs.find(x => x.id === activeTabId);
+    if (t && t.historyIndex < t.history.length - 1) { t.historyIndex++; t.url = t.history[t.historyIndex]; updateTabElement(t); switchTab(t.id); }
+}
+function navReload() { const t = tabs.find(x => x.id === activeTabId); if (t && t.url !== "newtab://") updateTabElement(t); }
+function openSettings() { document.getElementById('url').value = "settings://"; go(); }
+function goHome() { document.getElementById('url').value = settings.homeUrl; go(); }
+
+function updateNavButtons() {
+    const t = tabs.find(x => x.id === activeTabId); if (!t) return;
+    document.getElementById('btn-back').disabled = (t.historyIndex <= 0);
+    document.getElementById('btn-forward').disabled = (t.historyIndex >= t.history.length - 1);
+}
+
+function createNewTab(url) {
+    if (!url) url = settings.homeUrl || "newtab://";
+    switchTab(createTabObject(url).id);
+    saveState();
+}
+
+function closeTab(id, e) {
+    if (e) e.stopPropagation();
+    if (tabs.length === 1) {
+        tabs[0].url = settings.homeUrl || "newtab://";
+        tabs[0].history = [tabs[0].url];
+        tabs[0].historyIndex = 0;
+        updateTabElement(tabs[0]);
+        switchTab(tabs[0].id);
+        renderTabsUI();
+        return;
+    }
+    const idx = tabs.findIndex(t => t.id === id);
+    tabs[idx].element.remove(); tabs.splice(idx, 1);
+    switchTab(tabs[Math.max(0, idx - 1)].id);
+    renderTabsUI(); saveState();
+}
+
+/* ======================================================
+   フルスクリーン / 表示モード
+===================================================== */
+function toggleViewMode() {
+    settings.viewMode = settings.viewMode === "iframe" ? "embed" : "iframe";
+    updateViewModeButton(); saveState();
+    const t = tabs.find(x => x.id === activeTabId);
+    if (t && !SPECIAL_URLS.includes(t.url)) updateTabElement(t);
+}
+function updateViewModeButton() {
+    const btn = document.getElementById('view-mode-btn');
+    if (!btn) return;
+    if (settings.viewMode === "embed") {
+        btn.classList.add('embed-mode'); btn.title = "embedモード (回避中)";
+    } else {
+        btn.classList.remove('embed-mode'); btn.title = "iframeモード (通常)";
+    }
+}
+function toggleFullscreen() {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(e=>console.error(e));
+    else exitFullscreen();
+}
+function exitFullscreen() { if (document.exitFullscreen) document.exitFullscreen(); }
+function toggleDarkMode() {
+    settings.darkMode = !settings.darkMode;
+    document.body.classList.toggle('dark-mode');
+    saveState();
+    const sp = document.querySelector('.settings-page');
+    if (sp) renderSettingsInto(sp);
+}
+
+let pendingBookmarkUrl = null;
 
 function renderTabsUI() {
     const bar = document.getElementById('tabs-bar');
@@ -734,42 +849,11 @@ function renderTabsUI() {
         bar.appendChild(div);
     });
     const add = document.createElement('button');
-    add.textContent = "+"; add.style = "height:28px; margin-top:5px;";
+    add.textContent = "+"; add.style = "height:28px;margin-top:5px;padding:4px 10px;border-radius:4px;border:1px solid var(--border-color);background:transparent;color:inherit;cursor:pointer;";
     add.onclick = () => createNewTab('newtab://');
     bar.appendChild(add);
 }
 
-function go() {
-    let url = document.getElementById('url').value.trim();
-    if (!SPECIAL_URLS.includes(url) && !url.startsWith('http')) url = "https://" + url;
-    const tab = tabs.find(t => t.id === activeTabId);
-    if (tab.url !== url) {
-        tab.history = tab.history.slice(0, tab.historyIndex + 1);
-        tab.history.push(url); tab.historyIndex++; tab.url = url;
-        if (isAdUrl(url)) { alert('広告サイトのためブロックしました: ' + url); tab.url = tab.history[tab.historyIndex - 1] || tab.url; updateTabElement(tab); switchTab(tab.id); return; }
-        addHistory(url, tab.title);
-        updateTabElement(tab); switchTab(tab.id);
-    }
-}
-
-function navBack() {
-    const t = tabs.find(x => x.id === activeTabId);
-    if (t && t.historyIndex > 0) { t.historyIndex--; t.url = t.history[t.historyIndex]; updateTabElement(t); switchTab(t.id); }
-}
-function navForward() {
-    const t = tabs.find(x => x.id === activeTabId);
-    if (t && t.historyIndex < t.history.length - 1) { t.historyIndex++; t.url = t.history[t.historyIndex]; updateTabElement(t); switchTab(t.id); }
-}
-function navReload() { const t = tabs.find(x => x.id === activeTabId); if(t) updateTabElement(t); }
-function openSettings() { document.getElementById('url').value = "settings://"; go(); }
-function goHome() { document.getElementById('url').value = "newtab://"; go(); }
-function closeTab(id) {
-    if (tabs.length === 1) return;
-    const idx = tabs.findIndex(t => t.id === id);
-    tabs[idx].element.remove(); tabs.splice(idx, 1);
-    switchTab(tabs[Math.max(0, idx - 1)].id);
-}
-function createNewTab(url = 'newtab://') { switchTab(createTabObject(url).id); }
 function updateStarUI() {
     const t = tabs.find(x => x.id === activeTabId);
     const bookmarkable = t && !SPECIAL_URLS.includes(t.url);
@@ -777,9 +861,65 @@ function updateStarUI() {
     document.getElementById('star-btn').classList.toggle('active', isB);
 }
 
+function toggleBookmark() {
+    const tab = tabs.find(t => t.id === activeTabId);
+    if (!tab || SPECIAL_URLS.includes(tab.url)) return;
+    const idx = settings.bookmarks.findIndex(b => b.url === tab.url);
+    if (idx > -1) settings.bookmarks.splice(idx, 1);
+    else {
+        pendingBookmarkUrl = tab.url;
+        document.getElementById('bm-name-input').value = tab.title;
+        document.getElementById('bookmark-modal').classList.add('open');
+        setTimeout(() => document.getElementById('bm-name-input').focus(), 50);
+        return;
+    }
+    updateStarUI(); renderBookmarkBar(); saveState();
+}
+
+function closeBookmarkModal() {
+    document.getElementById('bookmark-modal').classList.remove('open');
+    pendingBookmarkUrl = null;
+}
+
+function confirmBookmark() {
+    const name = document.getElementById('bm-name-input').value.trim();
+    if (!name) return;
+    settings.bookmarks.push({ title: name, url: pendingBookmarkUrl });
+    pendingBookmarkUrl = null;
+    closeBookmarkModal();
+    updateStarUI(); renderBookmarkBar(); saveState();
+}
+
+function renderBookmarkBar() {
+    const bar = document.getElementById('bookmark-bar');
+    bar.innerHTML = '';
+    settings.bookmarks.forEach(bm => {
+        const div = document.createElement('div');
+        div.className = 'bm-item';
+        div.innerHTML = `<img src="${getIconUrl(bm.url)}"><span>${esc(bm.title)}</span>`;
+        div.onclick = () => { document.getElementById('url').value = bm.url; go(); };
+        bar.appendChild(div);
+    });
+    if (settings.bookmarks.length > 0) bar.classList.add('visible');
+    else bar.classList.remove('visible');
+}
+
+document.getElementById('bm-name-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') confirmBookmark();
+    if (e.key === 'Escape') closeBookmarkModal();
+});
+
+/* ======================================================
+   履歴 / Cookie / ニュータブ / 設定ページ
+====================================================== */
+function openInNewTab(url) {
+    document.getElementById('url').value = url;
+    go();
+}
+
 function renderHistoryInto(container) {
     const h = settings.history || [];
-    let html = '<h2 style="margin-top:0;">📜 履歴</h2>';
+    let html = '<h2 style="margin-top:0;">📋 履歴</h2>';
     if (h.length === 0) {
         html += '<p style="opacity:0.5;">履歴はありません</p>';
     } else {
@@ -812,7 +952,7 @@ function renderCookiesInto(container) {
     if (keys.length === 0) {
         html += '<p style="opacity:0.5;">データはありません</p>';
     } else {
-        html += '<p style="font-size:13px;opacity:0.6;">訪問したドメインの一覧です。Cookieやサイトデータは直接削除できません（ブラウザの設定からクリアしてください）。</p>';
+        html += '<p style="font-size:13px;opacity:0.6;">履歴のあるドメインの一覧です。Cookieやサイトデータは直接削除できません（ブラウザの設定からクリアしてください）。</p>';
         html += '<button onclick="if(confirm(\'すべての履歴を削除しますか？\')){settings.history=[];saveState();renderCookiesInto(document.querySelector(\'.settings-page\'));}" style="margin-bottom:12px;">🗑 すべて削除</button>';
         html += '<div style="display:flex;flex-direction:column;gap:4px;">';
         keys.forEach(d => {
@@ -826,69 +966,15 @@ function renderCookiesInto(container) {
     container.innerHTML = html;
 }
 
-function updateNavButtons() {
-    const t = tabs.find(x => x.id === activeTabId); if (!t) return;
-    document.getElementById('btn-back').disabled    = (t.historyIndex <= 0);
-    document.getElementById('btn-forward').disabled = (t.historyIndex >= t.history.length - 1);
-}
-let pendingBookmarkUrl = null;
-
-function toggleBookmark() {
-    const tab = tabs.find(t => t.id === activeTabId);
-    if (!tab || SPECIAL_URLS.includes(tab.url)) return;
-    const idx = settings.bookmarks.findIndex(b => b.url === tab.url);
-    if (idx > -1) settings.bookmarks.splice(idx, 1);
-    else {
-        pendingBookmarkUrl = tab.url;
-        document.getElementById('bm-name-input').value = tab.title;
-        document.getElementById('bookmark-modal').classList.add('open');
-        setTimeout(() => document.getElementById('bm-name-input').focus(), 50);
-        return;
-    }
-    updateStarUI(); renderBookmarkBar(); saveState();
-}
-
-function closeBookmarkModal() {
-    document.getElementById('bookmark-modal').classList.remove('open');
-    pendingBookmarkUrl = null;
-}
-
-function confirmBookmark() {
-    const name = document.getElementById('bm-name-input').value.trim();
-    if (!name) return;
-    settings.bookmarks.push({ title: name, url: pendingBookmarkUrl });
-    pendingBookmarkUrl = null;
-    closeBookmarkModal();
-    updateStarUI(); renderBookmarkBar(); saveState();
-}
-
-document.getElementById('bm-name-input').addEventListener('keydown', e => {
-    if (e.key === 'Enter') confirmBookmark();
-    if (e.key === 'Escape') closeBookmarkModal();
-});
-function renderBookmarkBar() {
-    const bar = document.getElementById('bookmark-bar'); bar.innerHTML = '';
-    settings.bookmarks.forEach(bm => {
-        const div = document.createElement('div'); div.className = 'bm-item';
-        div.innerHTML = `<img src="${getIconUrl(bm.url)}"><span>${esc(bm.title)}</span>`;
-        div.onclick = () => { document.getElementById('url').value = bm.url; go(); };
-        bar.appendChild(div);
-    });
-}
-
 /* ======================================================
    ニュータブページ
 ====================================================== */
 let ntEditMode = false;
-let clockTimer  = null;
-
 function renderNewtabInto(container) {
-    // 時計
     const now = new Date();
     const timeStr = now.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
     const dateStr = now.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
 
-    // カテゴリHTML
     let catsHtml = '';
     for (const cat of DEFAULT_NT_LINKS()) {
         let linksHtml = '';
@@ -926,10 +1012,8 @@ function renderNewtabInto(container) {
             <div class="nt-categories">${catsHtml}</div>
         </div>`;
 
-    // 時計更新
     startClock();
 
-    // 検索イベント: 入力時とEnterキー時に検索を実行
     const si = container.querySelector('#nt-search');
     if (si) {
         si.addEventListener('input', window.ntSearch);
@@ -949,46 +1033,35 @@ function startClock() {
     }, 1000);
 }
 
-/* ---- ニュータブ グローバル関数 ---- */
 window.ntOpen = function(catId, linkId) {
     const cat  = DEFAULT_NT_LINKS().find(c => c.id === catId);
     const link = cat && cat.links.find(l => l.id === linkId);
     if (link) openInNewTab(link.url);
 };
 
-/**
- * ツールの検索機能
- * 入力された文字列に基づいてリストのリンクをフィルタリングする
- */
 window.ntSearch = function() {
     const input = document.getElementById('nt-search');
     if (!input) return;
-    
     const query = input.value.toLowerCase();
     const categories = document.querySelectorAll('.nt-cat');
-
     categories.forEach(cat => {
         const links = cat.querySelectorAll('.nt-link');
         let visibleCount = 0;
-
         links.forEach(link => {
             const titleSpan = link.querySelector('span');
             if (titleSpan) {
                 const title = titleSpan.textContent.toLowerCase();
                 if (title.includes(query)) {
-                    link.style.display = 'flex'; // 表示
+                    link.style.display = 'flex';
                     visibleCount++;
                 } else {
-                    link.style.display = 'none';  // 非表示
+                    link.style.display = 'none';
                 }
             }
         });
-
-        // カテゴリ内に表示するリンクがなくなった場合はカテゴリごと非表示
         cat.style.display = visibleCount > 0 ? 'block' : 'none';
     });
 };
-
 
 /* ======================================================
    設定ページ
@@ -1006,7 +1079,7 @@ function renderSettingsInto(container) {
 
     const profileHtml = profiles.map(p => `
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-            <span>${p.id === activeProfileId ? '▶ ' : ''}<strong>${esc(p.name)}</strong>${p.id === activeProfileId ? ' (現在)' : ''}</span>
+            <span>${p.id === activeProfileId ? '✅ ' : ''}<strong>${esc(p.name)}</strong>${p.id === activeProfileId ? ' (現在)' : ''}</span>
             <div style="display:flex; gap:6px;">
                 ${p.id !== activeProfileId ? `<button onclick="switchProfile(${p.id})">切替</button>` : ''}
                 ${profiles.length > 1 ? `<button onclick="deleteProfile(${p.id})" style="color:#c00; border-color:#c00;">削除</button>` : ''}
@@ -1026,19 +1099,25 @@ function renderSettingsInto(container) {
             ${profileHtml}
             <button onclick="openProfileModal()" style="margin-top:8px;">＋ 新規プロファイル</button>
         </div>
-        <div class="card"><h3>★ ブックマーク</h3>${bmsHtml}</div>
-        <div class="card"><h3>🌓 表示・モード</h3>
+        <div class="card"><h3>🔖 ブックマーク</h3>${bmsHtml}</div>
+        <div class="card"><h3>🎨 表示・ロード</h3>
             <button onclick="settings.darkMode=!settings.darkMode; document.body.classList.toggle('dark-mode'); saveState(); renderSettingsInto(document.querySelector('.settings-page'));">ダークモード切替</button>
             <div style="margin-top:10px;">
-                表示方式:
+                表示モード:
                 <select onchange="settings.viewMode=this.value; updateViewModeButton(); saveState();" style="margin-left:10px;">
                     <option value="iframe"  ${settings.viewMode==='iframe' ?'selected':''}>iframe (通常)</option>
                     <option value="embed"   ${settings.viewMode==='embed'  ?'selected':''}>embed (回避モード)</option>
                     <option value="object"  ${settings.viewMode==='object' ?'selected':''}>object</option>
                 </select>
             </div>
+            <div style="margin-top:12px;">
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                    <input type="checkbox" ${settings.autoLoadTabs ? 'checked' : ''} onchange="settings.autoLoadTabs=this.checked;saveState();">
+                    起動時に前のタブを復元する
+                </label>
+            </div>
         </div>
-        <div class="card"><h3>🛡 セキュリティ</h3>
+        <div class="card"><h3>🔒 セキュリティ</h3>
             <div style="margin-bottom:8px;">
                 <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
                     <input type="checkbox" ${settings.adBlock ? 'checked' : ''} onchange="settings.adBlock=this.checked;saveState();">
@@ -1058,8 +1137,8 @@ function renderSettingsInto(container) {
                 </label>
             </div>
         </div>
-        <div class="card"><h3>📋 履歴・Cookie</h3>
-            <button onclick="settings.history=settings.history||[]; document.getElementById('url').value='history://'; go();" style="margin-right:8px;">📜 履歴を見る</button>
+        <div class="card"><h3>📜 履歴/Cookie</h3>
+            <button onclick="settings.history=settings.history||[]; document.getElementById('url').value='history://'; go();" style="margin-right:8px;">📋 履歴を表示</button>
             <button onclick="document.getElementById('url').value='cookie://'; go();">🍪 Cookie管理</button>
         </div>
         <div class="card"><h3>🌐 プロキシ設定</h3>${proxyHtml}</div>`;
@@ -1072,83 +1151,40 @@ window.toggleProxy = (id) => {
     renderSettingsInto(document.querySelector('.settings-page'));
 };
 
-/* ======================================================
-   表示モード / 全画面
-====================================================== */
-function toggleViewMode() {
-    settings.viewMode = settings.viewMode === "iframe" ? "embed" : "iframe";
-    updateViewModeButton(); saveState();
-    const t = tabs.find(x => x.id === activeTabId);
-    if (t && !SPECIAL_URLS.includes(t.url)) updateTabElement(t);
-}
-function updateViewModeButton() {
-    const btn = document.getElementById('view-mode-btn');
-    if (settings.viewMode === "embed") {
-        btn.classList.add('embed-mode'); btn.title = "embedモード (回避中)";
-    } else {
-        btn.classList.remove('embed-mode'); btn.title = "iframeモード (通常)";
-    }
-}
-function toggleFullscreen() {
-    if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(e=>console.error(e));
-    else exitFullscreen();
-}
-function exitFullscreen() { if (document.exitFullscreen) document.exitFullscreen(); }
-
 document.addEventListener('click', e => {
-    const container = document.getElementById('url-suggestions');
+    const sc = document.getElementById('url-suggestions');
     const input = document.getElementById('url');
-    if (container && input && !container.contains(e.target) && e.target !== input) {
-        container.classList.remove('show');
+    if (sc && input && !sc.contains(e.target) && e.target !== input) {
+        sc.classList.remove('show');
     }
 });
 
 /* ======================================================
-    初期化
+   初期化
 ====================================================== */
 function initProfile() {
     loadSettings();
     document.body.classList.toggle('dark-mode', !!settings.darkMode);
     updateViewModeButton();
-    ntEditMode = false;
 
-    const savedTabs = localStorage.getItem(pk('sessions'));
-    if (savedTabs) {
-        JSON.parse(savedTabs).forEach(t => createTabObject(t.url, t.id, t.title, t.history, t.historyIndex));
-        const lastActive = parseInt(localStorage.getItem(pk('last-active')));
-        switchTab((tabs.find(t => t.id === lastActive) || tabs[0]).id);
-    } else {
-        createNewTab('newtab://');
-    }
+    try {
+        const savedTabs = localStorage.getItem(pk('sessions'));
+        if (settings.autoLoadTabs && savedTabs) {
+            const list = JSON.parse(savedTabs);
+            if (list.length > 0) {
+                list.forEach(t => createTabObject(t.url, t.id, t.title, t.history ?? [t.url], t.historyIndex ?? 0));
+                const lastActive = parseInt(localStorage.getItem(pk('last-active')));
+                switchTab((tabs.find(t => t.id === lastActive) || tabs[0]).id);
+                renderBookmarkBar();
+                return;
+            }
+        }
+    } catch(e) { console.error(e); }
+
+    createNewTab(settings.homeUrl || "newtab://");
     renderBookmarkBar();
 }
 
-document.getElementById("url").addEventListener("input", updateSuggestions);
-document.getElementById("url").addEventListener("focus", updateSuggestions);
-document.getElementById("url").addEventListener("keydown", e => {
-    const container = document.getElementById('url-suggestions');
-    const items = container.querySelectorAll('.url-suggestion');
-    if (e.key === "Enter") {
-        if (suggestionIndex >= 0 && items[suggestionIndex]) {
-            e.preventDefault();
-            items[suggestionIndex].click();
-        } else {
-            go();
-        }
-        container.classList.remove('show');
-    } else if (e.key === "ArrowDown") {
-        e.preventDefault();
-        suggestionIndex = Math.min(suggestionIndex + 1, items.length - 1);
-        items.forEach((el, i) => el.classList.toggle('highlighted', i === suggestionIndex));
-    } else if (e.key === "ArrowUp") {
-        e.preventDefault();
-        suggestionIndex = Math.max(suggestionIndex - 1, -1);
-        items.forEach((el, i) => el.classList.toggle('highlighted', i === suggestionIndex));
-    } else if (e.key === "Escape") {
-        container.classList.remove('show');
-        suggestionIndex = -1;
-    }
-});
 initProfile();
 </script>
 </body>
