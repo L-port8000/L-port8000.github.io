@@ -8,7 +8,7 @@
     <meta name="mobile-web-app-capable" content="yes">
     <title>o - I Browser</title>
     <link rel="icon" href="../images/browser.png">
-    <link rel="apple-touch-icon" href="site.l-ituki8000.workers.dev/images/browser.png">
+    <link rel="apple-touch-icon" href="https://site.l-ituki8000.workers.dev/images/browser.png">
     <meta name="apple-mobile-web-app-title" content="IBrowser">
     <style>
         :root {
@@ -111,6 +111,40 @@
             font-size: 13px; font-weight: bold;
         }
 
+        #url-container { position: relative; }
+        #url-suggestions {
+            position: absolute; bottom: 100%; left: 0; right: 0;
+            background: var(--toolbar-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px 12px 0 0;
+            max-height: 250px; overflow-y: auto;
+            display: none; z-index: 500;
+            box-shadow: 0 -4px 16px rgba(0,0,0,0.15);
+        }
+        #url-suggestions.show { display: block; }
+
+        .toolbar-top #url-suggestions {
+            top: 100%; bottom: auto;
+            border-radius: 0 0 12px 12px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        }
+        .toolbar-top #toolbar { order: -1; }
+        .toolbar-top #bookmark-bar { order: 0; }
+        .toolbar-top #main-container { order: 1; }
+        .toolbar-top #bookmark-bar { border-top: none; border-bottom: 1px solid var(--border-color); }
+        .toolbar-top #toolbar { border-top: none; border-bottom: 1px solid var(--border-color); padding: calc(8px + var(--safe-area-top)) 12px 8px; }
+        .toolbar-bottom #toolbar { border-top: 1px solid var(--border-color); border-bottom: none; padding: 8px 12px calc(8px + var(--safe-area-bottom)); }
+        .url-suggestion {
+            display: flex; align-items: center; gap: 8px;
+            padding: 10px 12px; cursor: pointer; font-size: 14px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .url-suggestion:last-child { border-bottom: none; }
+        .url-suggestion:hover, .url-suggestion.highlighted { background: rgba(128,128,128,0.1); }
+        .url-suggestion img { width: 14px; height: 14px; flex-shrink: 0; }
+        .url-suggestion .sug-title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
+        .url-suggestion .sug-url { font-size: 11px; opacity: 0.5; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
         /* ---- メニューオーバーレイ ---- */
         #menu-overlay {
             position: fixed;
@@ -177,246 +211,49 @@
         }
 
         /* =====================================================
-           NEW TAB PAGE  
-        ===================================================== */
+           ニュータブページ（シンプル版）
+        ==================================================== */
         .newtab-page {
             background: var(--bg-color) !important;
             overflow-y: auto;
-            overflow-x: hidden;
-            display: flex;
+            box-sizing: border-box;
             flex-direction: column;
             align-items: center;
-            padding: 0;
-            position: relative;
+            padding: 36px 20px 40px;
         }
-
-        /* 背景グラデーション */
-        .nt-bg-deco {
-            position: absolute;
-            top: 0; left: 0; right: 0; height: 280px;
-            pointer-events: none; z-index: 0; overflow: hidden;
+        .page-element.newtab-page.active {
+            display: flex;
         }
-        .nt-bg-deco::before {
-            content: '';
-            position: absolute;
-            top: -80px; left: 50%; transform: translateX(-50%);
-            width: 500px; height: 300px;
-            background: radial-gradient(ellipse at center, rgba(0,96,223,0.1) 0%, transparent 70%);
+        .nt-header { text-align: center; margin-bottom: 28px; }
+        .nt-clock { font-size: 60px; font-weight: 200; letter-spacing: 3px; line-height: 1; margin-bottom: 6px; }
+        .nt-date  { font-size: 13px; opacity: 0.45; }
+        .nt-search-row { display: flex; gap: 8px; width: 100%; max-width: 520px; margin: 0 auto 36px; align-self: center; }
+        .nt-search-row input {
+            flex: 1; padding: 11px 20px; border-radius: 24px;
+            border: 1px solid var(--border-color); background: var(--toolbar-bg);
+            color: var(--text-color); font-size: 14px; outline: none;
         }
-        body.dark-mode .nt-bg-deco::before {
-            background: radial-gradient(ellipse at center, rgba(0,221,255,0.09) 0%, transparent 70%);
+        .nt-search-row input:focus { border-color: var(--accent); }
+        .nt-search-row button {
+            padding: 11px 22px; border-radius: 24px;
+            background: var(--accent); color: #fff; border: none; font-size: 13px;
         }
-
-        /* 時計・日付 */
-        .nt-header {
-            text-align: center;
-            padding: 32px 20px 0;
-            width: 100%;
-            position: relative;
-            z-index: 1;
-        }
-        .nt-clock {
-            font-size: clamp(52px, 14vw, 76px);
-            font-weight: 200;
-            letter-spacing: -1px;
-            line-height: 1;
-            color: var(--text-color);
-            font-variant-numeric: tabular-nums;
-        }
-        .nt-clock-sep {
-            animation: ntBlink 1s step-end infinite;
-            display: inline-block;
-        }
-        @keyframes ntBlink { 50% { opacity: 0.15; } }
-        .nt-date {
-            font-size: 13px;
-            opacity: 0.42;
-            margin-top: 7px;
-            letter-spacing: 0.3px;
-        }
-
-        /* 検索バー */
-        .nt-search-wrap {
-            width: 100%;
-            max-width: 500px;
-            padding: 22px 16px 0;
-            position: relative; z-index: 1;
-        }
-        .nt-search-box {
-            display: flex; align-items: center;
-            background: var(--toolbar-bg);
-            border: 1.5px solid var(--border-color);
-            border-radius: 28px;
-            padding: 4px 6px 4px 16px;
-            gap: 6px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.06);
-            transition: border-color 0.2s, box-shadow 0.2s;
-        }
-        .nt-search-box:focus-within {
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px rgba(0,96,223,0.1), 0 2px 10px rgba(0,0,0,0.06);
-        }
-        body.dark-mode .nt-search-box:focus-within {
-            box-shadow: 0 0 0 3px rgba(0,221,255,0.11), 0 2px 10px rgba(0,0,0,0.1);
-        }
-        .nt-search-icon { font-size: 15px; opacity: 0.38; flex-shrink: 0; }
-        .nt-search-input {
-            flex: 1; border: none; background: transparent;
-            color: var(--text-color); font-size: 15px; outline: none;
-            padding: 10px 0; min-width: 0;
-        }
-        .nt-search-input::placeholder { opacity: 0.38; }
-        .nt-search-btn {
-            background: var(--accent); color: #fff; border: none;
-            border-radius: 22px; padding: 9px 18px;
-            font-size: 13px; font-weight: 600; cursor: pointer;
-            flex-shrink: 0; white-space: nowrap;
-            transition: opacity 0.15s, transform 0.1s;
-        }
-        .nt-search-btn:active { opacity: 0.8; transform: scale(0.97); }
-
-        /* コンテンツエリア */
-        .nt-content {
-            width: 100%; max-width: 600px;
-            padding: 22px 16px 100px;
-            position: relative; z-index: 1;
-        }
-
-        /* セクションヘッダー */
-        .nt-section-header {
-            display: flex; align-items: center; justify-content: space-between;
-            margin-bottom: 10px; margin-top: 22px;
-        }
-        .nt-section-header:first-child { margin-top: 0; }
-        .nt-section-label {
-            font-size: 10px; font-weight: 700;
-            text-transform: uppercase; letter-spacing: 1.4px; opacity: 0.35;
-        }
-        .nt-edit-btn {
-            font-size: 11px; padding: 5px 11px; border-radius: 8px;
-            border: 1px solid var(--border-color);
-            background: rgba(128,128,128,0.08); color: var(--text-color);
-            cursor: pointer; display: flex; align-items: center; gap: 4px;
-            transition: background 0.15s;
-        }
-        .nt-edit-btn.on { background: var(--accent); color: #fff; border-color: var(--accent); }
-
-        /* お気に入りグリッド */
-        .nt-fav-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-        }
-        @media (max-width: 360px) { .nt-fav-grid { grid-template-columns: repeat(3, 1fr); } }
-
-        .nt-fav-item {
-            display: flex; flex-direction: column; align-items: center;
-            gap: 6px; padding: 12px 6px 10px;
-            border-radius: 14px; border: 1px solid var(--border-color);
-            background: var(--toolbar-bg); cursor: pointer;
-            position: relative;
-            transition: border-color 0.15s, transform 0.1s;
-            -webkit-tap-highlight-color: transparent;
-        }
-        .nt-fav-item:active { transform: scale(0.94); border-color: var(--accent); }
-        .nt-fav-icon {
-            width: 40px; height: 40px; border-radius: 10px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 22px; overflow: hidden;
-            background: rgba(128,128,128,0.06); flex-shrink: 0;
-        }
-        .nt-fav-icon img { width: 28px; height: 28px; object-fit: contain; }
-        .nt-fav-label {
-            font-size: 11px; text-align: center;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-            max-width: 100%; opacity: 0.68; width: 100%;
-        }
-        .nt-fav-del {
-            display: none; position: absolute; top: -7px; right: -7px;
-            width: 20px; height: 20px; border-radius: 50%;
-            background: #e74c3c; color: #fff; font-size: 11px;
-            align-items: center; justify-content: center; cursor: pointer;
-            border: 2px solid var(--bg-color); z-index: 2; line-height: 1;
-        }
-        .nt-edit-mode .nt-fav-del { display: flex; }
-        .nt-edit-mode .nt-fav-item {
-            animation: ntWiggle 0.4s ease infinite alternate;
-        }
-        @keyframes ntWiggle {
-            from { transform: rotate(-0.7deg); }
-            to   { transform: rotate(0.7deg); }
-        }
-        .nt-edit-mode .nt-fav-item:active { animation: none; transform: scale(0.94); }
-
-        /* お気に入り追加ボタン */
-        .nt-fav-add {
-            display: flex; flex-direction: column; align-items: center;
-            gap: 6px; padding: 12px 6px 10px;
-            border-radius: 14px; border: 1.5px dashed var(--border-color);
-            background: transparent; cursor: pointer;
-            color: var(--text-color); font-size: 11px;
-            opacity: 0; pointer-events: none;
-            transition: opacity 0.2s;
-        }
-        .nt-edit-mode .nt-fav-add { opacity: 0.5; pointer-events: auto; }
-        .nt-fav-add-icon {
-            width: 40px; height: 40px; border-radius: 10px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 22px; background: rgba(128,128,128,0.06);
-        }
-
-        /* カテゴリ */
-        .nt-cat-section { margin-top: 18px; }
-        .nt-cat-header-row {
-            display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
-        }
-        .nt-cat-label {
-            font-size: 10px; font-weight: 700;
-            text-transform: uppercase; letter-spacing: 1.4px; opacity: 0.35; flex: 1;
-        }
-        .nt-cat-del-btn {
-            font-size: 11px; color: #e74; border: 1px solid #e74;
-            background: transparent; border-radius: 6px; padding: 2px 8px;
-            cursor: pointer; display: none;
-        }
-        .nt-edit-mode .nt-cat-del-btn { display: flex; }
-        .nt-links-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+        .nt-body { width: 100%; max-width: 920px; }
+        .nt-top-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+        .nt-top-bar h3 { margin: 0; font-size: 13px; font-weight: 600; opacity: 0.5; text-transform: uppercase; letter-spacing: 1px; }
+        .nt-categories { display: flex; flex-direction: column; gap: 22px; }
+        .nt-cat-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .nt-cat-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; opacity: 0.4; flex: 1; }
+        .nt-links { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
         .nt-link {
             display: flex; align-items: center; gap: 8px;
-            padding: 9px 14px; border-radius: 10px;
-            border: 1px solid var(--border-color);
+            padding: 10px 20px; border-radius: 8px; border: 1px solid var(--border-color);
             background: var(--toolbar-bg); cursor: pointer; font-size: 13px;
-            position: relative; white-space: nowrap;
-            transition: border-color 0.15s;
-            -webkit-tap-highlight-color: transparent;
+            transition: border-color 0.15s, background 0.15s; position: relative;
+            white-space: nowrap;
         }
-        .nt-link:active { border-color: var(--accent); }
+        .nt-link:hover { border-color: var(--accent); }
         .nt-link img { width: 14px; height: 14px; flex-shrink: 0; }
-        .nt-link .nt-x {
-            display: none; position: absolute; top: -7px; right: -7px;
-            width: 17px; height: 17px; border-radius: 50%;
-            background: #e74c3c; color: #fff; font-size: 10px;
-            align-items: center; justify-content: center; cursor: pointer;
-            border: 2px solid var(--bg-color); line-height: 1; z-index: 2;
-        }
-        .nt-edit-mode .nt-link .nt-x { display: flex; }
-        .nt-add-link {
-            display: flex; align-items: center; gap: 6px;
-            padding: 8px 14px; border-radius: 10px;
-            border: 1.5px dashed var(--border-color); background: transparent;
-            cursor: pointer; font-size: 13px; color: var(--text-color);
-            opacity: 0; pointer-events: none; transition: opacity 0.15s;
-        }
-        .nt-edit-mode .nt-add-link { opacity: 0.5; pointer-events: auto; }
-        .nt-add-cat-row {
-            margin-top: 16px; opacity: 0; pointer-events: none; transition: opacity 0.15s;
-        }
-        .nt-edit-mode .nt-add-cat-row { opacity: 0.5; pointer-events: auto; }
-        .nt-add-cat-btn {
-            font-size: 12px; padding: 8px 14px; border-radius: 10px;
-            border: 1.5px dashed var(--border-color); background: transparent;
-            color: var(--text-color); cursor: pointer;
-        }
 
         /* ---- 設定・共通カード ---- */
         .card { background: var(--toolbar-bg); padding: 16px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 16px; }
@@ -478,42 +315,24 @@
     </div>
 </div>
 
-<!-- リンク追加モーダル -->
-<div id="link-modal" class="modal-overlay">
+<!-- スクリーンショットモーダル -->
+<div id="screenshot-modal" class="modal-overlay">
     <div class="modal-box">
-        <h3>リンクを追加</h3>
-        <input id="lm-title" type="text" placeholder="タイトル (省略可)">
-        <input id="lm-url" type="text" placeholder="https://...">
-        <select id="lm-cat"></select>
-        <div class="modal-btns">
-            <button class="btn" onclick="closeLinkModal()">キャンセル</button>
-            <button class="btn modal-ok" onclick="confirmAddLink()">追加</button>
-        </div>
+        <h3>📷 スクリーンショット</h3>
+        <p style="font-size:13px;margin-bottom:16px;opacity:0.7;">キャプチャ方法を選択</p>
+        <button class="btn modal-ok" onclick="takeViewportScreenshot();toggleMenu();" style="width:100%;margin-bottom:8px;padding:12px;font-size:14px;">🖥 現在表示中の画面</button>
+        <button class="btn" onclick="takeFullScreenshot();toggleMenu();" style="width:100%;padding:12px;font-size:14px;">📄 iframeサイト全体</button>
     </div>
 </div>
 
-<!-- カテゴリ追加モーダル -->
-<div id="cat-modal" class="modal-overlay">
+<!-- ブックマーク名編集モーダル -->
+<div id="bookmark-modal" class="modal-overlay">
     <div class="modal-box">
-        <h3>カテゴリを追加</h3>
-        <input id="cm-name" type="text" placeholder="カテゴリ名">
+        <h3>ブックマーク名を編集</h3>
+        <input id="bm-name-input" type="text" placeholder="ブックマーク名">
         <div class="modal-btns">
-            <button class="btn" onclick="closeCatModal()">キャンセル</button>
-            <button class="btn modal-ok" onclick="confirmAddCat()">追加</button>
-        </div>
-    </div>
-</div>
-
-<!-- お気に入り追加モーダル -->
-<div id="fav-modal" class="modal-overlay">
-    <div class="modal-box">
-        <h3>⭐ お気に入りを追加</h3>
-        <input id="fm-title" type="text" placeholder="タイトル (省略可)">
-        <input id="fm-url" type="text" placeholder="https://...">
-        <input id="fm-emoji" type="text" placeholder="絵文字アイコン (省略可)  例: 🎮 📺">
-        <div class="modal-btns">
-            <button class="btn" onclick="closeFavModal()">キャンセル</button>
-            <button class="btn modal-ok" onclick="confirmAddFav()">追加</button>
+            <button class="btn" onclick="closeBookmarkModal()">キャンセル</button>
+            <button class="btn modal-ok" onclick="confirmBookmark()">保存</button>
         </div>
     </div>
 </div>
@@ -553,6 +372,9 @@
     <div class="menu-item" onclick="openSettings(); toggleMenu();">
         <span style="width:24px;text-align:center;">⚙️</span> 設定
     </div>
+    <div class="menu-item" onclick="takeScreenshot(); toggleMenu();">
+        <span style="width:24px;text-align:center;">📷</span> スクリーンショット
+    </div>
     <div class="menu-item" onclick="toggleDarkMode(); toggleMenu();">
         <span style="width:24px;text-align:center;">🌓</span> ダークモード
     </div>
@@ -566,6 +388,7 @@
     <button class="icon-btn" onclick="navBack()" id="btn-back">◀</button>
     <div id="url-container">
         <input id="url" type="text" placeholder="検索またはアドレス入力" inputmode="url" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+        <div id="url-suggestions"></div>
     </div>
     <button id="tab-count-btn" class="icon-btn" onclick="toggleTabSwitcher()">1</button>
     <button class="icon-btn" onclick="toggleMenu()">⋮</button>
@@ -603,17 +426,231 @@ const PROXIES = {
     25: { name: "Blank",         url: "https://", info: "Blank" }
 };
 
-const SANDBOX_SETTINGS = "allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-presentation allow-same-origin allow-scripts allow-storage-access-by-user-activation";
-const SPECIAL_URLS = ["settings://", "newtab://"];
+function getSandbox() {
+    let s = "allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-presentation allow-same-origin allow-scripts allow-storage-access-by-user-activation";
+    if (!settings.blockDownloads) s += " allow-downloads";
+    if (!settings.blockPopups) s += " allow-popups allow-popups-to-escape-sandbox";
+    return s;
+}
+
+const AD_DOMAINS = [
+    "doubleclick.net", "googlesyndication.com", "googleadservices.com",
+    "google-analytics.com", "googletagmanager.com",
+    "amazon-adsystem.com", "adnxs.com", "rubiconproject.com",
+    "criteo.com", "criteo.net", "taboola.com", "outbrain.com",
+    "scorecardresearch.com", "quantserve.com", "sharethis.com",
+    "addthis.com", "adsrvr.org", "pubmatic.com", "openx.net",
+    "casalemedia.com", "moatads.com", "serving-sys.com",
+    "adserver.com", "advertising.com", "tribalfusion.com",
+    "bluekai.com", "exelator.com", "demdex.net", "krxd.net",
+    "agkn.com", "2mdn.net", "adform.net", "adition.com",
+    "bidswitch.net", "adsymptotic.com", "contextweb.com",
+    "turn.com", "media.net", "popads.net", "propellerads.com",
+    "exoclick.com", "trafficjunky.com", "juicyads.com",
+    "adsterra.com", "mgid.com"
+];
+
+function isAdUrl(url) {
+    if (!settings.adBlock) return false;
+    try {
+        const hostname = new URL(url).hostname.toLowerCase();
+        return AD_DOMAINS.some(d => hostname === d || hostname.endsWith('.' + d));
+    } catch(e) { return false; }
+}
+
+function addHistory(url, title) {
+    if (SPECIAL_URLS.includes(url)) return;
+    settings.history = settings.history || [];
+    settings.history.unshift({ url, title: title || url, time: Date.now() });
+    if (settings.history.length > 500) settings.history = settings.history.slice(0, 500);
+    saveState();
+}
+
+let suggestionData = [];
+let suggestionIndex = -1;
+
+function updateSuggestions() {
+    const input = document.getElementById('url');
+    const container = document.getElementById('url-suggestions');
+    const query = input.value.trim().toLowerCase();
+
+    if (!query || SPECIAL_URLS.some(s => query.startsWith(s))) {
+        container.classList.remove('show');
+        suggestionIndex = -1;
+        return;
+    }
+
+    const h = settings.history || [];
+    suggestionData = h.filter(item =>
+        (item.title && item.title.toLowerCase().includes(query)) ||
+        (item.url && item.url.toLowerCase().includes(query))
+    ).slice(0, 5);
+
+    if (suggestionData.length === 0) {
+        container.classList.remove('show');
+        suggestionIndex = -1;
+        return;
+    }
+
+    container.innerHTML = suggestionData.map((item, i) =>
+        '<div class="url-suggestion" data-index="' + i + '" onclick="navigateSuggestion(' + i + ')">' +
+            '<img src="' + getIconUrl(item.url) + '" onerror="this.style.display=\'none\'">' +
+            '<div style="flex:1;overflow:hidden;">' +
+                '<div class="sug-title">' + esc(item.title) + '</div>' +
+                '<div class="sug-url">' + esc(item.url) + '</div>' +
+            '</div>' +
+        '</div>'
+    ).join('');
+
+    container.classList.add('show');
+    suggestionIndex = -1;
+}
+
+function navigateSuggestion(i) {
+    if (suggestionData[i]) {
+        document.getElementById('url').value = suggestionData[i].url;
+        document.getElementById('url-suggestions').classList.remove('show');
+        go();
+    }
+}
+
+function takeScreenshot() {
+    document.getElementById('screenshot-modal').classList.add('open');
+}
+
+function closeScreenshotModal() {
+    document.getElementById('screenshot-modal').classList.remove('open');
+}
+
+async function takeViewportScreenshot() {
+    closeScreenshotModal();
+    try {
+        const stream = await navigator.mediaDevices.getDisplayMedia({ preferCurrentTab: true });
+        const video = document.createElement('video');
+        video.srcObject = stream;
+        await video.play();
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0);
+        stream.getTracks().forEach(t => t.stop());
+        const link = document.createElement('a');
+        link.download = 'screenshot-' + Date.now() + '.png';
+        link.href = canvas.toDataURL();
+        link.click();
+    } catch(e) {
+        if (e.name !== 'NotAllowedError') alert('スクリーンショットに失敗しました: ' + e.message);
+    }
+}
+
+async function takeFullScreenshot() {
+    closeScreenshotModal();
+    const tab = tabs.find(t => t.id === activeTabId);
+    if (!tab || !tab.element || tab.element.tagName !== 'IFRAME') {
+        alert('iframeサイトが開かれていません。現在表示中の画面でキャプチャします。');
+        takeViewportScreenshot();
+        return;
+    }
+
+    // Method 1: Canvas drawImage (works for same-origin iframes)
+    try {
+        const iframe = tab.element;
+        const doc = iframe.contentDocument || iframe.contentWindow.document;
+        const body = doc.body;
+        const html = doc.documentElement;
+        const width = Math.max(body.scrollWidth, body.offsetWidth, html.scrollWidth, html.offsetWidth, html.clientWidth);
+        const height = Math.max(body.scrollHeight, body.offsetHeight, html.scrollHeight, html.offsetHeight, html.clientHeight);
+        if (width === 0 || height === 0) throw new Error('Empty');
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(0, 0, width, height);
+        ctx.drawImage(iframe, 0, 0, width, height);
+        const link = document.createElement('a');
+        link.download = 'screenshot-full-' + Date.now() + '.png';
+        link.href = canvas.toDataURL();
+        link.click();
+        return;
+    } catch(e) {}
+
+    // Method 2: Fetch page through a CORS proxy → same-origin blob iframe → canvas
+    try {
+        const url = tab.url;
+        const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+        const resp = await fetch(proxyUrl);
+        const html = await resp.text();
+        if (html.length < 100) throw new Error('Empty response');
+        const blob = new Blob([html], { type: 'text/html' });
+        const blobUrl = URL.createObjectURL(blob);
+        const tempFrame = document.createElement('iframe');
+        tempFrame.style.cssText = 'position:absolute;left:-9999px;top:0;width:1024px;height:1px;border:none;';
+        tempFrame.src = blobUrl;
+        document.body.appendChild(tempFrame);
+        await new Promise((resolve, reject) => {
+            const t = setTimeout(() => reject(new Error('Timeout')), 10000);
+            tempFrame.onload = () => { clearTimeout(t); setTimeout(resolve, 1000); };
+        });
+        const d = tempFrame.contentDocument || tempFrame.contentWindow.document;
+        const b = d.body, h = d.documentElement;
+        const fw = Math.max(b.scrollWidth, b.offsetWidth, h.scrollWidth, h.offsetWidth, h.clientWidth, 1024);
+        const fh = Math.max(b.scrollHeight, b.offsetHeight, h.scrollHeight, h.offsetHeight, h.clientHeight, 1);
+        tempFrame.style.width = fw + 'px';
+        tempFrame.style.height = fh + 'px';
+        await new Promise(r => setTimeout(r, 300));
+        const canvas = document.createElement('canvas');
+        canvas.width = fw;
+        canvas.height = fh;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(0, 0, fw, fh);
+        ctx.drawImage(tempFrame, 0, 0, fw, fh);
+        tempFrame.remove();
+        URL.revokeObjectURL(blobUrl);
+        const link = document.createElement('a');
+        link.download = 'screenshot-full-' + Date.now() + '.png';
+        link.href = canvas.toDataURL();
+        link.click();
+        return;
+    } catch(e) {}
+
+    // Method 3: Open in popup → getDisplayMedia (user selects the popup)
+    try {
+        const popup = window.open(tab.url, '_blank', 'width=1024,height=768,scrollbars=yes');
+        if (!popup) {
+            alert('ポップアップがブロックされました。現在表示中の画面でキャプチャします。');
+            takeViewportScreenshot();
+            return;
+        }
+        await new Promise(r => setTimeout(r, 3000));
+        alert('新しいウィンドウが開きました。\n画面選択ダイアログでそのウィンドウを選択して「共有」をクリックしてください。');
+        const stream = await navigator.mediaDevices.getDisplayMedia();
+        const video = document.createElement('video');
+        video.srcObject = stream;
+        await video.play();
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0);
+        stream.getTracks().forEach(t => t.stop());
+        try { popup.close(); } catch(e) {}
+        const link = document.createElement('a');
+        link.download = 'screenshot-full-' + Date.now() + '.png';
+        link.href = canvas.toDataURL();
+        link.click();
+    } catch(e) {
+        if (e.name !== 'NotAllowedError') alert('スクリーンショットに失敗しました: ' + e.message);
+    }
+}
+
+const SPECIAL_URLS = ["settings://", "newtab://", "history://", "cookie://"];
 
 const PRESETS = [
     { name: "Google",     url: "https://google.com/?igu=1" },
     { name: "OffiDocs",   url: "https://offidocs.com" },
     { name: "nation",     url: "https://nation.online" },
 ];
-
-/* デフォルトのお気に入りサイト */
-const DEFAULT_NT_FAVS = () => ([]);
 
 const DEFAULT_NT_LINKS = () => ([
     {
@@ -642,7 +679,7 @@ let profiles = loadProfiles();
 let activeProfileId = getActiveProfileId();
 if (!profiles.find(p => p.id === activeProfileId)) { activeProfileId = profiles[0].id; setActiveProfileId(activeProfileId); }
 
-function pk(key) { return `p${activeProfileId}-${key}`; }
+function pk(key) { return `mobile-p${activeProfileId}-${key}`; }
 
 const DEFAULT_SETTINGS = () => ({
     homeUrl: "newtab://",
@@ -652,8 +689,11 @@ const DEFAULT_SETTINGS = () => ({
     activeProxyId: null,
     torEnabled: false,
     torGateway: ".tor.lc",
-    ntLinks: null,
-    ntFavs: null
+    blockDownloads: true,
+    blockPopups: true,
+    adBlock: true,
+    toolbarPos: 'bottom',
+    history: []
 });
 
 let settings = DEFAULT_SETTINGS();
@@ -661,8 +701,6 @@ let settings = DEFAULT_SETTINGS();
 function loadSettings() {
     const saved = localStorage.getItem(pk('settings'));
     settings = saved ? { ...DEFAULT_SETTINGS(), ...JSON.parse(saved) } : DEFAULT_SETTINGS();
-    if (!settings.ntLinks) settings.ntLinks = DEFAULT_NT_LINKS();
-    if (!settings.ntFavs)  settings.ntFavs  = DEFAULT_NT_FAVS();
 }
 
 function saveState() {
@@ -696,7 +734,7 @@ document.getElementById('profile-name-input').addEventListener('keydown', e => {
 function deleteProfile(id) {
     if (profiles.length <= 1) return;
     if (!confirm(`「${profiles.find(p => p.id === id)?.name}」を削除しますか？`)) return;
-    ['settings', 'sessions', 'last-active'].forEach(k => localStorage.removeItem(`p${id}-${k}`));
+    ['settings', 'sessions', 'last-active'].forEach(k => localStorage.removeItem(`mobile-p${id}-${k}`));
     profiles = profiles.filter(p => p.id !== id);
     saveProfiles();
     if (activeProfileId === id) { activeProfileId = profiles[0].id; setActiveProfileId(activeProfileId); }
@@ -761,18 +799,29 @@ function updateTabElement(tab) {
     if (tab.url === "settings://") {
         el = document.createElement('div');
         el.className = "page-element settings-page";
+        tab.title = "設定";
         renderSettingsInto(el);
     } else if (tab.url === "newtab://") {
         el = document.createElement('div');
         el.className = "page-element newtab-page";
         tab.title = "新しいタブ";
         renderNewtabInto(el);
+    } else if (tab.url === "history://") {
+        el = document.createElement('div');
+        el.className = "page-element settings-page";
+        tab.title = "履歴";
+        renderHistoryInto(el);
+    } else if (tab.url === "cookie://") {
+        el = document.createElement('div');
+        el.className = "page-element settings-page";
+        tab.title = "Cookie管理";
+        renderCookiesInto(el);
     } else {
         const finalUrl = getEffectiveUrl(tab.url);
         if (settings.viewMode === "iframe") {
             el = document.createElement('iframe');
             el.src = finalUrl;
-            el.setAttribute("sandbox", SANDBOX_SETTINGS);
+            el.setAttribute("sandbox", getSandbox());
         } else {
             el = document.createElement(settings.viewMode === "object" ? "object" : "embed");
             el.src = finalUrl; el.data = finalUrl; el.type = "text/html";
@@ -806,7 +855,6 @@ function switchTab(id) {
 function go() {
     let url = document.getElementById('url').value.trim();
     if (SPECIAL_URLS.includes(url)) {
-        /* そのまま */
     } else if (!url.startsWith('http')) {
         if (url.includes('.') && !url.includes(' ')) url = "https://" + url;
         else url = "https://www.google.com/search?q=" + encodeURIComponent(url);
@@ -816,13 +864,40 @@ function go() {
         if (tab.url !== url) {
             tab.history = tab.history.slice(0, tab.historyIndex + 1);
             tab.history.push(url); tab.historyIndex++; tab.url = url;
+            if (isAdUrl(url)) { alert('広告サイトのためブロックしました: ' + url); tab.url = tab.history[tab.historyIndex - 1] || tab.url; updateTabElement(tab); switchTab(tab.id); return; }
+            addHistory(url, tab.title);
         }
         updateTabElement(tab); switchTab(tab.id);
     }
     document.getElementById('url').blur();
 }
 
-document.getElementById("url").addEventListener("keydown", e => { if (e.key === "Enter") go(); });
+document.getElementById("url").addEventListener("input", updateSuggestions);
+document.getElementById("url").addEventListener("focus", updateSuggestions);
+document.getElementById("url").addEventListener("keydown", e => {
+    const container = document.getElementById('url-suggestions');
+    const items = container.querySelectorAll('.url-suggestion');
+    if (e.key === "Enter") {
+        if (suggestionIndex >= 0 && items[suggestionIndex]) {
+            e.preventDefault();
+            items[suggestionIndex].click();
+        } else {
+            go();
+        }
+        container.classList.remove('show');
+    } else if (e.key === "ArrowDown") {
+        e.preventDefault();
+        suggestionIndex = Math.min(suggestionIndex + 1, items.length - 1);
+        items.forEach((el, i) => el.classList.toggle('highlighted', i === suggestionIndex));
+    } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        suggestionIndex = Math.max(suggestionIndex - 1, -1);
+        items.forEach((el, i) => el.classList.toggle('highlighted', i === suggestionIndex));
+    } else if (e.key === "Escape") {
+        container.classList.remove('show');
+        suggestionIndex = -1;
+    }
+});
 
 function navBack() {
     const t = tabs.find(x => x.id === activeTabId);
@@ -895,6 +970,8 @@ function renderTabGrid() {
 /* ======================================================
    ブックマーク
 ====================================================== */
+let pendingBookmarkUrl = null;
+
 function renderBookmarkBar() {
     const bar = document.getElementById('bookmark-bar');
     bar.innerHTML = '';
@@ -922,95 +999,140 @@ function toggleBookmark() {
     if (!tab || SPECIAL_URLS.includes(tab.url)) return;
     const idx = settings.bookmarks.findIndex(b => b.url === tab.url);
     if (idx > -1) settings.bookmarks.splice(idx, 1);
-    else settings.bookmarks.push({ title: tab.title, url: tab.url });
+    else {
+        pendingBookmarkUrl = tab.url;
+        document.getElementById('bm-name-input').value = tab.title;
+        document.getElementById('bookmark-modal').classList.add('open');
+        setTimeout(() => document.getElementById('bm-name-input').focus(), 50);
+        return;
+    }
     updateStarUI(); renderBookmarkBar(); saveState();
 }
 
-/* ======================================================
-   ニュータブページ（リデザイン版）
-====================================================== */
-let ntEditMode = false;
+function closeBookmarkModal() {
+    document.getElementById('bookmark-modal').classList.remove('open');
+    pendingBookmarkUrl = null;
+}
 
+function confirmBookmark() {
+    const name = document.getElementById('bm-name-input').value.trim();
+    if (!name) return;
+    settings.bookmarks.push({ title: name, url: pendingBookmarkUrl });
+    pendingBookmarkUrl = null;
+    closeBookmarkModal();
+    updateStarUI(); renderBookmarkBar(); saveState();
+}
+
+document.getElementById('bm-name-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') confirmBookmark();
+    if (e.key === 'Escape') closeBookmarkModal();
+});
+
+function renderHistoryInto(container) {
+    const h = settings.history || [];
+    let html = '<h2 style="margin-top:0;">📜 履歴</h2>';
+    if (h.length === 0) {
+        html += '<p style="opacity:0.5;font-size:14px;">履歴はありません</p>';
+    } else {
+        html += '<button class="btn" onclick="settings.history=[];saveState();renderHistoryInto(document.querySelector(\'.settings-page\'));" style="margin-bottom:12px;">🗑 すべて削除</button>';
+        html += '<div style="display:flex;flex-direction:column;gap:6px;">';
+        h.forEach((item, i) => {
+            html += '<div style="display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:10px;border:1px solid var(--border-color);background:var(--toolbar-bg);">';
+            html += '<div style="flex:1;display:flex;align-items:center;gap:8px;cursor:pointer;overflow:hidden;" onclick="openInNewTab(\'' + esc(item.url) + '\')">';
+            html += '<img src="' + getIconUrl(item.url) + '" style="width:16px;height:16px;flex-shrink:0;" onerror="this.style.display=\'none\'">';
+            html += '<div style="flex:1;overflow:hidden;"><div style="font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc(item.title) + '</div>';
+            html += '<div style="font-size:12px;opacity:0.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc(item.url) + '</div></div>';
+            html += '<span style="font-size:11px;opacity:0.4;flex-shrink:0;">' + new Date(item.time).toLocaleString('ja-JP') + '</span>';
+            html += '</div>';
+            html += '<button style="font-size:12px;padding:4px 8px;flex-shrink:0;" class="btn" onclick="event.stopPropagation();settings.history.splice(' + i + ',1);saveState();renderHistoryInto(document.querySelector(\'.settings-page\'));">削除</button>';
+            html += '</div>';
+        });
+        html += '</div>';
+    }
+    container.innerHTML = html;
+}
+
+function renderCookiesInto(container) {
+    const domains = {};
+    (settings.history || []).forEach(h => {
+        try { const d = new URL(h.url).hostname; domains[d] = (domains[d] || 0) + 1; }
+        catch(e) {}
+    });
+    let html = '<h2 style="margin-top:0;">🍪 Cookie管理</h2>';
+    const keys = Object.keys(domains);
+    if (keys.length === 0) {
+        html += '<p style="opacity:0.5;font-size:14px;">データはありません</p>';
+    } else {
+        html += '<p style="font-size:13px;opacity:0.6;">訪問したドメインの一覧です。サイトデータを削除するには各ドメインを削除してください。</p>';
+        html += '<button class="btn" onclick="if(confirm(\'すべての履歴を削除しますか？\')){settings.history=[];saveState();renderCookiesInto(document.querySelector(\'.settings-page\'));}" style="margin-bottom:12px;">🗑 すべて削除</button>';
+        html += '<div style="display:flex;flex-direction:column;gap:4px;">';
+        keys.forEach(d => {
+            html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:10px;border:1px solid var(--border-color);background:var(--toolbar-bg);">';
+            html += '<span style="font-size:14px;">' + esc(d) + '</span>';
+            html += '<button class="btn" onclick="if(confirm(\'' + esc(d) + ' のデータを削除しますか？\')){settings.history=settings.history.filter(h=>!h.url.includes(\'' + esc(d) + '\'));saveState();renderCookiesInto(document.querySelector(\'.settings-page\'));}">削除</button>';
+            html += '</div>';
+        });
+        html += '</div>';
+    }
+    container.innerHTML = html;
+}
+
+window.openInNewTab = function(url) {
+    createNewTab(url);
+};
+
+/* ======================================================
+   ニュータブページ
+====================================================== */
 function renderNewtabInto(container) {
     const now = new Date();
-    const h = String(now.getHours()).padStart(2, '0');
-    const m = String(now.getMinutes()).padStart(2, '0');
+    const timeStr = now.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
     const dateStr = now.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
 
-    // お気に入りグリッドHTML
-    const favs = settings.ntFavs || DEFAULT_NT_FAVS();
-    const fallbackIcon = "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='18' font-size='16'>🌐</text></svg>";
-    let favsHtml = favs.map(fav => {
-        const hostname = (() => { try { return new URL(fav.url).hostname; } catch(e) { return 'example.com'; } })();
-        const iconHtml = fav.emoji
-            ? `<span style="font-size:22px;line-height:1;">${esc(fav.emoji)}</span>`
-            : `<img src="https://icons.duckduckgo.com/ip3/${esc(hostname)}.ico" onerror="this.onerror=null;this.src='${fallbackIcon}'">`;
-        return `<div class="nt-fav-item" onclick="window.ntFavOpen(${fav.id})">
-            <div class="nt-fav-del" onclick="event.stopPropagation();window.ntRemoveFav(${fav.id})">×</div>
-            <div class="nt-fav-icon">${iconHtml}</div>
-            <div class="nt-fav-label">${esc(fav.title)}</div>
-        </div>`;
-    }).join('');
-    favsHtml += `<div class="nt-fav-add" onclick="window.ntOpenFavModal()">
-        <div class="nt-fav-add-icon">＋</div>
-        <span>追加</span>
-    </div>`;
-
-    // カテゴリHTML
-    const cats = settings.ntLinks || DEFAULT_NT_LINKS();
-    let catsHtml = cats.map(cat => {
-        const linksHtml = cat.links.map(link => {
-            const hostname = (() => { try { return new URL(link.url).hostname; } catch(e) { return 'example.com'; } })();
-            return `<div class="nt-link" onclick="window.ntOpen(${cat.id},${link.id})">
-                <img src="https://icons.duckduckgo.com/ip3/${esc(hostname)}.ico" onerror="this.style.display='none'">
+    let catsHtml = '';
+    for (const cat of DEFAULT_NT_LINKS()) {
+        let linksHtml = '';
+        for (const link of cat.links) {
+            linksHtml += `
+            <div class="nt-link" onclick="window.ntOpen(${cat.id},${link.id})">
+                <img src="https://icons.duckduckgo.com/ip3/${(() => { try { return new URL(link.url).hostname; } catch(e) { return 'example.com'; }})()}.ico" onerror="this.style.display='none'">
                 <span>${esc(link.title)}</span>
-                <div class="nt-x" onclick="event.stopPropagation();window.ntRemoveLink(${cat.id},${link.id})">×</div>
             </div>`;
-        }).join('');
-        return `<div class="nt-cat-section" data-catid="${cat.id}">
-            <div class="nt-cat-header-row">
+        }
+        catsHtml += `
+        <div class="nt-cat" data-catid="${cat.id}">
+            <div class="nt-cat-header">
                 <span class="nt-cat-label">${esc(cat.name)}</span>
-                <button class="nt-cat-del-btn" onclick="window.ntRemoveCat(${cat.id})">削除</button>
             </div>
-            <div class="nt-links-row">
+            <div class="nt-links">
                 ${linksHtml}
-                <div class="nt-add-link" onclick="window.ntOpenLinkModal(${cat.id})">＋ 追加</div>
             </div>
         </div>`;
-    }).join('');
+    }
 
     container.innerHTML = `
-        <div class="nt-bg-deco"></div>
-
         <div class="nt-header">
-            <div class="nt-clock" id="nt-clock">${h}<span class="nt-clock-sep">:</span>${m}</div>
+            <div class="nt-clock" id="nt-clock">${timeStr}</div>
             <div class="nt-date" id="nt-date">${dateStr}</div>
         </div>
-
-
-        <div class="nt-content">
-
-            <div class="nt-section-header">
-                <span class="nt-section-label">⭐ お気に入り</span>
-                <button class="nt-edit-btn ${ntEditMode ? 'on' : ''}" onclick="window.ntToggleEdit()">
-                    ${ntEditMode ? '✓ 完了' : '✎ 編集'}
-                </button>
+        <div class="nt-search-row">
+            <input id="nt-search" type="text" placeholder="ツールを検索...">
+            <button onclick="window.ntSearch()">検索</button>
+        </div>
+        <div class="nt-body">
+            <div class="nt-top-bar">
+                <h3>ツール &amp; リンク</h3>
             </div>
-            <div class="nt-fav-grid ${ntEditMode ? 'nt-edit-mode' : ''}">${favsHtml}</div>
-
-            <div class="${ntEditMode ? 'nt-edit-mode' : ''}">
-                ${catsHtml}
-                <div class="nt-add-cat-row">
-                    <button class="nt-add-cat-btn" onclick="window.ntOpenCatModal()">＋ カテゴリを追加</button>
-                </div>
-            </div>
-
+            <div class="nt-categories">${catsHtml}</div>
         </div>`;
 
     startClock();
 
-    const si = container.querySelector('#nt-search-input');
-    if (si) si.addEventListener('keydown', e => { if (e.key === 'Enter') window.ntDoSearch(); });
+    const si = container.querySelector('#nt-search');
+    if (si) {
+        si.addEventListener('input', window.ntSearch);
+        si.addEventListener('keydown', e => { if (e.key === 'Enter') window.ntSearch(); });
+    }
 }
 
 function startClock() {
@@ -1020,150 +1142,41 @@ function startClock() {
         const d = document.getElementById('nt-date');
         if (!c) { clearInterval(clockTimer); clockTimer = null; return; }
         const now = new Date();
-        const h = String(now.getHours()).padStart(2, '0');
-        const m = String(now.getMinutes()).padStart(2, '0');
-        c.innerHTML = `${h}<span class="nt-clock-sep">:</span>${m}`;
+        c.textContent = now.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
         if (d) d.textContent = now.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
     }, 1000);
 }
 
 /* ---- ニュータブ グローバル関数 ---- */
-
-window.ntDoSearch = function() {
-    const input = document.getElementById('nt-search-input');
-    if (!input) return;
-    const query = input.value.trim();
-    if (!query) return;
-    document.getElementById('url').value = "https://www.google.com/search?igu=1&q=" + encodeURIComponent(query);
-    go();
-};
-
-window.ntFavOpen = function(favId) {
-    if (ntEditMode) return;
-    const fav = (settings.ntFavs || DEFAULT_NT_FAVS()).find(f => f.id === favId);
-    if (fav) { document.getElementById('url').value = fav.url; go(); }
-};
-
-window.ntRemoveFav = function(favId) {
-    if (!settings.ntFavs) settings.ntFavs = DEFAULT_NT_FAVS();
-    settings.ntFavs = settings.ntFavs.filter(f => f.id !== favId);
-    saveState();
-    const t = tabs.find(x => x.id === activeTabId);
-    if (t && t.url === "newtab://") renderNewtabInto(t.element);
-};
-
 window.ntOpen = function(catId, linkId) {
-    if (ntEditMode) return;
-    const cat = (settings.ntLinks || DEFAULT_NT_LINKS()).find(c => c.id === catId);
+    const cat  = DEFAULT_NT_LINKS().find(c => c.id === catId);
     const link = cat && cat.links.find(l => l.id === linkId);
     if (link) { document.getElementById('url').value = link.url; go(); }
 };
 
-window.ntToggleEdit = function() {
-    ntEditMode = !ntEditMode;
-    const t = tabs.find(x => x.id === activeTabId);
-    if (t && t.url === "newtab://") renderNewtabInto(t.element);
-};
-
-window.ntRemoveLink = function(catId, linkId) {
-    if (!settings.ntLinks) settings.ntLinks = DEFAULT_NT_LINKS();
-    const cat = settings.ntLinks.find(c => c.id === catId);
-    if (cat) cat.links = cat.links.filter(l => l.id !== linkId);
-    saveState();
-    const t = tabs.find(x => x.id === activeTabId);
-    if (t && t.url === "newtab://") renderNewtabInto(t.element);
-};
-
-window.ntRemoveCat = function(catId) {
-    if (!confirm('このカテゴリを削除しますか？')) return;
-    if (!settings.ntLinks) settings.ntLinks = DEFAULT_NT_LINKS();
-    settings.ntLinks = settings.ntLinks.filter(c => c.id !== catId);
-    saveState();
-    const t = tabs.find(x => x.id === activeTabId);
-    if (t && t.url === "newtab://") renderNewtabInto(t.element);
-};
-
-/* お気に入り追加モーダル */
-window.ntOpenFavModal = function() {
-    document.getElementById('fm-title').value = '';
-    document.getElementById('fm-url').value = '';
-    document.getElementById('fm-emoji').value = '';
-    document.getElementById('fav-modal').classList.add('open');
-    setTimeout(() => document.getElementById('fm-url').focus(), 50);
-};
-window.closeFavModal = function() { document.getElementById('fav-modal').classList.remove('open'); };
-window.confirmAddFav = function() {
-    let url = document.getElementById('fm-url').value.trim();
-    if (!url) return;
-    if (!url.startsWith('http')) url = 'https://' + url;
-    const title = document.getElementById('fm-title').value.trim() ||
-        (() => { try { return new URL(url).hostname; } catch(e) { return url; } })();
-    const emoji = document.getElementById('fm-emoji').value.trim();
-    if (!settings.ntFavs) settings.ntFavs = DEFAULT_NT_FAVS();
-    settings.ntFavs.push({ id: Date.now(), title, url, emoji });
-    saveState();
-    window.closeFavModal();
-    const t = tabs.find(x => x.id === activeTabId);
-    if (t && t.url === "newtab://") renderNewtabInto(t.element);
-};
-
-/* リンク追加モーダル */
-let _linkModalCatId = null;
-window.ntOpenLinkModal = function(catId) {
-    _linkModalCatId = catId;
-    document.getElementById('lm-title').value = '';
-    document.getElementById('lm-url').value = '';
-    const sel = document.getElementById('lm-cat');
-    sel.innerHTML = '';
-    const cats = settings.ntLinks || DEFAULT_NT_LINKS();
-    cats.forEach(c => {
-        const opt = document.createElement('option');
-        opt.value = c.id; opt.textContent = c.name;
-        if (c.id === catId) opt.selected = true;
-        sel.appendChild(opt);
+window.ntSearch = function() {
+    const input = document.getElementById('nt-search');
+    if (!input) return;
+    const query = input.value.toLowerCase();
+    const categories = document.querySelectorAll('.nt-cat');
+    categories.forEach(cat => {
+        const links = cat.querySelectorAll('.nt-link');
+        let visibleCount = 0;
+        links.forEach(link => {
+            const titleSpan = link.querySelector('span');
+            if (titleSpan) {
+                const title = titleSpan.textContent.toLowerCase();
+                if (title.includes(query)) {
+                    link.style.display = 'flex';
+                    visibleCount++;
+                } else {
+                    link.style.display = 'none';
+                }
+            }
+        });
+        cat.style.display = visibleCount > 0 ? 'block' : 'none';
     });
-    document.getElementById('link-modal').classList.add('open');
-    setTimeout(() => document.getElementById('lm-url').focus(), 50);
 };
-window.closeLinkModal = function() { document.getElementById('link-modal').classList.remove('open'); };
-window.confirmAddLink = function() {
-    let url = document.getElementById('lm-url').value.trim();
-    if (!url) return;
-    if (!url.startsWith('http')) url = 'https://' + url;
-    const title = document.getElementById('lm-title').value.trim() ||
-        (() => { try { return new URL(url).hostname; } catch(e) { return url; } })();
-    const catId = parseInt(document.getElementById('lm-cat').value);
-    if (!settings.ntLinks) settings.ntLinks = DEFAULT_NT_LINKS();
-    const cat = settings.ntLinks.find(c => c.id === catId);
-    if (cat) cat.links.push({ id: Date.now(), title, url });
-    saveState();
-    window.closeLinkModal();
-    const t = tabs.find(x => x.id === activeTabId);
-    if (t && t.url === "newtab://") renderNewtabInto(t.element);
-};
-
-/* カテゴリ追加モーダル */
-window.ntOpenCatModal = function() {
-    document.getElementById('cm-name').value = '';
-    document.getElementById('cat-modal').classList.add('open');
-    setTimeout(() => document.getElementById('cm-name').focus(), 50);
-};
-window.closeCatModal = function() { document.getElementById('cat-modal').classList.remove('open'); };
-window.confirmAddCat = function() {
-    const name = document.getElementById('cm-name').value.trim();
-    if (!name) return;
-    if (!settings.ntLinks) settings.ntLinks = DEFAULT_NT_LINKS();
-    settings.ntLinks.push({ id: Date.now(), name, links: [] });
-    saveState();
-    window.closeCatModal();
-    const t = tabs.find(x => x.id === activeTabId);
-    if (t && t.url === "newtab://") renderNewtabInto(t.element);
-};
-
-/* Enterキー */
-document.getElementById('lm-url').addEventListener('keydown', e => { if (e.key === 'Enter') window.confirmAddLink(); if (e.key === 'Escape') window.closeLinkModal(); });
-document.getElementById('cm-name').addEventListener('keydown', e => { if (e.key === 'Enter') window.confirmAddCat(); if (e.key === 'Escape') window.closeCatModal(); });
-document.getElementById('fm-url').addEventListener('keydown', e => { if (e.key === 'Enter') window.confirmAddFav(); if (e.key === 'Escape') window.closeFavModal(); });
 
 /* ======================================================
    設定ページ
@@ -1221,6 +1234,37 @@ function renderSettingsInto(container) {
                 <option value="object"  ${settings.viewMode === 'object'  ? 'selected' : ''}>object</option>
                 <option value="embed"   ${settings.viewMode === 'embed'   ? 'selected' : ''}>embed</option>
             </select>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;margin-top:12px;">
+                <span>ツールバー位置:</span>
+                <select onchange="setToolbarPosition(this.value)" style="width:auto;margin:0;">
+                    <option value="bottom" ${settings.toolbarPos === 'bottom' ? 'selected' : ''}>下</option>
+                    <option value="top" ${settings.toolbarPos === 'top' ? 'selected' : ''}>上</option>
+                </select>
+            </label>
+        </div>
+        <div class="card"><h3>🛡 セキュリティ</h3>
+            <div style="margin-bottom:10px;">
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;">
+                    <input type="checkbox" ${settings.adBlock ? 'checked' : ''} onchange="settings.adBlock=this.checked;saveState();">
+                    広告ブロッカー
+                </label>
+            </div>
+            <div style="margin-bottom:10px;">
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;">
+                    <input type="checkbox" ${!settings.blockDownloads ? 'checked' : ''} onchange="settings.blockDownloads=!this.checked;saveState();">
+                    ダウンロードを許可
+                </label>
+            </div>
+            <div>
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;">
+                    <input type="checkbox" ${!settings.blockPopups ? 'checked' : ''} onchange="settings.blockPopups=!this.checked;saveState();">
+                    ポップアップを許可
+                </label>
+            </div>
+        </div>
+        <div class="card"><h3>📋 履歴・Cookie</h3>
+            <button class="btn" onclick="settings.history=settings.history||[]; document.getElementById('url').value='history://'; go();" style="margin-right:8px;">📜 履歴を見る</button>
+            <button class="btn" onclick="document.getElementById('url').value='cookie://'; go();">🍪 Cookie管理</button>
         </div>
         <div class="card"><h3>🌐 プロキシ設定</h3>${proxyHtml}</div>
         <br><br><br>`;
@@ -1231,6 +1275,15 @@ function renderSettingsInto(container) {
         container.querySelector('#plist').appendChild(b);
     });
 }
+
+window.setToolbarPosition = (pos) => {
+    settings.toolbarPos = pos;
+    saveState();
+    document.body.classList.remove('toolbar-top', 'toolbar-bottom');
+    document.body.classList.add('toolbar-' + pos);
+    const sp = document.querySelector('.settings-page');
+    if (sp) renderSettingsInto(sp);
+};
 
 window.toggleTor = () => {
     settings.torEnabled = !settings.torEnabled; saveState();
@@ -1286,6 +1339,11 @@ document.addEventListener('click', e => {
     if (menu.style.display === 'flex' && !menu.contains(e.target) && !e.target.closest('#toolbar')) {
         menu.style.display = 'none';
     }
+    const sc = document.getElementById('url-suggestions');
+    const input = document.getElementById('url');
+    if (sc && input && !sc.contains(e.target) && e.target !== input) {
+        sc.classList.remove('show');
+    }
 });
 
 /* ======================================================
@@ -1303,6 +1361,7 @@ function initProfile() {
     } else {
         createNewTab(settings.homeUrl || "newtab://");
     }
+    setToolbarPosition(settings.toolbarPos || 'bottom');
     renderBookmarkBar();
 }
 
