@@ -30,7 +30,7 @@ body { margin: 0; font-family: system-ui, sans-serif; background: var(--bg-color
 
 /* ---- クロム ---- */
 #chrome { background: var(--toolbar-bg); border-bottom: 1px solid var(--border-color); padding: 8px; display: flex; gap: 8px; align-items: center; z-index: 10; }
-#url { flex: 1; padding: 8px 15px; border-radius: 20px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-color); font-size: 13px; }
+#url { width: 100%; box-sizing: border-box; padding: 8px 15px; border-radius: 20px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-color); font-size: 13px; }
 #bookmark-bar { background: var(--toolbar-bg); padding: 4px 10px; display: flex; gap: 10px; border-bottom: 1px solid var(--border-color); font-size: 11px; overflow-x: auto; min-height: 20px; }
 .bm-item { display: flex; align-items: center; gap: 4px; cursor: pointer; padding: 4px 8px; border-radius: 4px; white-space: nowrap; max-width: 150px; }
 .bm-item:hover { background: rgba(0,0,0,0.05); }
@@ -39,6 +39,28 @@ body { margin: 0; font-family: system-ui, sans-serif; background: var(--bg-color
 .star-btn.active { color: #f1c40f; }
 #view-mode-btn svg { width: 18px; height: 18px; fill: currentColor; }
 #view-mode-btn.embed-mode { color: var(--warning); border-color: var(--warning); background: rgba(243,156,18,0.1); }
+
+/* ---- URLサジェスト ---- */
+#url-suggestions {
+    position: absolute; top: 100%; left: 0; right: 0;
+    background: var(--toolbar-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 0 0 12px 12px;
+    max-height: 300px; overflow-y: auto;
+    display: none; z-index: 500;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+#url-suggestions.show { display: block; }
+.url-suggestion {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 12px; cursor: pointer; font-size: 13px;
+    border-bottom: 1px solid var(--border-color);
+}
+.url-suggestion:last-child { border-bottom: none; }
+.url-suggestion:hover, .url-suggestion.highlighted { background: rgba(128,128,128,0.1); }
+.url-suggestion img { width: 14px; height: 14px; flex-shrink: 0; }
+.url-suggestion .sug-title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.url-suggestion .sug-url { font-size: 11px; opacity: 0.5; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* ---- メインビュー ---- */
 #main-container { display: flex; flex: 1; overflow: hidden; position: relative; }
@@ -186,6 +208,28 @@ select, input[type="text"] { padding: 8px; border-radius: 4px; border: 1px solid
   </div>
 </div>
 
+<!-- ===== スクリーンショットモーダル ===== -->
+<div id="screenshot-modal" class="modal-overlay">
+  <div class="modal-box">
+    <h3>📷 スクリーンショット</h3>
+    <p style="font-size:13px;margin-bottom:16px;opacity:0.7;">キャプチャ方法を選択</p>
+    <button class="modal-ok" onclick="takeViewportScreenshot()" style="width:100%;margin-bottom:8px;padding:12px;font-size:14px;">🖥 現在表示中の画面</button>
+    <button class="btn" onclick="takeFullScreenshot()" style="width:100%;padding:12px;font-size:14px;">📄 iframeサイト全体</button>
+  </div>
+</div>
+
+<!-- ===== ブックマーク名編集モーダル ===== -->
+<div id="bookmark-modal" class="modal-overlay">
+  <div class="modal-box">
+    <h3>ブックマーク名を編集</h3>
+    <input id="bm-name-input" type="text" placeholder="ブックマーク名">
+    <div class="modal-btns">
+      <button onclick="closeBookmarkModal()">キャンセル</button>
+      <button class="modal-ok" onclick="confirmBookmark()">保存</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===== カテゴリ追加モーダル ===== -->
 <div id="cat-modal" class="modal-overlay">
   <div class="modal-box">
@@ -205,8 +249,14 @@ select, input[type="text"] { padding: 8px; border-radius: 4px; border: 1px solid
     <button onclick="navReload()">⟳</button>
     <button onclick="goHome()">◻️</button>
     <span id="star-btn" class="star-btn" onclick="toggleBookmark()">★</span>
-    <input id="url" placeholder="URLを入力してEnter">
+    <div style="position:relative;flex:1;">
+        <input id="url" placeholder="URLを入力してEnter" autocomplete="off">
+        <div id="url-suggestions"></div>
+    </div>
     <button onclick="go()">Go</button>
+    <button onclick="takeScreenshot()" title="スクリーンショット">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>
+    </button>
     <button id="view-mode-btn" onclick="toggleViewMode()" title="iframeモード (通常)">
         <svg viewBox="0 0 24 24"><path d="M3 13h12v-2H3v2zm0 4h12v-2H3v2zm0-8h12V7H3v2zm14 8l5-5-5-5v10z"/></svg>
     </button>
@@ -246,8 +296,225 @@ const PROXIES = {
     20: { name: "Workers - 15", url: "https://little-credit-fc7d.sfzanghao.workers.dev/-----", info: "US - SF Non-anony" },
     21: { name: "Workers - 16", url: "https://proxy.thiruhostinger.workers.dev/?url=", info: "US - SF Non-anony" }
 };
-const SANDBOX = "allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-presentation allow-same-origin allow-scripts allow-storage-access-by-user-activation";
-const SPECIAL_URLS = ["settings://", "newtab://"];
+function getSandbox() {
+    let s = "allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-presentation allow-same-origin allow-scripts allow-storage-access-by-user-activation";
+    if (!settings.blockDownloads) s += " allow-downloads";
+    if (!settings.blockPopups) s += " allow-popups allow-popups-to-escape-sandbox";
+    return s;
+}
+
+const AD_DOMAINS = [
+    "doubleclick.net", "googlesyndication.com", "googleadservices.com",
+    "google-analytics.com", "googletagmanager.com",
+    "amazon-adsystem.com", "adnxs.com", "rubiconproject.com",
+    "criteo.com", "criteo.net", "taboola.com", "outbrain.com",
+    "scorecardresearch.com", "quantserve.com", "sharethis.com",
+    "addthis.com", "adsrvr.org", "pubmatic.com", "openx.net",
+    "casalemedia.com", "moatads.com", "serving-sys.com",
+    "adserver.com", "advertising.com", "tribalfusion.com",
+    "bluekai.com", "exelator.com", "demdex.net", "krxd.net",
+    "agkn.com", "2mdn.net", "adform.net", "adition.com",
+    "bidswitch.net", "adsymptotic.com", "contextweb.com",
+    "turn.com", "media.net", "popads.net", "propellerads.com",
+    "exoclick.com", "trafficjunky.com", "juicyads.com",
+    "adsterra.com", "mgid.com"
+];
+
+function isAdUrl(url) {
+    if (!settings.adBlock) return false;
+    try {
+        const hostname = new URL(url).hostname.toLowerCase();
+        return AD_DOMAINS.some(d => hostname === d || hostname.endsWith('.' + d));
+    } catch(e) { return false; }
+}
+
+function addHistory(url, title) {
+    if (SPECIAL_URLS.includes(url)) return;
+    settings.history = settings.history || [];
+    settings.history.unshift({ url, title: title || url, time: Date.now() });
+    if (settings.history.length > 500) settings.history = settings.history.slice(0, 500);
+    saveState();
+}
+
+let suggestionData = [];
+let suggestionIndex = -1;
+
+function updateSuggestions() {
+    const input = document.getElementById('url');
+    const container = document.getElementById('url-suggestions');
+    const query = input.value.trim().toLowerCase();
+
+    if (!query || SPECIAL_URLS.some(s => query.startsWith(s))) {
+        container.classList.remove('show');
+        suggestionIndex = -1;
+        return;
+    }
+
+    const h = settings.history || [];
+    suggestionData = h.filter(item =>
+        (item.title && item.title.toLowerCase().includes(query)) ||
+        (item.url && item.url.toLowerCase().includes(query))
+    ).slice(0, 5);
+
+    if (suggestionData.length === 0) {
+        container.classList.remove('show');
+        suggestionIndex = -1;
+        return;
+    }
+
+    container.innerHTML = suggestionData.map((item, i) =>
+        '<div class="url-suggestion" data-index="' + i + '" onclick="navigateSuggestion(' + i + ')">' +
+            '<img src="' + getIconUrl(item.url) + '" onerror="this.style.display=\'none\'">' +
+            '<div style="flex:1;overflow:hidden;">' +
+                '<div class="sug-title">' + esc(item.title) + '</div>' +
+                '<div class="sug-url">' + esc(item.url) + '</div>' +
+            '</div>' +
+        '</div>'
+    ).join('');
+
+    container.classList.add('show');
+    suggestionIndex = -1;
+}
+
+function navigateSuggestion(i) {
+    if (suggestionData[i]) {
+        document.getElementById('url').value = suggestionData[i].url;
+        document.getElementById('url-suggestions').classList.remove('show');
+        go();
+    }
+}
+
+function takeScreenshot() {
+    document.getElementById('screenshot-modal').classList.add('open');
+}
+
+function closeScreenshotModal() {
+    document.getElementById('screenshot-modal').classList.remove('open');
+}
+
+async function takeViewportScreenshot() {
+    closeScreenshotModal();
+    try {
+        const stream = await navigator.mediaDevices.getDisplayMedia({ preferCurrentTab: true });
+        const video = document.createElement('video');
+        video.srcObject = stream;
+        await video.play();
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0);
+        stream.getTracks().forEach(t => t.stop());
+        const link = document.createElement('a');
+        link.download = 'screenshot-' + Date.now() + '.png';
+        link.href = canvas.toDataURL();
+        link.click();
+    } catch(e) {
+        if (e.name !== 'NotAllowedError') alert('スクリーンショットに失敗しました: ' + e.message);
+    }
+}
+
+async function takeFullScreenshot() {
+    closeScreenshotModal();
+    const tab = tabs.find(t => t.id === activeTabId);
+    if (!tab || !tab.element || tab.element.tagName !== 'IFRAME') {
+        alert('iframeサイトが開かれていません。現在表示中の画面でキャプチャします。');
+        takeViewportScreenshot();
+        return;
+    }
+
+    // Method 1: Canvas drawImage (works for same-origin iframes)
+    try {
+        const iframe = tab.element;
+        const doc = iframe.contentDocument || iframe.contentWindow.document;
+        const body = doc.body;
+        const html = doc.documentElement;
+        const width = Math.max(body.scrollWidth, body.offsetWidth, html.scrollWidth, html.offsetWidth, html.clientWidth);
+        const height = Math.max(body.scrollHeight, body.offsetHeight, html.scrollHeight, html.offsetHeight, html.clientHeight);
+        if (width === 0 || height === 0) throw new Error('Empty');
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(0, 0, width, height);
+        ctx.drawImage(iframe, 0, 0, width, height);
+        const link = document.createElement('a');
+        link.download = 'screenshot-full-' + Date.now() + '.png';
+        link.href = canvas.toDataURL();
+        link.click();
+        return;
+    } catch(e) {}
+
+    // Method 2: Fetch page through a CORS proxy → same-origin blob iframe → canvas
+    try {
+        const url = tab.url;
+        const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+        const resp = await fetch(proxyUrl);
+        const html = await resp.text();
+        if (html.length < 100) throw new Error('Empty response');
+        const blob = new Blob([html], { type: 'text/html' });
+        const blobUrl = URL.createObjectURL(blob);
+        const tempFrame = document.createElement('iframe');
+        tempFrame.style.cssText = 'position:absolute;left:-9999px;top:0;width:1024px;height:1px;border:none;';
+        tempFrame.src = blobUrl;
+        document.body.appendChild(tempFrame);
+        await new Promise((resolve, reject) => {
+            const t = setTimeout(() => reject(new Error('Timeout')), 10000);
+            tempFrame.onload = () => { clearTimeout(t); setTimeout(resolve, 1000); };
+        });
+        const d = tempFrame.contentDocument || tempFrame.contentWindow.document;
+        const b = d.body, h = d.documentElement;
+        const fw = Math.max(b.scrollWidth, b.offsetWidth, h.scrollWidth, h.offsetWidth, h.clientWidth, 1024);
+        const fh = Math.max(b.scrollHeight, b.offsetHeight, h.scrollHeight, h.offsetHeight, h.clientHeight, 1);
+        tempFrame.style.width = fw + 'px';
+        tempFrame.style.height = fh + 'px';
+        await new Promise(r => setTimeout(r, 300));
+        const canvas = document.createElement('canvas');
+        canvas.width = fw;
+        canvas.height = fh;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(0, 0, fw, fh);
+        ctx.drawImage(tempFrame, 0, 0, fw, fh);
+        tempFrame.remove();
+        URL.revokeObjectURL(blobUrl);
+        const link = document.createElement('a');
+        link.download = 'screenshot-full-' + Date.now() + '.png';
+        link.href = canvas.toDataURL();
+        link.click();
+        return;
+    } catch(e) {}
+
+    // Method 3: Open in popup → getDisplayMedia (user selects the popup)
+    try {
+        const popup = window.open(tab.url, '_blank', 'width=1024,height=768,scrollbars=yes');
+        if (!popup) {
+            alert('ポップアップがブロックされました。現在表示中の画面でキャプチャします。');
+            takeViewportScreenshot();
+            return;
+        }
+        await new Promise(r => setTimeout(r, 3000));
+        alert('新しいウィンドウが開きました。\n画面選択ダイアログでそのウィンドウを選択して「共有」をクリックしてください。');
+        const stream = await navigator.mediaDevices.getDisplayMedia();
+        const video = document.createElement('video');
+        video.srcObject = stream;
+        await video.play();
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0);
+        stream.getTracks().forEach(t => t.stop());
+        try { popup.close(); } catch(e) {}
+        const link = document.createElement('a');
+        link.download = 'screenshot-full-' + Date.now() + '.png';
+        link.href = canvas.toDataURL();
+        link.click();
+    } catch(e) {
+        if (e.name !== 'NotAllowedError') alert('スクリーンショットに失敗しました: ' + e.message);
+    }
+}
+
+const SPECIAL_URLS = ["settings://", "newtab://", "history://", "cookie://"];
 
 const DEFAULT_NT_LINKS = () => ([
 
@@ -271,7 +538,11 @@ const DEFAULT_SETTINGS = () => ({
     darkMode: false,
     bookmarks: [],
     viewMode: "iframe",
-    activeProxyId: null
+    activeProxyId: null,
+    blockDownloads: true,
+    blockPopups: true,
+    adBlock: true,
+    history: []
 });
 
 function loadProfiles() {
@@ -395,18 +666,29 @@ function updateTabElement(tab) {
     if (tab.url === "settings://") {
         el = document.createElement('div');
         el.className = "page-element settings-page";
+        tab.title = "設定";
         renderSettingsInto(el);
     } else if (tab.url === "newtab://") {
         el = document.createElement('div');
         el.className = "page-element newtab-page";
         tab.title = "新しいタブ";
         renderNewtabInto(el);
+    } else if (tab.url === "history://") {
+        el = document.createElement('div');
+        el.className = "page-element settings-page";
+        tab.title = "履歴";
+        renderHistoryInto(el);
+    } else if (tab.url === "cookie://") {
+        el = document.createElement('div');
+        el.className = "page-element settings-page";
+        tab.title = "Cookie管理";
+        renderCookiesInto(el);
     } else {
         const finalUrl = getEffectiveUrl(tab.url);
         if (settings.viewMode === "iframe") {
             el = document.createElement('iframe');
             el.src = finalUrl;
-            el.setAttribute("sandbox", SANDBOX);
+            el.setAttribute("sandbox", getSandbox());
         } else {
             el = document.createElement(settings.viewMode === "object" ? "object" : "embed");
             el.src = finalUrl; el.data = finalUrl; el.type = "text/html";
@@ -464,6 +746,8 @@ function go() {
     if (tab.url !== url) {
         tab.history = tab.history.slice(0, tab.historyIndex + 1);
         tab.history.push(url); tab.historyIndex++; tab.url = url;
+        if (isAdUrl(url)) { alert('広告サイトのためブロックしました: ' + url); tab.url = tab.history[tab.historyIndex - 1] || tab.url; updateTabElement(tab); switchTab(tab.id); return; }
+        addHistory(url, tab.title);
         updateTabElement(tab); switchTab(tab.id);
     }
 }
@@ -492,19 +776,96 @@ function updateStarUI() {
     const isB = bookmarkable && settings.bookmarks.some(b => b.url === t.url);
     document.getElementById('star-btn').classList.toggle('active', isB);
 }
+
+function renderHistoryInto(container) {
+    const h = settings.history || [];
+    let html = '<h2 style="margin-top:0;">📜 履歴</h2>';
+    if (h.length === 0) {
+        html += '<p style="opacity:0.5;">履歴はありません</p>';
+    } else {
+        html += '<button onclick="settings.history=[];saveState();renderHistoryInto(document.querySelector(\'.settings-page\'));" style="margin-bottom:12px;">🗑 すべて削除</button>';
+        html += '<div style="display:flex;flex-direction:column;gap:6px;">';
+        h.forEach((item, i) => {
+            html += '<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;border:1px solid var(--border-color);background:var(--toolbar-bg);">';
+            html += '<div style="flex:1;display:flex;align-items:center;gap:8px;cursor:pointer;overflow:hidden;" onclick="openInNewTab(\'' + esc(item.url) + '\')">';
+            html += '<img src="' + getIconUrl(item.url) + '" style="width:16px;height:16px;flex-shrink:0;" onerror="this.style.display=\'none\'">';
+            html += '<div style="flex:1;overflow:hidden;"><div style="font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc(item.title) + '</div>';
+            html += '<div style="font-size:11px;opacity:0.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc(item.url) + '</div></div>';
+            html += '<span style="font-size:11px;opacity:0.4;flex-shrink:0;">' + new Date(item.time).toLocaleString('ja-JP') + '</span>';
+            html += '</div>';
+            html += '<button style="font-size:12px;padding:4px 8px;flex-shrink:0;" class="btn" onclick="event.stopPropagation();settings.history.splice(' + i + ',1);saveState();renderHistoryInto(document.querySelector(\'.settings-page\'));">削除</button>';
+            html += '</div>';
+        });
+        html += '</div>';
+    }
+    container.innerHTML = html;
+}
+
+function renderCookiesInto(container) {
+    const domains = {};
+    (settings.history || []).forEach(h => {
+        try { const d = new URL(h.url).hostname; domains[d] = (domains[d] || 0) + 1; }
+        catch(e) {}
+    });
+    let html = '<h2 style="margin-top:0;">🍪 Cookie管理</h2>';
+    const keys = Object.keys(domains);
+    if (keys.length === 0) {
+        html += '<p style="opacity:0.5;">データはありません</p>';
+    } else {
+        html += '<p style="font-size:13px;opacity:0.6;">訪問したドメインの一覧です。Cookieやサイトデータは直接削除できません（ブラウザの設定からクリアしてください）。</p>';
+        html += '<button onclick="if(confirm(\'すべての履歴を削除しますか？\')){settings.history=[];saveState();renderCookiesInto(document.querySelector(\'.settings-page\'));}" style="margin-bottom:12px;">🗑 すべて削除</button>';
+        html += '<div style="display:flex;flex-direction:column;gap:4px;">';
+        keys.forEach(d => {
+            html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:8px;border:1px solid var(--border-color);background:var(--toolbar-bg);">';
+            html += '<span style="font-size:13px;">' + esc(d) + '</span>';
+            html += '<button onclick="if(confirm(\'' + esc(d) + ' のデータを削除しますか？\')){settings.history=settings.history.filter(h=>!h.url.includes(\'' + esc(d) + '\'));saveState();renderCookiesInto(document.querySelector(\'.settings-page\'));}">削除</button>';
+            html += '</div>';
+        });
+        html += '</div>';
+    }
+    container.innerHTML = html;
+}
+
 function updateNavButtons() {
     const t = tabs.find(x => x.id === activeTabId); if (!t) return;
     document.getElementById('btn-back').disabled    = (t.historyIndex <= 0);
     document.getElementById('btn-forward').disabled = (t.historyIndex >= t.history.length - 1);
 }
+let pendingBookmarkUrl = null;
+
 function toggleBookmark() {
     const tab = tabs.find(t => t.id === activeTabId);
     if (!tab || SPECIAL_URLS.includes(tab.url)) return;
     const idx = settings.bookmarks.findIndex(b => b.url === tab.url);
     if (idx > -1) settings.bookmarks.splice(idx, 1);
-    else settings.bookmarks.push({ title: tab.title, url: tab.url });
+    else {
+        pendingBookmarkUrl = tab.url;
+        document.getElementById('bm-name-input').value = tab.title;
+        document.getElementById('bookmark-modal').classList.add('open');
+        setTimeout(() => document.getElementById('bm-name-input').focus(), 50);
+        return;
+    }
     updateStarUI(); renderBookmarkBar(); saveState();
 }
+
+function closeBookmarkModal() {
+    document.getElementById('bookmark-modal').classList.remove('open');
+    pendingBookmarkUrl = null;
+}
+
+function confirmBookmark() {
+    const name = document.getElementById('bm-name-input').value.trim();
+    if (!name) return;
+    settings.bookmarks.push({ title: name, url: pendingBookmarkUrl });
+    pendingBookmarkUrl = null;
+    closeBookmarkModal();
+    updateStarUI(); renderBookmarkBar(); saveState();
+}
+
+document.getElementById('bm-name-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') confirmBookmark();
+    if (e.key === 'Escape') closeBookmarkModal();
+});
 function renderBookmarkBar() {
     const bar = document.getElementById('bookmark-bar'); bar.innerHTML = '';
     settings.bookmarks.forEach(bm => {
@@ -677,6 +1038,30 @@ function renderSettingsInto(container) {
                 </select>
             </div>
         </div>
+        <div class="card"><h3>🛡 セキュリティ</h3>
+            <div style="margin-bottom:8px;">
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                    <input type="checkbox" ${settings.adBlock ? 'checked' : ''} onchange="settings.adBlock=this.checked;saveState();">
+                    広告ブロッカー
+                </label>
+            </div>
+            <div style="margin-bottom:8px;">
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                    <input type="checkbox" ${!settings.blockDownloads ? 'checked' : ''} onchange="settings.blockDownloads=!this.checked;saveState();">
+                    ダウンロードを許可
+                </label>
+            </div>
+            <div>
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                    <input type="checkbox" ${!settings.blockPopups ? 'checked' : ''} onchange="settings.blockPopups=!this.checked;saveState();">
+                    ポップアップを許可
+                </label>
+            </div>
+        </div>
+        <div class="card"><h3>📋 履歴・Cookie</h3>
+            <button onclick="settings.history=settings.history||[]; document.getElementById('url').value='history://'; go();" style="margin-right:8px;">📜 履歴を見る</button>
+            <button onclick="document.getElementById('url').value='cookie://'; go();">🍪 Cookie管理</button>
+        </div>
         <div class="card"><h3>🌐 プロキシ設定</h3>${proxyHtml}</div>`;
 }
 
@@ -710,8 +1095,16 @@ function toggleFullscreen() {
 }
 function exitFullscreen() { if (document.exitFullscreen) document.exitFullscreen(); }
 
+document.addEventListener('click', e => {
+    const container = document.getElementById('url-suggestions');
+    const input = document.getElementById('url');
+    if (container && input && !container.contains(e.target) && e.target !== input) {
+        container.classList.remove('show');
+    }
+});
+
 /* ======================================================
-   初期化
+    初期化
 ====================================================== */
 function initProfile() {
     loadSettings();
@@ -730,7 +1123,32 @@ function initProfile() {
     renderBookmarkBar();
 }
 
-document.getElementById("url").addEventListener("keydown", e => { if (e.key === "Enter") go(); });
+document.getElementById("url").addEventListener("input", updateSuggestions);
+document.getElementById("url").addEventListener("focus", updateSuggestions);
+document.getElementById("url").addEventListener("keydown", e => {
+    const container = document.getElementById('url-suggestions');
+    const items = container.querySelectorAll('.url-suggestion');
+    if (e.key === "Enter") {
+        if (suggestionIndex >= 0 && items[suggestionIndex]) {
+            e.preventDefault();
+            items[suggestionIndex].click();
+        } else {
+            go();
+        }
+        container.classList.remove('show');
+    } else if (e.key === "ArrowDown") {
+        e.preventDefault();
+        suggestionIndex = Math.min(suggestionIndex + 1, items.length - 1);
+        items.forEach((el, i) => el.classList.toggle('highlighted', i === suggestionIndex));
+    } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        suggestionIndex = Math.max(suggestionIndex - 1, -1);
+        items.forEach((el, i) => el.classList.toggle('highlighted', i === suggestionIndex));
+    } else if (e.key === "Escape") {
+        container.classList.remove('show');
+        suggestionIndex = -1;
+    }
+});
 initProfile();
 </script>
 </body>
