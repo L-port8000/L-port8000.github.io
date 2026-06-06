@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
@@ -843,11 +842,16 @@ function updateTabElement(tab) {
 }
 
 function switchTab(id) {
+    const prev = tabs.find(t => t.id === activeTabId);
+    if (prev && prev.element) prev.element._st = prev.element.scrollTop;
     activeTabId = id;
     tabs.forEach(t => {
         const active = t.id === id;
         t.element.classList.toggle('active', active);
-        if (active) document.getElementById('url').value = t.url;
+        if (active) {
+            document.getElementById('url').value = t.url;
+            requestAnimationFrame(() => { if (t.element) t.element.scrollTop = t.element._st || 0; });
+        }
     });
     updateNavButtons(); updateStarUI(); saveState();
 }
@@ -907,7 +911,7 @@ function navForward() {
     const t = tabs.find(x => x.id === activeTabId);
     if (t && t.historyIndex < t.history.length - 1) { t.historyIndex++; t.url = t.history[t.historyIndex]; updateTabElement(t); switchTab(t.id); }
 }
-function navReload() { const t = tabs.find(x => x.id === activeTabId); if (t) updateTabElement(t); }
+function navReload() { const t = tabs.find(x => x.id === activeTabId); if (t && t.url !== "newtab://") updateTabElement(t); }
 function openSettings() { document.getElementById('url').value = "settings://"; go(); }
 function goHome() { document.getElementById('url').value = settings.homeUrl; go(); }
 
