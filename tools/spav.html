@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AV Base64 Encoder</title>
+
+<style>
+/* ===== ベース ===== */
+body{
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: #0f1115;
+    color: #e6e6e6;
+    margin: 0;
+    padding: 40px 20px;
+    display: flex;
+    justify-content: center;
+}
+
+/* ===== コンテナ（カード） ===== */
+.container{
+    width: 100%;
+    max-width: 520px;
+    background: #20283a;
+    padding: 24px;
+    border-radius: 12px;
+    border: 1px solid #232a36;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+}
+
+/* ===== タイトル ===== */
+h3{
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 20px;
+    color: #e6e6e6;
+}
+
+/* ===== 入力欄 ===== */
+input{
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    border-radius: 8px;
+    border: 1px solid #2a3342;
+    background: #0f1115;
+    color: #e6e6e6;
+    outline: none;
+    transition: 0.2s;
+}
+
+input::placeholder{
+    color: #6b7280;
+}
+
+input:focus{
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
+}
+
+/* ===== ボタン ===== */
+button{
+    margin-top: 12px;
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    cursor: pointer;
+    border: none;
+    border-radius: 8px;
+    background: #3b82f6;
+    color: white;
+    font-weight: bold;
+    transition: 0.2s;
+}
+
+button:hover{
+    background: #2563eb;
+}
+
+/* ===== 出力エリア ===== */
+#out{
+    margin-top: 20px;
+    padding: 12px;
+    background: #0f1115;
+    border: 1px solid #2a3342;
+    border-radius: 8px;
+    word-break: break-all;
+}
+
+/* ===== コード表示 ===== */
+code{
+    display: block;
+    padding: 8px;
+    background: #111827;
+    color: #93c5fd;
+    border-radius: 6px;
+    margin-top: 6px;
+    font-size: 14px;
+}
+
+/* ===== リンク ===== */
+a{
+    display:block;
+    margin-top:10px;
+    color: #60a5fa;
+    text-decoration: none;
+    word-break: break-all;
+}
+
+a:hover{
+    text-decoration: underline;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+    <h3>SP AVTunnel maker</h3>
+
+    <input id="url" placeholder="https://example.com">
+    <button onclick="generate()">生成</button>
+
+    <div id="out"></div>
+</div>
+
+<script>
+function base64urlEncode(str) {
+    return btoa(str)
+        .replace(/\+/g, "-")
+        .replace(/\//g, "_")
+        .replace(/=+$/, "");
+}
+
+function generate() {
+    const url = document.getElementById("url").value.trim();
+    if (!url) return;
+
+    const encoded = base64urlEncode(url);
+    const avUrl = "https://av.startpage.com/__av/" + encoded;
+
+    document.getElementById("out").innerHTML = `
+        <div>エンコード:</div>
+        <code>${encoded}</code>
+        <div style="margin-top:10px;">Tunnel URL:</div>
+        <a href="${avUrl}" target="_blank" rel="noopener noreferrer">${avUrl}</a>
+    `;
+}
+</script>
+
+</body>
+</html>
