@@ -1,3 +1,4 @@
+
 // 共通
 const i18nData = {
     ja: {
@@ -19,7 +20,10 @@ const i18nData = {
         Liyun: "丽丽云のホームページ\n",
         redirtect_slink: "相互リンク専用ページを開く",
         link_search_placeholder: "サイト名で検索...",
-
+        slink_explain: "相互リンクしていただいているサイトの一覧です。\n掲載希望の方はXの方にご連絡ください。",
+        my_banner: "私のバナー",
+        image_url: "画像URL",
+ 
         projects_text: "制作した作品の一覧です\nつまらないものですがどうぞ",
         project1_text: "その名の通りIPを確認するツールですIPv4,IPv6両方表示されます。\nただIPv6しか無いものだとバグってIPv4にもIPv6が表示される\nという設計です。終わってますね。",
         project2_text: "画像を画質を選択してPDFに変換するツールです(Gemini製)",
