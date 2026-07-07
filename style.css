@@ -315,6 +315,59 @@ a:hover {
     border-style: dashed;
 }
 
+/* 相互リンク：検索欄 + 独立スクロール枠（news-item / blog-card と同じトーンに統一） */
+.link-controls {
+    margin-bottom: 20px;
+}
+
+.banner-grid-scroll {
+    max-height: 420px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 15px;
+    background: var(--bg-overlay);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    scrollbar-width: thin;
+}
+
+.banner-grid-scroll .banner-grid {
+    margin: 0;
+}
+
+.banner-grid-scroll::-webkit-scrollbar {
+    width: 8px;
+}
+.banner-grid-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+.banner-grid-scroll::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 8px;
+}
+
+.link-no-results {
+    display: none;
+    text-align: center;
+    color: var(--sub-text);
+    font-size: 0.85rem;
+    padding: 20px 0;
+}
+
+.link-more {
+    text-align: center;
+    margin-top: 15px;
+    font-size: 0.85rem;
+}
+.link-more a {
+    color: var(--sub-text);
+}
+.link-more a:hover {
+    color: var(--text-color);
+}
+
 /* Blog専用スタイル */
 .blog-controls { margin-bottom: 30px; }
 
