@@ -178,12 +178,12 @@ elements.langBtns.forEach(btn => {
 
 const handleHashChange = () => {
     const hash = window.location.hash || '#home';
-    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
     const target = document.querySelector(hash);
-    if (target) {
-        target.classList.add('active');
-        if (elements.sideMenu?.classList.contains('open')) toggleMenu();
-    }
+    if (!target || !target.classList.contains('tab-content')) return;
+
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    target.classList.add('active');
+    if (elements.sideMenu?.classList.contains('open')) toggleMenu();
 };
 
 const updateIndicator = () => {
