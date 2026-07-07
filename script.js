@@ -6,10 +6,23 @@ const i18nData = {
         home_text: "ようこそ。こちらは一樹の個人ホームページです。\n特に大したものは有りませんが、ゆっくり見ていってください！",
         news: "おすすめ",
         about_text: "こんにちは！\nどうも一樹です！主にガジェット界隈に居ます\n結構ジャンル横断させてもらってます\n(例:中国語圏、情報技術系界隈等々)\n\n現在勉強中\n・中国語(簡体)\n・英語\n・電験三種\n・ITパスポート\n\nなどなど勉強中です。\n\n趣味\n・Windowsアプリ開発\n・Linuxいじり\n・アニメ、漫画\n・プログラミング\n・AIと討論（？）\n\n他にも個人的に興味のあるサイトなどをたくさん探したり、学タブでの規制突破方法を探したり、調べ物をするのがすきです。\nTwitterなどでも気軽に話しかけてください！ラフにリプされたらラフに答えます、丁寧にリプしてくれたら丁寧に答えるよう心がけています。\n皆さんこれからもよろしくお願いします！\n相互リンク募集中です！DMなどで教えてください！", // そいち相互リンクありがと
+        slink_404: "一致するサイトが見つかりませんでした。",
+        soichiaishiteru: "Soichiのホームページ！！！<br>かっこいい",
+        User0899: "User0899のホームページ。\niPhone 4sでも問題なく開けるとか。頻繁に鯖落ちしてます。",
+        kotosandaaaa: "ことだよ！！のホームページ。\nとても可愛いサカバンパスピスです",
+        Jüw: "Jüwのホームページ。\n多言語勉強中らしい...。結構フレンドリーな人です！",
+        taitaitai: "taitai2661のホーム。\n最近いろんなWebツール作ってる",
+        K_anon: "奏音のホームページ。\n私の垢の古参の人！中国語ができて、知識豊富な人で尊敬してる",
+        Aizu: "博麗紅葉のホームページ\n音MAD系詳しい人、知識量がとにかくすごい",
+        Name: "TheNameのホームページ\n博麗紅葉のドッペルゲンガー、たぶんこの人も頭いい",
+        marunoringo: "マルノリンゴ。\nブログたくさん書いてる人です。",
+        Liyun: "丽丽云のホームページ\n",
+        redirtect_slink: "相互リンク専用ページを開く",
         projects_text: "制作した作品の一覧です\nつまらないものですがどうぞ",
         project1_text: "その名の通りIPを確認するツールですIPv4,IPv6両方表示されます。\nただIPv6しか無いものだとバグってIPv4にもIPv6が表示される\nという設計です。終わってますね。",
         project2_text: "画像を画質を選択してPDFに変換するツールです(Gemini製)",
         web_tools: "WEBツール",
+        app: "アプリケーションの一覧",
         app_tools: "アプリケーション",
         contact_text: "ご連絡はこちらから",
         link_title: "相互リンク",
@@ -23,7 +36,10 @@ const i18nData = {
         blog_2: "アカウントが復元できた話",
         blog_3: "",
         blog_4: "",
-        backtohome: "←ホームに戻る"
+        202601211: "アカウントが乗っ取られた時の話",
+        202601251: "アカウントが復元できた話",
+        backtohome: "←ホームに戻る",
+        other_title: "まだ何もありません"
     },
     en: {
         nav_home: "Home", nav_about: "About", nav_projects: "Projects", nav_blog: "blog", nav_contact: "Contact", nav_etc: "Other",
@@ -31,10 +47,23 @@ const i18nData = {
         home_text: "Welcome. This is Ituki's personal website. \nThere's nothing particularly special here, but please take your time and have a look around！",
         news: "Recommended",
         about_text: "Hello!\nHi, I’m Ituki! I’m mainly active in the gadget community on X,\nbut I also dabble in a variety of other fields\n(e.g., the X's Chinese-speaking world, the X's IT community, etc.).\n\nCurrently studying:\n・Simplified Chinese\n・English\n・Chief Electrical Engineer (Grade 3)\n・IT Passport\n\nand more. \n\nHobbies\n・Windows app development\n・Tinkering with Linux\n・Anime and manga\n・Programming\n・Discuss with AI (?)\n\nI also enjoy searching for websites that interest me, figuring out ways to bypass restrictions on study platforms, and doing research. \nFeel free to reach out to me on Twitter or elsewhere! If you reply casually, I’ll reply casually; if you reply politely, I try to reply politely. \nI look forward to your continued support! \nI’m looking for link exchanges! Please let me know via DM or similar!",
+        slink_404: "一致するサイトが見つかりませんでした。",
+        soichiaishiteru: "Soichiのホームページ！！！<br>かっこいい",
+        User0899: "User0899のホームページ。\niPhone 4sでも問題なく開けるとか。頻繁に鯖落ちしてます。",
+        kotosandaaaa: "ことだよ！！のホームページ。\nとても可愛いサカバンパスピスです",
+        Jüw: "Jüwのホームページ。\n多言語勉強中らしい...。結構フレンドリーな人です！",
+        taitaitai: "taitai2661のホーム。\n最近いろんなWebツール作ってる",
+        K_anon: "奏音のホームページ。\n私の垢の古参の人！中国語ができて、知識豊富な人で尊敬してる",
+        Aizu: "博麗紅葉のホームページ\n音MAD系詳しい人、知識量がとにかくすごい",
+        Name: "TheNameのホームページ\n博麗紅葉のドッペルゲンガー、たぶんこの人も頭いい",
+        marunoringo: "マルノリンゴ。\nブログたくさん書いてる人です。",
+        Liyun: "丽丽云のホームページ\n",
+        redirtect_slink: "相互リンク専用ページを開く",
         projects_text: "A list of my works.",
         project1_text: "",
         project2_text: "",
         web_tools: "WEB tools",
+        app: "アプリケーションの一覧",
         app_tools: "Applications",
         contact_text: "Get in touch here.",
         link_title: "Links",
@@ -48,7 +77,10 @@ const i18nData = {
         blog_2: "I got my account back",
         blog_3: "",
         blog_4: "",
-        backtohome: "←back to home"
+        202601211: "アカウントが乗っ取られた時の話",
+        202601251: "アカウントが復元できた話",
+        backtohome: "←back to home",
+        other_title: "まだ何もありません"
     },
     "zh-CN": {
         nav_home: "首页", nav_about: "关于", nav_projects: "项目", nav_blog: "博客", nav_contact: "联系", nav_etc: "其他",
@@ -56,10 +88,23 @@ const i18nData = {
         home_text: "欢迎。这是Ituki的个人网站。\n这里没什么特别之处，但请您慢慢逛，随意看看！",
         news: "推荐",
         about_text: "你好！\n大家好，我是Ituki！我主要活跃在X平台上的科技圈，\n但也涉猎其他各种领域\n（例如X平台的中文圈、X平台的IT社区等）。\n\n目前正在学习：\n・简体中文\n・英语\n・首席电气工程师（3级）\n・IT护照\n\n等等。\n\n兴趣爱好\n・Windows应用开发\n・折腾Linux\n・动漫与漫画\n・编程\n・与AI对话（？）\n\n我还喜欢搜寻感兴趣的网站、研究如何绕过学习平台的限制，以及进行各种研究。\n欢迎在Twitter或其他平台联系我！如果你随意回复，我会随意回复；如果你礼貌回复，我会尽量礼貌回复。\n期待大家继续支持！\n正在寻找链接交换！请通过私信等方式联系我！",
+        slink_404: "一致するサイトが見つかりませんでした。",
+        soichiaishiteru: "Soichiのホームページ！！！<br>かっこいい",
+        User0899: "User0899のホームページ。\niPhone 4sでも問題なく開けるとか。頻繁に鯖落ちしてます。",
+        kotosandaaaa: "ことだよ！！のホームページ。\nとても可愛いサカバンパスピスです",
+        Jüw: "Jüwのホームページ。\n多言語勉強中らしい...。結構フレンドリーな人です！",
+        taitaitai: "taitai2661のホーム。\n最近いろんなWebツール作ってる",
+        K_anon: "奏音のホームページ。\n私の垢の古参の人！中国語ができて、知識豊富な人で尊敬してる",
+        Aizu: "博麗紅葉のホームページ\n音MAD系詳しい人、知識量がとにかくすごい",
+        Name: "TheNameのホームページ\n博麗紅葉のドッペルゲンガー、たぶんこの人も頭いい",
+        marunoringo: "マルノリンゴ。\nブログたくさん書いてる人です。",
+        Liyun: "丽丽云のホームページ\n",
+        redirtect_slink: "相互リンク専用ページを開く",
         projects_text: "我的作品列表。",
         project1_text: "",
         project2_text: "",
         web_tools: "",
+        app: "アプリケーションの一覧",
         app_tools: "",
         contact_text: "在这里联系我。",
         link_title: "友情链接",
@@ -73,7 +118,10 @@ const i18nData = {
         blog_2: "我找回了我的账号",
         blog_3: "",
         blog_4: "",
-        backtohome: "←返回首页"
+        202601211: "アカウントが乗っ取られた時の話",
+        202601251: "アカウントが復元できた話",
+        backtohome: "←返回首页",
+        other_title: "まだ何もありません"
     },
     "zh-TW": {
         nav_home: "首頁", nav_about: "關於", nav_projects: "項目", nav_blog: "部落格", nav_contact: "聯繫", nav_etc: "其他",
@@ -81,10 +129,23 @@ const i18nData = {
         home_text: "欢迎。这是Ituki的个人网站。\n这里没什么特别之处，但请您慢慢逛，随意看看！",
         news: "推薦",
         about_text: "你好！\n大家好，我是Ituki！我主要活跃在X平台上的科技圈，\n但也涉猎其他各种领域\n（例如X平台的中文圈、X平台的IT社区等）。\n\n目前正在学习：\n・简体中文\n・英语\n・首席电气工程师（3级）\n・IT护照\n\n等等。\n\n兴趣爱好\n・Windows应用开发\n・折腾Linux\n・动漫与漫画\n・编程\n・与AI对话（？）\n\n我还喜欢搜寻感兴趣的网站、研究如何绕过学习平台的限制，以及进行各种研究。\n欢迎在Twitter或其他平台联系我！如果你随意回复，我会随意回复；如果你礼貌回复，我会尽量礼貌回复。\n期待大家继续支持！\n正在寻找链接交换！请通过私信等方式联系我！",
+        slink_404: "一致するサイトが見つかりませんでした。",
+        soichiaishiteru: "Soichiのホームページ！！！<br>かっこいい",
+        User0899: "User0899のホームページ。\niPhone 4sでも問題なく開けるとか。頻繁に鯖落ちしてます。",
+        kotosandaaaa: "ことだよ！！のホームページ。\nとても可愛いサカバンパスピスです",
+        Jüw: "Jüwのホームページ。\n多言語勉強中らしい...。結構フレンドリーな人です！",
+        taitaitai: "taitai2661のホーム。\n最近いろんなWebツール作ってる",
+        K_anon: "奏音のホームページ。\n私の垢の古参の人！中国語ができて、知識豊富な人で尊敬してる",
+        Aizu: "博麗紅葉のホームページ\n音MAD系詳しい人、知識量がとにかくすごい",
+        Name: "TheNameのホームページ\n博麗紅葉のドッペルゲンガー、たぶんこの人も頭いい",
+        marunoringo: "マルノリンゴ。\nブログたくさん書いてる人です。",
+        Liyun: "丽丽云のホームページ\n",
+        redirtect_slink: "相互リンク専用ページを開く",
         projects_text: "我的作品列表。",
         project1_text: "",
         project2_text: "",
         web_tools: "",
+        app: "アプリケーションの一覧",
         app_tools: "",
         contact_text: "在這裡聯繫我。",
         link_title: "友情連結",
@@ -98,7 +159,10 @@ const i18nData = {
         blog_2: "我找回了我的账号",
         blog_3: "",
         blog_4: "",
-        backtohome: "←返回首頁"
+        202601211: "アカウントが乗っ取られた時の話",
+        202601251: "アカウントが復元できた話",
+        backtohome: "←返回首頁",
+        other_title: "まだ何もありません"
     }
 };
 
@@ -175,6 +239,35 @@ const updateIndicator = () => {
     elements.indicator.style.opacity = scrollRight > 20 ? "1" : "0";
 };
 
+// 相互リンク検索（ホームの banner-grid-scroll 内を絞り込み）
+(function () {
+    const input = document.getElementById('linkSearch');
+    const grid = document.getElementById('bannerGrid');
+    const noResults = document.getElementById('linkNoResults');
+    if (!input || !grid) return;
+
+    const items = Array.from(grid.querySelectorAll('.banner-item'));
+
+    input.addEventListener('input', () => {
+        const query = input.value.trim().toLowerCase();
+        let visibleCount = 0;
+
+        items.forEach(item => {
+            const nameEl = item.querySelector('.banner-name');
+            const text = nameEl ? nameEl.textContent.toLowerCase() : '';
+            const img = item.querySelector('img');
+            const altText = img ? (img.getAttribute('alt') || '').toLowerCase() : '';
+            const match = !query || text.includes(query) || altText.includes(query);
+            item.style.display = match ? '' : 'none';
+            if (match) visibleCount++;
+        });
+
+        if (noResults) {
+            noResults.style.display = visibleCount === 0 ? 'block' : 'none';
+        }
+    });
+})();
+
 window.addEventListener('hashchange', handleHashChange);
 elements.navLinks.addEventListener('scroll', updateIndicator);
 
@@ -186,63 +279,8 @@ window.onload = () => {
     handleHashChange();
     updateIndicator();
 };
+
 // Blog
-document.addEventListener('DOMContentLoaded', () => {
-    const blogSearch = document.getElementById('blogSearch');
-    const tagButtons = document.querySelectorAll('.tag-btn');
-    const blogCards = document.querySelectorAll('.blog-card');
-
-    const performFilter = () => {
-        const query = blogSearch.value.trim().toLowerCase();
-        const activeTag = document.querySelector('.tag-btn.active').dataset.tag.toLowerCase();
-
-        blogCards.forEach(card => {
-            const title = card.querySelector('.post-title').textContent.toLowerCase();
-            const tags = card.dataset.tags.toLowerCase().split(' ');
-            
-            let isVisible = true;
-
-            if (query !== "") {
-                if (query.startsWith('#')) {
-                    const tagQuery = query.substring(1);
-                    isVisible = tags.some(t => t.includes(tagQuery));
-                } else {
-                    isVisible = title.includes(query);
-                }
-            }
-
-            if (isVisible && activeTag !== 'all') {
-                isVisible = tags.includes(activeTag);
-            }
-
-            card.style.display = isVisible ? 'block' : 'none';
-        });
-    };
-
-    if (blogSearch) {
-        blogSearch.addEventListener('input', performFilter);
-    }
-
-    tagButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-            tagButtons.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            performFilter();
-        });
-    });
-});
-
-window.addEventListener("load", () => {
-    const loader = document.getElementById("loader");
-
-    loader.style.transition = "opacity 0.5s";
-    loader.style.opacity = "0";
-
-    setTimeout(() => {
-        loader.style.display = "none";
-    }, 500);
-});
-
 document.addEventListener('DOMContentLoaded', () => {
     const blogSearch = document.getElementById('blogSearch');
     const tagButtons = document.querySelectorAll('.tag-btn');
@@ -257,7 +295,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const title = card.querySelector('.post-title').textContent.toLowerCase();
             const tagsAttr = card.dataset.tags || "";
             const tagsArray = tagsAttr.toLowerCase().split(' ');
-            
+
             let isVisible = true;
 
             if (query !== "") {
@@ -288,4 +326,15 @@ document.addEventListener('DOMContentLoaded', () => {
             performFilter();
         });
     });
+});
+
+window.addEventListener("load", () => {
+    const loader = document.getElementById("loader");
+
+    loader.style.transition = "opacity 0.5s";
+    loader.style.opacity = "0";
+
+    setTimeout(() => {
+        loader.style.display = "none";
+    }, 500);
 });
