@@ -1,0 +1,349 @@
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="../icon.png">
+    <title>一樹 / いつき / Ituki</title>
+    <link rel="stylesheet" href="../style.css">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="一樹/いつき/itukiの個人サイト" />
+    <meta property="og:description" content="regia:8000" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://site.l-ituki8000.workers.dev" />
+    <meta property="og:image" content="https://site.l-ituki8000.workers.dev/images/slink.png" />
+    <meta property="og:site_name" content="一樹/イツキ/itukiの個人サイト" />
+    <meta property="og:locale" content="ja_JP" />
+    <!-- Twitter用 -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="一樹/イツキ/itukiの個人サイト" />
+    <meta name="twitter:description" content="個人サイト" />
+    <meta name="twitter:image" content="https://site.l-ituki8000.workers.dev/images/slink.png" />
+
+    <!-- iPhone用 -->
+    <link rel="apple-touch-icon" href="site.l-ituki8000.workers.dev/icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="一樹/イツキ/itukiの個人サイト">
+
+</head>
+<body>
+     <div id="loader">
+     <div class="loader-content">
+            <div class="spinner"></div>
+            <p>Loading...</p>
+        </div>
+    </div>
+    <button class="menu-trigger" id="menuTrigger">
+        <span></span><span></span><span></span>
+    </button>
+
+    <div class="side-menu" id="sideMenu">
+        <div class="side-menu-header">
+            <button id="menuClose" class="menu-close">✕</button>
+        </div>
+        
+        <nav class="side-nav">
+            <ul class="side-nav-links">
+                <li><a href="#home" data-i18n="nav_home"></a></li>
+                <li><a href="#about" data-i18n="nav_about"></a></li>
+                <li><a href="#projects" data-i18n="nav_projects"></a></li>
+                <li><a href="#blog" data-i18n="nav_blog"></a></li>
+                <li><a href="#contact" data-i18n="nav_contact"></a></li>
+                <li><a href="#etc" data-i18n="nav_etc"></a></li>
+            </ul>
+        </nav>
+
+        <hr class="side-divider">
+
+        <div class="settings">
+            <h3 data-i18n="settings_title"></h3>
+            
+            <div class="setting-item">
+                <span data-i18n="mode_label"></span>
+                <div class="switch-container">
+                    <input type="checkbox" id="themeToggle" class="switch-input">
+                    <label for="themeToggle" class="switch-label">
+                        <span class="switch-circle"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="setting-item flex-column">
+                <span data-i18n="lang_label"></span>
+                <div class="lang-selector" id="langSelector">
+                    <button data-lang="ja" class="lang-btn">JP</button>
+                    <button data-lang="en" class="lang-btn">EN</button>
+                    <button data-lang="zh-CN" class="lang-btn">简体</button>
+                    <button data-lang="zh-TW" class="lang-btn">繁體</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="overlay" id="overlay"></div>
+
+    <header>
+        <h1>一樹 / いつき / Ituki</h1>
+        <nav class="nav-container">
+            <ul class="nav-links" id="navLinks">
+                <li><a href="#home" data-i18n="nav_home"></a></li>
+                <li><a href="#about" data-i18n="nav_about"></a></li>
+                <li><a href="#projects" data-i18n="nav_projects"></a></li>
+                <li><a href="#contact" data-i18n="nav_contact"></a></li>
+                <li><a href="#blog" data-i18n="nav_blog"></a></li>
+                <li><a href="#etc" data-i18n="nav_etc"></a></li>
+            </ul>
+            <div class="scroll-indicator" id="scrollIndicator">
+                <span>&rsaquo;</span>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section id="home" class="tab-content active">
+           <div id="keepandroid-banner">
+    <script src="https://keepandroidopen.org/banner.js?id=keepandroid-banner&size=mini"></script>
+</div>
+            <h2 data-i18n="nav_home"></h2>
+            <p data-i18n="home_text"></p>
+
+            <div class="news-container">
+                <h1 data-i18n="news"></h1>
+                <div class="news-scroll">
+                    <section class="news-item">
+                        <img src="https://assets.st-note.com/production/uploads/images/244995112/rectangle_large_type_2_536a3fde711785c0a31cf3230632192e.png" alt="1">
+                        <h3><a href="../blog/202601211.html" data-i18n="blog_1"></a></h3>
+                    </section>
+                    <section class="news-item">
+                        <img src="https://assets.st-note.com/production/uploads/images/246534545/rectangle_large_type_2_3fe6f30e1aae80e83da0cf769706e401.jpeg?width=1280" alt="2">
+                        <h3><a href="../blog/202601251" data-i18n="blog_2"></a></h3>
+                    </section>
+                </div>
+                <br>
+                <h1 data-i18n="link_title"></h1>
+
+                <div class="link-controls">
+                    <div class="search-wrapper">
+                        <input type="text" id="linkSearch" placeholder="Search on domain..." data-i18n-placeholder="link_search_placeholder">
+                    </div>
+                </div>
+
+                <div class="banner-grid-scroll" id="bannerGridScroll">
+                    <div class="banner-grid" id="bannerGrid">
+
+                       <a href="https://soichi-portfolio.soichi1208.workers.dev/" target="_blank" rel="noopener" class="banner-item">
+                            <img src="https://soichi-portfolio.soichi1208.workers.dev/header.svg" alt="Soichiaishiteru" class="banner-img">
+                            <span class="banner-name" data-i18n="soichiaishiteru"></span>
+                        </a>
+
+                        <a href="https://scn-adm1n.f5.si/" target="_blank" rel="noopener" class="banner-item">
+                            <img src="https://images.scn-adm1n.f5.si/link.png" alt="User0899" class="banner-img">
+                            <span class="banner-name" data-i18n="User0899"></span>
+                        </a>
+
+                        <a href="https://kotosan-page.pages.dev" target="_blank" rel="noopener" class="banner-item">
+                            <img src="https://kotosan-page.pages.dev/images/banner.jpg" alt="kotosandaaaa" class="banner-img">
+                            <span class="banner-name" data-i18n="kotosandaaaa"></span>
+                        </a>
+
+                        <a href="https://drsb.f5.si" target="_blank" rel="noopener" class="banner-item">
+                            <img src="https://drsb.f5.si/img/banner.png" alt="Jüw" class="banner-img">
+                            <span class="banner-name" data-i18n="Jüw"></span>
+                        </a>
+
+                        <a href="https://taitai2661dayo.pages.dev" target="_blank" rel="noopener" class="banner-item">
+                            <img src="../images/taitai2661.slink.png" alt="taitaitai" class="banner-img">
+                            <span class="banner-name" data-i18n="taitaitai"></span>
+                        </a>
+
+                        <a href="https://zyn.f5.si" target="_blank" rel="noopener" class="banner-item">
+                            <img src="../images/Kanon.slink.png" alt="K-anon" class="banner-img">
+                            <span class="banner-name" data-i18n="K_anon"></span>
+                        </a>
+
+                        <a href="http://hakureihp.web.fc2.com" target="_blank" rel="noopener" class="banner-item">
+                            <img src="../images/hakureihp.slink.png" alt="Aizu" class="banner-img">
+                            <span class="banner-name" data-i18n="Aizu"></span>
+                        </a>
+
+                        <a href="https://thenamejp.web.fc2.com" target="_blank" rel="noopener" class="banner-item">
+                            <img src="https://thenamejp.web.fc2.com/banner.png" alt="Name" class="banner-img">
+                            <span class="banner-name" data-i18n="Name"></span>
+                        </a>
+
+                        <a href="https://marunoringo8.blogspot.com" target="_blank" rel="noopener" class="banner-item">
+                            <img src="../images/marunoringo8.slink.png" alt="marunoringo" class="banner-img">
+                            <span class="banner-name" data-i18n="marunoringo"></span>
+                        </a>
+
+                        <a href="https://lygreen.github.io" target="_blank" rel="noopener" class="banner-item">
+                            <img src="https://lygreen.github.io/banner.svg" alt="Li Liyun" class="banner-img">
+                            <span class="banner-name" data-i18n="Liyun"></span>
+                        </a>
+
+                    </div>
+                    <p class="link-no-results" id="linkNoResults" data-i18n="slink_404"></p>
+                </div>
+
+                <p class="link-more"><a href="./slink.html" data-i18n="redirtect_slink"></a></p>
+
+                <p data-i18n="title_blank"></p>
+
+                <div class="banner-item my-banner-info">
+                       <p data-i18n="my_banner_text">My Banner Image link:</p>
+                       <code>https://site.l-ituki8000.workers.dev/images/slink.png</code>
+                   </div>
+
+               <br>
+                <h1 data-i18n="archive_title"></h1>
+                <p data-i18n="archive_content"></p>
+　　　　　　　　<p><a href="./archive/index.html" data-i18n="archive_button"></a></p>
+            </div>
+
+            <br>
+            <h1 data-i18n="mirror_title"></h1>
+　　　　　　<p><a href="https://l-ituki8000.f5.si">l-ituki8000.f5.si</a><br><a href="https://site.l-ituki8000.workers.dev">site.l-ituki8000.workers.dev</a></p>
+
+           <br><br>
+           <div class="banner-item my-banner-info">
+               <img src="https://count.getloli.com/@:L_port8000?theme=rule34&darkmode=0" alt=":L_port8000" />
+           </div>
+           
+        </section>
+
+        <section id="about" class="tab-content">
+            <h2 data-i18n="nav_about"></h2>
+            <p data-i18n="about_text"></p><br>
+            <h2 data-i18n="about_hujin"></h2>
+            <p>・MacBook2015
+               <br>・自作PC<br>　・CPU core i5 6400<br>　・GPU GTX 1660<br>　・メモリ 12GB(増設予定)<br>　・Storage SSD 512GB(C D:), HDD 1TB(E:), SSD 64GB(F:), 外付けSSD 250GB(G:)
+               <br>・iPhone 17e<br>・801fj(没収済み)<br>・Rakuten Hand p710(没収済み)<br>・学タブ(chromeBook CPU:Celeron N4020, メモリ:4GB)</p><br>
+        </section>
+
+<section id="projects" class="tab-content">
+    <h2 data-i18n="nav_projects"></h2>
+
+    <div class="blog-grid">
+        <article class="blog-card">
+  <a href="./tools/web.html" class="blog-card-link">
+    <div class="blog-card-content">
+      <h3 class="post-title">WEB Tools</h3>
+      <p class="post-desc" data-i18n="web">WEBツールの一覧</p>
+    </div>
+  </a>
+</article>
+
+        <article class="blog-card">
+  <a href="./tools/app.html" class="blog-card-link">
+    <div class="blog-card-content">
+      <h3 class="post-title">Application</h3>
+      <p class="post-desc" data-i18n="app">アプリケーションの一覧</p>
+    </div>
+  </a>
+</article>
+    </div>
+</section>
+
+    <section id="blog" class="tab-content">
+            <h2 data-i18n="nav_blog">Blog</h2>
+            <div class="blog-controls">
+                <div class="search-wrapper">
+                    <input type="text" id="blogSearch" placeholder="タイトルまたは #タグ で検索..." data-i18n-placeholder="search_placeholder">
+                </div>
+    
+                <div class="tag-filters" id="tagFilters">
+                    <button class="tag-btn active" data-tag="all">All</button>
+                    <button class="tag-btn" data-tag="X">#X</button>
+                    <button class="tag-btn" data-tag="Twitter">#Twitter</button>
+                    <button class="tag-btn" data-tag="乗っ取り">#乗っ取り</button>
+                    <button class="tag-btn" data-tag="JP">#JP</button>
+                </div>
+            </div>
+            <div class="blog-grid" id="blogGrid">
+                <article class="blog-card" data-tags="X Twitter 乗っ取り JP">
+                    <div class="blog-card-content">
+                        <span class="post-date">2026.01.21</span>
+                        <h3 class="post-title" data-i18n="202601211"><a href="./blog/202601211.html"></a></h3>
+                        <div class="post-tags-display">
+                            <span class="tag-label">#X</span><span class="tag-label">#Twitter</span><span class="tag-label">#乗っ取り</span><span class="tag-label">#JP</span>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="blog-card" data-tags="X Twitter 乗っ取り JP">
+                    <div class="blog-card-content">
+                        <span class="post-date">2026.01.25</span>
+                        <h3 class="post-title" data-i18n="202601251"><a href="./blog/202601251.html"></a></h3>
+                        <div class="post-tags-display">
+                            <span class="tag-label">#X</span><span class="tag-label">#Twitter</span><span class="tag-label">#乗っ取り</span><span class="tag-label">#JP</span>
+                        </div>
+                    </div>
+                </article>
+
+            </div>
+        </section>
+       
+        <section id="contact" class="tab-content">
+            <h2 data-i18n="nav_contact"></h2>
+            <p data-i18n="contact_text"></p><br>
+
+           <h2>X</h2>
+           <a href="https://x.com/L_port8000">@L_port8000 - 本垢</a><br>
+           <a href="https://x.com/L_port8080">@L_port8000 - 第二拠点</a><br>
+           <a href="https://x.com/L_port1194">@L_port1194 - 避難垢</a><br>
+           <a href="https://x.com/L_port9999">@L_port9999 - 凍結</a><br>
+           <a href="https://x.com/L_port443">@L_port443 - 凍結</a><br>
+
+           <h2>Blue Sky</h2>
+           <a href="https://bsky.app/profile/l-port8000.bsky.social">@l-port8000</a><br>
+
+           <h2>Discord</h2>
+           <a href="https://discord.com/users/1433399422859087883">@L_port8000</a><br>
+
+           <h2>Reddit</h2>
+           <a href="https://reddit.com/L_port8000">@L_port8000</a><br>
+
+           <h2>note</h2>
+           <a href="https://note.com/L_port8000">@L_port8000</a><br>
+
+           <h2>Zenn</h2>
+           <a href="https://zenn.dev/L_port8000">@L_port8000</a><br>
+
+           <h2>Youtube</h2>
+           <a href="https://youtube.com/L_port8000">@L_port8000</a><br>
+
+           <h2>Spotify</h2>
+           <a href="https://open.spotify.com/user/31zguh5v5tudzxcti63hgxyaxaha">@L_port8000</a><br>
+
+           <h2>Instagram</h2>
+           <a href="https://instagram.com/L_port8000">@L_port8000</a><br>
+
+           <h2>TikTok</h2>
+           <a href="https://tiktok/@L_port8000">@L_port8000</a><br>
+
+           <h2>Github</h2>
+           <a href="https://github.com/L-port8000">@L_port8000</a><br>
+
+           <h2>Twitch</h2>
+           <a href="https://twitch.tv/L_port8000">@L_port8000</a><br>
+
+           <!-- 
+              気軽にリクエスト送ってね
+            Session - 0570bdbac23a983562fe4125699d8ad51cce6328b2f58ffbcaa7aa10661cfbfc7a
+            Simple X Chat - https://smp19.simplex.im/a#-ObmK32Z5nRxa1NXcZxYgBjTbRqV0oRFVozcaRvxD6o
+           -->
+
+        </section>
+        <section id="etc" class="tab-content">
+           <p data-i18n="other_title">まだ何もありません</p>
+        </section>
+    </main>
+
+    <footer>
+        <p>© 2026 Regia:8000</p>
+    </footer>
+
+    <script src="../script.js"></script>
+</body>
+</html>
