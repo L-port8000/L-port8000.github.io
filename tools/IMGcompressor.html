@@ -1,0 +1,1097 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>画像圧縮ツール</title>
+<style>
+:root {
+  --base: #1e1e2e; --mantle: #181825; --crust: #11111b;
+  --surface0: #313244; --surface1: #45475a; --surface2: #585b70;
+  --text: #cdd6f4; --subtext: #a6adc8; --overlay: #6c7086;
+  --mauve: #cba6f7; --blue: #89b4fa; --green: #a6e3a1;
+  --red: #f38ba8; --peach: #fab387; --yellow: #f9e2af;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'SF Mono', 'Consolas', 'Hiragino Kaku Gothic ProN', monospace;
+  background: var(--crust); color: var(--text); min-height: 100vh; padding: 2rem;
+}
+h1 {
+  font-size: 13px; letter-spacing: 0.3em; text-transform: uppercase;
+  color: var(--overlay); margin-bottom: 2rem; border-bottom: 1px solid var(--surface0); padding-bottom: 1rem;
+  max-width: 1100px; margin-left: auto; margin-right: auto;
+}
+.grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;
+  max-width: 1100px; margin: 0 auto;
+}
+.panel { background: var(--mantle); border: 1px solid var(--surface0); padding: 1.5rem; border-radius: 6px; }
+.panel-title {
+  font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase;
+  color: var(--overlay); margin-bottom: 1.25rem;
+}
+.drop-zone {
+  border: 1px dashed var(--surface1); padding: 3rem 1.5rem; text-align: center;
+  cursor: pointer; transition: border-color 0.2s, background 0.2s; position: relative; border-radius: 6px;
+}
+.drop-zone:hover, .drop-zone.dragover { border-color: var(--mauve); background: rgba(203,166,247,0.05); }
+.drop-zone input[type=file] {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+}
+.drop-label { font-size: 11px; letter-spacing: 0.15em; color: var(--subtext); }
+.drop-label span { display: block; font-size: 9px; margin-top: 0.5rem; color: var(--overlay); }
+.controls { margin-top: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+.ctrl-row { display: flex; align-items: center; gap: 10px; }
+.ctrl-label { font-size: 10px; letter-spacing: 0.15em; color: var(--subtext); width: 90px; flex-shrink: 0; }
+
+input[type=number], input[type=text] {
+  background: var(--crust); border: 1px solid var(--surface1); color: var(--text);
+  font-family: inherit; font-size: 13px; padding: 6px 10px; width: 100px;
+  outline: none; transition: border-color 0.2s; border-radius: 4px;
+}
+input[type=number]:focus { border-color: var(--mauve); }
+input[type=number]:disabled {
+  background: var(--surface0); color: var(--overlay); cursor: not-allowed; border-color: var(--surface0);
+}
+.unit { font-size: 10px; color: var(--overlay); flex-shrink: 0; }
+
+/* 優先モード切替 */
+.mode-switch {
+  display: flex; gap: 0; border: 1px solid var(--surface1); border-radius: 6px; overflow: hidden;
+}
+.mode-option {
+  flex: 1; text-align: center; padding: 10px 8px; cursor: pointer;
+  font-size: 10px; letter-spacing: 0.08em; color: var(--subtext);
+  background: var(--crust); transition: all 0.15s; border: none;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+}
+.mode-option:first-child { border-right: 1px solid var(--surface1); }
+.mode-option.active { background: var(--mauve); color: var(--crust); font-weight: bold; }
+.mode-option .sub { font-size: 8px; opacity: 0.8; }
+
+.lock-btn {
+  background: none; border: 1px solid var(--surface1); color: var(--subtext);
+  font-family: inherit; font-size: 10px; padding: 5px 10px; border-radius: 4px;
+  cursor: pointer; letter-spacing: 0.1em; transition: all 0.15s;
+}
+.lock-btn.active { border-color: var(--mauve); color: var(--mauve); }
+
+input[type=range] {
+  -webkit-appearance: none; width: 100%; height: 3px;
+  background: var(--surface1); outline: none; cursor: pointer; border-radius: 2px;
+}
+input[type=range]:disabled { opacity: 0.3; cursor: not-allowed; }
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 12px; height: 12px;
+  background: var(--mauve); border: none; cursor: pointer; border-radius: 50%;
+}
+input[type=range]::-moz-range-thumb {
+  width: 12px; height: 12px; background: var(--mauve); border: none; cursor: pointer; border-radius: 50%;
+}
+
+.quality-row { display: flex; flex-direction: column; gap: 8px; }
+.quality-header { display: flex; justify-content: space-between; align-items: center; }
+.quality-val { font-size: 13px; color: var(--mauve); min-width: 50px; text-align: right; }
+.divider { border: none; border-top: 1px solid var(--surface0); margin: 1rem 0; }
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 1rem; }
+.stat-box { background: var(--crust); border: 1px solid var(--surface0); padding: 10px 12px; border-radius: 4px; }
+.stat-label { font-size: 9px; letter-spacing: 0.2em; color: var(--overlay); text-transform: uppercase; margin-bottom: 4px; }
+.stat-val { font-size: 14px; color: var(--text); }
+.stat-val.accent { color: var(--mauve); }
+.preview-wrap {
+  position: relative; background: var(--crust); border: 1px solid var(--surface0); border-radius: 6px;
+  min-height: 280px; display: flex; align-items: center; justify-content: center; overflow: hidden;
+}
+.preview-wrap img { max-width: 100%; max-height: 420px; object-fit: contain; display: block; }
+.preview-placeholder { font-size: 10px; letter-spacing: 0.2em; color: var(--surface1); text-transform: uppercase; }
+.compare-bar {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-top: 10px; padding: 8px 12px; background: var(--crust);
+  border: 1px solid var(--surface0); font-size: 11px; border-radius: 4px;
+}
+.compare-label { color: var(--subtext); letter-spacing: 0.1em; }
+.compare-val { color: var(--text); }
+.reduction { color: var(--green); font-size: 11px; }
+.reduction.increase { color: var(--peach); }
+.btn-download {
+  display: block; width: 100%; margin-top: 1rem; background: var(--mauve); border: none;
+  color: var(--crust); font-family: inherit; font-size: 11px; letter-spacing: 0.25em;
+  text-transform: uppercase; padding: 12px; cursor: pointer; transition: background 0.15s; border-radius: 4px;
+  font-weight: bold;
+}
+.btn-download:hover { background: var(--blue); }
+.btn-download:disabled { background: var(--surface0); color: var(--overlay); cursor: not-allowed; }
+.target-size-row { display: flex; flex-direction: column; gap: 6px; }
+.target-input-row { display: flex; align-items: center; gap: 8px; }
+.target-input-row input[type=number] { width: 110px; }
+.target-unit-select {
+  background: var(--crust); border: 1px solid var(--surface1); color: var(--text);
+  font-family: inherit; font-size: 11px; padding: 6px 8px; outline: none; cursor: pointer; border-radius: 4px;
+}
+.target-unit-select:disabled { background: var(--surface0); color: var(--overlay); }
+.progress-wrap {
+  display: none; margin-top: 8px; background: var(--crust); border: 1px solid var(--surface0);
+  padding: 8px 12px; border-radius: 4px;
+}
+.progress-bar-bg { background: var(--surface0); height: 3px; margin-top: 6px; position: relative; border-radius: 2px; overflow: hidden; }
+.progress-bar-fill { background: var(--mauve); height: 3px; width: 0%; transition: width 0.15s; }
+.progress-text { font-size: 9px; color: var(--subtext); letter-spacing: 0.05em; }
+.format-row { display: flex; gap: 6px; margin-top: 8px; }
+.fmt-btn {
+  background: none; border: 1px solid var(--surface1); color: var(--subtext); border-radius: 4px;
+  font-family: inherit; font-size: 10px; padding: 5px 12px;
+  cursor: pointer; letter-spacing: 0.1em; transition: all 0.15s;
+}
+.fmt-btn.active { border-color: var(--mauve); color: var(--mauve); }
+.warning { font-size: 10px; color: var(--red); margin-top: 6px; letter-spacing: 0.05em; display: none; line-height: 1.5; }
+.info-note { font-size: 10px; color: var(--peach); margin-top: 6px; letter-spacing: 0.05em; display: none; line-height: 1.5; }
+.info { font-size: 10px; color: var(--overlay); margin-top: 6px; letter-spacing: 0.05em; line-height: 1.4; }
+.solve-btn {
+  background: none; border: 1px solid var(--mauve); color: var(--mauve); border-radius: 4px;
+  font-family: inherit; font-size: 10px; padding: 8px 14px; width: 100%;
+  cursor: pointer; letter-spacing: 0.1em; transition: all 0.15s; margin-top: 4px;
+}
+.solve-btn:hover { background: var(--mauve); color: var(--crust); }
+.solve-btn:disabled { border-color: var(--surface1); color: var(--overlay); cursor: not-allowed; }
+@media (max-width: 700px) { .grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<h1>// image compressor & resizer</h1>
+
+<div class="grid">
+  <div class="panel">
+    <div class="panel-title">01 — 入力</div>
+
+    <div class="drop-zone" id="dropZone">
+      <input type="file" id="fileInput" accept="image/*">
+      <div class="drop-label">
+        クリックまたはドロップで画像を選択
+        <span>PNG / JPG / WebP / BMP など</span>
+      </div>
+    </div>
+
+    <div class="controls" id="controls" style="display:none;">
+
+      <div class="panel-title">優先モード</div>
+      <div class="mode-switch">
+        <button class="mode-option active" id="modeSize" onclick="setMode('size')">
+          容量優先
+          <span class="sub">容量を指定 → サイズ自動計算</span>
+        </button>
+        <button class="mode-option" id="modeDimension" onclick="setMode('dimension')">
+          画像の大きさ優先
+          <span class="sub">サイズを指定 → 容量自動計算</span>
+        </button>
+      </div>
+
+      <hr class="divider">
+      <div class="panel-title">出力形式</div>
+      <div class="format-row">
+        <button class="fmt-btn active" data-fmt="image/jpeg" onclick="setFormat(this)">JPEG</button>
+        <button class="fmt-btn" data-fmt="image/webp" onclick="setFormat(this)">WebP</button>
+        <button class="fmt-btn" data-fmt="image/png" onclick="setFormat(this)">PNG</button>
+      </div>
+      <div class="info" id="formatNote"></div>
+
+      <hr class="divider">
+      <div class="panel-title">画像の大きさ</div>
+
+      <div class="ctrl-row">
+        <span class="ctrl-label">幅</span>
+        <input type="number" id="widthInput" min="1" max="99999" placeholder="---">
+        <span class="unit">px</span>
+      </div>
+      <div class="ctrl-row">
+        <span class="ctrl-label">高さ</span>
+        <input type="number" id="heightInput" min="1" max="99999" placeholder="---">
+        <span class="unit">px</span>
+      </div>
+      <div class="ctrl-row">
+        <button class="lock-btn active" id="aspectBtn" onclick="toggleAspect()">縦横比固定</button>
+      </div>
+      <div class="info" id="canvasWarn" style="display:none;"></div>
+
+      <hr class="divider">
+      <div class="panel-title">品質</div>
+      <div class="quality-row">
+        <div class="quality-header">
+          <span class="ctrl-label" style="width:auto;">品質 (JPEG/WebP)</span>
+          <span class="quality-val" id="qualityVal">0.85</span>
+        </div>
+        <input type="range" id="qualitySlider" min="1" max="1000" value="850">
+      </div>
+
+      <hr class="divider">
+      <div class="panel-title">容量（ファイルサイズ）</div>
+      <div class="target-size-row">
+        <div class="target-input-row">
+          <input type="number" id="targetSizeInput" min="0.001" step="any" placeholder="例: 810">
+          <select class="target-unit-select" id="targetUnit">
+            <option value="mb">MB</option>
+            <option value="kb">KB</option>
+            <option value="gb">GB</option>
+            <option value="bytes">Bytes</option>
+          </select>
+        </div>
+        <button class="solve-btn" id="solveBtn" onclick="runSolve()" disabled>
+          計算して適用
+        </button>
+        <div class="warning" id="sizeWarning"></div>
+        <div class="info-note" id="paddedNote"></div>
+      </div>
+
+      <div class="progress-wrap" id="progressWrap">
+        <div class="progress-text" id="progressText">探索中...</div>
+        <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressFill"></div></div>
+      </div>
+
+      <hr class="divider">
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-label">元の容量</div>
+          <div class="stat-val" id="origSize">—</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">出力容量 (実測)</div>
+          <div class="stat-val accent" id="outSize">—</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">元の解像度</div>
+          <div class="stat-val" id="origDims">—</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">出力解像度</div>
+          <div class="stat-val" id="outDims">—</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">02 — プレビュー</div>
+
+    <div class="preview-wrap" id="previewWrap">
+      <span class="preview-placeholder">No Image</span>
+    </div>
+
+    <div id="compareBar" style="display:none;">
+      <div class="compare-bar">
+        <span class="compare-label">圧縮率</span>
+        <span class="compare-val" id="compareRatio">—</span>
+        <span class="reduction" id="reductionLabel">—</span>
+      </div>
+    </div>
+
+    <button class="btn-download" id="downloadBtn" disabled onclick="downloadImage()">
+      ダウンロード
+    </button>
+  </div>
+</div>
+
+<canvas id="canvas" style="display:none;"></canvas>
+
+<script>
+/* ============================================================
+   状態管理
+============================================================ */
+let origImage = null;
+let origFile = null;
+let origW = 0, origH = 0;
+let aspectLocked = true;
+let currentFormat = 'image/jpeg';
+let mode = 'size'; // 'size' = 容量優先 / 'dimension' = 画像の大きさ優先
+let blobCache = null;
+let solving = false;
+
+// 実際のCanvas/OffscreenCanvasの上限はブラウザ・GPU・メモリ状況によって変わるため、
+// 固定値で事前判定はせず、findWorkingResolution() が実際に描画を試して動的に判定する。
+
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+/* ============================================================
+   CRC32 (PNGチャンク用)
+============================================================ */
+const CRC_TABLE = (() => {
+  const table = [];
+  for (let n = 0; n < 256; n++) {
+    let c = n;
+    for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+    table[n] = c;
+  }
+  return table;
+})();
+function crc32(bytes) {
+  let crc = 0xFFFFFFFF;
+  for (let i = 0; i < bytes.length; i++) crc = CRC_TABLE[(crc ^ bytes[i]) & 0xFF] ^ (crc >>> 8);
+  return (crc ^ 0xFFFFFFFF) >>> 0;
+}
+
+/* ============================================================
+   メタデータパディング（容量が過剰指定された場合に「盛る」処理）
+   JPEG: COMマーカーセグメントを挿入
+   PNG : tEXtチャンクを挿入
+   WebP: RIFFのJUNKチャンクを挿入
+============================================================ */
+function padJpeg(bytes, addBytes) {
+  if (addBytes < 4) return bytes;
+  const segments = [];
+  let remaining = addBytes;
+  while (remaining >= 4) {
+    const segDataLen = Math.min(remaining - 4, 65533);
+    const totalLen = segDataLen + 2;
+    const seg = new Uint8Array(4 + segDataLen);
+    seg[0] = 0xFF; seg[1] = 0xFE;
+    seg[2] = (totalLen >> 8) & 0xFF; seg[3] = totalLen & 0xFF;
+    seg.fill(0x20, 4);
+    segments.push(seg);
+    remaining -= (4 + segDataLen);
+  }
+  const totalSegBytes = segments.reduce((a, s) => a + s.length, 0);
+  const out = new Uint8Array(bytes.length + totalSegBytes);
+  out.set(bytes.slice(0, 2), 0); // SOI
+  let pos = 2;
+  for (const seg of segments) { out.set(seg, pos); pos += seg.length; }
+  out.set(bytes.slice(2), pos);
+  return out;
+}
+
+function padPng(bytes, addBytes) {
+  const keyword = new TextEncoder().encode("Comment");
+  const overhead = 12 + keyword.length + 1; // len+type+crc + keyword + null
+  if (addBytes < overhead) return bytes;
+  const dataLen = addBytes - overhead;
+  const fill = new Uint8Array(dataLen).fill(0x30);
+  const chunkData = new Uint8Array([...keyword, 0, ...fill]);
+  const chunkType = new TextEncoder().encode("tEXt");
+  const crc = crc32(new Uint8Array([...chunkType, ...chunkData]));
+
+  const chunk = new Uint8Array(4 + 4 + chunkData.length + 4);
+  const dv = new DataView(chunk.buffer);
+  dv.setUint32(0, chunkData.length, false);
+  chunk.set(chunkType, 4);
+  chunk.set(chunkData, 8);
+  dv.setUint32(8 + chunkData.length, crc, false);
+
+  // シグネチャ(8) + IHDRチャンク(4+4+13+4=25) の直後に挿入
+  const insertPos = 8 + 25;
+  const out = new Uint8Array(bytes.length + chunk.length);
+  out.set(bytes.slice(0, insertPos), 0);
+  out.set(chunk, insertPos);
+  out.set(bytes.slice(insertPos), insertPos + chunk.length);
+  return out;
+}
+
+function padWebp(bytes, addBytes) {
+  if (addBytes < 8) return bytes;
+  let dataLen = addBytes - 8;
+  if (dataLen % 2 === 1) dataLen -= 1; // 偶数バイト境界を維持
+  const chunk = new Uint8Array(8 + dataLen);
+  chunk.set(new TextEncoder().encode("JUNK"), 0);
+  new DataView(chunk.buffer).setUint32(4, dataLen, true);
+  const insertPos = 12; // "RIFF"+size(8) + "WEBP"(4) の直後
+  const out = new Uint8Array(bytes.length + chunk.length);
+  out.set(bytes.slice(0, insertPos), 0);
+  out.set(chunk, insertPos);
+  out.set(bytes.slice(insertPos), insertPos + chunk.length);
+  const newRiffSize = out.length - 8;
+  new DataView(out.buffer).setUint32(4, newRiffSize, true);
+  return out;
+}
+
+async function inflateBlobToTarget(blob, targetBytes, mimeType) {
+  if (targetBytes <= blob.size) return blob;
+  const addBytes = targetBytes - blob.size;
+  const buf = new Uint8Array(await blob.arrayBuffer());
+  let padded;
+  if (mimeType === 'image/jpeg') padded = padJpeg(buf, addBytes);
+  else if (mimeType === 'image/png') padded = padPng(buf, addBytes);
+  else if (mimeType === 'image/webp') padded = padWebp(buf, addBytes);
+  else padded = buf;
+  return new Blob([padded], { type: mimeType });
+}
+
+/* ============================================================
+   UI: モード切替
+============================================================ */
+function setMode(m) {
+  mode = m;
+  document.getElementById('modeSize').classList.toggle('active', m === 'size');
+  document.getElementById('modeDimension').classList.toggle('active', m === 'dimension');
+
+  const widthInput = document.getElementById('widthInput');
+  const heightInput = document.getElementById('heightInput');
+  const targetInput = document.getElementById('targetSizeInput');
+  const targetUnit = document.getElementById('targetUnit');
+  const solveBtn = document.getElementById('solveBtn');
+
+  if (m === 'size') {
+    // 容量が入力側、サイズは計算結果（読み取り専用にはしないが自動で更新される）
+    widthInput.disabled = false;
+    heightInput.disabled = false;
+    targetInput.disabled = false;
+    targetUnit.disabled = false;
+    solveBtn.style.display = 'block';
+    solveBtn.disabled = !origImage;
+  } else {
+    // サイズが入力側、容量は計算結果のみ表示
+    widthInput.disabled = false;
+    heightInput.disabled = false;
+    targetInput.disabled = true;
+    targetUnit.disabled = true;
+    solveBtn.style.display = 'none';
+    document.getElementById('sizeWarning').style.display = 'none';
+    document.getElementById('paddedNote').style.display = 'none';
+    if (origImage) doRender();
+  }
+}
+
+function setFormat(btn) {
+  document.querySelectorAll('.fmt-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentFormat = btn.dataset.fmt;
+  const note = document.getElementById('formatNote');
+  if (currentFormat === 'image/png') {
+    note.textContent = 'PNGは可逆圧縮のため「品質」は無視され、容量調整は解像度変更とメタデータ付加のみで行われます。';
+  } else {
+    note.textContent = '';
+  }
+  if (mode === 'dimension' && origImage) doRender();
+}
+
+function toggleAspect() {
+  aspectLocked = !aspectLocked;
+  document.getElementById('aspectBtn').classList.toggle('active', aspectLocked);
+}
+
+/* ============================================================
+   ファイル読み込み
+============================================================ */
+document.getElementById('fileInput').addEventListener('change', e => {
+  if (e.target.files[0] && !isLoadingFile) loadFile(e.target.files[0]);
+});
+const dropZone = document.getElementById('dropZone');
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault(); dropZone.classList.remove('dragover');
+  if (e.dataTransfer.files[0] && !isLoadingFile) loadFile(e.dataTransfer.files[0]);
+});
+
+let isLoadingFile = false;
+async function loadFile(file) {
+  if (isLoadingFile) return;
+  isLoadingFile = true;
+  origFile = file;
+  origImage = null;
+  workerAvailable = false;
+  document.getElementById('origSize').textContent = fmtBytes(file.size);
+
+  const dropLabel = document.querySelector('#dropZone .drop-label');
+  const origDropLabelHTML = dropLabel.innerHTML;
+  dropLabel.innerHTML = '画像を読み込み中...<span>大きなファイルは数十秒〜数分かかる場合があります</span>';
+  document.getElementById('controls').style.display = 'none';
+
+  try {
+    let bitmap = null;
+    try {
+      // createImageBitmapの方が大容量画像に対して省メモリ・高速なことが多い
+      bitmap = await createImageBitmap(file);
+    } catch (e) {
+      // フォールバック: <img>タグでの読み込み
+    }
+
+    if (bitmap) {
+      origImage = bitmap;
+      origW = bitmap.width;
+      origH = bitmap.height;
+    } else {
+      await new Promise((resolve, reject) => {
+        const url = URL.createObjectURL(file);
+        const img = new Image();
+        img.onload = () => {
+          origImage = img;
+          origW = img.naturalWidth;
+          origH = img.naturalHeight;
+          resolve();
+        };
+        img.onerror = () => reject(new Error('画像の読み込みに失敗しました。ファイルが極端に大きい（数ギガピクセル級）か、対応していない形式の可能性があります。これはブラウザのデコーダ自体の限界のため、このツールでは回避できません。'));
+        img.src = url;
+      });
+    }
+
+    dropLabel.innerHTML = origDropLabelHTML;
+    onImageReady();
+
+    // ワーカー(OffscreenCanvas)が使えれば、そちらにも同じファイルを読み込ませておく。
+    // 失敗しても無視して、メインスレッドのみのフォールバック経路で継続する。
+    if (initWorker()) {
+      try {
+        await callWorker('load', { file });
+        workerAvailable = true;
+      } catch (e) {
+        workerAvailable = false;
+      }
+    }
+  } catch (e) {
+    dropLabel.innerHTML = origDropLabelHTML;
+    alert(e.message || String(e));
+  } finally {
+    isLoadingFile = false;
+  }
+}
+
+function onImageReady() {
+  document.getElementById('origDims').textContent = `${origW} × ${origH}`;
+  document.getElementById('widthInput').value = origW;
+  document.getElementById('heightInput').value = origH;
+
+  const warn = document.getElementById('canvasWarn');
+  warn.style.display = 'block';
+  warn.textContent = `元の解像度（${origW}×${origH}）のまま処理を試みます。ブラウザの上限に達した場合のみ、自動的に処理可能なサイズまで縮小して再試行します（速度は優先しません）。`;
+
+  document.getElementById('controls').style.display = 'flex';
+  document.getElementById('solveBtn').disabled = (mode !== 'size');
+  document.getElementById('sizeWarning').style.display = 'none';
+  document.getElementById('paddedNote').style.display = 'none';
+
+  if (mode === 'dimension') doRender();
+}
+
+// 明らかに異常な値(0・NaN・桁違いに巨大な値)だけをガードする軽いチェック。
+// 実際に処理可能な上限は findWorkingResolution が「実際に描画を試す」ことで
+// 動的に判定するため、ここでは事前の推測による縮小は行わない。
+function safeResolution(w, h) {
+  const ABS_MAX_DIM = 300000;
+  const sw = Math.max(1, Math.min(Math.round(w) || 1, ABS_MAX_DIM));
+  const sh = Math.max(1, Math.min(Math.round(h) || 1, ABS_MAX_DIM));
+  return { w: sw, h: sh };
+}
+
+/* ============================================================
+   幅・高さ・品質 入力イベント
+============================================================ */
+let dimDebounce = null;
+document.getElementById('widthInput').addEventListener('input', function() {
+  if (aspectLocked && origW) {
+    document.getElementById('heightInput').value = Math.round(+this.value * origH / origW);
+  }
+  if (mode === 'dimension') {
+    clearTimeout(dimDebounce);
+    dimDebounce = setTimeout(doRender, 200);
+  }
+});
+document.getElementById('heightInput').addEventListener('input', function() {
+  if (aspectLocked && origH) {
+    document.getElementById('widthInput').value = Math.round(+this.value * origW / origH);
+  }
+  if (mode === 'dimension') {
+    clearTimeout(dimDebounce);
+    dimDebounce = setTimeout(doRender, 200);
+  }
+});
+document.getElementById('qualitySlider').addEventListener('input', function() {
+  document.getElementById('qualityVal').textContent = (+this.value / 1000).toFixed(3);
+  if (mode === 'dimension') {
+    clearTimeout(dimDebounce);
+    dimDebounce = setTimeout(doRender, 150);
+  }
+});
+
+function getQuality() { return +document.getElementById('qualitySlider').value / 1000; }
+function setQualityUI(q) {
+  document.getElementById('qualitySlider').value = Math.round(q * 1000);
+  document.getElementById('qualityVal').textContent = q.toFixed(3);
+}
+function getTargetBytes() {
+  const val = parseFloat(document.getElementById('targetSizeInput').value);
+  const unit = document.getElementById('targetUnit').value;
+  if (!val || isNaN(val) || val <= 0) return null;
+  if (unit === 'gb') return val * 1024 ** 3;
+  if (unit === 'mb') return val * 1024 ** 2;
+  if (unit === 'kb') return val * 1024;
+  return val;
+}
+function getWH() {
+  const w = parseInt(document.getElementById('widthInput').value) || origW;
+  const h = parseInt(document.getElementById('heightInput').value) || origH;
+  return safeResolution(w, h);
+}
+
+/* ============================================================
+   Canvas描画 → Blob
+============================================================ */
+// メインスレッドでのCanvas描画(フォールバック用・ワーカー未対応時のプライマリ経路)。
+// 一部ブラウザは上限超過時に例外を投げず、canvas.width/heightを黙って0や別の値に
+// クランプすることがあるため、代入直後に実際の値を検証する。
+function renderToBlobMain(w, h, quality) {
+  return new Promise((resolve, reject) => {
+    try {
+      canvas.width = w;
+      canvas.height = h;
+      if (canvas.width !== w || canvas.height !== h) {
+        reject(new Error(`canvasサイズ ${w}x${h} を確保できませんでした（ブラウザが ${canvas.width}x${canvas.height} に丸めました）`));
+        return;
+      }
+      ctx.clearRect(0, 0, w, h);
+      if (currentFormat !== 'image/png') {
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, w, h);
+      }
+      ctx.drawImage(origImage, 0, 0, w, h);
+      canvas.toBlob(blob => {
+        if (!blob) reject(new Error('toBlob failed（画像サイズが大きすぎる可能性があります）'));
+        else resolve(blob);
+      }, currentFormat, quality);
+    } catch (e) { reject(e); }
+  });
+}
+
+/* ============================================================
+   Web Worker + OffscreenCanvas によるバックグラウンド処理
+   メインスレッドをブロックしないよう試み、失敗時は自動的に
+   メインスレッドの Canvas 処理にフォールバックする。
+============================================================ */
+const WORKER_SRC = `
+  let cachedBitmap = null;
+  self.onmessage = async (e) => {
+    const { id, type, payload } = e.data;
+    try {
+      if (type === 'load') {
+        cachedBitmap = await createImageBitmap(payload.file);
+        self.postMessage({ id, ok: true, width: cachedBitmap.width, height: cachedBitmap.height });
+      } else if (type === 'render') {
+        if (!cachedBitmap) throw new Error('worker: image not loaded');
+        const { w, h, quality, format } = payload;
+        const off = new OffscreenCanvas(w, h);
+        if (off.width !== w || off.height !== h) throw new Error('offscreencanvas size mismatch');
+        const c = off.getContext('2d');
+        if (format !== 'image/png') { c.fillStyle = '#ffffff'; c.fillRect(0, 0, w, h); }
+        c.drawImage(cachedBitmap, 0, 0, w, h);
+        const blob = await off.convertToBlob({ type: format, quality });
+        self.postMessage({ id, ok: true, blob });
+      } else {
+        throw new Error('worker: unknown message type ' + type);
+      }
+    } catch (err) {
+      self.postMessage({ id, ok: false, error: (err && err.message) ? err.message : String(err) });
+    }
+  };
+`;
+
+let bgWorker = null;
+let workerAvailable = false;
+let workerReqId = 0;
+const workerPending = new Map();
+
+function initWorker() {
+  if (typeof Worker === 'undefined' || typeof OffscreenCanvas === 'undefined') return false;
+  try {
+    if (bgWorker) { bgWorker.terminate(); }
+    const blobUrl = URL.createObjectURL(new Blob([WORKER_SRC], { type: 'text/javascript' }));
+    bgWorker = new Worker(blobUrl);
+    bgWorker.onmessage = (e) => {
+      const { id, ok, error, ...rest } = e.data;
+      const p = workerPending.get(id);
+      if (!p) return;
+      workerPending.delete(id);
+      if (ok) p.resolve(rest); else p.reject(new Error(error));
+    };
+    bgWorker.onerror = () => { workerAvailable = false; };
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+function callWorker(type, payload) {
+  return new Promise((resolve, reject) => {
+    const id = ++workerReqId;
+    workerPending.set(id, { resolve, reject });
+    bgWorker.postMessage({ id, type, payload });
+  });
+}
+
+// ワーカーが使えればそちらを使い、失敗したらそのリクエストだけメインスレッドに
+// フォールバックする（ワーカー自体は生かしたままにする）。
+async function renderToBlobRaw(w, h, quality) {
+  if (workerAvailable) {
+    try {
+      const { blob } = await callWorker('render', { w, h, quality, format: currentFormat });
+      return blob;
+    } catch (e) {
+      // このリクエストのみメインスレッドで再試行
+    }
+  }
+  return renderToBlobMain(w, h, quality);
+}
+
+// 指定解像度で実際に描画できるかを確認し、失敗したら段階的に縮小しながら
+// 「処理可能な解像度」を探す。速度は問わず、可能な限り大きい解像度を狙う。
+async function findWorkingResolution(w, h, onAttempt) {
+  let tw = Math.max(1, Math.round(w));
+  let th = Math.max(1, Math.round(h));
+  const MAX_ATTEMPTS = 50;
+  for (let i = 0; i < MAX_ATTEMPTS; i++) {
+    try {
+      if (onAttempt) onAttempt(tw, th, i);
+      await renderToBlobRaw(tw, th, 0.5);
+      return { w: tw, h: th, attempts: i + 1 };
+    } catch (e) {
+      tw = Math.max(1, Math.floor(tw * 0.85));
+      th = Math.max(1, Math.floor(th * 0.85));
+      if (tw < 32 || th < 32) {
+        throw new Error('この画像はブラウザが処理できる上限を大きく超えており、縮小しても描画できませんでした。');
+      }
+    }
+  }
+  throw new Error('十分に小さい解像度でも処理に失敗しました。端末のメモリ不足の可能性があります。');
+}
+
+function setProgress(pct, text) {
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = text;
+}
+
+/* ============================================================
+   モード: 画像の大きさ優先 → 容量は自動計算（プレビューのみ）
+============================================================ */
+async function doRender() {
+  if (!origImage) return;
+  let { w, h } = getWH();
+  const q = currentFormat === 'image/png' ? 1.0 : getQuality();
+  document.getElementById('progressWrap').style.display = 'block';
+  setProgress(50, 'レンダリング中...');
+  try {
+    let blob;
+    try {
+      blob = await renderToBlobRaw(w, h, q);
+    } catch (e) {
+      // 指定解像度で失敗 → 実際に描画できるサイズまで自動的に縮小して再試行
+      setProgress(20, `${w}×${h} では描画できませんでした。処理可能なサイズを探索中...`);
+      const working = await findWorkingResolution(w, h, (tw, th) => {
+        setProgress(40, `${tw}×${th} で再試行中...`);
+      });
+      w = working.w; h = working.h;
+      document.getElementById('widthInput').value = w;
+      document.getElementById('heightInput').value = h;
+      const warn = document.getElementById('canvasWarn');
+      warn.style.display = 'block';
+      warn.textContent = `⚠ ブラウザの上限のため ${w}×${h} に自動縮小して処理しました。`;
+      blob = await renderToBlobRaw(w, h, q);
+    }
+    blobCache = blob;
+    updatePreviewFromBlob(blob, w, h);
+  } catch (e) {
+    alert('レンダリングエラー: ' + e.message);
+  }
+  document.getElementById('progressWrap').style.display = 'none';
+}
+
+/* ============================================================
+   モード: 容量優先 → サイズ・品質・(必要ならメタデータ付加)を自動計算
+============================================================ */
+async function runSolve() {
+  if (!origImage || solving) return;
+  const targetBytes = getTargetBytes();
+  if (!targetBytes) { alert('目標容量を入力してください'); return; }
+
+  solving = true;
+  document.getElementById('solveBtn').disabled = true;
+  document.getElementById('sizeWarning').style.display = 'none';
+  document.getElementById('paddedNote').style.display = 'none';
+  const progressWrap = document.getElementById('progressWrap');
+  progressWrap.style.display = 'block';
+  setProgress(0, '処理可能な解像度を確認中...');
+
+  const startWH = getWH();
+
+  try {
+    const working = await findWorkingResolution(startWH.w, startWH.h, (tw, th) => {
+      setProgress(1, `${tw}×${th} で処理を試行中...`);
+    });
+    const fullW = working.w, fullH = working.h;
+
+    if (fullW !== startWH.w || fullH !== startWH.h) {
+      document.getElementById('widthInput').value = fullW;
+      document.getElementById('heightInput').value = fullH;
+      const warn = document.getElementById('canvasWarn');
+      warn.style.display = 'block';
+      warn.textContent = `⚠ ブラウザの上限のため ${fullW}×${fullH}（要求: ${startWH.w}×${startWH.h}）に自動縮小して処理します。`;
+    }
+
+    let result;
+    if (currentFormat === 'image/png') {
+      result = await solvePng(fullW, fullH, targetBytes);
+    } else {
+      result = await solveLossy(fullW, fullH, targetBytes);
+    }
+
+    setProgress(100, `完了 — 実測 ${fmtBytes(result.blob.size)}`);
+    setTimeout(() => { progressWrap.style.display = 'none'; }, 1200);
+
+    document.getElementById('widthInput').value = result.w;
+    document.getElementById('heightInput').value = result.h;
+    if (result.quality !== undefined) setQualityUI(result.quality);
+
+    blobCache = result.blob;
+    updatePreviewFromBlob(result.blob, result.w, result.h);
+
+    if (result.padded) {
+      const note = document.getElementById('paddedNote');
+      note.style.display = 'block';
+      const isMajorOverage = result.paddedBytes > targetBytes * 0.005;
+      if (isMajorOverage) {
+        note.textContent = `ℹ 指定容量が画質・解像度だけで到達できる最大サイズを超えていたため、メタデータ（${fmtBytes(result.paddedBytes)}分）を付加して容量を正確に一致させました。画質・見た目への影響はありません。`;
+      } else {
+        note.textContent = `ℹ 画質・解像度の探索では ${fmtBytes(result.paddedBytes)} の誤差が残ったため、メタデータで正確に埋めて目標容量とバイト単位で一致させました。画質・見た目への影響はありません。`;
+      }
+    }
+
+    const err = Math.abs(result.blob.size - targetBytes) / targetBytes * 100;
+    if (err > 0.5 && !result.padded) {
+      const sw = document.getElementById('sizeWarning');
+      sw.style.display = 'block';
+      sw.textContent = `目標 ${fmtBytes(targetBytes)} に対して実測 ${fmtBytes(result.blob.size)}（誤差 ${err.toFixed(2)}%）です。`;
+    }
+  } catch (e) {
+    alert('計算エラー: ' + e.message);
+  }
+
+  solving = false;
+  document.getElementById('solveBtn').disabled = false;
+}
+
+// --- JPEG / WebP: 品質+解像度の2軸探索 ---
+async function solveLossy(fullW, fullH, targetBytes) {
+  setProgress(5, 'Q=1.0 (最大画質) 測定中...');
+  const blobHigh = await renderToBlobRaw(fullW, fullH, 1.0);
+
+  // 目標が最大画質でのサイズを超える → パディングで「盛る」
+  if (targetBytes > blobHigh.size) {
+    setProgress(60, '目標が最大画質時のサイズを超過 — メタデータで容量を調整中...');
+    const padded = await inflateBlobToTarget(blobHigh, targetBytes, currentFormat);
+    return { blob: padded, w: fullW, h: fullH, quality: 1.0, padded: true, paddedBytes: padded.size - blobHigh.size };
+  }
+
+  setProgress(12, 'Q=0.01 測定中...');
+  const blobLow = await renderToBlobRaw(fullW, fullH, 0.01);
+
+  // 最低画質でもまだ大きすぎる → 解像度を縮小する必要あり
+  if (targetBytes < blobLow.size) {
+    setProgress(18, '低画質でも容量超過 — 解像度を調整します...');
+    return await solveLossyWithScale(fullW, fullH, targetBytes, blobLow.size);
+  }
+
+  // 品質だけで解決できる範囲 → 対数補間 + バイナリサーチ
+  const logHigh = Math.log(blobHigh.size), logLow = Math.log(blobLow.size);
+  const logTarget = Math.log(targetBytes);
+  let guessQ = 0.01 + 0.99 * (logTarget - logLow) / (logHigh - logLow);
+  guessQ = Math.max(0.001, Math.min(0.999, guessQ));
+
+  setProgress(25, `品質探索を開始 (推定 Q=${guessQ.toFixed(3)})`);
+  const blob = await binarySearchQuality(fullW, fullH, targetBytes, guessQ, 25, 92);
+
+  setProgress(95, '残差をメタデータで正確に埋めています...');
+  const finalBlob = await inflateBlobToTarget(blob, targetBytes, currentFormat);
+  return {
+    blob: finalBlob, w: fullW, h: fullH, quality: blob._q,
+    padded: finalBlob.size > blob.size, paddedBytes: finalBlob.size - blob.size
+  };
+}
+
+// 「目標バイト数を超えない範囲で最大」のblobを探す（= 目標以下で最高画質）。
+// ブラウザのJPEG/WebPエンコーダは内部的に品質を粗い段階（実質100段階程度）に
+// 丸めているため、あるポイントを超えると品質を変えても出力サイズが変化しない
+// 「プラトー」に入る。そこから先はメタデータパディングで正確な一致を取る。
+async function binarySearchQuality(w, h, targetBytes, guessQ, progStart, progEnd) {
+  const MAX_ITER = 24;
+  let lo = 0.001, hi = 1.0;
+  let bestUnder = null;   // 目標以下で最大のblob（画質最優先の候補）
+  let bestOverall = null, bestOverallDiff = Infinity; // 保険用（万一bestUnderが見つからない場合）
+
+  function consider(blob, q) {
+    blob._q = q;
+    if (blob.size <= targetBytes && (!bestUnder || blob.size > bestUnder.size)) bestUnder = blob;
+    const diff = Math.abs(blob.size - targetBytes);
+    if (diff < bestOverallDiff) { bestOverallDiff = diff; bestOverall = blob; }
+  }
+
+  let blob = await renderToBlobRaw(w, h, guessQ);
+  consider(blob, guessQ);
+  if (blob.size > targetBytes) hi = guessQ; else lo = guessQ;
+
+  for (let i = 0; i < MAX_ITER; i++) {
+    if (hi - lo < 0.0002) break;
+    const mid = (lo + hi) / 2;
+    const pct = progStart + (progEnd - progStart) * (i + 1) / MAX_ITER;
+    setProgress(pct, `品質探索 Q=${mid.toFixed(4)} [範囲 ${lo.toFixed(3)}〜${hi.toFixed(3)}]`);
+
+    blob = await renderToBlobRaw(w, h, mid);
+    consider(blob, mid);
+
+    // 目標以下かつ差が数バイト〜微小なら、これ以上探索してもプラトーで変化しない
+    if (bestUnder && (targetBytes - bestUnder.size) <= Math.max(8, targetBytes * 0.00002)) break;
+
+    if (blob.size > targetBytes) hi = mid; else lo = mid;
+  }
+  return bestUnder || bestOverall;
+}
+
+async function solveLossyWithScale(fullW, fullH, targetBytes, sizeAtMinQ) {
+  let scale = Math.sqrt(targetBytes / sizeAtMinQ);
+  scale = Math.min(1.0, Math.max(0.02, scale));
+  let loScale = 0.01, hiScale = 1.0;
+
+  let tw = Math.max(1, Math.round(fullW * scale));
+  let th = Math.max(1, Math.round(fullH * scale));
+
+  setProgress(22, `推定スケール ${(scale * 100).toFixed(1)}% → ${tw}×${th}`);
+  let blob = await renderToBlobRaw(tw, th, 0.9);
+  if (blob.size > targetBytes) hiScale = scale; else loScale = scale;
+
+  let bestBlob = blob, bestDiff = Math.abs(blob.size - targetBytes);
+  let bestW = tw, bestH = th;
+
+  for (let i = 0; i < 16; i++) {
+    const pct = 25 + 50 * (i + 1) / 16;
+    const mid = (loScale + hiScale) / 2;
+    tw = Math.max(1, Math.round(fullW * mid));
+    th = Math.max(1, Math.round(fullH * mid));
+
+    setProgress(pct, `解像度探索 ${(mid * 100).toFixed(1)}% → ${tw}×${th}`);
+    blob = await renderToBlobRaw(tw, th, 0.9);
+    const diff = Math.abs(blob.size - targetBytes);
+
+    if (diff < bestDiff) { bestDiff = diff; bestBlob = blob; bestW = tw; bestH = th; }
+    if (diff / targetBytes < 0.01) break;
+
+    if (blob.size > targetBytes) hiScale = mid; else loScale = mid;
+  }
+
+  setProgress(78, `解像度確定 ${bestW}×${bestH}、品質を微調整中...`);
+  const refined = await binarySearchQuality(bestW, bestH, targetBytes, 0.85, 78, 94);
+
+  setProgress(96, '残差をメタデータで正確に埋めています...');
+  const finalBlob = await inflateBlobToTarget(refined, targetBytes, currentFormat);
+  return {
+    blob: finalBlob, w: bestW, h: bestH, quality: refined._q,
+    padded: finalBlob.size > refined.size, paddedBytes: finalBlob.size - refined.size
+  };
+}
+
+// --- PNG: 可逆圧縮のため解像度のみで調整、超過分はパディング ---
+async function solvePng(fullW, fullH, targetBytes) {
+  setProgress(10, 'フル解像度でのPNGサイズを測定中...');
+  const blobFull = await renderToBlobRaw(fullW, fullH, 1.0);
+
+  if (targetBytes > blobFull.size) {
+    setProgress(60, '目標が最大サイズを超過 — メタデータで容量を調整中...');
+    const padded = await inflateBlobToTarget(blobFull, targetBytes, 'image/png');
+    return { blob: padded, w: fullW, h: fullH, padded: true, paddedBytes: padded.size - blobFull.size };
+  }
+
+  // 解像度スケールをバイナリサーチ（PNGは内容依存で非線形なので実測ベース）。
+  // 「目標以下で最大」のものを追跡し、最後にパディングで正確に一致させる。
+  let scale = Math.sqrt(targetBytes / blobFull.size);
+  scale = Math.min(1.0, Math.max(0.02, scale));
+  let loScale = 0.01, hiScale = 1.0;
+
+  let tw = Math.max(1, Math.round(fullW * scale));
+  let th = Math.max(1, Math.round(fullH * scale));
+  setProgress(25, `推定スケール ${(scale * 100).toFixed(1)}% → ${tw}×${th}`);
+  let blob = await renderToBlobRaw(tw, th, 1.0);
+
+  let bestUnder = blob.size <= targetBytes ? blob : null;
+  let bestUnderW = tw, bestUnderH = th;
+  let bestOverall = blob, bestOverallDiff = Math.abs(blob.size - targetBytes);
+  let bestOverallW = tw, bestOverallH = th;
+
+  if (blob.size > targetBytes) hiScale = scale; else loScale = scale;
+
+  for (let i = 0; i < 20; i++) {
+    const pct = 25 + 65 * (i + 1) / 20;
+    const mid = (loScale + hiScale) / 2;
+    tw = Math.max(1, Math.round(fullW * mid));
+    th = Math.max(1, Math.round(fullH * mid));
+
+    setProgress(pct, `解像度探索 ${(mid * 100).toFixed(1)}% → ${tw}×${th}`);
+    blob = await renderToBlobRaw(tw, th, 1.0);
+
+    if (blob.size <= targetBytes && (!bestUnder || blob.size > bestUnder.size)) {
+      bestUnder = blob; bestUnderW = tw; bestUnderH = th;
+    }
+    const diff = Math.abs(blob.size - targetBytes);
+    if (diff < bestOverallDiff) { bestOverallDiff = diff; bestOverall = blob; bestOverallW = tw; bestOverallH = th; }
+
+    if (bestUnder && (targetBytes - bestUnder.size) / targetBytes < 0.003) break;
+
+    if (blob.size > targetBytes) hiScale = mid; else loScale = mid;
+  }
+
+  const chosen = bestUnder || bestOverall;
+  const chosenW = bestUnder ? bestUnderW : bestOverallW;
+  const chosenH = bestUnder ? bestUnderH : bestOverallH;
+
+  setProgress(93, '残差をメタデータで正確に埋めています...');
+  const padded = await inflateBlobToTarget(chosen, targetBytes, 'image/png');
+  return {
+    blob: padded, w: chosenW, h: chosenH,
+    padded: padded.size > chosen.size, paddedBytes: padded.size - chosen.size
+  };
+}
+
+/* ============================================================
+   プレビュー更新・ダウンロード
+============================================================ */
+function updatePreviewFromBlob(blob, w, h) {
+  const url = URL.createObjectURL(blob);
+  const wrap = document.getElementById('previewWrap');
+  const img = document.createElement('img');
+  img.onload = () => { wrap.innerHTML = ''; wrap.appendChild(img); };
+  img.src = url;
+
+  document.getElementById('outSize').textContent = fmtBytes(blob.size);
+  document.getElementById('outDims').textContent = `${w} × ${h}`;
+
+  const origBytes = origFile ? origFile.size : 0;
+  const pct = origBytes ? Math.round((1 - blob.size / origBytes) * 100) : 0;
+
+  document.getElementById('compareBar').style.display = 'block';
+  document.getElementById('compareRatio').textContent = `${fmtBytes(origBytes)} → ${fmtBytes(blob.size)}`;
+  const lbl = document.getElementById('reductionLabel');
+  if (pct > 0) { lbl.textContent = `▼ ${pct}% 削減`; lbl.className = 'reduction'; }
+  else if (pct < 0) { lbl.textContent = `▲ ${Math.abs(pct)}% 増加`; lbl.className = 'reduction increase'; }
+  else { lbl.textContent = '±0%'; lbl.className = 'reduction'; }
+
+  document.getElementById('downloadBtn').disabled = false;
+}
+
+function downloadImage() {
+  if (!blobCache) return;
+  const ext = currentFormat === 'image/jpeg' ? 'jpg' : currentFormat === 'image/webp' ? 'webp' : 'png';
+  const url = URL.createObjectURL(blobCache);
+  const a = document.createElement('a');
+  a.href = url;
+  const orig = origFile ? origFile.name.replace(/\.[^.]+$/, '') : 'image';
+  a.download = `${orig}_compressed.${ext}`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
+function fmtBytes(b) {
+  if (b >= 1024 ** 3) return (b / 1024 ** 3).toFixed(2) + ' GB';
+  if (b >= 1024 ** 2) return (b / 1024 ** 2).toFixed(2) + ' MB';
+  if (b >= 1024) return (b / 1024).toFixed(1) + ' KB';
+  return b + ' Bytes';
+}
+
+// 初期状態
+setMode('size');
+</script>
+</body>
+</html>
