@@ -464,7 +464,16 @@ a:hover {
     border-radius: 50%;
     animation: spin 1s linear infinite;
 }
+/*熊本地震の画像埋め込み用*/
+.responsive-img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
 
+.banner-item.my-banner-info {
+    max-width: 700px;
+}
 
 @keyframes spin {
     to {
