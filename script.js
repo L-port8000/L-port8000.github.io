@@ -35,12 +35,11 @@ const i18nData = {
         archive_button: "アーカイブページへ",
         mirror_title: "ミラーページ",
         about_hujin: "布陣",
+        blog_0: "自己紹介",
         blog_1: "アカウントが乗っ取られた話",
         blog_2: "アカウントが復元できた話",
-        blog_3: "",
-        blog_4: "",
-        202601211: "アカウントが乗っ取られた時の話",
-        202601251: "アカウントが復元できた話",
+        f202601211: "アカウントが乗っ取られた時の話",
+        f202601251: "アカウントが復元できた話",
         backtohome: "←ホームに戻る",
         other_title: "まだ何もありません"
     },
@@ -79,12 +78,11 @@ const i18nData = {
         archive_button: "Go to Archive Page",
         mirror_title: "mirror pages",
         about_hujin: "my Devices",
+        blog_0: "About me",
         blog_1: "My account was hacked",
         blog_2: "I got my account back",
-        blog_3: "",
-        blog_4: "",
-        202601211: "When My Account Got Hacked",
-        202601251: "How I Recovered My Account",
+        f202601211: "When My Account Got Hacked",
+        f202601251: "How I Recovered My Account",
         backtohome: "←back to home",
         other_title: "Nothing here yet."
     },
@@ -123,12 +121,11 @@ const i18nData = {
         archive_button: "前往存档页面",
         mirror_title: "镜像网站",
         about_hujin: "我的设备",
+        blog_0: "自己紹介",
         blog_1: "我的账号被盗了",
         blog_2: "我找回了我的账号",
-        blog_3: "",
-        blog_4: "",
-        202601211: "关于账号被盗的那点事",
-        202601251: "關於帳號被盜的那點事",
+        f202601211: "关于账号被盗的那点事",
+        f202601251: "關於帳號被盜的那點事",
         backtohome: "←返回首页",
         other_title: "目前什么都没有..."
     },
@@ -167,12 +164,11 @@ const i18nData = {
         archive_button: "前往存檔頁面",
         mirror_title: "镜像网站",
         about_hujin: "我的设备",
+        blog_0: "自己紹介",
         blog_1: "我的账号被盗了",
         blog_2: "我找回了我的账号",
-        blog_3: "",
-        blog_4: "",
-        202601211: "アカウントが乗っ取られた時の話",
-        202601251: "アカウントが復元できた話",
+        f202601211: "アカウントが乗っ取られた時の話",
+        f202601251: "アカウントが復元できた話",
         backtohome: "←返回首頁",
         other_title: "目前什麼都沒有..."
     }
@@ -206,12 +202,10 @@ if (elements.themeToggle) {
     };
 }
 
-
 const formatText = (text) => {
     if (!text) return "";
     return text.replace(/\n/g, "<br>");
 };
-
 
 const updateLanguage = (lang) => {
     document.querySelectorAll('[data-i18n]').forEach(el => {
