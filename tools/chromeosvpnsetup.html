@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>WireGuard for ChromeOS</title>
+<style>
+body{
+    font-family:Meiryo,sans-serif;
+    margin:30px;
+}
+table{
+    border-collapse:collapse;
+    width:700px;
+}
+th,td{
+    border:1px solid #ccc;
+    padding:8px;
+}
+th{
+    background:#f0f0f0;
+    width:250px;
+    text-align:left;
+}
+</style>
+</head>
+<body>
+
+<h2>How to setup WireGuard on ChromeOS</h2>
+
+<input type="file" id="file" accept=".conf,.txt">
+
+<br><br>
+
+<table>
+<tr><th>IPv4</th><td id="ipversion">○</td></tr>
+<tr><th>クライアントIPアドレス</th><td id="clientip"></td></tr>
+<tr><th>ネームサーバー</th><td id="dns"></td></tr>
+<tr><th>キー</th><td>入力した鍵ペアを使用</td></tr>
+<tr><th>秘密鍵</th><td id="privatekey"></td></tr>
+<tr><th>共有鍵</th><td id="publickey"></td></tr>
+<tr><th>事前共有キー</th><td>なし</td></tr>
+<tr><th>エンドポイント</th><td id="endpoint"></td></tr>
+<tr><th>許可するIP</th><td id="allowedips"></td></tr>
+<tr><th>PersistentKeepAlive送信間隔</th><td id="keepalive"></td></tr>
+</table>
+
+<script>
+
+document.getElementById("file").addEventListener("change", function(e){
+
+    const file = e.target.files[0];
+    if(!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = function(){
+
+        const text = reader.result;
+
+        function getValue(key){
+            const m = text.match(new RegExp("^" + key + "\\s*=\\s*(.+)$", "mi"));
+            return m ? m[1].trim() : "";
+        }
+
+        // IPv4を優先、無ければIPv6を返す
+        function getIPAddress(value){
+
+            if(!value) return "";
+
+            const list = value.split(",").map(v => v.trim());
+
+            // IPv4
+            const ipv4 = list.find(v => v.includes("."));
+            if(ipv4){
+                return {
+                    address: ipv4.split("/")[0],
+                    version: "IPv4"
+                };
+            }
+
+            // IPv6
+            const ipv6 = list.find(v => v.includes(":"));
+            if(ipv6){
+                return {
+                    address: ipv6.split("/")[0],
+                    version: "IPv6"
+                };
+            }
+
+            return {
+                address: "",
+                version: ""
+            };
+        }
+
+        const addressInfo = getIPAddress(getValue("Address"));
+        const dnsInfo = getIPAddress(getValue("DNS"));
+
+        document.getElementById("ipversion").textContent =
+            addressInfo.version === "IPv6" ? "× (IPv6)" : "○";
+
+        document.getElementById("clientip").textContent =
+            addressInfo.address;
+
+        document.getElementById("dns").textContent =
+            dnsInfo.address;
+
+        document.getElementById("privatekey").textContent =
+            getValue("PrivateKey");
+
+        document.getElementById("publickey").textContent =
+            getValue("PublicKey");
+
+        document.getElementById("endpoint").textContent =
+            getValue("Endpoint");
+
+        document.getElementById("allowedips").textContent =
+            getValue("AllowedIPs");
+
+        document.getElementById("keepalive").textContent =
+            getValue("PersistentKeepalive");
+
+    };
+
+    reader.readAsText(file);
+
+});
+
+</script>
+
+</body>
+</html>
