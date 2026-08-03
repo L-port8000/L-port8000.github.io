@@ -1,157 +1,153 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<title>ChromeosVPNSetup</title>
-<style>
-body{
-    font-family:Meiryo,sans-serif;
-    margin:30px;
-}
-table{
-    border-collapse:collapse;
-    width:700px;
-}
-th,td{
-    border:1px solid #ccc;
-    padding:8px;
-}
-th{
-    background:#f0f0f0;
-    width:250px;
-    text-align:left;
-}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ChromeOS VPN setup</title>
+  <style>
+    body { font-family: Meiryo, sans-serif; margin: 30px; max-width: 900px; color: #222; }
+    h2 { margin-bottom: .3em; } h3 { margin-top: 28px; }
+    .notice, .warning { padding: 12px 16px; border-left: 4px solid; }
+    .notice { background: #eef6ff; border-color: #1976d2; } .warning { background: #fff8e1; border-color: #f9a825; }
+    .selector { display: flex; gap: 18px; margin: 18px 0; } label { cursor: pointer; }
+    .panel { display: none; } .panel.active { display: block; }
+    table { border-collapse: collapse; width: 100%; max-width: 780px; }
+    th, td { border: 1px solid #ccc; padding: 9px; vertical-align: top; text-align: left; }
+    th { background: #f0f0f0; width: 245px; } .value { white-space: pre-wrap; word-break: break-all; }
+    button { margin-top: 8px; padding: 8px 13px; cursor: pointer; background: #1976d2; color: #fff; border: 0; border-radius: 4px; }
+    ol li { margin: 10px 0; } code { background: #f3f3f3; padding: 1px 4px; }
+  </style>
+  <!-- PKCS#12 をブラウザー内だけで生成するためのライブラリ -->
+  <script src="https://cdn.jsdelivr.net/npm/node-forge@1.3.1/dist/forge.min.js"></script>
 </head>
 <body>
+  <h2>Chromebook VPN Setup</h2>
+  <p class="notice">VPNの種類を選び、設定ファイルを指定してください。選択したファイルはこのブラウザー内だけで処理されます。</p>
 
-<h2>How to setup WireGuard on ChromeOS</h2>
+  <div class="selector" role="radiogroup" aria-label="VPNの種類">
+    <label><input type="radio" name="vpnType" value="wireguard" checked> WireGuard（.conf）</label>
+    <label><input type="radio" name="vpnType" value="openvpn"> OpenVPN（.ovpn）</label>
+  </div>
 
-<input type="file" id="file" accept=".conf,.txt">
+  <section id="wireguard" class="panel active">
+    <h3>WireGuard</h3>
+    <input type="file" id="wgFile">
+    <table>
+      <tr><th>IPv4</th><td id="wgIpVersion">○</td></tr>
+      <tr><th>クライアントIPアドレス</th><td class="value" id="wgClientIp"></td></tr>
+      <tr><th>ネームサーバー</th><td class="value" id="wgDns"></td></tr>
+      <tr><th>キー</th><td>入力した鍵ペアを使用</td></tr>
+      <tr><th>秘密鍵</th><td class="value" id="wgPrivateKey"></td></tr>
+      <tr><th>共有鍵</th><td class="value" id="wgPublicKey"></td></tr>
+      <tr><th>事前共有キー</th><td class="value" id="wgPresharedKey">なし</td></tr>
+      <tr><th>エンドポイント</th><td class="value" id="wgEndpoint"></td></tr>
+      <tr><th>許可するIP</th><td class="value" id="wgAllowedIps"></td></tr>
+      <tr><th>PersistentKeepAlive送信間隔</th><td class="value" id="wgKeepalive">なし</td></tr>
+    </table>
+    <h3>Chromebook での設定手順</h3>
+    <ol><li>設定で「ネットワーク」→「VPN」→「WireGuardを追加」を選びます。</li><li>上の抽出結果を各項目に入力します。IPv6のみの設定はChromeOSの環境により利用できない場合があります。</li></ol>
+  </section>
 
-<br><br>
+  <section id="openvpn" class="panel">
+    <h3>OpenVPN</h3>
+    <input type="file" id="ovpnFile">
+    <table>
+      <tr><th>サーバーホスト名</th><td class="value" id="ovpnHosts">未検出</td></tr>
+      <tr><th>ポート</th><td class="value" id="ovpnPorts">未検出</td></tr>
+      <tr><th>プロトコル</th><td class="value" id="ovpnProtocol">未検出</td></tr>
+      <tr><th>ユーザー名</th><td class="value" id="ovpnUsername">未検出</td></tr>
+      <tr><th>パスワード</th><td class="value" id="ovpnPassword">未検出</td></tr>
+      <tr><th>暗号化方式</th><td class="value" id="ovpnCipher">未検出</td></tr>
+    </table>
+    <h3>証明書</h3>
+    <div id="certInfo" class="warning">.ovpn ファイルを選択してください。</div>
+    <h3>Chromebook での設定手順</h3>
+    <ol>
+      <li>CA証明書を検出した場合は <code>ca_certificate.crt</code> を保存し、<code>chrome://certificate-manager/localcerts/</code> を開いて「ローカル証明書」 → 「信頼できる証明書」としてインポートします。</li>
+      <li><code>&lt;cert&gt;</code> と <code>&lt;key&gt;</code> の両方がある場合は、上の証明書エリアにある「client.p12 を生成・ダウンロード」ボタンから <code>client.p12</code> を作成し、<code>chrome://certificate-manager/clientcerts/</code> を開いてユーザー証明書 → プラットフォームのクライアント証明書にインポートします。</li>
+      <li>設定で「ネットワーク」→「組み込みのVPNの端の＋ボタン」→「OpenVPN」が選択されているのを確認し、上の抽出結果を入力します。</li>
+    </ol>
+  </section>
 
-<table>
-<tr><th>IPv4</th><td id="ipversion">○</td></tr>
-<tr><th>クライアントIPアドレス</th><td id="clientip"></td></tr>
-<tr><th>ネームサーバ</th><td id="dns"></td></tr>
-<tr><th>キー</th><td>入力した鍵ペアを使用</td></tr>
-<tr><th>秘密鍵</th><td id="privatekey"></td></tr>
-<tr><th>共有鍵</th><td id="publickey"></td></tr>
-<tr><th>事前共有キー</th><td>なし</td></tr>
-<tr><th>エンドポイント</th><td id="endpoint"></td></tr>
-<tr><th>許可するIP</th><td id="allowedips"></td></tr>
-<tr><th>PersistentKeepAlive送信間隔</th><td id="keepalive">なし</td></tr>
-</table>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    document.querySelectorAll('input[name="vpnType"]').forEach(radio => radio.addEventListener("change", () => {
+      $("wireguard").classList.toggle("active", radio.value === "wireguard" && radio.checked);
+      $("openvpn").classList.toggle("active", radio.value === "openvpn" && radio.checked);
+    }));
 
-<script>
+    function wgValue(text, key) { const m = text.match(new RegExp("^" + key + "\\s*=\\s*(.+)$", "mi")); return m ? m[1].trim() : ""; }
+    function firstAddress(value) {
+      const list = value.split(",").map(v => v.trim());
+      const address = list.find(v => v.includes(".")) || list.find(v => v.includes(":")) || "";
+      return { address: address.split("/")[0], ipv6: address.includes(":") && !address.includes(".") };
+    }
+    $("wgFile").addEventListener("change", event => {
+      const file = event.target.files[0]; if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        const text = reader.result, address = firstAddress(wgValue(text, "Address")), dns = firstAddress(wgValue(text, "DNS"));
+        $("wgIpVersion").textContent = address.ipv6 ? "× (IPv6)" : "○";
+        $("wgClientIp").textContent = address.address; $("wgDns").textContent = dns.address;
+        $("wgPrivateKey").textContent = wgValue(text, "PrivateKey"); $("wgPublicKey").textContent = wgValue(text, "PublicKey");
+        $("wgPresharedKey").textContent = wgValue(text, "PresharedKey") || "なし"; $("wgEndpoint").textContent = wgValue(text, "Endpoint");
+        const allowed = wgValue(text, "AllowedIPs"); $("wgAllowedIps").textContent = allowed;
+        $("wgKeepalive").textContent = wgValue(text, "PersistentKeepalive") || "なし";
+      };
+      reader.readAsText(file);
+    });
 
-document.getElementById("file").addEventListener("change", function(e){
+    function block(text, tag) { const m = text.match(new RegExp("<" + tag + ">\\s*([\\s\\S]*?)\\s*</" + tag + ">", "i")); return m ? m[1].trim() : ""; }
+    function option(text, name) { const m = text.match(new RegExp("^\\s*" + name + "\\s+([^\\s;]+)(?:\\s+([^\\s;]+))?", "mi")); return m ? [m[1], m[2] || ""] : null; }
+    function downloadButton(contents, filename) { const url = URL.createObjectURL(new Blob([contents + "\n"], {type:"application/x-pem-file"})); return `<br><a href="${url}" download="${filename}"><button>${filename} をダウンロード</button></a>`; }
+    
+    function generateP12(certPem, keyPem) {
+      const statusEl = $("p12Status");
+      if (!statusEl) return;
+      statusEl.textContent = "生成中...";
+      try {
+        if (!window.forge) throw new Error("変換ライブラリを読み込めませんでした。ネットワーク接続を確認してください。");
+        const cert = forge.pki.certificateFromPem(certPem);
+        const key = forge.pki.privateKeyFromPem(keyPem);
+        const p12Asn1 = forge.pkcs12.toPkcs12Asn1(key, [cert], "", { algorithm: "3des" });
+        const der = forge.asn1.toDer(p12Asn1).getBytes();
+        const bytes = new Uint8Array(der.length);
+        for (let i = 0; i < der.length; i++) bytes[i] = der.charCodeAt(i);
+        const url = URL.createObjectURL(new Blob([bytes], { type: "application/x-pkcs12" }));
+        const a = document.createElement("a");
+        a.href = url; a.download = "client.p12"; a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        statusEl.textContent = "client.p12 をダウンロードしました。インポート時のパスワードは空欄のままにしてください。";
+      } catch (error) {
+        statusEl.textContent = "P12 を作成できませんでした。\n" + error.message;
+      }
+    }
 
-    const file = e.target.files[0];
-    if(!file) return;
-
-    const reader = new FileReader();
-
-    reader.onload = function(){
-
-        const text = reader.result;
-
-        function getValue(key){
-            const m = text.match(
-                new RegExp("^" + key + "\\s*=\\s*(.+)$", "mi")
-            );
-            return m ? m[1].trim() : "";
+    $("ovpnFile").addEventListener("change", event => {
+      const file = event.target.files[0]; if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        const text = reader.result, remotes = [...text.matchAll(/^\s*remote\s+([^\s;]+)(?:\s+(\d+))?/gmi)];
+        $("ovpnHosts").textContent = remotes.length ? remotes.map(m => m[1]).join("\n") : "未検出";
+        $("ovpnPorts").textContent = remotes.length ? remotes.map(m => m[2] || "標準").join("\n") : "未検出";
+        const proto = option(text, "proto"), cipher = option(text, "data-ciphers") || option(text, "cipher"), auth = block(text, "auth-user-pass");
+        const lines = auth ? auth.split(/\r?\n/).map(v => v.trim()).filter(Boolean) : [], authFile = option(text, "auth-user-pass");
+        $("ovpnProtocol").textContent = proto ? proto[0] : "未検出"; $("ovpnCipher").textContent = cipher ? cipher[0] : "未検出";
+        $("ovpnUsername").textContent = lines[0] || (authFile ? "外部ファイルを参照" : "未検出"); $("ovpnPassword").textContent = lines[1] || (authFile ? "外部ファイルを参照" : "未検出");
+        const ca = block(text, "ca"), cert = block(text, "cert"), key = block(text, "key");
+        let html = ca ? "CA証明書を検出しました。" + downloadButton(ca, "ca_certificate.crt") : "CA証明書は .ovpn 内に見つかりませんでした。";
+        html += "<br><br>ユーザー証明書: " + (cert ? "検出" : "未検出") + "<br>秘密鍵: " + (key ? "検出" : "未検出");
+        if (cert && key) {
+          html += `<br><br><button id="p12Btn" type="button">client.p12 を生成・ダウンロード</button><br><span id="p12Status" style="font-size: 0.9em; color: #555;"></span>`;
         }
-
-        // IPv4優先、なければIPv6
-        function getIPAddress(value){
-
-            if(!value){
-                return {
-                    address:"",
-                    version:""
-                };
-            }
-
-            const list = value.split(",").map(v => v.trim());
-
-            const ipv4 = list.find(v => v.includes("."));
-            if(ipv4){
-                return {
-                    address: ipv4.split("/")[0],
-                    version: "IPv4"
-                };
-            }
-
-            const ipv6 = list.find(v => v.includes(":"));
-            if(ipv6){
-                return {
-                    address: ipv6.split("/")[0],
-                    version: "IPv6"
-                };
-            }
-
-            return {
-                address:"",
-                version:""
-            };
+        $("certInfo").innerHTML = html;
+        
+        if (cert && key) {
+          $("p12Btn").addEventListener("click", () => generateP12(cert, key));
         }
-        function getAllowedIPs(value){
-
-            if(!value) return "";
-
-            const list = value.split(",").map(v => v.trim());
-
-            const ipv4 = list.filter(v => v.includes("."));
-            if(ipv4.length){
-                return ipv4.join(", ");
-            }
-
-            const ipv6 = list.filter(v => v.includes(":"));
-            return ipv6.join(", ");
-        }
-
-        const addressInfo = getIPAddress(
-            getValue("Address")
-        );
-
-        const dnsInfo = getIPAddress(
-            getValue("DNS")
-        );
-        document.getElementById("ipversion").textContent =
-            addressInfo.version === "IPv6"
-                ? "× (IPv6)"
-                : "○";
-        document.getElementById("clientip").textContent =
-            addressInfo.address;
-
-        document.getElementById("dns").textContent =
-            dnsInfo.address;
-
-        document.getElementById("privatekey").textContent =
-            getValue("PrivateKey");
-
-        document.getElementById("publickey").textContent =
-            getValue("PublicKey");
-
-        document.getElementById("endpoint").textContent =
-            getValue("Endpoint");
-
-        document.getElementById("allowedips").textContent =
-            getAllowedIPs(
-                getValue("AllowedIPs")
-            );
-        document.getElementById("keepalive").textContent =
-            "なし";
-
-    };
-
-    reader.readAsText(file);
-
-});
-
-</script>
-
+      };
+      reader.readAsText(file);
+    });
+  </script>
 </body>
 </html>
