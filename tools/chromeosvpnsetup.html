@@ -27,6 +27,7 @@
   <div class="selector" role="radiogroup" aria-label="VPNの種類">
     <label><input type="radio" name="vpnType" value="wireguard" checked> WireGuard（.conf）</label>
     <label><input type="radio" name="vpnType" value="openvpn"> OpenVPN（.ovpn）</label>
+    <label><input type="radio" name="vpnType" value="l2tp-ipsec"> L2TP / IPsec</label>
   </div>
 
   <section id="wireguard" class="panel active">
@@ -69,11 +70,21 @@
     </ol>
   </section>
 
+  <section id="l2tp-ipsec" class="panel">
+    <h3>Chromebook の設定手順</h3>
+    <ol>
+      <li>サーバのホスト名を接続したいサーバのIPまたはドメインにする（IP推奨）</li>
+      <li>認証タイプを「事前共有キー」にする。</li>
+      <li>ユーザー名、パスワードを任意のものにする。</li>
+      <li>接続ボタン</li>
+    </ol>
+  </section>
+
   <script>
     const $ = (id) => document.getElementById(id);
+    const panelIds = ["wireguard", "openvpn", "l2tp-ipsec"];
     document.querySelectorAll('input[name="vpnType"]').forEach(radio => radio.addEventListener("change", () => {
-      $("wireguard").classList.toggle("active", radio.value === "wireguard" && radio.checked);
-      $("openvpn").classList.toggle("active", radio.value === "openvpn" && radio.checked);
+      panelIds.forEach(id => $(id).classList.toggle("active", radio.value === id && radio.checked));
     }));
 
     function wgValue(text, key) { const m = text.match(new RegExp("^" + key + "\\s*=\\s*(.+)$", "mi")); return m ? m[1].trim() : ""; }
