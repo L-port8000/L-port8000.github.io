@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#060606">
+<meta name="color-scheme" content="dark">
+<meta name="format-detection" content="telephone=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="description" content="ブラウザ内で完結するファイル暗号化・復号ツール。AES-256-GCM / PBKDF2-SHA256。サーバー送信なし。">
+<link rel="icon" href="data:,">
+<title>LOCALCRYPT — ローカル完結のファイル暗号化</title>
+<style>
+  :root{
+    --bg:#060606;
+    --bg-elev:#0d0d0d;
+    --bg-elev-2:#161616;
+    --border:#242424;
+    --border-strong:#3a3a3a;
+    --text:#ededed;
+    --text-dim:#8f8f8f;
+    --text-faint:#5c5c5c;
+    --accent:#e3a53c;
+    --accent-strong:#f2bc5c;
+    --accent-text:#1a1300;
+    --danger:#ef6a6a;
+    --danger-bg:rgba(239,106,106,0.08);
+    --radius:4px;
+    --radius-lg:8px;
+    --tap:44px;
+    --pad-x:20px;
+    --font-mono: ui-monospace, "SF Mono", "Cascadia Code", "Roboto Mono", "JetBrains Mono", Consolas, monospace;
+    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic", "Noto Sans JP", sans-serif;
+  }
+
+  *{ box-sizing:border-box; }
+
+  /* ---------- scroll foundation (mobile safe) ---------- */
+  html{
+    /* 高さを固定しない = コンテンツが伸びればページごとスクロールできる */
+    min-height:100%;
+    -webkit-text-size-adjust:100%;
+    text-size-adjust:100%;
+    background:var(--bg);
+    scroll-behavior:smooth;
+    /* Android Chrome の引っ張って更新でファイル選択が飛ぶのを防ぐ */
+    overscroll-behavior-y:contain;
+  }
+  body{
+    margin:0;
+    min-height:100vh;
+    min-height:100dvh;
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--font-sans);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+    /* 横スクロールだけ殺し、縦スクロールは常に有効 */
+    overflow-x:hidden;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+    -webkit-tap-highlight-color:transparent;
+  }
+
+  .app{
+    width:100%;
+    max-width:480px;
+    margin:0 auto;
+    display:flex;
+    flex-direction:column;
+    gap:28px;
+    /* セーフエリア（ノッチ／ホームバー）を考慮した内側余白 */
+    padding-top:max(48px, calc(env(safe-area-inset-top) + 24px));
+    padding-bottom:calc(48px + env(safe-area-inset-bottom));
+    padding-left:max(var(--pad-x), env(safe-area-inset-left));
+    padding-right:max(var(--pad-x), env(safe-area-inset-right));
+  }
+
+  /* ---------- brand ---------- */
+  .brand-mark{
+    font-family:var(--font-mono);
+    font-size:14px;
+    font-weight:700;
+    letter-spacing:0.24em;
+    color:var(--text);
+  }
+  .brand-sub{
+    margin:6px 0 0;
+    font-size:12.5px;
+    color:var(--text-faint);
+  }
+
+  /* ---------- card ---------- */
+  .card{
+    background:var(--bg-elev);
+    border:1px solid var(--border);
+    border-radius:var(--radius-lg);
+    overflow:hidden;
+  }
+
+  .tabs{
+    display:flex;
+    border-bottom:1px solid var(--border);
+  }
+  .tab{
+    flex:1;
+    appearance:none;
+    background:transparent;
+    border:none;
+    color:var(--text-faint);
+    font-family:var(--font-mono);
+    font-size:14px;
+    letter-spacing:0.05em;
+    min-height:var(--tap);
+    padding:14px 8px 12px;
+    cursor:pointer;
+    position:relative;
+    touch-action:manipulation;
+    transition:color .15s ease;
+  }
+  .tab:hover{ color:var(--text-dim); }
+  .tab[aria-selected="true"]{ color:var(--text); }
+  .tab[aria-selected="true"]::after{
+    content:"";
+    position:absolute;
+    left:14px; right:14px; bottom:-1px;
+    height:2px;
+    background:var(--accent);
+  }
+  .tab:focus-visible{ outline:2px solid var(--accent); outline-offset:-2px; }
+
+  .panel{ padding:24px; display:flex; flex-direction:column; gap:20px; }
+
+  /* ---------- dropzone ---------- */
+  .dropzone{
+    border:1px dashed var(--border-strong);
+    border-radius:var(--radius);
+    padding:32px 16px;
+    text-align:center;
+    cursor:pointer;
+    touch-action:manipulation;
+    -webkit-user-select:none;
+    user-select:none;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .dropzone:hover{ border-color:var(--text-dim); }
+  .dropzone:active{ background:rgba(255,255,255,0.03); }
+  .dropzone.drag{ border-color:var(--accent); background:rgba(227,165,60,0.05); }
+  .dropzone:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+  .dz-icon{ color:var(--text-faint); margin-bottom:10px; }
+  .dz-text{ margin:0; font-size:14.5px; color:var(--text); }
+  .dz-sub{ margin:6px 0 0; font-size:12px; color:var(--text-faint); font-family:var(--font-mono); }
+  .dz-note{ margin:8px 0 0; font-size:12px; color:var(--accent); }
+
+  /* ---------- file chip ---------- */
+  .file-chip{
+    display:flex; align-items:center; gap:12px;
+    padding:10px 10px 10px 14px;
+    background:var(--bg-elev-2);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+  }
+  .file-chip > svg{ flex:none; color:var(--text-dim); }
+  .file-meta{ flex:1; min-width:0; }
+  .file-name{
+    font-family:var(--font-mono);
+    font-size:13px;
+    color:var(--text);
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .file-size{ font-size:11.5px; color:var(--text-faint); margin-top:2px; }
+
+  /* ---------- fields ---------- */
+  .field{ display:flex; flex-direction:column; gap:8px; }
+  .field label{ font-size:12.5px; color:var(--text-dim); font-family:var(--font-mono); letter-spacing:0.02em; }
+  .field-hint{ font-size:12px; color:var(--text-faint); margin:0; }
+  .field-hint.error{ color:var(--danger); }
+
+  .input-row{ display:flex; gap:8px; align-items:stretch; }
+  input[type="password"],
+  input[type="text"],
+  input[type="number"]{
+    flex:1;
+    width:100%;
+    background:var(--bg-elev-2);
+    border:1px solid var(--border);
+    color:var(--text);
+    font-family:var(--font-mono);
+    /* 16px 未満だと iOS がフォーカス時に勝手にズーム＆スクロールする */
+    font-size:16px;
+    min-height:var(--tap);
+    padding:10px 12px;
+    border-radius:var(--radius);
+    min-width:0;
+  }
+  input::placeholder{ color:var(--text-faint); }
+  input:focus-visible{ outline:2px solid var(--accent); outline-offset:1px; border-color:var(--accent); }
+  input[type="number"]{ max-width:180px; }
+
+  .icon-btn{
+    flex:none;
+    width:var(--tap); height:var(--tap);
+    display:flex; align-items:center; justify-content:center;
+    background:var(--bg-elev-2);
+    border:1px solid var(--border);
+    color:var(--text-dim);
+    border-radius:var(--radius);
+    cursor:pointer;
+    touch-action:manipulation;
+  }
+  .icon-btn:hover{ color:var(--text); border-color:var(--border-strong); }
+  .icon-btn:focus-visible{ outline:2px solid var(--accent); outline-offset:1px; }
+
+  .strength{ display:flex; align-items:center; gap:10px; }
+  .strength-bar{ flex:1; height:3px; background:var(--border); border-radius:2px; overflow:hidden; }
+  .strength-fill{ height:100%; width:0%; background:var(--danger); transition:width .15s ease, background .15s ease; }
+  .strength-label{ font-size:11.5px; color:var(--text-faint); font-family:var(--font-mono); min-width:32px; text-align:right; }
+
+  /* ---------- advanced ---------- */
+  details.advanced{ border-top:1px solid var(--border); padding-top:8px; }
+  details.advanced summary{
+    cursor:pointer;
+    font-size:13px;
+    color:var(--text-dim);
+    font-family:var(--font-mono);
+    letter-spacing:0.02em;
+    list-style:none;
+    padding:10px 0;
+    min-height:var(--tap);
+    display:flex;
+    align-items:center;
+    touch-action:manipulation;
+    -webkit-user-select:none;
+    user-select:none;
+  }
+  details.advanced summary::-webkit-details-marker{ display:none; }
+  details.advanced summary::before{ content:"▸ "; color:var(--text-faint); margin-right:4px; }
+  details.advanced[open] summary::before{ content:"▾ "; }
+  details.advanced summary:focus-visible{ outline:2px solid var(--accent); }
+  details.advanced .field{ margin-top:14px; }
+  .checkbox-row{
+    display:flex; align-items:flex-start; gap:10px;
+    cursor:pointer;
+    font-family:var(--font-sans);
+    font-size:14px;
+    color:var(--text);
+    padding:6px 0;
+    min-height:var(--tap);
+    align-items:center;
+    touch-action:manipulation;
+  }
+  .checkbox-row input[type="checkbox"]{
+    appearance:none;
+    width:20px; height:20px; flex:none;
+    border:1px solid var(--border-strong);
+    border-radius:3px;
+    background:var(--bg-elev-2);
+    cursor:pointer;
+    position:relative;
+  }
+  .checkbox-row input[type="checkbox"]:checked{
+    background:var(--accent);
+    border-color:var(--accent);
+  }
+  .checkbox-row input[type="checkbox"]:checked::after{
+    content:"";
+    position:absolute; left:6px; top:2px;
+    width:5px; height:10px;
+    border:solid var(--accent-text);
+    border-width:0 2px 2px 0;
+    transform:rotate(45deg);
+  }
+  .checkbox-row input[type="checkbox"]:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+
+  /* ---------- buttons ---------- */
+  .primary-btn{
+    appearance:none;
+    border:1px solid var(--accent);
+    background:var(--accent);
+    color:var(--accent-text);
+    font-family:var(--font-mono);
+    font-size:14px;
+    font-weight:700;
+    letter-spacing:0.03em;
+    min-height:48px;
+    padding:13px 16px;
+    border-radius:var(--radius);
+    cursor:pointer;
+    touch-action:manipulation;
+    transition:background .15s ease, border-color .15s ease, opacity .15s ease;
+  }
+  .primary-btn:hover:not(:disabled){ background:var(--accent-strong); border-color:var(--accent-strong); }
+  .primary-btn:active:not(:disabled){ background:var(--accent-strong); }
+  .primary-btn:disabled{ opacity:0.35; cursor:not-allowed; }
+  .primary-btn:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+
+  .ghost-btn{
+    appearance:none;
+    border:1px solid var(--border-strong);
+    background:transparent;
+    color:var(--text-dim);
+    font-family:var(--font-mono);
+    font-size:13px;
+    min-height:48px;
+    padding:11px 16px;
+    border-radius:var(--radius);
+    cursor:pointer;
+    touch-action:manipulation;
+  }
+  .ghost-btn:hover{ color:var(--text); border-color:var(--text-dim); }
+  .ghost-btn:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+
+  /* ---------- progress ---------- */
+  .progress-wrap{ display:flex; flex-direction:column; gap:8px; scroll-margin:24px; }
+  .progress-row{ display:flex; justify-content:space-between; font-size:12.5px; color:var(--text-dim); font-family:var(--font-mono); }
+  .progress-bar{ height:3px; background:var(--border); border-radius:2px; overflow:hidden; }
+  .progress-fill{ height:100%; width:0%; background:var(--accent); transition:width .12s linear; }
+  .hex-stream{
+    font-family:var(--font-mono);
+    font-size:11px;
+    color:var(--text-faint);
+    letter-spacing:0.05em;
+    height:14px;
+    white-space:nowrap;
+    overflow:hidden;
+  }
+
+  /* ---------- error / result ---------- */
+  .error-box{
+    display:flex; align-items:flex-start; gap:10px;
+    background:var(--danger-bg);
+    border:1px solid var(--danger);
+    color:var(--danger);
+    padding:12px 8px 12px 14px;
+    border-radius:var(--radius);
+    font-size:13.5px;
+    scroll-margin:24px;
+  }
+  .error-box span{ flex:1; min-width:0; word-break:break-word; }
+  .error-box .icon-btn{ width:32px; height:32px; background:transparent; border:none; color:var(--danger); }
+
+  .result-box{ display:flex; flex-direction:column; gap:16px; scroll-margin:24px; }
+  .result-head{ display:flex; align-items:center; gap:10px; color:var(--accent); }
+  .result-head span{ font-family:var(--font-mono); font-size:14px; font-weight:700; }
+  .result-meta{ margin:0; display:flex; flex-direction:column; gap:12px; }
+  .result-meta > div{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .result-meta dt{ width:82px; flex:none; font-size:11.5px; color:var(--text-faint); font-family:var(--font-mono); }
+  .result-meta dd{ margin:0; font-size:12.5px; color:var(--text); word-break:break-all; overflow-wrap:anywhere; min-width:0; }
+  .result-meta dd.mono{ font-family:var(--font-mono); flex:1 1 180px; }
+  .copy-btn{
+    flex:none; background:transparent; border:1px solid var(--border);
+    color:var(--text-faint); font-size:11.5px; font-family:var(--font-mono);
+    padding:8px 12px; border-radius:var(--radius); cursor:pointer;
+    touch-action:manipulation;
+  }
+  .copy-btn:hover{ color:var(--text); border-color:var(--border-strong); }
+
+  .result-actions{ display:flex; gap:10px; }
+  .result-actions .primary-btn{ flex:1; }
+
+  .hidden{ display:none !important; }
+
+  /* ---------- footer ---------- */
+  .foot{ text-align:center; }
+  .foot p{ margin:0; font-size:11.5px; color:var(--text-faint); font-family:var(--font-mono); letter-spacing:0.02em; line-height:1.8; word-break:keep-all; }
+
+  /* ---------- processing state (scroll は殺さない) ---------- */
+  body.busy .tabs,
+  body.busy .dropzone,
+  body.busy .file-chip,
+  body.busy .field,
+  body.busy details.advanced{ opacity:.55; pointer-events:none; }
+
+  /* ---------- responsive ---------- */
+  @media (max-width:600px){
+    .app{
+      gap:22px;
+      padding-top:max(28px, calc(env(safe-area-inset-top) + 16px));
+      padding-bottom:calc(36px + env(safe-area-inset-bottom));
+      --pad-x:14px;
+    }
+    .panel{ padding:18px 16px; gap:18px; }
+    .dropzone{ padding:26px 14px; }
+    .result-meta > div{ align-items:flex-start; flex-direction:column; gap:4px; }
+    .result-meta dt{ width:auto; }
+    .result-meta dd.mono{ flex:none; width:100%; font-size:12px; }
+    .copy-btn{ align-self:flex-start; }
+    .result-actions{ flex-direction:column; }
+    .result-actions .ghost-btn{ width:100%; }
+    input[type="number"]{ max-width:none; }
+  }
+
+  @media (max-width:360px){
+    .tab{ font-size:13px; letter-spacing:0; }
+    .panel{ padding:16px 12px; }
+  }
+
+  /* 横向き・低い画面でも上に張り付かないように */
+  @media (max-height:520px){
+    .app{ padding-top:max(20px, env(safe-area-inset-top)); gap:18px; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    html{ scroll-behavior:auto; }
+    *{ transition:none !important; animation:none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <div>
+    <div class="brand-mark">LOCALCRYPT</div>
+    <p class="brand-sub">ファイルはこの端末から一切送信されません</p>
+  </div>
+
+  <div class="card">
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" id="tabEncrypt" aria-selected="true" data-mode="encrypt">暗号化</button>
+      <button class="tab" role="tab" id="tabDecrypt" aria-selected="false" data-mode="decrypt">復号</button>
+    </div>
+
+    <div class="panel">
+
+      <div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="ファイルを選択してください">
+        <svg class="dz-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">
+          <path d="M12 3v12" stroke-linecap="round"/>
+          <path d="M7 9l5-5 5 5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <p class="dz-text" id="dzText">ここにファイルをドロップ</p>
+        <p class="dz-sub" id="dzSub">またはクリックして選択・1ファイルのみ</p>
+        <p class="dz-note hidden" id="dzNote"></p>
+        <input type="file" id="fileInput" hidden>
+      </div>
+
+      <div class="file-chip hidden" id="fileChip">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <path d="M14 2v6h6"/>
+        </svg>
+        <div class="file-meta">
+          <div class="file-name" id="fileName"></div>
+          <div class="file-size" id="fileSize"></div>
+        </div>
+        <button class="icon-btn" id="fileRemove" aria-label="ファイルを削除" type="button">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+
+      <div class="field">
+        <label for="password">パスワード</label>
+        <div class="input-row">
+          <input type="password" id="password" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="next">
+          <button class="icon-btn" id="togglePw" type="button" aria-label="パスワードを表示">
+            <svg id="eyeIcon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+              <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" stroke-linejoin="round"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+          </button>
+        </div>
+        <div class="strength hidden" id="strengthWrap">
+          <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
+          <span class="strength-label" id="strengthLabel"></span>
+        </div>
+      </div>
+
+      <div class="field" id="confirmField">
+        <label for="passwordConfirm">パスワード（確認）</label>
+        <div class="input-row">
+          <input type="password" id="passwordConfirm" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go">
+        </div>
+        <p class="field-hint error hidden" id="confirmError">パスワードが一致しません</p>
+      </div>
+
+      <details class="advanced" id="advancedDetails">
+        <summary>詳細設定</summary>
+        <div class="field">
+          <label for="iterations">反復回数（PBKDF2-SHA256）</label>
+          <input type="number" id="iterations" min="100000" max="5000000" step="50000" value="600000" inputmode="numeric">
+          <p class="field-hint">値が大きいほど総当たり攻撃に強くなりますが、処理に時間がかかります。スマートフォンでは 300,000〜600,000 程度が快適です。</p>
+        </div>
+        <div class="field checkbox-field">
+          <label class="checkbox-row">
+            <input type="checkbox" id="customLayer">
+            <span>独自の追加暗号化レイヤーを使う（実験的）</span>
+          </label>
+          <p class="field-hint">AES-256-GCMの暗号文の上から、パスワードから独立に導出した鍵でXORストリーム難読化をもう1回かけます。実際の安全性は引き続きAES-256-GCMに依存しており、この層は検証されていない自作方式です。無効のままでも暗号強度は変わりません。</p>
+        </div>
+      </details>
+
+      <button class="primary-btn" id="runBtn" disabled type="button">暗号化して保存</button>
+
+      <div class="progress-wrap hidden" id="progressWrap" aria-live="polite">
+        <div class="progress-row">
+          <span id="progressLabel">暗号化中…</span>
+          <span id="progressPct">0%</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="hex-stream" id="hexStream" aria-hidden="true"></div>
+      </div>
+
+      <div class="error-box hidden" id="errorBox" role="alert">
+        <span id="errorMsg"></span>
+        <button class="icon-btn" id="errorClose" aria-label="閉じる" type="button">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+
+      <div class="result-box hidden" id="resultBox">
+        <div class="result-head">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span id="resultTitle">暗号化が完了しました</span>
+        </div>
+        <dl class="result-meta">
+          <div><dt>ファイル名</dt><dd id="resultName"></dd></div>
+          <div><dt>サイズ</dt><dd id="resultSize"></dd></div>
+          <div><dt>SHA-256</dt><dd class="mono" id="resultHash"></dd><button class="copy-btn" id="copyHash" type="button">コピー</button></div>
+          <div><dt>追加レイヤー</dt><dd id="resultLayer"></dd></div>
+        </dl>
+        <p class="field-hint" id="resultWarning" hidden>このパスワードは保存されません。忘れると復号できませんのでご注意ください。</p>
+        <div class="result-actions">
+          <button class="primary-btn" id="downloadBtn" type="button">ダウンロード</button>
+          <button class="ghost-btn" id="resetBtn" type="button">別のファイルを処理</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="foot">
+    <p>AES-256-GCM ・ PBKDF2-SHA256<br>全ての処理はブラウザ内で完結します</p>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* =========================================================
+     File format
+     LCF2 (current):
+       [0:4)   magic "LCF2"
+       [4:20)  salt (16 bytes)
+       [20:24) iterations (uint32 LE)
+       [24:28) chunk size in bytes (uint32 LE)
+       [28:29) flags (1 byte) — bit0: optional custom XOR layer applied
+       [29:..) metadata block: iv(12) + len(uint32 LE) + ciphertext(len)
+               metadata plaintext = JSON {n: filename, t: mimetype, s: original size}
+       [..end] repeated data chunks: iv(12) + len(uint32 LE) + ciphertext(len)
+     LCF1 (legacy, still readable): same as above without the flags byte
+       (metadata starts at offset 28, custom layer never applied).
+
+     Real security = AES-256-GCM with a key derived via PBKDF2-SHA256.
+     The optional "custom layer" (flags bit0) is an additional, NOT
+     independently-vetted XOR obfuscation pass applied on top of the
+     already-encrypted ciphertext bytes — see applyCustomLayer() below.
+     It never runs instead of AES-GCM, only in addition to it.
+     ========================================================= */
+
+  const MAGIC_V1 = new Uint8Array([0x4c, 0x43, 0x46, 0x31]); // "LCF1"
+  const MAGIC_V2 = new Uint8Array([0x4c, 0x43, 0x46, 0x32]); // "LCF2"
+  const CHUNK_SIZE = 4 * 1024 * 1024; // 4 MiB plaintext per chunk
+  const HASH_LIMIT = 192 * 1024 * 1024; // モバイルのメモリ保護: これを超えるとSHA-256表示を省略
+  const subtle = window.crypto && window.crypto.subtle;
+
+  const reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const isTouch = window.matchMedia && window.matchMedia('(hover: none), (pointer: coarse)').matches;
+
+  /* ---------- small helpers ---------- */
+  function u32(n){
+    const b = new Uint8Array(4);
+    new DataView(b.buffer).setUint32(0, n, true);
+    return b;
+  }
+  function concatBytes(arrs){
+    let total = 0;
+    for (const a of arrs) total += a.length;
+    const out = new Uint8Array(total);
+    let off = 0;
+    for (const a of arrs){ out.set(a, off); off += a.length; }
+    return out;
+  }
+  function randomHex(nBytes){
+    const b = new Uint8Array(nBytes);
+    crypto.getRandomValues(b);
+    return Array.from(b, x => x.toString(16).padStart(2, '0')).join('');
+  }
+  function formatSize(bytes){
+    if (bytes === 0) return '0 B';
+    const units = ['B','KB','MB','GB','TB'];
+    const i = Math.min(units.length - 1, Math.floor(Math.log(bytes) / Math.log(1024)));
+    const val = bytes / Math.pow(1024, i);
+    return (i === 0 ? val : val.toFixed(val < 10 ? 2 : 1)) + ' ' + units[i];
+  }
+  function bytesToHex(bytes){
+    return Array.from(bytes, x => x.toString(16).padStart(2, '0')).join('');
+  }
+
+  /* ---------- scroll helpers (mobile UX) ---------- */
+  function scrollToEl(el, block){
+    if (!el) return;
+    requestAnimationFrame(() => {
+      try {
+        el.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: block || 'nearest', inline:'nearest' });
+      } catch (e){
+        el.scrollIntoView(false);
+      }
+    });
+  }
+  // 端末のソフトキーボードが出た時に、入力欄が隠れないよう追従させる
+  function keepVisibleOnFocus(input){
+    if (!isTouch) return;
+    input.addEventListener('focus', () => {
+      setTimeout(() => scrollToEl(input.closest('.field') || input, 'center'), 320);
+    });
+  }
+
+  /* ---------- key derivation: one PBKDF2 pass, split into two independent subkeys ---------- */
+  async function deriveKeys(passphrase, salt, iterations){
+    const baseKey = await subtle.importKey(
+      'raw', new TextEncoder().encode(passphrase), 'PBKDF2', false, ['deriveBits']
+    );
+    const bits = await subtle.deriveBits(
+      { name:'PBKDF2', salt, iterations, hash:'SHA-256' }, baseKey, 512
+    );
+    const bytes = new Uint8Array(bits);
+    return { aesKeyBytes: bytes.slice(0, 32), layerKeyBytes: bytes.slice(32, 64) };
+  }
+
+  /* =========================================================
+     Optional custom layer: a small, original stream cipher used
+     ONLY as an extra pass on top of AES-GCM ciphertext bytes.
+     ========================================================= */
+  function xorshiftKeystreamXor(seed32, data){
+    const dv = new DataView(seed32.buffer, seed32.byteOffset, 32);
+    let x = (dv.getUint32(0, true) ^ dv.getUint32(16, true)) >>> 0;
+    let y = (dv.getUint32(4, true) ^ dv.getUint32(20, true)) >>> 0;
+    let z = (dv.getUint32(8, true) ^ dv.getUint32(24, true)) >>> 0;
+    let w = (dv.getUint32(12, true) ^ dv.getUint32(28, true)) >>> 0;
+    if ((x | y | z | w) === 0) x = 0x9e3779b9; // avoid the all-zero xorshift state
+
+    const out = new Uint8Array(data.length);
+    let i = 0;
+    while (i < data.length){
+      let t = (x ^ (x << 11)) >>> 0;
+      t = (t ^ (t >>> 8)) >>> 0;
+      x = y; y = z; z = w;
+      w = (w ^ (w >>> 19) ^ t) >>> 0;
+      out[i] = data[i] ^ (w & 0xff); i++;
+      if (i < data.length){ out[i] = data[i] ^ ((w >>> 8) & 0xff); i++; }
+      if (i < data.length){ out[i] = data[i] ^ ((w >>> 16) & 0xff); i++; }
+      if (i < data.length){ out[i] = data[i] ^ ((w >>> 24) & 0xff); i++; }
+    }
+    return out;
+  }
+
+  async function applyCustomLayer(layerKeyBytes, segmentIv, data, enabled){
+    if (!enabled) return data;
+    const seed = new Uint8Array(await subtle.digest('SHA-256', concatBytes([layerKeyBytes, segmentIv])));
+    return xorshiftKeystreamXor(seed, data);
+  }
+
+  /* ---------- 描画をブロックしない小休止（スマホでスクロールが固まらないように） ---------- */
+  function yieldToUI(){
+    return new Promise(resolve => {
+      if (typeof requestAnimationFrame === 'function') requestAnimationFrame(() => setTimeout(resolve, 0));
+      else setTimeout(resolve, 0);
+    });
+  }
+
+  /* ---------- encrypt: reads the File lazily via slice() ---------- */
+  async function encryptFile(file, passphrase, iterations, useLayer, onProgress){
+    const salt = crypto.getRandomValues(new Uint8Array(16));
+    const { aesKeyBytes, layerKeyBytes } = await deriveKeys(passphrase, salt, iterations);
+    const aesKey = await subtle.importKey('raw', aesKeyBytes, { name:'AES-GCM' }, false, ['encrypt']);
+
+    const flags = useLayer ? 1 : 0;
+    const header = concatBytes([MAGIC_V2, salt, u32(iterations), u32(CHUNK_SIZE), new Uint8Array([flags])]);
+
+    const metaPlain = new TextEncoder().encode(JSON.stringify({
+      n: file.name, t: file.type || 'application/octet-stream', s: file.size
+    }));
+    const ivMeta = crypto.getRandomValues(new Uint8Array(12));
+    let metaCipher = new Uint8Array(await subtle.encrypt({ name:'AES-GCM', iv:ivMeta }, aesKey, metaPlain));
+    metaCipher = await applyCustomLayer(layerKeyBytes, ivMeta, metaCipher, useLayer);
+    const metaBlock = concatBytes([ivMeta, u32(metaCipher.length), metaCipher]);
+
+    const parts = [header, metaBlock];
+    let offset = 0;
+    while (offset < file.size){
+      const end = Math.min(offset + CHUNK_SIZE, file.size);
+      const plainBuf = await file.slice(offset, end).arrayBuffer();
+      const iv = crypto.getRandomValues(new Uint8Array(12));
+      let cipherChunk = new Uint8Array(await subtle.encrypt({ name:'AES-GCM', iv }, aesKey, plainBuf));
+      cipherChunk = await applyCustomLayer(layerKeyBytes, iv, cipherChunk, useLayer);
+      parts.push(concatBytes([iv, u32(cipherChunk.length), cipherChunk]));
+      offset = end;
+      if (onProgress) onProgress(offset / Math.max(file.size, 1));
+      await yieldToUI();
+    }
+    if (file.size === 0 && onProgress) onProgress(1);
+
+    return new Blob(parts, { type:'application/octet-stream' });
+  }
+
+  /* ---------- decrypt: reads the encrypted File lazily via slice() ---------- */
+  async function decryptFile(encFile, passphrase, onProgress){
+    const first4 = new Uint8Array(await encFile.slice(0, 4).arrayBuffer());
+    const isV2 = encFile.size >= 29 && MAGIC_V2.every((b,i) => first4[i] === b);
+    const isV1 = encFile.size >= 28 && MAGIC_V1.every((b,i) => first4[i] === b);
+    if (!isV1 && !isV2){
+      throw new Error('INVALID_FORMAT');
+    }
+    const headerLen = isV2 ? 29 : 28;
+    const headerBuf = new Uint8Array(await encFile.slice(0, headerLen).arrayBuffer());
+    const headerDv = new DataView(headerBuf.buffer);
+    const salt = headerBuf.slice(4, 20);
+    const iterations = headerDv.getUint32(20, true);
+    const useLayer = isV2 ? !!(headerBuf[28] & 1) : false;
+    let offset = headerLen;
+
+    const { aesKeyBytes, layerKeyBytes } = await deriveKeys(passphrase, salt, iterations);
+    const aesKey = await subtle.importKey('raw', aesKeyBytes, { name:'AES-GCM' }, false, ['decrypt']);
+
+    // metadata block
+    const metaHeadBuf = new Uint8Array(await encFile.slice(offset, offset + 16).arrayBuffer());
+    const ivMeta = metaHeadBuf.slice(0, 12);
+    const metaLen = new DataView(metaHeadBuf.buffer).getUint32(12, true);
+    offset += 16;
+    let metaCipher = new Uint8Array(await encFile.slice(offset, offset + metaLen).arrayBuffer());
+    offset += metaLen;
+
+    let meta;
+    try {
+      metaCipher = await applyCustomLayer(layerKeyBytes, ivMeta, metaCipher, useLayer);
+      const metaPlain = new Uint8Array(await subtle.decrypt({ name:'AES-GCM', iv:ivMeta }, aesKey, metaCipher));
+      meta = JSON.parse(new TextDecoder().decode(metaPlain));
+    } catch (e){
+      throw new Error('WRONG_PASSWORD');
+    }
+
+    const outParts = [];
+    while (offset < encFile.size){
+      const chunkHeadBuf = new Uint8Array(await encFile.slice(offset, offset + 16).arrayBuffer());
+      const iv = chunkHeadBuf.slice(0, 12);
+      const len = new DataView(chunkHeadBuf.buffer).getUint32(12, true);
+      offset += 16;
+      let cipherChunk = new Uint8Array(await encFile.slice(offset, offset + len).arrayBuffer());
+      offset += len;
+      try {
+        cipherChunk = await applyCustomLayer(layerKeyBytes, iv, cipherChunk, useLayer);
+        const plainChunk = await subtle.decrypt({ name:'AES-GCM', iv }, aesKey, cipherChunk);
+        outParts.push(new Uint8Array(plainChunk));
+      } catch (e){
+        throw new Error('WRONG_PASSWORD');
+      }
+      if (onProgress) onProgress(offset / Math.max(encFile.size, 1));
+      await yieldToUI();
+    }
+
+    return {
+      blob: new Blob(outParts, { type: meta.t || 'application/octet-stream' }),
+      name: meta.n || 'decrypted_file',
+      usedLayer: useLayer,
+    };
+  }
+
+  /* =========================================================
+     UI wiring
+     ========================================================= */
+
+  const $ = (id) => document.getElementById(id);
+
+  const els = {
+    tabEncrypt: $('tabEncrypt'), tabDecrypt: $('tabDecrypt'),
+    dropzone: $('dropzone'), dzText: $('dzText'), dzSub: $('dzSub'), dzNote: $('dzNote'),
+    fileInput: $('fileInput'),
+    fileChip: $('fileChip'), fileName: $('fileName'), fileSize: $('fileSize'), fileRemove: $('fileRemove'),
+    password: $('password'), togglePw: $('togglePw'), eyeIcon: $('eyeIcon'),
+    strengthWrap: $('strengthWrap'), strengthFill: $('strengthFill'), strengthLabel: $('strengthLabel'),
+    confirmField: $('confirmField'), passwordConfirm: $('passwordConfirm'), confirmError: $('confirmError'),
+    advancedDetails: $('advancedDetails'), iterations: $('iterations'), customLayer: $('customLayer'),
+    runBtn: $('runBtn'),
+    progressWrap: $('progressWrap'), progressLabel: $('progressLabel'), progressPct: $('progressPct'),
+    progressFill: $('progressFill'), hexStream: $('hexStream'),
+    errorBox: $('errorBox'), errorMsg: $('errorMsg'), errorClose: $('errorClose'),
+    resultBox: $('resultBox'), resultTitle: $('resultTitle'), resultName: $('resultName'),
+    resultSize: $('resultSize'), resultHash: $('resultHash'), copyHash: $('copyHash'),
+    resultLayer: $('resultLayer'), resultWarning: $('resultWarning'),
+    downloadBtn: $('downloadBtn'), resetBtn: $('resetBtn'),
+  };
+
+  let mode = 'encrypt';
+  let currentFile = null;
+  let pwVisible = false;
+  let busy = false;
+  let hexTimer = null;
+  let pendingDownload = null; // { blob, filename }
+
+  function setMode(next){
+    mode = next;
+    els.tabEncrypt.setAttribute('aria-selected', String(mode === 'encrypt'));
+    els.tabDecrypt.setAttribute('aria-selected', String(mode === 'decrypt'));
+    els.confirmField.classList.toggle('hidden', mode !== 'encrypt');
+    els.strengthWrap.classList.toggle('hidden', mode !== 'encrypt' || !els.password.value);
+    els.advancedDetails.classList.toggle('hidden', mode !== 'encrypt');
+    els.fileInput.accept = mode === 'decrypt' ? '.lcf' : '';
+    if (isTouch){
+      els.dzText.textContent = mode === 'encrypt' ? 'タップしてファイルを選択' : 'タップして .lcf を選択';
+      els.dzSub.textContent = '1ファイルのみ・端末内で処理されます';
+    } else {
+      els.dzText.textContent = mode === 'encrypt' ? 'ここにファイルをドロップ' : '.lcf ファイルをドロップ';
+      els.dzSub.textContent = 'またはクリックして選択・1ファイルのみ';
+    }
+    els.runBtn.textContent = mode === 'encrypt' ? '暗号化して保存' : '復号して保存';
+    els.progressLabel.textContent = mode === 'encrypt' ? '暗号化中…' : '復号中…';
+    resetTransientState();
+    updateRunButtonState();
+  }
+
+  function resetTransientState(){
+    currentFile = null;
+    els.fileInput.value = '';
+    els.fileChip.classList.add('hidden');
+    els.dzNote.classList.add('hidden');
+    els.password.value = '';
+    els.passwordConfirm.value = '';
+    els.confirmError.classList.add('hidden');
+    els.strengthWrap.classList.add('hidden');
+    hideProgress();
+    hideError();
+    hideResult();
+    pendingDownload = null;
+  }
+
+  function hideProgress(){ els.progressWrap.classList.add('hidden'); stopHexStream(); }
+  function hideError(){ els.errorBox.classList.add('hidden'); }
+  function hideResult(){ els.resultBox.classList.add('hidden'); }
+
+  function showError(msg){
+    hideResult();
+    els.errorMsg.textContent = msg;
+    els.errorBox.classList.remove('hidden');
+    scrollToEl(els.errorBox, 'center');
+  }
+
+  function startHexStream(){
+    if (reducedMotion) { els.hexStream.textContent = ''; return; }
+    hexTimer = setInterval(() => {
+      els.hexStream.textContent = randomHex(16);
+    }, 90);
+  }
+  function stopHexStream(){
+    if (hexTimer){ clearInterval(hexTimer); hexTimer = null; }
+    els.hexStream.textContent = '';
+  }
+
+  function setProgress(ratio){
+    const pct = Math.round(Math.min(1, Math.max(0, ratio)) * 100);
+    els.progressFill.style.width = pct + '%';
+    els.progressPct.textContent = pct + '%';
+  }
+
+  function updateRunButtonState(){
+    if (busy){ els.runBtn.disabled = true; return; }
+    if (!currentFile){ els.runBtn.disabled = true; return; }
+    if (!els.password.value){ els.runBtn.disabled = true; return; }
+    if (mode === 'encrypt'){
+      const match = els.password.value === els.passwordConfirm.value && els.passwordConfirm.value.length > 0;
+      els.confirmError.classList.toggle('hidden', match || els.passwordConfirm.value.length === 0);
+      els.runBtn.disabled = !match;
+    } else {
+      els.runBtn.disabled = false;
+    }
+  }
+
+  function updateStrength(){
+    const v = els.password.value;
+    if (mode !== 'encrypt' || !v){
+      els.strengthWrap.classList.add('hidden');
+      return;
+    }
+    els.strengthWrap.classList.remove('hidden');
+    let score = 0;
+    if (v.length >= 8) score++;
+    if (v.length >= 14) score++;
+    if (/[a-z]/.test(v) && /[A-Z]/.test(v)) score++;
+    if (/[0-9]/.test(v)) score++;
+    if (/[^a-zA-Z0-9]/.test(v) || /[^\x00-\x7F]/.test(v)) score++;
+    const levels = [
+      { pct:15, color:'var(--danger)', label:'弱い' },
+      { pct:35, color:'var(--danger)', label:'弱い' },
+      { pct:60, color:'var(--accent)', label:'普通' },
+      { pct:80, color:'var(--accent)', label:'普通' },
+      { pct:100, color:'#7bc98f', label:'強い' },
+    ];
+    const lvl = levels[Math.min(score, levels.length - 1)];
+    els.strengthFill.style.width = lvl.pct + '%';
+    els.strengthFill.style.background = lvl.color;
+    els.strengthLabel.textContent = lvl.label;
+  }
+
+  function handleFile(file){
+    if (!file) return;
+    currentFile = file;
+    els.fileName.textContent = file.name;
+    els.fileSize.textContent = formatSize(file.size);
+    els.fileChip.classList.remove('hidden');
+    hideError();
+    hideResult();
+    updateRunButtonState();
+    // 選択後にパスワード欄まで自然に誘導（スマホで下が見えない問題の解消）
+    scrollToEl(els.password.closest('.field'), 'center');
+  }
+
+  /* ---------- dropzone ---------- */
+  els.dropzone.addEventListener('click', () => els.fileInput.click());
+  els.dropzone.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); els.fileInput.click(); }
+  });
+  ['dragenter','dragover'].forEach(evt => {
+    els.dropzone.addEventListener(evt, (e) => { e.preventDefault(); els.dropzone.classList.add('drag'); });
+  });
+  ['dragleave','drop'].forEach(evt => {
+    els.dropzone.addEventListener(evt, (e) => { e.preventDefault(); els.dropzone.classList.remove('drag'); });
+  });
+  els.dropzone.addEventListener('drop', (e) => {
+    const files = e.dataTransfer.files;
+    if (!files || files.length === 0) return;
+    if (files.length > 1){
+      els.dzNote.textContent = '複数のファイルが検出されましたが、最初の1件のみ使用します';
+      els.dzNote.classList.remove('hidden');
+    } else {
+      els.dzNote.classList.add('hidden');
+    }
+    handleFile(files[0]);
+  });
+  // ドロップゾーン外にファイルを落としてもページが差し替わらないようにする
+  ['dragover','drop'].forEach(evt => {
+    window.addEventListener(evt, (e) => {
+      if (!els.dropzone.contains(e.target)) e.preventDefault();
+    });
+  });
+  els.fileInput.addEventListener('change', (e) => {
+    if (e.target.files && e.target.files[0]) handleFile(e.target.files[0]);
+  });
+  els.fileRemove.addEventListener('click', (e) => {
+    e.stopPropagation();
+    currentFile = null;
+    els.fileInput.value = '';
+    els.fileChip.classList.add('hidden');
+    updateRunButtonState();
+  });
+
+  /* ---------- password ---------- */
+  els.password.addEventListener('input', () => { updateStrength(); updateRunButtonState(); });
+  els.passwordConfirm.addEventListener('input', updateRunButtonState);
+  keepVisibleOnFocus(els.password);
+  keepVisibleOnFocus(els.passwordConfirm);
+  keepVisibleOnFocus(els.iterations);
+  els.togglePw.addEventListener('click', () => {
+    pwVisible = !pwVisible;
+    const type = pwVisible ? 'text' : 'password';
+    els.password.type = type;
+    els.passwordConfirm.type = type;
+    els.togglePw.setAttribute('aria-label', pwVisible ? 'パスワードを隠す' : 'パスワードを表示');
+    els.eyeIcon.innerHTML = pwVisible
+      ? '<path d="M2 2l20 20" stroke-linecap="round"/><path d="M9.9 5.2A10.7 10.7 0 0112 5c7 0 11 7 11 7a17.6 17.6 0 01-4 4.6M6.2 6.2C3.5 8 1 12 1 12s4 7 11 7a10.6 10.6 0 005.1-1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M9.5 9.5a3 3 0 004.2 4.2" stroke-linecap="round"/>'
+      : '<path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" stroke-linejoin="round"/><circle cx="12" cy="12" r="3"/>';
+  });
+  [els.password, els.passwordConfirm].forEach(input => {
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !els.runBtn.disabled){
+        input.blur(); // モバイルのソフトキーボードを閉じてから実行
+        run();
+      }
+    });
+  });
+
+  els.errorClose.addEventListener('click', hideError);
+
+  els.tabEncrypt.addEventListener('click', () => setMode('encrypt'));
+  els.tabDecrypt.addEventListener('click', () => setMode('decrypt'));
+
+  els.resetBtn.addEventListener('click', () => {
+    els.fileInput.value = '';
+    resetTransientState();
+    updateRunButtonState();
+    scrollToEl(els.dropzone, 'center');
+  });
+
+  els.downloadBtn.addEventListener('click', () => {
+    if (!pendingDownload) return;
+    triggerDownload(pendingDownload.blob, pendingDownload.filename);
+  });
+
+  els.copyHash.addEventListener('click', async () => {
+    const text = els.resultHash.textContent;
+    const orig = 'コピー';
+    try {
+      await navigator.clipboard.writeText(text);
+      els.copyHash.textContent = 'コピーしました';
+    } catch (e){
+      // クリップボードAPIが使えない端末向けのフォールバック
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly','');
+        ta.style.cssText = 'position:absolute;left:-9999px;top:0;';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        ta.remove();
+        els.copyHash.textContent = 'コピーしました';
+      } catch (e2){ return; }
+    }
+    setTimeout(() => { els.copyHash.textContent = orig; }, 1500);
+  });
+
+  function triggerDownload(blob, filename){
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.rel = 'noopener';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 30000);
+  }
+
+  async function safeHash(blob){
+    if (blob.size > HASH_LIMIT) return null; // 大容量はメモリ保護のためスキップ
+    try {
+      const buf = await subtle.digest('SHA-256', await blob.arrayBuffer());
+      return bytesToHex(new Uint8Array(buf));
+    } catch (e){
+      return null;
+    }
+  }
+
+  async function run(){
+    if (!subtle){
+      showError('この環境では暗号化APIを利用できません。HTTPS、または localhost 経由でファイルを開いてください。');
+      return;
+    }
+    if (!currentFile || busy) return;
+
+    busy = true;
+    document.body.classList.add('busy');
+    hideError();
+    hideResult();
+    updateRunButtonState();
+    els.progressWrap.classList.remove('hidden');
+    setProgress(0);
+    startHexStream();
+    scrollToEl(els.progressWrap, 'center');
+
+    try {
+      if (mode === 'encrypt'){
+        const iterations = Math.max(10000, parseInt(els.iterations.value, 10) || 600000);
+        const useLayer = !!els.customLayer.checked;
+        const blob = await encryptFile(currentFile, els.password.value, iterations, useLayer, setProgress);
+        const outName = randomHex(8) + '.lcf';
+        const hash = await safeHash(blob);
+        showResult({
+          title: '暗号化が完了しました',
+          name: outName,
+          size: formatSize(blob.size),
+          hash: hash || '（大きいファイルのため省略）',
+          layerUsed: useLayer,
+          warning: true,
+        });
+        pendingDownload = { blob, filename: outName };
+        triggerDownload(blob, outName);
+      } else {
+        const { blob, name, usedLayer } = await decryptFile(currentFile, els.password.value, setProgress);
+        const hash = await safeHash(blob);
+        showResult({
+          title: '復号が完了しました',
+          name,
+          size: formatSize(blob.size),
+          hash: hash || '（大きいファイルのため省略）',
+          layerUsed: usedLayer,
+          warning: false,
+        });
+        pendingDownload = { blob, filename: name };
+        triggerDownload(blob, name);
+      }
+    } catch (err){
+      if (err && err.message === 'INVALID_FORMAT'){
+        showError('有効な暗号化ファイル（.lcf）ではありません。');
+      } else if (err && err.message === 'WRONG_PASSWORD'){
+        showError('復号に失敗しました。パスワードが誤っているか、ファイルが破損しています。');
+      } else {
+        showError('処理中にエラーが発生しました：' + (err && err.message ? err.message : String(err)));
+      }
+    } finally {
+      busy = false;
+      document.body.classList.remove('busy');
+      hideProgress();
+      updateRunButtonState();
+    }
+  }
+
+  function showResult({ title, name, size, hash, layerUsed, warning }){
+    els.resultTitle.textContent = title;
+    els.resultName.textContent = name;
+    els.resultSize.textContent = size;
+    els.resultHash.textContent = hash;
+    els.resultLayer.textContent = layerUsed ? '有効' : '無効';
+    els.resultWarning.hidden = !warning;
+    els.resultBox.classList.remove('hidden');
+    scrollToEl(els.resultBox, 'center');
+  }
+
+  els.runBtn.addEventListener('click', run);
+
+  /* ---------- 処理中の離脱防止（スマホでのスワイプ戻り対策） ---------- */
+  window.addEventListener('beforeunload', (e) => {
+    if (!busy) return;
+    e.preventDefault();
+    e.returnValue = '';
+  });
+
+  setMode('encrypt');
+})();
+</script>
+</body>
+</html>
