@@ -1,10 +1,12 @@
+<!DOCTYPE html>
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
   <title>你的IP</title>
   <style>
-    body { font-family: sans-serif; }
+    body { font-family: sans-serif; padding: 20px; }
     .box { margin: 10px 0; }
+    code { background: #f0f0f0; padding: 2px 6px; border-radius: 4px; }
   </style>
 </head>
 <body>
@@ -14,58 +16,40 @@
     <strong>HTTP (IPv4):</strong>
     <span id="http-ipv4">取得中...</span>
   </div>
-
   <div class="box">
     <strong>HTTP (IPv6):</strong>
     <span id="http-ipv6">取得中...</span>
   </div>
-
   <div class="box">
     <strong>HTTPS (IPv4):</strong>
     <span id="https-ipv4">取得中...</span>
   </div>
-
   <div class="box">
     <strong>HTTPS (IPv6):</strong>
     <span id="https-ipv6">取得中...</span>
   </div>
 
   <script>
-    fetch('http://icanhazip.com')
-      .then(res => res.text())
-      .then(data => {
-        document.getElementById('http-ipv4').textContent = data.trim();
-      })
-      .catch(() => {
-        document.getElementById('http-ipv4').textContent = '取得失敗';
-      });
+    const targets = [
+      { id: 'http-ipv4',  url: 'http://ipv4.icanhazip.com'  },
+      { id: 'http-ipv6',  url: 'http://ipv6.icanhazip.com'  },
+      { id: 'https-ipv4', url: 'https://ipv4.icanhazip.com' },
+      { id: 'https-ipv6', url: 'https://ipv6.icanhazip.com' },
+    ];
 
-    fetch('http://ipv6.icanhazip.com')
-      .then(res => res.text())
-      .then(data => {
-        document.getElementById('http-ipv6').textContent = data.trim();
-      })
-      .catch(() => {
-        document.getElementById('http-ipv6').textContent = 'なし';
-      });
-
-    fetch('https://icanhazip.com')
-      .then(res => res.text())
-      .then(data => {
-        document.getElementById('https-ipv4').textContent = data.trim();
-      })
-      .catch(() => {
-        document.getElementById('https-ipv4').textContent = '取得失敗';
-      });
-
-    fetch('https://ipv6.icanhazip.com')
-      .then(res => res.text())
-      .then(data => {
-        document.getElementById('https-ipv6').textContent = data.trim();
-      })
-      .catch(() => {
-        document.getElementById('https-ipv6').textContent = 'なし';
-      });
+    targets.forEach(({ id, url }) => {
+      fetch(url, { cache: 'no-store' })
+        .then(res => {
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          return res.text();
+        })
+        .then(data => {
+          document.getElementById(id).textContent = data.trim() || 'なし';
+        })
+        .catch(() => {
+          document.getElementById(id).textContent = '取得失敗 / なし';
+        });
+    });
   </script>
 </body>
 </html>
