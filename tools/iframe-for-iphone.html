@@ -11,6 +11,8 @@
   <link rel="icon" href="../images/browser.png">
   <link rel="apple-touch-icon" href="https://site.l-ituki8000.workers.dev/images/browser.png">
   <meta name="apple-mobile-web-app-title" content="IBrowser">
+
+  <title>I Browser</title>
   <style>
     :root {
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
@@ -705,37 +707,97 @@
       }
 
       function renderStage() {
-        const tab = activeTab();
         const stage = document.getElementById('stage');
         if (!stage) return;
 
-        if (tab.url === START_URL) {
-          stage.innerHTML = '<div class="page">' + startPageMarkup() + '</div>';
-          finishLoading();
-        } else if (tab.url === SETTINGS_URL) {
-          stage.innerHTML = '<div class="page">' + settingsMarkup() + '</div>';
-          finishLoading();
-        } else if (tab.url === HISTORY_URL) {
-          stage.innerHTML = '<div class="page">' + historyMarkup() + '</div>';
-          finishLoading();
-        } else {
-          const proxy = PROXIES.find(item => item.id === state.settings.proxyId) || PROXIES[0];
-          const url = proxy.prefix + tab.url;
-          const sandbox = [
-            'allow-forms', 'allow-modals', 'allow-orientation-lock', 'allow-pointer-lock',
-            'allow-presentation', 'allow-same-origin', 'allow-scripts',
-            'allow-storage-access-by-user-activation',
-            state.settings.allowDownloads ? 'allow-downloads' : '',
-            state.settings.blockPopups ? '' : 'allow-popups allow-popups-to-escape-sandbox'
-          ].filter(Boolean).join(' ');
-          const zoom = tab.zoom || 1;
-          stage.innerHTML = `
-            <div class="page web-view">
-              <iframe id="webFrame" title="${attr(tab.title)}" src="${attr(url)}" sandbox="${attr(sandbox)}" referrerpolicy="strict-origin-when-cross-origin" style="width:${100 / zoom}%;height:${100 / zoom}%;transform:scale(${zoom});transform-origin:0 0"></iframe>
-            </div>`;
-          startLoading();
-          document.getElementById('webFrame').addEventListener('load', finishLoading, { once: true });
-        }
+        const currentTabIds = new Set(state.tabs.map(t => t.id));
+
+        // Remove containers of deleted tabs
+        const children = Array.from(stage.children);
+        children.forEach(child => {
+          const tabId = child.dataset.tabId;
+          if (tabId && !currentTabIds.has(tabId)) {
+            child.remove();
+          }
+        });
+
+        // Ensure each tab has its container inside stage
+        state.tabs.forEach(tab => {
+          let container = stage.querySelector(`[data-tab-id="${tab.id}"]`);
+
+          const needsRebuild = !container || 
+            container.dataset.url !== tab.url || 
+            parseInt(container.dataset.reloadKey || '0') !== tab.reloadKey ||
+            parseFloat(container.dataset.zoom || '1') !== tab.zoom ||
+            container.dataset.proxyId !== state.settings.proxyId ||
+            container.dataset.allowDownloads !== String(state.settings.allowDownloads) ||
+            container.dataset.blockPopups !== String(state.settings.blockPopups);
+
+          if (needsRebuild) {
+            if (container) {
+              container.remove();
+            }
+
+            container = document.createElement('div');
+            container.dataset.tabId = tab.id;
+            container.dataset.url = tab.url;
+            container.dataset.reloadKey = tab.reloadKey;
+            container.dataset.zoom = tab.zoom;
+            container.dataset.proxyId = state.settings.proxyId;
+            container.dataset.allowDownloads = String(state.settings.allowDownloads);
+            container.dataset.blockPopups = String(state.settings.blockPopups);
+
+            if (tab.url === START_URL) {
+              container.className = 'page';
+              container.innerHTML = startPageMarkup();
+              if (tab.id === state.activeId) finishLoading();
+            } else if (tab.url === SETTINGS_URL) {
+              container.className = 'page';
+              container.innerHTML = settingsMarkup();
+              if (tab.id === state.activeId) finishLoading();
+            } else if (tab.url === HISTORY_URL) {
+              container.className = 'page';
+              container.innerHTML = historyMarkup();
+              if (tab.id === state.activeId) finishLoading();
+            } else {
+              const proxy = PROXIES.find(item => item.id === state.settings.proxyId) || PROXIES[0];
+              const url = proxy.prefix + tab.url;
+              const sandbox = [
+                'allow-forms', 'allow-modals', 'allow-orientation-lock', 'allow-pointer-lock',
+                'allow-presentation', 'allow-same-origin', 'allow-scripts',
+                'allow-storage-access-by-user-activation',
+                state.settings.allowDownloads ? 'allow-downloads' : '',
+                state.settings.blockPopups ? '' : 'allow-popups allow-popups-to-escape-sandbox'
+              ].filter(Boolean).join(' ');
+              const zoom = tab.zoom || 1;
+              container.className = 'page web-view';
+
+              const iframe = document.createElement('iframe');
+              iframe.id = `webFrame-${tab.id}`;
+              iframe.title = tab.title;
+              iframe.src = url;
+              iframe.sandbox = sandbox;
+              iframe.referrerPolicy = 'strict-origin-when-cross-origin';
+              iframe.style.width = (100 / zoom) + '%';
+              iframe.style.height = (100 / zoom) + '%';
+              iframe.style.transform = 'scale(' + zoom + ')';
+              iframe.style.transformOrigin = '0 0';
+
+              if (tab.id === state.activeId) {
+                startLoading();
+                iframe.addEventListener('load', finishLoading, { once: true });
+              }
+
+              container.appendChild(iframe);
+            }
+            stage.appendChild(container);
+          }
+
+          // Toggle visibility of each tab container
+          const isActive = tab.id === state.activeId;
+          container.style.display = isActive ? 'block' : 'none';
+        });
+
         persist();
       }
 
@@ -854,11 +916,15 @@
         const tab = activeTab();
         if (INTERNAL_URLS.includes(tab.url)) return;
         tab.zoom = Math.min(2, Math.max(.5, Math.round(value * 10) / 10));
-        const frame = document.getElementById('webFrame');
-        if (frame) {
-          frame.style.width = (100 / tab.zoom) + '%';
-          frame.style.height = (100 / tab.zoom) + '%';
-          frame.style.transform = 'scale(' + tab.zoom + ')';
+        const container = document.querySelector(`#stage [data-tab-id="${tab.id}"]`);
+        if (container) {
+          container.dataset.zoom = tab.zoom;
+          const frame = container.querySelector('iframe');
+          if (frame) {
+            frame.style.width = (100 / tab.zoom) + '%';
+            frame.style.height = (100 / tab.zoom) + '%';
+            frame.style.transform = 'scale(' + tab.zoom + ')';
+          }
         }
         renderOverlay();
         persist();
