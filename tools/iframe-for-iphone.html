@@ -1,0 +1,1140 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta id="theme-color" name="theme-color" content="#f2f2f7">
+  <title>I Browser</title>
+  <link rel="icon" href="../images/browser.png">
+  <link rel="apple-touch-icon" href="https://site.l-ituki8000.workers.dev/images/browser.png">
+  <meta name="apple-mobile-web-app-title" content="IBrowser">
+  <style>
+    :root {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+      color-scheme: light;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --address-height: 54px;
+      --toolbar-height: 54px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body, #app { width: 100%; height: 100%; margin: 0; overflow: hidden; }
+    body { -webkit-font-smoothing: antialiased; overscroll-behavior: none; }
+    button, input, select { font: inherit; }
+    button { -webkit-tap-highlight-color: transparent; }
+
+    .browser {
+      --bg: #f2f2f7;
+      --surface: rgba(248, 248, 250, .92);
+      --surface-solid: #f8f8fa;
+      --raised: #fff;
+      --field: rgba(118, 118, 128, .14);
+      --field-focus: #fff;
+      --text: #111114;
+      --muted: #68686e;
+      --faint: #8e8e93;
+      --line: rgba(60, 60, 67, .16);
+      --accent: #007aff;
+      --accent-soft: rgba(0, 122, 255, .13);
+      --danger: #ff3b30;
+      --shadow: 0 18px 48px rgba(22, 28, 36, .18), 0 2px 8px rgba(22, 28, 36, .08);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      height: 100%;
+      height: 100dvh;
+      overflow: hidden;
+      color: var(--text);
+      background: var(--bg);
+      isolation: isolate;
+    }
+
+    .browser.dark {
+      color-scheme: dark;
+      --bg: #1c1c1e;
+      --surface: rgba(29, 29, 32, .93);
+      --surface-solid: #262629;
+      --raised: #2c2c2e;
+      --field: rgba(118, 118, 128, .28);
+      --field-focus: #38383a;
+      --text: #f5f5f7;
+      --muted: #aeaeb2;
+      --faint: #8e8e93;
+      --line: rgba(255, 255, 255, .12);
+      --accent: #0a84ff;
+      --accent-soft: rgba(10, 132, 255, .18);
+      --shadow: 0 20px 54px rgba(0, 0, 0, .48);
+    }
+
+    .browser.private { --accent: #7067f0; --accent-soft: rgba(112, 103, 240, .18); }
+
+    .progress {
+      position: fixed;
+      z-index: 5000;
+      top: 0;
+      left: 0;
+      width: 0;
+      height: 3px;
+      opacity: 0;
+      background: var(--accent);
+      box-shadow: 0 0 9px color-mix(in srgb, var(--accent) 55%, transparent);
+      transition: width .25s ease, opacity .2s ease;
+    }
+
+    .top-slot, .bottom-slot { position: relative; z-index: 50; flex: 0 0 auto; }
+    .top-slot { order: 0; }
+    .stage { order: 1; }
+    .bottom-slot { order: 2; }
+    .bottom-toolbar { order: 3; }
+
+    .address-bar {
+      display: flex;
+      height: var(--address-height);
+      align-items: center;
+      padding: 6px 10px;
+      background: var(--surface);
+      backdrop-filter: blur(26px) saturate(175%);
+      -webkit-backdrop-filter: blur(26px) saturate(175%);
+    }
+
+    .top-slot .address-bar {
+      height: calc(var(--address-height) + var(--safe-top));
+      padding-top: calc(6px + var(--safe-top));
+      border-bottom: 1px solid var(--line);
+    }
+
+    .bottom-slot .address-bar { border-top: 1px solid var(--line); }
+
+    .address-form {
+      position: relative;
+      display: flex;
+      flex: 1;
+      min-width: 0;
+      height: 40px;
+      align-items: center;
+      border: 1px solid transparent;
+      border-radius: 12px;
+      background: var(--field);
+      transition: background .16s ease, border-color .16s ease, box-shadow .16s ease;
+    }
+
+    .address-form:focus-within {
+      border-color: color-mix(in srgb, var(--accent) 60%, transparent);
+      background: var(--field-focus);
+      box-shadow: 0 0 0 3px var(--accent-soft);
+    }
+
+    .address-form input {
+      flex: 1;
+      min-width: 0;
+      height: 100%;
+      padding: 0 3px;
+      border: 0;
+      outline: 0;
+      color: var(--text);
+      background: transparent;
+      font-size: 16px;
+      text-align: center;
+    }
+
+    .address-form input:focus { text-align: left; }
+    .address-form input::placeholder { color: var(--muted); opacity: 1; }
+
+    .address-option, .address-action {
+      display: inline-flex;
+      height: 32px;
+      flex: 0 0 auto;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      border: 0;
+      border-radius: 9px;
+      color: var(--accent);
+      background: transparent;
+      cursor: pointer;
+    }
+
+    .address-option { width: 43px; margin-left: 3px; font-weight: 700; letter-spacing: -1.5px; }
+    .address-option small { margin-right: 1px; font-size: 10px; }
+    .address-action { width: 37px; margin-right: 3px; }
+    .address-option:active, .address-option.active, .address-action:active { background: var(--accent-soft); }
+    .security-icon { display: inline-flex; margin: 0 2px; color: var(--muted); }
+
+    .suggestions {
+      position: absolute;
+      z-index: 250;
+      right: 0;
+      left: 0;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--surface-solid);
+      box-shadow: var(--shadow);
+    }
+
+    .top-slot .suggestions { top: calc(100% + 8px); }
+    .bottom-slot .suggestions { bottom: calc(100% + 8px); }
+    .suggestions:empty { display: none; }
+
+    .suggestion {
+      display: flex;
+      width: 100%;
+      min-height: 55px;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 11px;
+      border: 0;
+      border-bottom: 1px solid var(--line);
+      color: var(--text);
+      background: transparent;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .suggestion:last-child { border-bottom: 0; }
+    .suggestion:active { background: var(--field); }
+    .suggestion-copy { display: flex; flex: 1; min-width: 0; flex-direction: column; }
+    .suggestion-copy strong, .suggestion-copy small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .suggestion-copy strong { font-size: 14px; font-weight: 600; }
+    .suggestion-copy small { margin-top: 2px; color: var(--muted); font-size: 12px; }
+    .suggestion-kind { flex: 0 0 auto; color: var(--faint); font-size: 10px; }
+
+    .stage {
+      position: relative;
+      z-index: 1;
+      flex: 1 1 auto;
+      min-width: 0;
+      min-height: 0;
+      overflow: hidden;
+      background: var(--bg);
+    }
+
+    .page { position: absolute; inset: 0; overflow: hidden; }
+    .web-view { width: 100%; height: 100%; overflow: hidden; background: #fff; }
+    .web-view iframe { display: block; border: 0; background: #fff; will-change: transform; }
+
+    .bottom-toolbar {
+      z-index: 70;
+      display: flex;
+      height: calc(var(--toolbar-height) + var(--safe-bottom));
+      flex: 0 0 auto;
+      align-items: flex-start;
+      justify-content: space-between;
+      padding: 5px 8px var(--safe-bottom);
+      border-top: 1px solid var(--line);
+      background: var(--surface);
+      backdrop-filter: blur(26px) saturate(175%);
+      -webkit-backdrop-filter: blur(26px) saturate(175%);
+    }
+
+    .chrome-button {
+      display: inline-flex;
+      height: 44px;
+      flex: 1 1 0;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      border: 0;
+      border-radius: 10px;
+      color: var(--accent);
+      background: transparent;
+      cursor: pointer;
+      transition: transform .1s ease;
+    }
+
+    .chrome-button:active:not(:disabled) { transform: scale(.88); }
+    .chrome-button:disabled { opacity: .25; cursor: default; }
+    .tab-count { display: inline-flex; width: 23px; height: 23px; align-items: center; justify-content: center; border: 1.8px solid currentColor; border-radius: 6px; font-size: 12px; font-weight: 700; }
+
+    .site-icon {
+      display: inline-flex;
+      width: 31px;
+      height: 31px;
+      flex: 0 0 auto;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      color: #fff;
+      background: linear-gradient(145deg, #5ac8fa, #007aff);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .site-icon.large { width: 54px; height: 54px; border-radius: 13px; font-size: 20px; }
+
+    .start-page {
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+      color: #fff;
+      background: radial-gradient(circle at 82% 5%, rgba(192, 255, 237, .56), transparent 28%), radial-gradient(circle at -10% 86%, rgba(59, 134, 168, .56), transparent 38%), linear-gradient(145deg, #79aebe, #2f7484 38%, #17394d 72%, #102434);
+    }
+
+    .private .start-page { background: radial-gradient(circle at 75% 0, rgba(112, 103, 240, .42), transparent 34%), linear-gradient(145deg, #292a50, #161620 62%, #09090d); }
+    .start-content { width: min(560px, calc(100% - 34px)); margin: 0 auto; padding: clamp(36px, 7vh, 64px) 0 40px; }
+    .brand-label { display: block; margin-bottom: 8px; color: rgba(255,255,255,.7); font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+    .start-page h1 { margin: 0; font-size: clamp(31px, 9vw, 45px); font-weight: 700; letter-spacing: -.045em; line-height: 1.05; }
+    .start-lead { margin: 12px 0 0; color: rgba(255,255,255,.74); font-size: 14px; line-height: 1.5; }
+
+    .start-search {
+      display: flex;
+      width: 100%;
+      height: 48px;
+      align-items: center;
+      gap: 10px;
+      margin-top: 27px;
+      padding: 0 15px;
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 13px;
+      color: rgba(255,255,255,.8);
+      background: rgba(255,255,255,.15);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      cursor: text;
+    }
+
+    .section-head { display: flex; align-items: baseline; justify-content: space-between; margin: 42px 0 16px; }
+    .section-head h2 { margin: 0; font-size: 20px; letter-spacing: -.02em; }
+    .section-head span { color: rgba(255,255,255,.62); font-size: 12px; }
+    .favorites { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 22px 12px; }
+    .favorite { display: flex; min-width: 0; flex-direction: column; align-items: center; gap: 8px; padding: 0; border: 0; color: #fff; background: transparent; font-size: 12px; cursor: pointer; }
+    .favorite > span:last-child { width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; }
+    .favorite-tile { display: inline-flex; width: 64px; height: 64px; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,.22); border-radius: 16px; background: rgba(255,255,255,.88); box-shadow: 0 8px 25px rgba(0,0,0,.18); transition: transform .1s; }
+    .favorite:active .favorite-tile { transform: scale(.94); }
+    .favorite-add { color: #fff; background: rgba(255,255,255,.15); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+    .privacy-note { display: flex; align-items: center; gap: 10px; margin-top: 40px; padding: 14px 2px; border-top: 1px solid rgba(255,255,255,.22); border-bottom: 1px solid rgba(255,255,255,.22); color: rgba(255,255,255,.75); font-size: 12px; line-height: 1.4; }
+    .privacy-note strong { color: #fff; }
+
+    .internal-page { width: 100%; height: 100%; overflow: auto; padding: 24px 16px 48px; color: var(--text); background: var(--bg); -webkit-overflow-scrolling: touch; }
+    .page-title, .settings-section, .footnote, .history-wrap { width: min(560px, 100%); margin-right: auto; margin-left: auto; }
+    .page-title { margin-bottom: 24px; }
+    .page-title span { color: var(--accent); font-size: 12px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; }
+    .page-title h1 { margin: 3px 0 0; font-size: 34px; letter-spacing: -.04em; }
+    .settings-section { margin-bottom: 24px; }
+    .settings-section > h2 { margin: 0 0 8px 13px; color: var(--muted); font-size: 12px; font-weight: 600; text-transform: uppercase; }
+    .settings-group { overflow: hidden; border: 1px solid var(--line); border-radius: 13px; background: var(--raised); }
+
+    .settings-row {
+      display: flex;
+      width: 100%;
+      min-height: 62px;
+      align-items: center;
+      gap: 11px;
+      padding: 8px 13px;
+      border: 0;
+      border-bottom: 1px solid var(--line);
+      color: var(--text);
+      background: transparent;
+      text-align: left;
+    }
+
+    .settings-row:last-child { border-bottom: 0; }
+    button.settings-row { cursor: pointer; }
+    button.settings-row:active { background: var(--field); }
+    .row-icon { display: inline-flex; width: 30px; height: 30px; flex: 0 0 auto; align-items: center; justify-content: center; border-radius: 8px; color: #fff; background: var(--accent); }
+    .row-copy { display: flex; flex: 1; min-width: 0; flex-direction: column; }
+    .row-copy strong, .row-copy small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .row-copy strong { font-size: 15px; font-weight: 550; }
+    .row-copy small { margin-top: 2px; color: var(--muted); font-size: 12px; }
+    .settings-row select { max-width: 140px; padding: 7px 5px; border: 0; outline: 0; color: var(--accent); background: transparent; font-size: 14px; text-align: right; }
+
+    .switch { position: relative; width: 50px; height: 30px; flex: 0 0 auto; padding: 0; border: 0; border-radius: 999px; background: #d1d1d6; cursor: pointer; transition: background .18s; }
+    .dark .switch { background: #4a4a4d; }
+    .switch span { position: absolute; top: 2px; left: 2px; width: 26px; height: 26px; border-radius: 50%; background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,.23); transition: transform .18s; }
+    .switch.on { background: #34c759; }
+    .switch.on span { transform: translateX(20px); }
+    .danger .row-icon { background: var(--danger); }
+    .danger strong { color: var(--danger); }
+    .footnote { padding: 0 13px; color: var(--muted); font-size: 12px; line-height: 1.5; }
+
+    .history-header { display: grid; grid-template-columns: 1fr auto 1fr; height: 50px; align-items: center; margin-bottom: 16px; border-bottom: 1px solid var(--line); }
+    .history-header h1 { margin: 0; font-size: 17px; }
+    .history-header button { width: max-content; padding: 5px 0; border: 0; color: var(--accent); background: transparent; cursor: pointer; }
+    .history-header button:last-child { justify-self: end; }
+    .history-header button:disabled { opacity: .35; }
+    .history-list { overflow: hidden; border: 1px solid var(--line); border-radius: 13px; background: var(--raised); }
+    .history-row { display: flex; min-height: 61px; align-items: center; padding: 7px 9px; border-bottom: 1px solid var(--line); }
+    .history-row:last-child { border-bottom: 0; }
+    .history-open { display: flex; flex: 1; min-width: 0; align-items: center; gap: 10px; padding: 0; border: 0; color: var(--text); background: transparent; text-align: left; cursor: pointer; }
+    .history-open .row-copy { max-width: calc(100% - 42px); }
+    .row-delete { display: inline-flex; width: 32px; height: 32px; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 50%; color: var(--danger); background: transparent; cursor: pointer; }
+    .empty { padding: 80px 20px; color: var(--muted); text-align: center; }
+    .empty h2 { margin: 13px 0 5px; color: var(--text); font-size: 18px; }
+    .empty p { margin: 0; font-size: 13px; }
+
+    .overlay {
+      position: fixed;
+      z-index: 1000;
+      inset: 0;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      background: rgba(0,0,0,.26);
+      animation: fade-in .16s ease;
+    }
+
+    .overlay.popover-bottom { padding: 12px 12px calc(var(--toolbar-height) + var(--address-height) + var(--safe-bottom) + 9px); background: rgba(0,0,0,.12); }
+    .overlay.popover-top { align-items: flex-start; padding: calc(var(--address-height) + var(--safe-top) + 9px) 12px 12px; background: rgba(0,0,0,.12); }
+    .popover { width: min(340px, calc(100vw - 24px)); overflow: hidden; border: 1px solid var(--line); border-radius: 16px; color: var(--text); background: var(--surface-solid); box-shadow: var(--shadow); animation: pop-in .18s ease; }
+    .zoom-control { display: grid; grid-template-columns: 1fr 88px 1fr; height: 50px; margin: 8px; overflow: hidden; border-radius: 11px; background: var(--field); }
+    .zoom-control button { border: 0; border-right: 1px solid var(--line); color: var(--text); background: transparent; cursor: pointer; }
+    .zoom-control button:last-child { border-right: 0; }
+    .zoom-control button:active:not(:disabled) { background: var(--accent-soft); }
+    .zoom-control button:disabled { opacity: .3; }
+    .zoom-value { color: var(--accent) !important; font-weight: 700; }
+    .zoom-hint { margin: 0 12px 10px; color: var(--muted); font-size: 11px; text-align: center; }
+    .separator { height: 7px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--field); }
+    .menu-button { display: flex; width: 100%; height: 49px; align-items: center; gap: 11px; padding: 0 14px; border: 0; border-bottom: 1px solid var(--line); color: var(--text); background: transparent; font-size: 15px; text-align: left; cursor: pointer; }
+    .menu-button:last-child { border-bottom: 0; }
+    .menu-button:active { background: var(--field); }
+    .menu-button:disabled { opacity: .33; }
+    .menu-button svg { color: var(--accent); }
+
+    .sheet { width: min(620px, 100%); max-height: min(660px, calc(100% - 50px)); overflow: auto; padding: 0 14px calc(16px + var(--safe-bottom)); border-radius: 20px 20px 0 0; color: var(--text); background: var(--surface-solid); box-shadow: var(--shadow); animation: sheet-in .25s cubic-bezier(.2,.8,.2,1); }
+    .sheet-handle { display: block; width: 38px; height: 5px; margin: 7px auto 10px; border-radius: 999px; background: var(--line); }
+    .sheet-head { display: flex; min-height: 52px; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--line); }
+    .sheet-head h2 { margin: 0; font-size: 17px; }
+    .sheet-head button { padding: 8px 2px; border: 0; color: var(--accent); background: transparent; font-weight: 650; cursor: pointer; }
+    .sheet-list { margin-top: 10px; overflow: hidden; border: 1px solid var(--line); border-radius: 13px; background: var(--raised); }
+    .sheet-row { display: flex; min-height: 60px; align-items: center; gap: 10px; padding: 7px 10px; border-bottom: 1px solid var(--line); }
+    .sheet-row:last-child { border-bottom: 0; }
+    .sheet-row-main { display: flex; flex: 1; min-width: 0; align-items: center; gap: 10px; padding: 0; border: 0; color: var(--text); background: transparent; text-align: left; cursor: pointer; }
+    .share-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 21px 0 7px; }
+    .share-actions button { display: flex; flex-direction: column; align-items: center; gap: 7px; padding: 0; border: 0; color: var(--text); background: transparent; font-size: 11px; cursor: pointer; }
+    .share-actions span { display: inline-flex; width: 55px; height: 55px; align-items: center; justify-content: center; border: 1px solid var(--line); border-radius: 14px; color: var(--accent); background: var(--raised); }
+
+    .tabs-view { position: fixed; z-index: 3000; inset: 0; display: flex; flex-direction: column; color: var(--text); background: radial-gradient(circle at 12% 0, var(--accent-soft), transparent 32%), var(--bg); animation: fade-in .2s ease; }
+    .tabs-head { display: grid; grid-template-columns: 1fr auto 1fr; height: calc(58px + var(--safe-top)); flex: 0 0 auto; align-items: end; padding: var(--safe-top) 16px 12px; border-bottom: 1px solid var(--line); background: var(--surface); }
+    .tabs-head strong { align-self: center; font-size: 14px; }
+    .tabs-head button { display: inline-flex; width: max-content; align-items: center; gap: 5px; padding: 6px 0; border: 0; color: var(--accent); background: transparent; cursor: pointer; }
+    .tabs-head button:last-child { justify-self: end; font-weight: 700; }
+    .tab-grid { display: grid; flex: 1; min-height: 0; grid-template-columns: repeat(2, minmax(0,1fr)); align-content: start; gap: 18px 14px; padding: 20px 16px calc(78px + var(--safe-bottom)); overflow: auto; }
+    .tab-preview { position: relative; min-width: 0; aspect-ratio: .74; overflow: hidden; border: 1px solid var(--line); border-radius: 14px; background: var(--raised); box-shadow: 0 7px 20px rgba(0,0,0,.13); }
+    .tab-preview.current { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .tab-main { display: flex; width: 100%; height: 100%; flex-direction: column; padding: 0; border: 0; color: var(--text); background: transparent; cursor: pointer; }
+    .tab-title { display: flex; height: 42px; flex: 0 0 auto; align-items: center; gap: 7px; padding: 7px 38px 7px 9px; border-bottom: 1px solid var(--line); font-size: 11px; font-weight: 600; }
+    .tab-title span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .tab-body { display: flex; flex: 1; min-height: 0; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 14px; overflow: hidden; background: radial-gradient(circle at 70% 22%, var(--accent-soft), transparent 35%), linear-gradient(145deg, var(--surface-solid), var(--bg)); }
+    .tab-body strong, .tab-body small { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .tab-body strong { font-size: 13px; }
+    .tab-body small { color: var(--muted); font-size: 9px; }
+    .tab-close { position: absolute; top: 7px; right: 7px; display: inline-flex; width: 28px; height: 28px; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 50%; color: var(--muted); background: var(--field); cursor: pointer; }
+    .tabs-foot { position: absolute; right: 0; bottom: 0; left: 0; display: grid; grid-template-columns: repeat(3,1fr); height: calc(67px + var(--safe-bottom)); padding: 6px 10px var(--safe-bottom); border-top: 1px solid var(--line); background: var(--surface); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); }
+    .tabs-foot button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 0; border: 0; color: var(--accent); background: transparent; font-size: 9px; cursor: pointer; }
+    .tabs-foot button:first-child { align-items: flex-start; }
+    .tabs-foot button:last-child { align-items: flex-end; }
+
+    .toast { position: fixed; z-index: 6000; bottom: calc(var(--toolbar-height) + var(--address-height) + var(--safe-bottom) + 14px); left: 50%; display: flex; align-items: center; gap: 7px; max-width: calc(100vw - 32px); padding: 10px 14px; border: 1px solid var(--line); border-radius: 999px; color: var(--text); background: var(--surface-solid); box-shadow: var(--shadow); font-size: 12px; white-space: nowrap; transform: translateX(-50%); animation: toast-in .18s ease; }
+    .address-top .toast { top: calc(var(--address-height) + var(--safe-top) + 14px); bottom: auto; }
+
+    @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes pop-in { from { opacity: 0; transform: translateY(8px) scale(.97); } to { opacity: 1; transform: none; } }
+    @keyframes sheet-in { from { transform: translateY(100%); } to { transform: none; } }
+    @keyframes toast-in { from { opacity: 0; transform: translate(-50%, 9px) scale(.96); } to { opacity: 1; transform: translateX(-50%); } }
+
+    @media (min-width: 700px) {
+      .favorites { grid-template-columns: repeat(6, minmax(0,1fr)); }
+      .tab-grid { grid-template-columns: repeat(3, minmax(0,1fr)); max-width: 820px; width: 100%; margin: 0 auto; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const START_URL = "ibrowser://start";
+      const SETTINGS_URL = "ibrowser://settings";
+      const HISTORY_URL = "ibrowser://history";
+      const INTERNAL_URLS = [START_URL, SETTINGS_URL, HISTORY_URL];
+      const STORAGE_KEY = "ibrowser-single-file-v1";
+
+      const PROXIES = [
+        { id: "direct", name: "直接接続", detail: "プロキシを使用しません", prefix: "" },
+        { id: "55games-1", name: "55games - 1", detail: "US - NY", prefix: "https://55gms.com/embed.html#" },
+        { id: "55games-2", name: "55games - 2", detail: "US - NY", prefix: "https://55gms.me/embed.html#" },
+        { id: "workers-1", name: "Workers - 1", detail: "US - SF", prefix: "https://sk.skkatoo.workers.dev/-----" },
+        { id: "workers-2", name: "Workers - 2", detail: "US - SF", prefix: "https://black-resonance-5407.cvfr.workers.dev/-----" },
+        { id: "freeplace", name: "Freeplace Tor", detail: "Tor gateway", prefix: "https://freeplace.in/proxy/browse.php?u=" }
+      ];
+
+      const DEFAULT_SETTINGS = {
+        addressPosition: "bottom",
+        darkMode: false,
+        proxyId: "direct",
+        allowDownloads: false,
+        blockPopups: true,
+        homeUrl: START_URL
+      };
+
+      const DEFAULT_BOOKMARKS = [
+        { id: "apple", title: "Apple", url: "https://www.apple.com/jp/" },
+        { id: "google", title: "Google", url: "https://www.google.com/?igu=1" },
+        { id: "wikipedia", title: "Wikipedia", url: "https://ja.wikipedia.org/" },
+        { id: "bing", title: "Bing", url: "https://www.bing.com/" }
+      ];
+
+      const ICONS = {
+        back: '<path d="m15 18-6-6 6-6"/><path d="M9 12h9"/>',
+        forward: '<path d="m9 18 6-6-6-6"/><path d="M15 12H6"/>',
+        share: '<path d="M12 3v12"/><path d="m8 7 4-4 4 4"/><path d="M5 11v9h14v-9"/>',
+        book: '<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H11v17H6.5A2.5 2.5 0 0 0 4 22Z"/><path d="M20 5.5A2.5 2.5 0 0 0 17.5 3H13v17h4.5A2.5 2.5 0 0 1 20 22Z"/>',
+        reload: '<path d="M20 6v5h-5"/><path d="M18.5 15a7 7 0 1 1 .5-7.5L20 11"/>',
+        search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>',
+        lock: '<rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>',
+        globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/>',
+        close: '<path d="m7 7 10 10M17 7 7 17"/>',
+        plus: '<path d="M12 5v14M5 12h14"/>',
+        minus: '<path d="M5 12h14"/>',
+        star: '<path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-2.9-5.6 2.9 1.1-6.2L3 9.6l6.2-.9Z"/>',
+        moon: '<path d="M20 15.2A8.5 8.5 0 0 1 8.8 4 8.5 8.5 0 1 0 20 15.2Z"/>',
+        sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+        settings: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3A1.7 1.7 0 0 0 10 3V2.8h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1Z"/>',
+        history: '<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/>',
+        trash: '<path d="M4 7h16M9 7V4h6v3M7 7l1 14h8l1-14M10 11v6M14 11v6"/>',
+        copy: '<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/>',
+        eyeoff: '<path d="M3 3l18 18M10.6 10.7a2 2 0 0 0 2.7 2.7M9.9 4.2A10.6 10.6 0 0 1 21 12a12 12 0 0 1-3.2 4.3M6.2 6.2A12 12 0 0 0 3 12a10.6 10.6 0 0 0 11.9 7.6"/>',
+        shield: '<path d="M12 3 4.5 6v5.5c0 4.6 3.2 7.8 7.5 9.5 4.3-1.7 7.5-4.9 7.5-9.5V6Z"/><path d="m9 12 2 2 4-4"/>',
+        download: '<path d="M12 3v12m-4-4 4 4 4-4M5 20h14"/>',
+        external: '<path d="M14 4h6v6M13 11l7-7M19 13v7H4V5h7"/>',
+        check: '<path d="m5 12 4 4L19 6"/>',
+        chevron: '<path d="m9 18 6-6-6-6"/>'
+      };
+
+      function icon(name, size = 22, filled = false) {
+        return '<svg aria-hidden="true" width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="' + (filled ? 'currentColor' : 'none') + '" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + (ICONS[name] || '') + '</svg>';
+      }
+
+      function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+      function esc(value) { return String(value ?? '').replace(/[&<>"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[char]); }
+      function attr(value) { return esc(value).replace(/'/g, '&#39;'); }
+      function encoded(value) { return encodeURIComponent(value); }
+
+      function pageTitle(url) {
+        if (url === START_URL) return 'スタートページ';
+        if (url === SETTINGS_URL) return '設定';
+        if (url === HISTORY_URL) return '履歴';
+        try { return new URL(url).hostname.replace(/^www\./, ''); } catch (_) { return url || '新しいタブ'; }
+      }
+
+      function displayUrl(url) {
+        if (url === START_URL) return '';
+        if (url === SETTINGS_URL) return '設定';
+        if (url === HISTORY_URL) return '履歴';
+        try {
+          const parsed = new URL(url);
+          return parsed.hostname + (parsed.pathname === '/' ? '' : parsed.pathname);
+        } catch (_) { return url || ''; }
+      }
+
+      function normalizeAddress(input) {
+        const value = String(input || '').trim();
+        if (!value) return START_URL;
+        if (INTERNAL_URLS.includes(value)) return value;
+        if (/^https?:\/\//i.test(value)) return value;
+        if (/^[\w.-]+\.[a-z]{2,}(\/.*)?$/i.test(value) && !value.includes(' ')) return 'https://' + value;
+        return 'https://www.google.com/search?q=' + encodeURIComponent(value) + '&igu=1';
+      }
+
+      function siteIcon(url, large = false) {
+        return '<span class="site-icon' + (large ? ' large' : '') + '">' + esc(pageTitle(url).charAt(0).toUpperCase() || 'I') + '</span>';
+      }
+
+      function createTab(url = START_URL) {
+        return { id: uid(), url, title: pageTitle(url), history: [url], historyIndex: 0, zoom: 1, reloadKey: 0 };
+      }
+
+      function loadState() {
+        let saved = {};
+        try { saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch (_) {}
+        const tabs = Array.isArray(saved.tabs) && saved.tabs.length
+          ? saved.tabs.map(tab => ({ ...tab, zoom: tab.zoom || 1, reloadKey: 0 }))
+          : [createTab()];
+        const activeId = tabs.some(tab => tab.id === saved.activeId) ? saved.activeId : tabs[0].id;
+        return {
+          settings: { ...DEFAULT_SETTINGS, ...(saved.settings || {}) },
+          bookmarks: Array.isArray(saved.bookmarks) ? saved.bookmarks : DEFAULT_BOOKMARKS,
+          historyItems: Array.isArray(saved.historyItems) ? saved.historyItems : [],
+          tabs,
+          activeId,
+          privateMode: false,
+          overlay: null,
+          addressDraft: '',
+          addressFocused: false,
+          loading: false
+        };
+      }
+
+      const state = loadState();
+      let progressTimer = 0;
+      let toastTimer = 0;
+      const app = document.getElementById('app');
+
+      function activeTab() { return state.tabs.find(tab => tab.id === state.activeId) || state.tabs[0]; }
+
+      function persist() {
+        if (state.privateMode) return;
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify({
+            settings: state.settings,
+            bookmarks: state.bookmarks,
+            historyItems: state.historyItems,
+            tabs: state.tabs.map(({ reloadKey, ...tab }) => tab),
+            activeId: state.activeId
+          }));
+        } catch (_) {}
+      }
+
+      function startLoading() {
+        state.loading = true;
+        const bar = document.getElementById('progress');
+        if (!bar) return;
+        bar.style.opacity = '1';
+        bar.style.width = '14%';
+        clearTimeout(progressTimer);
+        progressTimer = setTimeout(() => { bar.style.width = '72%'; }, 180);
+        updateAddressAction();
+      }
+
+      function finishLoading() {
+        state.loading = false;
+        const bar = document.getElementById('progress');
+        if (!bar) return;
+        bar.style.width = '100%';
+        clearTimeout(progressTimer);
+        progressTimer = setTimeout(() => {
+          bar.style.opacity = '0';
+          bar.style.width = '0';
+        }, 280);
+        updateAddressAction();
+      }
+
+      function toast(message) {
+        let node = document.getElementById('toast');
+        if (!node) {
+          node = document.createElement('div');
+          node.id = 'toast';
+          node.className = 'toast';
+          document.getElementById('browser').appendChild(node);
+        }
+        node.innerHTML = icon('check', 16) + '<span>' + esc(message) + '</span>';
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => node.remove(), 2200);
+      }
+
+      function shell() {
+        app.innerHTML = `
+          <div id="browser" class="browser">
+            <div id="progress" class="progress"></div>
+            <div id="topSlot" class="top-slot"></div>
+            <main id="stage" class="stage"></main>
+            <div id="bottomSlot" class="bottom-slot"></div>
+            <nav id="bottomToolbar" class="bottom-toolbar" aria-label="ブラウザ操作"></nav>
+            <div id="overlayRoot"></div>
+          </div>`;
+        applyTheme();
+        renderChrome();
+        renderStage();
+      }
+
+      function applyTheme() {
+        const browser = document.getElementById('browser');
+        if (!browser) return;
+        browser.classList.toggle('dark', state.settings.darkMode);
+        browser.classList.toggle('private', state.privateMode);
+        browser.classList.toggle('address-top', state.settings.addressPosition === 'top');
+        document.documentElement.style.colorScheme = state.settings.darkMode ? 'dark' : 'light';
+        document.getElementById('theme-color').content = state.settings.darkMode ? '#1c1c1e' : '#f2f2f7';
+      }
+
+      function addressMarkup() {
+        const tab = activeTab();
+        const value = state.addressFocused ? state.addressDraft : displayUrl(tab.url);
+        const secureIcon = tab.url === START_URL ? icon('search', 14) : tab.url.startsWith('https://') ? icon('lock', 12) : icon('globe', 14);
+        return `
+          <div class="address-bar">
+            <form class="address-form" id="addressForm">
+              <button type="button" class="address-option ${state.overlay === 'page' ? 'active' : ''}" data-action="page-menu" aria-label="表示オプション"><small>A</small>A</button>
+              <span class="security-icon">${secureIcon}</span>
+              <input id="addressInput" value="${attr(value)}" placeholder="検索またはWebサイト名を入力" inputmode="url" enterkeyhint="go" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="検索またはWebサイト名を入力">
+              <button type="button" class="address-action" id="addressAction" data-action="${state.loading ? 'stop' : 'reload'}" aria-label="${state.loading ? '読み込みを停止' : '再読み込み'}">${state.loading ? icon('close', 15) : icon('reload', 16)}</button>
+              <div id="suggestions" class="suggestions"></div>
+            </form>
+          </div>`;
+      }
+
+      function chromeButton(action, label, content, disabled = false) {
+        return '<button type="button" class="chrome-button" data-action="' + action + '" aria-label="' + label + '" ' + (disabled ? 'disabled' : '') + '>' + content + '</button>';
+      }
+
+      function renderChrome() {
+        const top = document.getElementById('topSlot');
+        const bottom = document.getElementById('bottomSlot');
+        if (!top || !bottom) return;
+        const address = addressMarkup();
+        top.innerHTML = state.settings.addressPosition === 'top' ? address : '';
+        bottom.innerHTML = state.settings.addressPosition === 'bottom' ? address : '';
+
+        const tab = activeTab();
+        document.getElementById('bottomToolbar').innerHTML =
+          chromeButton('back', '戻る', icon('back', 25), tab.historyIndex <= 0) +
+          chromeButton('forward', '進む', icon('forward', 25), tab.historyIndex >= tab.history.length - 1) +
+          chromeButton('share', '共有', icon('share', 23), INTERNAL_URLS.includes(tab.url)) +
+          chromeButton('bookmarks', 'ブックマーク', icon('book', 23)) +
+          chromeButton('tabs', 'タブ一覧', '<span class="tab-count">' + state.tabs.length + '</span>');
+      }
+
+      function updateAddressAction() {
+        const button = document.getElementById('addressAction');
+        if (!button) return;
+        button.dataset.action = state.loading ? 'stop' : 'reload';
+        button.setAttribute('aria-label', state.loading ? '読み込みを停止' : '再読み込み');
+        button.innerHTML = state.loading ? icon('close', 15) : icon('reload', 16);
+      }
+
+      function renderStage() {
+        const tab = activeTab();
+        const stage = document.getElementById('stage');
+        if (!stage) return;
+
+        if (tab.url === START_URL) {
+          stage.innerHTML = '<div class="page">' + startPageMarkup() + '</div>';
+          finishLoading();
+        } else if (tab.url === SETTINGS_URL) {
+          stage.innerHTML = '<div class="page">' + settingsMarkup() + '</div>';
+          finishLoading();
+        } else if (tab.url === HISTORY_URL) {
+          stage.innerHTML = '<div class="page">' + historyMarkup() + '</div>';
+          finishLoading();
+        } else {
+          const proxy = PROXIES.find(item => item.id === state.settings.proxyId) || PROXIES[0];
+          const url = proxy.prefix + tab.url;
+          const sandbox = [
+            'allow-forms', 'allow-modals', 'allow-orientation-lock', 'allow-pointer-lock',
+            'allow-presentation', 'allow-same-origin', 'allow-scripts',
+            'allow-storage-access-by-user-activation',
+            state.settings.allowDownloads ? 'allow-downloads' : '',
+            state.settings.blockPopups ? '' : 'allow-popups allow-popups-to-escape-sandbox'
+          ].filter(Boolean).join(' ');
+          const zoom = tab.zoom || 1;
+          stage.innerHTML = `
+            <div class="page web-view">
+              <iframe id="webFrame" title="${attr(tab.title)}" src="${attr(url)}" sandbox="${attr(sandbox)}" referrerpolicy="strict-origin-when-cross-origin" style="width:${100 / zoom}%;height:${100 / zoom}%;transform:scale(${zoom});transform-origin:0 0"></iframe>
+            </div>`;
+          startLoading();
+          document.getElementById('webFrame').addEventListener('load', finishLoading, { once: true });
+        }
+        persist();
+      }
+
+      function startPageMarkup() {
+        const hour = new Date().getHours();
+        const greeting = hour < 11 ? 'おはようございます' : hour < 18 ? 'こんにちは' : 'こんばんは';
+        const heading = state.privateMode ? '履歴を残しません' : greeting;
+        const lead = state.privateMode ? 'このモードで訪れたページは履歴に保存されません。' : 'お気に入りから、すぐにブラウジングを始められます。';
+        const items = state.bookmarks.slice(0, 8).map(bookmark => `
+          <button type="button" class="favorite" data-action="navigate" data-url="${encoded(bookmark.url)}">
+            <span class="favorite-tile">${siteIcon(bookmark.url, true)}</span>
+            <span>${esc(bookmark.title)}</span>
+          </button>`).join('');
+        return `
+          <div class="start-page">
+            <div class="start-content">
+              <span class="brand-label">${state.privateMode ? 'Private Browsing' : 'I Browser'}</span>
+              <h1>${heading}</h1>
+              <p class="start-lead">${lead}</p>
+              <button type="button" class="start-search" data-action="focus-address">${icon('search', 18)}<span>検索またはWebサイト名を入力</span></button>
+              <div class="section-head"><h2>お気に入り</h2><span>${state.bookmarks.length}件</span></div>
+              <div class="favorites">
+                ${items}
+                <button type="button" class="favorite" data-action="focus-address"><span class="favorite-tile favorite-add">${icon('plus', 27)}</span><span>Webサイトを開く</span></button>
+              </div>
+              <div class="privacy-note">${icon('shield', 21)}<span><strong>プライバシー保護</strong><br>iframeは制限された権限で読み込まれます。</span>${icon('chevron', 17)}</div>
+            </div>
+          </div>`;
+      }
+
+      function settingRow(iconName, title, detail, control, danger = false) {
+        return `<div class="settings-row ${danger ? 'danger' : ''}"><span class="row-icon">${icon(iconName, 18)}</span><span class="row-copy"><strong>${title}</strong><small>${detail}</small></span>${control}</div>`;
+      }
+
+      function settingsMarkup() {
+        const proxyOptions = PROXIES.map(proxy => '<option value="' + proxy.id + '" ' + (proxy.id === state.settings.proxyId ? 'selected' : '') + '>' + esc(proxy.name) + '</option>').join('');
+        return `
+          <div class="internal-page">
+            <div class="page-title"><span>I Browser</span><h1>設定</h1></div>
+            <section class="settings-section"><h2>表示</h2><div class="settings-group">
+              ${settingRow('sun', '外観', state.settings.darkMode ? 'ダーク' : 'ライト', '<button type="button" class="switch ' + (state.settings.darkMode ? 'on' : '') + '" data-action="toggle-dark" aria-label="ダークモード"><span></span></button>')}
+              ${settingRow('book', 'アドレスバーの位置', '移動するのは入力欄のみです', '<select id="addressPosition"><option value="bottom" ' + (state.settings.addressPosition === 'bottom' ? 'selected' : '') + '>下</option><option value="top" ' + (state.settings.addressPosition === 'top' ? 'selected' : '') + '>上</option></select>')}
+            </div></section>
+            <section class="settings-section"><h2>接続</h2><div class="settings-group">
+              ${settingRow('globe', 'プロキシ', 'iframeの接続先', '<select id="proxySelect">' + proxyOptions + '</select>')}
+              ${settingRow('download', 'ダウンロードを許可', 'iframeの権限設定', '<button type="button" class="switch ' + (state.settings.allowDownloads ? 'on' : '') + '" data-action="toggle-downloads" aria-label="ダウンロードを許可"><span></span></button>')}
+              ${settingRow('external', 'ポップアップをブロック', '新しいウィンドウを制限', '<button type="button" class="switch ' + (state.settings.blockPopups ? 'on' : '') + '" data-action="toggle-popups" aria-label="ポップアップをブロック"><span></span></button>')}
+            </div></section>
+            <section class="settings-section"><h2>ブラウズデータ</h2><div class="settings-group">
+              <button type="button" class="settings-row" data-action="open-history"><span class="row-icon">${icon('history', 18)}</span><span class="row-copy"><strong>履歴</strong><small>${state.historyItems.length}件の訪問履歴</small></span>${icon('chevron', 17)}</button>
+              <button type="button" class="settings-row danger" data-action="clear-history"><span class="row-icon">${icon('trash', 18)}</span><span class="row-copy"><strong>履歴を消去</strong><small>ブックマークは残ります</small></span></button>
+            </div></section>
+            <p class="footnote">一部のWebサイトはX-Frame-OptionsまたはContent-Security-Policyによりiframe内で表示できません。これはサイト側の制限です。</p>
+          </div>`;
+      }
+
+      function historyMarkup() {
+        const list = state.historyItems.length ? `
+          <div class="history-list">${state.historyItems.map(item => `
+            <div class="history-row">
+              <button type="button" class="history-open" data-action="navigate" data-url="${encoded(item.url)}">${siteIcon(item.url)}<span class="row-copy"><strong>${esc(item.title)}</strong><small>${esc(displayUrl(item.url))}</small></span></button>
+              <button type="button" class="row-delete" data-action="delete-history" data-id="${attr(item.id)}" aria-label="履歴から削除">${icon('close', 16)}</button>
+            </div>`).join('')}</div>` : `<div class="empty">${icon('history', 44)}<h2>履歴はありません</h2><p>訪問したWebサイトがここに表示されます。</p></div>`;
+        return `
+          <div class="internal-page"><div class="history-wrap">
+            <div class="history-header"><button type="button" data-action="settings">戻る</button><h1>履歴</h1><button type="button" data-action="clear-history" ${state.historyItems.length ? '' : 'disabled'}>消去</button></div>
+            ${list}
+          </div></div>`;
+      }
+
+      function navigate(rawUrl) {
+        const url = normalizeAddress(rawUrl);
+        const tab = activeTab();
+        const next = tab.history.slice(0, tab.historyIndex + 1);
+        if (tab.url !== url) next.push(url);
+        tab.url = url;
+        tab.title = pageTitle(url);
+        tab.history = next;
+        tab.historyIndex = next.length - 1;
+        tab.zoom = 1;
+        tab.reloadKey += 1;
+        state.addressDraft = '';
+        state.addressFocused = false;
+        state.overlay = null;
+
+        if (!INTERNAL_URLS.includes(url) && !state.privateMode) {
+          state.historyItems = [{ id: uid(), title: pageTitle(url), url, visitedAt: Date.now() }, ...state.historyItems.filter(item => item.url !== url)].slice(0, 200);
+        }
+        renderChrome();
+        renderOverlay();
+        renderStage();
+      }
+
+      function goHistory(direction) {
+        const tab = activeTab();
+        const nextIndex = tab.historyIndex + direction;
+        if (nextIndex < 0 || nextIndex >= tab.history.length) return;
+        tab.historyIndex = nextIndex;
+        tab.url = tab.history[nextIndex];
+        tab.title = pageTitle(tab.url);
+        tab.reloadKey += 1;
+        state.overlay = null;
+        renderChrome();
+        renderOverlay();
+        renderStage();
+      }
+
+      function reload() {
+        const tab = activeTab();
+        if (INTERNAL_URLS.includes(tab.url)) { renderStage(); return; }
+        tab.reloadKey += 1;
+        renderStage();
+      }
+
+      function setZoom(value) {
+        const tab = activeTab();
+        if (INTERNAL_URLS.includes(tab.url)) return;
+        tab.zoom = Math.min(2, Math.max(.5, Math.round(value * 10) / 10));
+        const frame = document.getElementById('webFrame');
+        if (frame) {
+          frame.style.width = (100 / tab.zoom) + '%';
+          frame.style.height = (100 / tab.zoom) + '%';
+          frame.style.transform = 'scale(' + tab.zoom + ')';
+        }
+        renderOverlay();
+        persist();
+      }
+
+      function toggleBookmark() {
+        const tab = activeTab();
+        if (INTERNAL_URLS.includes(tab.url)) return;
+        const exists = state.bookmarks.some(item => item.url === tab.url);
+        state.bookmarks = exists
+          ? state.bookmarks.filter(item => item.url !== tab.url)
+          : [...state.bookmarks, { id: uid(), title: tab.title, url: tab.url }];
+        state.overlay = null;
+        renderOverlay();
+        persist();
+        toast(exists ? 'ブックマークを削除しました' : 'ブックマークに追加しました');
+      }
+
+      function addTab(url = state.settings.homeUrl || START_URL) {
+        const tab = createTab(url);
+        state.tabs.push(tab);
+        state.activeId = tab.id;
+        state.overlay = null;
+        renderChrome();
+        renderOverlay();
+        renderStage();
+      }
+
+      function closeTab(id) {
+        const index = state.tabs.findIndex(tab => tab.id === id);
+        if (index < 0) return;
+        if (state.tabs.length === 1) {
+          const replacement = createTab();
+          state.tabs = [replacement];
+          state.activeId = replacement.id;
+        } else {
+          state.tabs.splice(index, 1);
+          if (state.activeId === id) state.activeId = state.tabs[Math.max(0, index - 1)].id;
+        }
+        renderChrome();
+        renderOverlay();
+        renderStage();
+        persist();
+      }
+
+      function switchTab(id) {
+        if (!state.tabs.some(tab => tab.id === id)) return;
+        state.activeId = id;
+        state.overlay = null;
+        renderChrome();
+        renderOverlay();
+        renderStage();
+      }
+
+      function renderOverlay() {
+        const root = document.getElementById('overlayRoot');
+        if (!root) return;
+        root.innerHTML = '';
+        if (!state.overlay) return;
+        if (state.overlay === 'page') root.innerHTML = pageMenuMarkup();
+        if (state.overlay === 'bookmarks') root.innerHTML = bookmarksMarkup();
+        if (state.overlay === 'share') root.innerHTML = shareMarkup();
+        if (state.overlay === 'tabs') root.innerHTML = tabsMarkup();
+      }
+
+      function pageMenuMarkup() {
+        const tab = activeTab();
+        const internal = INTERNAL_URLS.includes(tab.url);
+        const bookmarked = state.bookmarks.some(item => item.url === tab.url);
+        const locationClass = state.settings.addressPosition === 'bottom' ? 'popover-bottom' : 'popover-top';
+        return `
+          <div class="overlay ${locationClass}" data-action="close-overlay">
+            <div class="popover" data-panel>
+              <div class="zoom-control">
+                <button type="button" data-action="zoom-out" ${internal || tab.zoom <= .5 ? 'disabled' : ''} aria-label="縮小"><b style="font-size:14px">A</b> ${icon('minus', 11)}</button>
+                <button type="button" class="zoom-value" data-action="zoom-reset" ${internal ? 'disabled' : ''}>${Math.round(tab.zoom * 100)}%</button>
+                <button type="button" data-action="zoom-in" ${internal || tab.zoom >= 2 ? 'disabled' : ''} aria-label="拡大"><b style="font-size:20px">A</b> ${icon('plus', 11)}</button>
+              </div>
+              <p class="zoom-hint">iframeページを50%から200%まで拡大できます</p>
+              <div class="separator"></div>
+              <button type="button" class="menu-button" data-action="reload" ${internal ? 'disabled' : ''}>${icon('reload',18)}再読み込み</button>
+              <button type="button" class="menu-button" data-action="toggle-bookmark" ${internal ? 'disabled' : ''}>${icon('star',18,bookmarked)}${bookmarked ? 'ブックマークを削除' : 'ブックマークに追加'}</button>
+              <div class="separator"></div>
+              <button type="button" class="menu-button" data-action="start">${icon('globe',18)}スタートページ</button>
+              <button type="button" class="menu-button" data-action="toggle-dark">${icon(state.settings.darkMode ? 'sun' : 'moon',18)}${state.settings.darkMode ? 'ライトモード' : 'ダークモード'}</button>
+              <button type="button" class="menu-button" data-action="settings">${icon('settings',18)}I Browserの設定</button>
+            </div>
+          </div>`;
+      }
+
+      function bookmarksMarkup() {
+        const rows = state.bookmarks.length ? state.bookmarks.map(item => `
+          <div class="sheet-row">
+            <button type="button" class="sheet-row-main" data-action="navigate" data-url="${encoded(item.url)}">${siteIcon(item.url)}<span class="row-copy"><strong>${esc(item.title)}</strong><small>${esc(displayUrl(item.url))}</small></span></button>
+            <button type="button" class="row-delete" data-action="delete-bookmark" data-id="${attr(item.id)}" aria-label="削除">${icon('trash',17)}</button>
+          </div>`).join('') : '<div class="empty"><h2>ブックマークはありません</h2></div>';
+        return `<div class="overlay" data-action="close-overlay"><div class="sheet" data-panel><span class="sheet-handle"></span><div class="sheet-head"><h2>ブックマーク</h2><button type="button" data-action="close-overlay">完了</button></div><div class="sheet-list">${rows}</div></div></div>`;
+      }
+
+      function shareMarkup() {
+        const tab = activeTab();
+        return `
+          <div class="overlay" data-action="close-overlay"><div class="sheet" data-panel>
+            <span class="sheet-handle"></span>
+            <div class="sheet-head"><div class="sheet-row-main">${siteIcon(tab.url)}<span class="row-copy"><strong>${esc(tab.title)}</strong><small>${esc(displayUrl(tab.url))}</small></span></div><button type="button" data-action="close-overlay">完了</button></div>
+            <div class="share-actions">
+              <button type="button" data-action="copy-url"><span>${icon('copy',22)}</span>コピー</button>
+              <button type="button" data-action="toggle-bookmark"><span>${icon('star',22)}</span>ブックマーク</button>
+              <button type="button" data-action="duplicate-tab"><span>${icon('plus',23)}</span>新規タブ</button>
+            </div>
+          </div></div>`;
+      }
+
+      function tabsMarkup() {
+        const cards = state.tabs.map(tab => `
+          <article class="tab-preview ${tab.id === state.activeId ? 'current' : ''}">
+            <button type="button" class="tab-main" data-action="switch-tab" data-id="${attr(tab.id)}">
+              <div class="tab-title">${siteIcon(tab.url)}<span>${esc(tab.title)}</span></div>
+              <div class="tab-body">${siteIcon(tab.url, true)}<strong>${esc(tab.title)}</strong><small>${esc(displayUrl(tab.url) || 'I Browser')}</small></div>
+            </button>
+            <button type="button" class="tab-close" data-action="close-tab" data-id="${attr(tab.id)}" aria-label="タブを閉じる">${icon('close',16)}</button>
+          </article>`).join('');
+        return `
+          <div class="tabs-view">
+            <header class="tabs-head"><button type="button" data-action="private">${icon('eyeoff',17)}${state.privateMode ? 'プライベート' : '通常'}</button><strong>${state.tabs.length}個のタブ</strong><button type="button" data-action="close-overlay">完了</button></header>
+            <div class="tab-grid">${cards}</div>
+            <footer class="tabs-foot"><button type="button" data-action="private">${icon('eyeoff',21)}<span>${state.privateMode ? 'プライベート' : '通常'}</span></button><button type="button" data-action="new-tab">${icon('plus',28)}<span>新しいタブ</span></button><button type="button" data-action="close-overlay">${icon('check',22)}<span>完了</span></button></footer>
+          </div>`;
+      }
+
+      function renderSuggestions(value) {
+        const root = document.getElementById('suggestions');
+        if (!root) return;
+        const query = String(value || '').trim().toLowerCase();
+        if (!query) { root.innerHTML = ''; return; }
+        const combined = [
+          ...state.bookmarks.map(item => ({ ...item, kind: 'ブックマーク' })),
+          ...state.historyItems.map(item => ({ ...item, kind: '履歴' }))
+        ];
+        const seen = new Set();
+        const found = combined.filter(item => {
+          if (seen.has(item.url)) return false;
+          const match = item.title.toLowerCase().includes(query) || item.url.toLowerCase().includes(query);
+          if (match) seen.add(item.url);
+          return match;
+        }).slice(0, 6);
+        root.innerHTML = found.map(item => `
+          <button type="button" class="suggestion" data-action="navigate" data-url="${encoded(item.url)}">${siteIcon(item.url)}<span class="suggestion-copy"><strong>${esc(item.title)}</strong><small>${esc(displayUrl(item.url))}</small></span><span class="suggestion-kind">${item.kind}</span></button>`).join('');
+      }
+
+      async function shareCurrent() {
+        const tab = activeTab();
+        if (navigator.share) {
+          try { await navigator.share({ title: tab.title, url: tab.url }); return; } catch (error) { if (error && error.name === 'AbortError') return; }
+        }
+        state.overlay = 'share';
+        renderOverlay();
+      }
+
+      async function copyCurrentUrl() {
+        const text = activeTab().url;
+        try {
+          await navigator.clipboard.writeText(text);
+        } catch (_) {
+          const textarea = document.createElement('textarea');
+          textarea.value = text;
+          textarea.style.position = 'fixed';
+          textarea.style.opacity = '0';
+          document.body.appendChild(textarea);
+          textarea.select();
+          document.execCommand('copy');
+          textarea.remove();
+        }
+        state.overlay = null;
+        renderOverlay();
+        toast('アドレスをコピーしました');
+      }
+
+      document.addEventListener('submit', event => {
+        if (event.target.id !== 'addressForm') return;
+        event.preventDefault();
+        const input = document.getElementById('addressInput');
+        navigate(input ? input.value : state.addressDraft);
+      });
+
+      document.addEventListener('focusin', event => {
+        if (event.target.id !== 'addressInput') return;
+        state.addressFocused = true;
+        const tab = activeTab();
+        state.addressDraft = INTERNAL_URLS.includes(tab.url) ? '' : tab.url;
+        event.target.value = state.addressDraft;
+        requestAnimationFrame(() => event.target.select());
+        renderSuggestions(event.target.value);
+      });
+
+      document.addEventListener('focusout', event => {
+        if (event.target.id !== 'addressInput') return;
+        setTimeout(() => {
+          state.addressFocused = false;
+          const input = document.getElementById('addressInput');
+          if (input) input.value = displayUrl(activeTab().url);
+          renderSuggestions('');
+        }, 120);
+      });
+
+      document.addEventListener('input', event => {
+        if (event.target.id !== 'addressInput') return;
+        state.addressDraft = event.target.value;
+        renderSuggestions(event.target.value);
+      });
+
+      document.addEventListener('change', event => {
+        if (event.target.id === 'addressPosition') {
+          state.settings.addressPosition = event.target.value;
+          applyTheme();
+          renderChrome();
+          persist();
+        }
+        if (event.target.id === 'proxySelect') {
+          state.settings.proxyId = event.target.value;
+          persist();
+          toast('接続方法を変更しました');
+        }
+      });
+
+      document.addEventListener('click', event => {
+        const button = event.target.closest('[data-action]');
+        if (!button || button.disabled) return;
+        const action = button.dataset.action;
+        if (action === 'close-overlay' && event.target.closest('[data-panel]') && button === event.target.closest('.overlay')) return;
+
+        if (action === 'back') goHistory(-1);
+        if (action === 'forward') goHistory(1);
+        if (action === 'reload') { state.overlay = null; renderOverlay(); reload(); }
+        if (action === 'stop') finishLoading();
+        if (action === 'share') shareCurrent();
+        if (action === 'bookmarks') { state.overlay = 'bookmarks'; renderOverlay(); }
+        if (action === 'tabs') { state.overlay = 'tabs'; renderOverlay(); }
+        if (action === 'page-menu') { state.overlay = state.overlay === 'page' ? null : 'page'; renderChrome(); renderOverlay(); }
+        if (action === 'close-overlay') { state.overlay = null; renderChrome(); renderOverlay(); }
+        if (action === 'navigate') navigate(decodeURIComponent(button.dataset.url || ''));
+        if (action === 'focus-address') { const input = document.getElementById('addressInput'); input && input.focus(); }
+        if (action === 'zoom-out') setZoom(activeTab().zoom - .1);
+        if (action === 'zoom-in') setZoom(activeTab().zoom + .1);
+        if (action === 'zoom-reset') setZoom(1);
+        if (action === 'toggle-bookmark') toggleBookmark();
+        if (action === 'start') navigate(START_URL);
+        if (action === 'settings') navigate(SETTINGS_URL);
+        if (action === 'open-history') navigate(HISTORY_URL);
+        if (action === 'toggle-dark') {
+          state.settings.darkMode = !state.settings.darkMode;
+          state.overlay = null;
+          applyTheme(); renderChrome(); renderOverlay();
+          if (activeTab().url === SETTINGS_URL) renderStage();
+          persist();
+        }
+        if (action === 'toggle-downloads') { state.settings.allowDownloads = !state.settings.allowDownloads; renderStage(); persist(); }
+        if (action === 'toggle-popups') { state.settings.blockPopups = !state.settings.blockPopups; renderStage(); persist(); }
+        if (action === 'clear-history') { state.historyItems = []; renderStage(); persist(); toast('履歴を消去しました'); }
+        if (action === 'delete-history') { state.historyItems = state.historyItems.filter(item => item.id !== button.dataset.id); renderStage(); persist(); }
+        if (action === 'delete-bookmark') { state.bookmarks = state.bookmarks.filter(item => item.id !== button.dataset.id); renderOverlay(); persist(); }
+        if (action === 'copy-url') copyCurrentUrl();
+        if (action === 'duplicate-tab') addTab(activeTab().url);
+        if (action === 'new-tab') addTab();
+        if (action === 'switch-tab') switchTab(button.dataset.id);
+        if (action === 'close-tab') closeTab(button.dataset.id);
+        if (action === 'private') {
+          state.privateMode = !state.privateMode;
+          applyTheme();
+          renderOverlay();
+          if (activeTab().url === START_URL) renderStage();
+        }
+      });
+
+      shell();
+    })();
+  </script>
+</body>
+</html>
