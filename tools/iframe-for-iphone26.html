@@ -451,6 +451,12 @@
     @media (min-width: 700px) {
       .favorites { grid-template-columns: repeat(6, minmax(0,1fr)); }
       .tab-grid { grid-template-columns: repeat(3, minmax(0,1fr)); max-width: 820px; width: 100%; margin: 0 auto; }
+      .compact-bar { max-width: 640px; height: 56px; margin: 14px auto 0; }
+      .bottom-slot .compact-bar { margin: 0 auto 14px; }
+    }
+
+    @media (min-width: 1100px) {
+      .compact-bar { max-width: 720px; }
     }
 
     @media (prefers-reduced-motion: reduce) {
