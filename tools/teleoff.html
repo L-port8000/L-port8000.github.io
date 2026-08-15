@@ -1,0 +1,1819 @@
+
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TELEOFF | Windows テレメトリ遮断ツール</title>
+    <meta
+      name="description"
+      content="Windows の診断データ・DiagTrack・CEIP を止める管理者権限つき CMD スクリプトを生成します。"
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='%2322d3ee'%20stroke-width='2'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M20%2013c0%205-3.5%207.5-8%209-4.5-1.5-8-4-8-9V5l8-3%208%203v8z'/%3E%3Cline%20x1='4'%20y1='4'%20x2='20'%20y2='20'/%3E%3C/svg%3E"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+JP:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* ---------- Reset ---------- */
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      button {
+        font: inherit;
+        color: inherit;
+        background: none;
+        border: 0;
+        cursor: pointer;
+      }
+      input {
+        font: inherit;
+        color: inherit;
+      }
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      /* ---------- Base ---------- */
+      :root {
+        --bg: #06080c;
+        --bg-2: #0b1016;
+        --bg-3: #071016;
+        --line: rgba(255, 255, 255, 0.08);
+        --line-strong: rgba(255, 255, 255, 0.14);
+        --text: #e6edf5;
+        --muted: #94a3b8;
+        --dim: #64748b;
+        --dimmer: #475569;
+        --cyan: #22d3ee;
+        --cyan-2: #67e8f9;
+        --emerald: #34d399;
+        --amber: #fbbf24;
+        --rose: #fb7185;
+      }
+      html,
+      body,
+      #root {
+        min-height: 100%;
+      }
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: "IBM Plex Sans JP", "Noto Sans JP", "Segoe UI", sans-serif;
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+      }
+      .font-display {
+        font-family: "Chakra Petch", "IBM Plex Sans JP", sans-serif;
+      }
+      .font-mono {
+        font-family: "IBM Plex Mono", "Cascadia Code", "Consolas", monospace;
+      }
+
+      *::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+      }
+      *::-webkit-scrollbar-thumb {
+        background: #1f3347;
+        border-radius: 999px;
+      }
+      ::selection {
+        background: rgba(34, 211, 238, 0.28);
+        color: #f8feff;
+      }
+
+      /* ---------- Layout helpers ---------- */
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 24px;
+      }
+
+      /* ---------- Header ---------- */
+      .site-header {
+        position: sticky;
+        top: 0;
+        z-index: 40;
+        border-bottom: 1px solid rgba(34, 211, 238, 0.1);
+        background: rgba(6, 8, 12, 0.8);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+      }
+      .site-header .inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 64px;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .brand-icon {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        background: rgba(34, 211, 238, 0.1);
+        box-shadow: inset 0 0 0 1px rgba(103, 232, 249, 0.3);
+      }
+      .brand-icon svg {
+        width: 20px;
+        height: 20px;
+        color: var(--cyan-2);
+      }
+      .brand-icon::after {
+        content: "";
+        position: absolute;
+        top: -2px;
+        right: -2px;
+        width: 8px;
+        height: 8px;
+        background: var(--emerald);
+        border-radius: 50%;
+        box-shadow: 0 0 8px var(--emerald);
+      }
+      .brand-text {
+        display: flex;
+        flex-direction: column;
+        line-height: 1;
+      }
+      .brand-name {
+        font-family: "Chakra Petch", sans-serif;
+        font-size: 18px;
+        font-weight: 700;
+        letter-spacing: 0.18em;
+        color: #cffafe;
+      }
+      .brand-sub {
+        margin-top: 4px;
+        font-size: 10px;
+        letter-spacing: 0.22em;
+        color: var(--dimmer);
+      }
+      .nav {
+        display: flex;
+        gap: 4px;
+        font-size: 14px;
+      }
+      .nav a,
+      .nav button {
+        padding: 6px 12px;
+        border-radius: 6px;
+        color: var(--muted);
+        transition: 0.15s;
+      }
+      .nav a:hover,
+      .nav button:hover {
+        background: rgba(255, 255, 255, 0.05);
+        color: #a5f3fc;
+      }
+      @media (max-width: 640px) {
+        .nav a {
+          display: none;
+        }
+      }
+
+      /* ---------- Hero ---------- */
+      .hero {
+        position: relative;
+        overflow: hidden;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      }
+      .hero-bg {
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(ellipse at 20% 10%, rgba(34, 211, 238, 0.18), transparent 55%),
+          radial-gradient(ellipse at 80% 30%, rgba(56, 189, 248, 0.1), transparent 60%),
+          radial-gradient(ellipse at 50% 90%, rgba(16, 185, 129, 0.08), transparent 60%),
+          linear-gradient(180deg, #06121a 0%, #06080c 90%);
+      }
+      .hero-grid {
+        position: absolute;
+        inset: 0;
+        background-image:
+          linear-gradient(rgba(34, 211, 238, 0.045) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(34, 211, 238, 0.045) 1px, transparent 1px);
+        background-size: 48px 48px;
+        -webkit-mask-image: radial-gradient(ellipse at top, black 30%, transparent 78%);
+        mask-image: radial-gradient(ellipse at top, black 30%, transparent 78%);
+      }
+      .hero-inner {
+        position: relative;
+        padding: 80px 0 88px;
+      }
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 4px 12px;
+        border-radius: 999px;
+        border: 1px solid rgba(34, 211, 238, 0.2);
+        background: rgba(34, 211, 238, 0.05);
+        font-size: 11px;
+        letter-spacing: 0.2em;
+        color: #a5f3fc;
+      }
+      .badge .dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--emerald);
+      }
+      .hero h1 {
+        margin: 24px 0 0;
+        max-width: 780px;
+        font-family: "Chakra Petch", sans-serif;
+        font-size: clamp(34px, 5.5vw, 62px);
+        font-weight: 700;
+        line-height: 1.14;
+        letter-spacing: 0.02em;
+        color: #fff;
+      }
+      .hero h1 .accent {
+        display: block;
+        color: #67e8f9;
+      }
+      .hero p.lead {
+        margin: 20px 0 0;
+        max-width: 640px;
+        font-size: 15px;
+        line-height: 1.75;
+        color: var(--muted);
+      }
+      .hero-actions {
+        margin-top: 32px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 10px 20px;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 600;
+        transition: 0.15s;
+      }
+      .btn svg {
+        width: 16px;
+        height: 16px;
+      }
+      .btn-primary {
+        background: var(--cyan);
+        color: #0f172a;
+        box-shadow: 0 0 28px rgba(34, 211, 238, 0.28);
+      }
+      .btn-primary:hover {
+        background: var(--cyan-2);
+      }
+      .btn-primary:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+        box-shadow: none;
+      }
+      .btn-ghost {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #e2e8f0;
+      }
+      .btn-ghost:hover {
+        border-color: rgba(34, 211, 238, 0.3);
+        color: #fff;
+      }
+      .btn-ghost svg {
+        color: var(--cyan-2);
+      }
+      .btn-ghost:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+      .stat-row {
+        margin-top: 40px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        max-width: 640px;
+      }
+      .stat-card {
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(0, 0, 0, 0.35);
+        border-radius: 12px;
+        padding: 12px 16px;
+        backdrop-filter: blur(6px);
+      }
+      .stat-card .k {
+        font-size: 10px;
+        letter-spacing: 0.18em;
+        color: var(--dim);
+      }
+      .stat-card .v {
+        font-family: "Chakra Petch", sans-serif;
+        font-size: 18px;
+        margin-top: 4px;
+        color: #cffafe;
+      }
+      .hero-note {
+        margin-top: 24px;
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        font-size: 12px;
+        color: rgba(253, 230, 138, 0.8);
+      }
+      .hero-note svg {
+        width: 16px;
+        height: 16px;
+        flex-shrink: 0;
+        margin-top: 2px;
+      }
+
+      /* ---------- Main grid ---------- */
+      main.main {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 32px;
+        padding: 40px 0;
+      }
+      @media (min-width: 1024px) {
+        main.main {
+          grid-template-columns: minmax(0, 1fr) 420px;
+        }
+      }
+
+      /* ---------- Ops section ---------- */
+      .section-head {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      @media (min-width: 640px) {
+        .section-head {
+          flex-direction: row;
+          align-items: flex-end;
+          justify-content: space-between;
+        }
+      }
+      .eyebrow {
+        font-size: 10px;
+        letter-spacing: 0.24em;
+        color: var(--cyan);
+      }
+      .section-head h2 {
+        margin: 4px 0 0;
+        font-family: "Chakra Petch", sans-serif;
+        font-size: 24px;
+        color: #fff;
+      }
+      .search {
+        width: 100%;
+        max-width: 260px;
+        padding: 8px 12px;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(0, 0, 0, 0.4);
+        color: #e2e8f0;
+        font-size: 14px;
+        outline: none;
+      }
+      .search::placeholder {
+        color: var(--dimmer);
+      }
+      .search:focus {
+        border-color: rgba(34, 211, 238, 0.4);
+      }
+
+      .preset-grid {
+        margin-top: 24px;
+        display: grid;
+        gap: 8px;
+        grid-template-columns: 1fr;
+      }
+      @media (min-width: 640px) {
+        .preset-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      .preset {
+        text-align: left;
+        padding: 14px 16px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.02);
+        transition: 0.15s;
+      }
+      .preset:hover {
+        border-color: rgba(255, 255, 255, 0.16);
+      }
+      .preset.active {
+        border-color: rgba(34, 211, 238, 0.4);
+        background: rgba(34, 211, 238, 0.1);
+      }
+      .preset .t {
+        font-size: 14px;
+        color: #e2e8f0;
+        font-weight: 500;
+      }
+      .preset .d {
+        margin-top: 4px;
+        font-size: 11px;
+        line-height: 1.5;
+        color: var(--dim);
+      }
+
+      .category {
+        margin-top: 32px;
+      }
+      .category-head {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+      .category-head h3 {
+        margin: 0;
+        font-size: 14px;
+        color: #e2e8f0;
+        font-weight: 500;
+      }
+      .category-head p {
+        margin: 2px 0 0;
+        font-size: 11px;
+        color: var(--dim);
+      }
+      .cat-toggle {
+        font-size: 11px;
+        color: rgba(103, 232, 249, 0.8);
+      }
+      .cat-toggle:hover {
+        color: #a5f3fc;
+      }
+      .cat-toggle .frac {
+        margin-left: 8px;
+        color: var(--dimmer);
+      }
+      .op-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .op {
+        display: flex;
+        gap: 16px;
+        padding: 16px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        background: rgba(255, 255, 255, 0.02);
+        cursor: pointer;
+        transition: 0.15s;
+      }
+      .op:hover {
+        border-color: rgba(255, 255, 255, 0.12);
+        background: rgba(255, 255, 255, 0.04);
+      }
+      .op.checked {
+        border-color: rgba(34, 211, 238, 0.25);
+        background: rgba(34, 211, 238, 0.04);
+      }
+      .op input {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+      }
+      .checkbox {
+        margin-top: 2px;
+        flex-shrink: 0;
+        width: 20px;
+        height: 20px;
+        border-radius: 5px;
+        border: 1px solid #475569;
+        background: rgba(6, 8, 12, 0.6);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #0f172a;
+        transition: 0.15s;
+      }
+      .op:hover .checkbox {
+        border-color: #94a3b8;
+      }
+      .op.checked .checkbox {
+        border-color: var(--cyan-2);
+        background: var(--cyan);
+      }
+      .checkbox svg {
+        width: 14px;
+        height: 14px;
+        display: none;
+      }
+      .op.checked .checkbox svg {
+        display: block;
+      }
+      .op-body {
+        flex: 1;
+        min-width: 0;
+      }
+      .op-title-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+      }
+      .op-title {
+        font-size: 14px;
+        font-weight: 500;
+        color: #f1f5f9;
+      }
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-size: 10px;
+        letter-spacing: 0.02em;
+        box-shadow: inset 0 0 0 1px currentColor;
+      }
+      .chip svg {
+        width: 12px;
+        height: 12px;
+      }
+      .chip.safe {
+        color: #6ee7b7;
+        background: rgba(52, 211, 153, 0.1);
+      }
+      .chip.caution {
+        color: #fcd34d;
+        background: rgba(251, 191, 36, 0.1);
+      }
+      .chip.danger {
+        color: #fda4af;
+        background: rgba(251, 113, 133, 0.1);
+      }
+      .op-desc {
+        margin-top: 6px;
+        font-size: 12px;
+        line-height: 1.6;
+        color: var(--muted);
+      }
+      .op-warn {
+        margin-top: 8px;
+        font-size: 11px;
+        color: rgba(252, 211, 77, 0.85);
+      }
+      .op-cmd {
+        margin-top: 8px;
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 10px;
+        line-height: 1.5;
+        color: #475569;
+        display: none;
+      }
+      @media (min-width: 640px) {
+        .op-cmd {
+          display: block;
+          word-break: break-all;
+        }
+      }
+
+      .empty {
+        margin-top: 24px;
+        padding: 32px 16px;
+        text-align: center;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        color: var(--dim);
+        font-size: 14px;
+      }
+
+      /* ---------- Preview panel ---------- */
+      .preview-wrap {
+        position: relative;
+      }
+      @media (min-width: 1024px) {
+        .preview-wrap {
+          position: sticky;
+          top: 80px;
+        }
+      }
+      .terminal {
+        border-radius: 16px;
+        overflow: hidden;
+        border: 1px solid rgba(34, 211, 238, 0.15);
+        background: var(--bg-3);
+        box-shadow:
+          0 0 0 1px rgba(34, 211, 238, 0.25),
+          0 0 40px rgba(34, 211, 238, 0.08);
+        display: flex;
+        flex-direction: column;
+      }
+      .term-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 16px;
+        background: rgba(0, 0, 0, 0.4);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .term-dots {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .term-dots span {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+      }
+      .term-dots span:nth-child(1) {
+        background: rgba(251, 113, 133, 0.8);
+      }
+      .term-dots span:nth-child(2) {
+        background: rgba(251, 191, 36, 0.8);
+      }
+      .term-dots span:nth-child(3) {
+        background: rgba(52, 211, 153, 0.8);
+      }
+      .term-title {
+        margin-left: 8px;
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 11px;
+        color: var(--dimmer);
+      }
+      .mode-toggle {
+        display: flex;
+        background: rgba(255, 255, 255, 0.05);
+        padding: 2px;
+        border-radius: 6px;
+        font-size: 11px;
+      }
+      .mode-toggle button {
+        padding: 4px 10px;
+        border-radius: 4px;
+        color: var(--dim);
+        transition: 0.15s;
+      }
+      .mode-toggle button:hover {
+        color: #fff;
+      }
+      .mode-toggle button.active-disable {
+        background: var(--cyan);
+        color: #0f172a;
+      }
+      .mode-toggle button.active-restore {
+        background: #fcd34d;
+        color: #0f172a;
+      }
+
+      .term-body {
+        max-height: 420px;
+        overflow: auto;
+        padding: 16px;
+      }
+      @media (min-width: 640px) {
+        .term-body {
+          max-height: 520px;
+        }
+      }
+      .term-body pre {
+        margin: 0;
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 11px;
+        line-height: 1.5;
+        color: rgba(52, 211, 153, 0.9);
+      }
+      .term-body .ln {
+        display: flex;
+        gap: 12px;
+      }
+      .term-body .num {
+        display: inline-block;
+        width: 32px;
+        flex-shrink: 0;
+        text-align: right;
+        color: #334155;
+        user-select: none;
+      }
+      .term-body .comment {
+        color: var(--dim);
+      }
+      .term-body .cmd {
+        color: #a5f3fc;
+      }
+      .term-body::-webkit-scrollbar {
+        width: 8px;
+      }
+      .term-body::-webkit-scrollbar-thumb {
+        background: #164e63;
+        border-radius: 999px;
+      }
+
+      .term-footer {
+        padding: 16px;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(0, 0, 0, 0.3);
+      }
+      .checkbox-label {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        cursor: pointer;
+        font-size: 12px;
+        color: #cbd5e1;
+      }
+      .checkbox-label input {
+        margin-top: 3px;
+        accent-color: var(--cyan);
+      }
+      .checkbox-label .sub {
+        display: block;
+        margin-top: 2px;
+        font-size: 11px;
+        color: var(--dim);
+      }
+
+      .flag-row {
+        margin-top: 12px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        font-size: 11px;
+      }
+      .flag {
+        padding: 4px 8px;
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--muted);
+      }
+      .flag.caution {
+        background: rgba(251, 191, 36, 0.1);
+        color: #fcd34d;
+      }
+      .flag.danger {
+        background: rgba(251, 113, 133, 0.1);
+        color: #fda4af;
+      }
+      .flag.cyan {
+        background: rgba(34, 211, 238, 0.1);
+        color: #a5f3fc;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .flag.cyan svg {
+        width: 12px;
+        height: 12px;
+      }
+      .action-row {
+        margin-top: 12px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+
+      .kpis {
+        margin-top: 16px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        text-align: center;
+        font-size: 11px;
+      }
+      .kpi {
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.02);
+        border-radius: 8px;
+        padding: 8px;
+      }
+      .kpi .k {
+        color: var(--dim);
+      }
+      .kpi .v {
+        font-family: "Chakra Petch", sans-serif;
+        font-size: 16px;
+        color: #cffafe;
+      }
+
+      /* ---------- Notes ---------- */
+      .notes {
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+      }
+      .notes .container {
+        padding-top: 56px;
+        padding-bottom: 56px;
+      }
+      .notes-grid {
+        margin-top: 24px;
+        display: grid;
+        gap: 16px;
+      }
+      @media (min-width: 768px) {
+        .notes-grid {
+          grid-template-columns: repeat(3, 1fr);
+        }
+      }
+      .note-card {
+        padding: 20px;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.02);
+      }
+      .note-card h3 {
+        margin: 0;
+        font-size: 14px;
+        color: #f1f5f9;
+        font-weight: 500;
+      }
+      .note-card p {
+        margin: 8px 0 0;
+        font-size: 12px;
+        line-height: 1.7;
+        color: var(--muted);
+      }
+
+      footer {
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+        padding: 32px 0;
+        text-align: center;
+        font-size: 11px;
+        color: var(--dimmer);
+      }
+
+      /* ---------- Modal ---------- */
+      .modal {
+        position: fixed;
+        inset: 0;
+        z-index: 50;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+      }
+      .modal.open {
+        display: flex;
+      }
+      .modal-bg {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(6px);
+      }
+      .modal-card {
+        position: relative;
+        width: 100%;
+        max-width: 520px;
+        border-radius: 16px;
+        border: 1px solid rgba(34, 211, 238, 0.2);
+        background: var(--bg-2);
+        padding: 24px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      }
+      .modal-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+      }
+      .modal-close {
+        padding: 4px;
+        border-radius: 6px;
+        color: var(--dim);
+      }
+      .modal-close:hover {
+        background: rgba(255, 255, 255, 0.05);
+        color: #fff;
+      }
+      .modal-close svg {
+        width: 20px;
+        height: 20px;
+      }
+      .steps {
+        margin: 24px 0 0;
+        padding: 0;
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .steps li {
+        display: flex;
+        gap: 16px;
+      }
+      .step-n {
+        font-family: "Chakra Petch", sans-serif;
+        font-size: 14px;
+        color: var(--cyan);
+        flex-shrink: 0;
+      }
+      .step-t {
+        font-size: 14px;
+        font-weight: 500;
+        color: #f1f5f9;
+      }
+      .step-d {
+        margin-top: 4px;
+        font-size: 12px;
+        line-height: 1.7;
+        color: var(--muted);
+      }
+      .modal-warn {
+        margin-top: 24px;
+        border-radius: 12px;
+        border: 1px solid rgba(251, 191, 36, 0.2);
+        background: rgba(251, 191, 36, 0.05);
+        padding: 12px;
+        font-size: 12px;
+        line-height: 1.7;
+        color: rgba(254, 243, 199, 0.8);
+      }
+
+      /* ---------- Utilities ---------- */
+      .hidden {
+        display: none !important;
+      }
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Header -->
+    <header class="site-header">
+      <div class="container inner">
+        <a href="#top" class="brand">
+          <span class="brand-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 13c0 5-3.5 7.5-8 9-4.5-1.5-8-4-8-9V5l8-3 8 3v8z" />
+              <line x1="4" y1="4" x2="20" y2="20" />
+            </svg>
+          </span>
+          <span class="brand-text">
+            <span class="brand-name">TELEOFF</span>
+            <span class="brand-sub">WINDOWS CMD TOOL</span>
+          </span>
+        </a>
+        <nav class="nav">
+          <a href="#ops">操作一覧</a>
+          <a href="#preview">スクリプト</a>
+          <button type="button" id="btn-guide">使い方</button>
+        </nav>
+      </div>
+    </header>
+
+    <!-- Hero -->
+    <section class="hero" id="top">
+      <div class="hero-bg"></div>
+      <div class="hero-grid"></div>
+      <div class="container hero-inner">
+        <span class="badge">
+          <span class="dot"></span>
+          ADMIN ELEVATION READY
+        </span>
+        <h1>
+          Windows の監視を、
+          <span class="accent">ワンクリックで遮断。</span>
+        </h1>
+        <p class="lead">
+          診断データ、DiagTrack、CEIP、広告 ID、Cortana。よく使うテレメトリ停止コマンドを
+          選んで、管理者権限つきの .bat を生成します。ブラウザから Windows
+          を直接操作することはありません。生成したスクリプトをローカルで実行します。
+        </p>
+        <div class="hero-actions">
+          <button type="button" class="btn btn-primary" id="btn-hero-dl">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            遮断スクリプトをダウンロード
+          </button>
+          <a href="#ops" class="btn btn-ghost">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="4 17 10 11 4 5" />
+              <line x1="12" y1="19" x2="20" y2="19" />
+            </svg>
+            項目を選ぶ
+          </a>
+        </div>
+        <div class="stat-row">
+          <div class="stat-card"><div class="k">選択中</div><div class="v" id="stat-selected">0 / 0</div></div>
+          <div class="stat-card"><div class="k">出力</div><div class="v">CMD / .bat</div></div>
+          <div class="stat-card"><div class="k">権限</div><div class="v">UAC 自動要求</div></div>
+        </div>
+        <div class="hero-note">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2 4 6v6c0 5 3.5 7.5 8 10 4.5-2.5 8-5 8-10V6l-8-4z" />
+            <line x1="12" y1="9" x2="12" y2="13" />
+            <circle cx="12" cy="16" r="1" />
+          </svg>
+          <p>実行前にシステムの復元ポイント作成を推奨します。Windows Update の停止は既定でオフです。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main -->
+    <main class="main container" id="ops">
+      <section>
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">OPERATIONS</p>
+            <h2>遮断する項目</h2>
+          </div>
+          <input type="text" id="search" class="search" placeholder="サービス名・説明で検索" />
+        </div>
+
+        <div class="preset-grid" id="preset-grid"></div>
+
+        <div id="categories"></div>
+
+        <div class="empty hidden" id="empty">「<span id="empty-q"></span>」に一致する項目はありません</div>
+      </section>
+
+      <div class="preview-wrap">
+        <aside class="terminal" id="preview">
+          <div class="term-header">
+            <div class="term-dots">
+              <span></span><span></span><span></span>
+              <span class="term-title">TELEOFF.bat — cmd.exe</span>
+            </div>
+            <div class="mode-toggle">
+              <button type="button" data-mode="disable" id="mode-disable">遮断</button>
+              <button type="button" data-mode="restore" id="mode-restore">復元</button>
+            </div>
+          </div>
+          <div class="term-body">
+            <pre id="script-out"></pre>
+          </div>
+          <div class="term-footer">
+            <label class="checkbox-label">
+              <input type="checkbox" id="restore-point" checked />
+              <span>
+                実行前にシステムの復元ポイントを作成する
+                <span class="sub">Checkpoint-Computer をスクリプト先頭に挿入します</span>
+              </span>
+            </label>
+            <div class="flag-row" id="flag-row"></div>
+            <div class="action-row">
+              <button type="button" class="btn btn-primary" id="btn-download">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                <span id="dl-label">遮断 .bat</span>
+              </button>
+              <button type="button" class="btn btn-ghost" id="btn-copy">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                </svg>
+                <span id="copy-label">コピー</span>
+              </button>
+            </div>
+          </div>
+        </aside>
+        <div class="kpis">
+          <div class="kpi"><div class="k">サービス</div><div class="v" id="kpi-svc">0</div></div>
+          <div class="kpi"><div class="k">タスク</div><div class="v" id="kpi-task">0</div></div>
+          <div class="kpi"><div class="k">レジストリ他</div><div class="v" id="kpi-reg">0</div></div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Notes -->
+    <section class="notes">
+      <div class="container">
+        <p class="eyebrow">NOTES</p>
+        <h2 style="margin:4px 0 0;font-family:'Chakra Petch',sans-serif;font-size:24px;color:#fff;">実行前に知っておくこと</h2>
+        <div class="notes-grid">
+          <article class="note-card">
+            <h3>ブラウザは実行しません</h3>
+            <p>生成されるのはただのテキストです。実際の reg / sc / schtasks は、ダウンロードした .bat をあなたが実行したときだけ動きます。</p>
+          </article>
+          <article class="note-card">
+            <h3>UAC で管理者になる</h3>
+            <p>スクリプト先頭で net session を試し、失敗したら PowerShell の Start-Process -Verb RunAs で自分自身を昇格します。</p>
+          </article>
+          <article class="note-card">
+            <h3>戻せるようにしてある</h3>
+            <p>同じ項目の逆操作を「復元」モードで書き出せます。Windows Update は推奨セットに含めていません。</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <footer>TELEOFF — Windows テレメトリ遮断用 CMD ジェネレータ。設定変更は自己責任で。</footer>
+
+    <!-- Guide modal -->
+    <div class="modal" id="modal">
+      <button type="button" class="modal-bg" id="modal-bg" aria-label="閉じる"></button>
+      <div class="modal-card">
+        <div class="modal-head">
+          <div>
+            <p class="eyebrow">HOW TO USE</p>
+            <h2 style="margin:4px 0 0;font-family:'Chakra Petch',sans-serif;font-size:24px;color:#fff;">使い方</h2>
+          </div>
+          <button type="button" class="modal-close" id="modal-close">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+        <ol class="steps">
+          <li><span class="step-n">01</span><div><div class="step-t">項目を選ぶ</div><p class="step-d">推奨プリセットのままでも、個別にオンオフしても構いません。赤い「危険」ラベルは Windows Update など副作用の大きい項目です。</p></div></li>
+          <li><span class="step-n">02</span><div><div class="step-t">.bat をダウンロード</div><p class="step-d">「遮断 .bat」を保存します。UTF-8（BOM 付き）で書き出されるので、日本語メッセージも崩れません。</p></div></li>
+          <li><span class="step-n">03</span><div><div class="step-t">ダブルクリックで実行</div><p class="step-d">スクリプトが自分自身を管理者として再起動します。UAC で「はい」を選べば、管理者権限でコマンドが走ります。</p></div></li>
+          <li><span class="step-n">04</span><div><div class="step-t">再起動して完了</div><p class="step-d">終了時に再起動を尋ねます。DiagTrack や Autologger は再起動後に完全反映されます。戻したくなったら復元 .bat を使います。</p></div></li>
+        </ol>
+        <div class="modal-warn">
+          このサイトはコマンドをあなたの PC 上では実行しません。生成された .bat はローカルの cmd.exe で動きます。社用 PC ではポリシーで一部が拒否されることがあります。
+        </div>
+      </div>
+    </div>
+
+    <!-- SVG defs -->
+    <svg style="display:none">
+      <symbol id="i-check" viewBox="0 0 16 16" fill="none">
+        <path d="M3.5 8.2 6.4 11.2 12.5 4.8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+      </symbol>
+      <symbol id="i-warn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+        <line x1="12" y1="9" x2="12" y2="13" />
+        <line x1="12" y1="17" x2="12.01" y2="17" />
+      </symbol>
+      <symbol id="i-danger" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 13c0 5-3.5 7.5-8 9-4.5-1.5-8-4-8-9V5l8-3 8 3v8z" />
+        <line x1="12" y1="9" x2="12" y2="13" />
+        <circle cx="12" cy="16" r="1" />
+      </symbol>
+      <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2 4 6v6c0 5 3.5 7.5 8 10 4.5-2.5 8-5 8-10V6l-8-4z" />
+      </symbol>
+      <symbol id="i-restore" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="1 4 1 10 7 10" />
+        <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+      </symbol>
+    </svg>
+
+    <script>
+      // ============================================================
+      // Data
+      // ============================================================
+      const CATEGORIES = [
+        { id: "telemetry", label: "診断データ / テレメトリ", hint: "Microsoft へ送られる診断データの根幹を止めます" },
+        { id: "service", label: "Windows サービス", hint: "常駐サービスを停止し、自動起動も無効化します" },
+        { id: "task", label: "スケジュールタスク", hint: "バックグラウンドで動く収集タスクを無効化します" },
+        { id: "privacy", label: "プライバシー / 広告", hint: "行動追跡・広告 ID・フィードバック送信を遮断します" },
+        { id: "search", label: "検索 / Cortana", hint: "スタートメニューの Web 検索と音声アシスタントを止めます" },
+      ];
+
+      const OPERATIONS = [
+        {
+          id: "allow-telemetry", category: "telemetry",
+          title: "診断データ（テレメトリ）の無効化",
+          description: "AllowTelemetry を 0 に固定し、Windows が Microsoft へ診断データを送らないよう強制します。すべての遮断の土台になる設定です。",
+          impact: "safe",
+          disable: ['reg add "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection" /v "AllowTelemetry" /t REG_DWORD /d 0 /f'],
+          restore: ['reg add "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection" /v "AllowTelemetry" /t REG_DWORD /d 1 /f'],
+          defaultOn: true,
+        },
+        {
+          id: "diagtrack-logger", category: "telemetry",
+          title: "DiagTrack 自動ログの停止",
+          description: "AutoLogger-Diagtrack-Listener を無効化し、起動直後から診断トレースが記録されないようにします。",
+          impact: "safe",
+          disable: ['reg add "HKLM\\SYSTEM\\CurrentControlSet\\Control\\WMI\\Autologger\\AutoLogger-Diagtrack-Listener" /v "Start" /t REG_DWORD /d 0 /f'],
+          restore: ['reg add "HKLM\\SYSTEM\\CurrentControlSet\\Control\\WMI\\Autologger\\AutoLogger-Diagtrack-Listener" /v "Start" /t REG_DWORD /d 1 /f'],
+          defaultOn: true,
+        },
+        {
+          id: "diagtrack", category: "service",
+          title: "接続ユーザー体験とテレメトリ（DiagTrack）",
+          description: "Connected User Experiences and Telemetry サービスを停止し、自動起動を無効化します。テレメトリ送信の中核サービスです。",
+          impact: "safe",
+          disable: ["sc stop DiagTrack", "sc config DiagTrack start= disabled"],
+          restore: ["sc config DiagTrack start= auto", "sc start DiagTrack"],
+          defaultOn: true,
+        },
+        {
+          id: "dmwappush", category: "service",
+          title: "WAP プッシュメッセージ転送（dmwappushservice）",
+          description: "デバイス管理用の WAP プッシュ受信サービスを停止します。テレメトリやリモート設定の受け口のひとつです。",
+          impact: "safe",
+          disable: ["sc stop dmwappushservice", "sc config dmwappushservice start= disabled"],
+          restore: ["sc config dmwappushservice start= demand", "sc start dmwappushservice"],
+          defaultOn: true,
+        },
+        {
+          id: "lfsvc", category: "service",
+          title: "位置情報サービス（Geolocation / lfsvc）",
+          description: "Windows の位置情報サービスを停止します。天気やマップなど位置を使うアプリは動かなくなる場合があります。",
+          impact: "caution", impactNote: "位置情報を使うアプリが使えなくなります",
+          disable: ["sc stop lfsvc", "sc config lfsvc start= disabled"],
+          restore: ["sc config lfsvc start= demand", "sc start lfsvc"],
+          defaultOn: true,
+        },
+        {
+          id: "sensrsvc", category: "service",
+          title: "センサー サービス（SensrSvc）",
+          description: "端末センサーの監視サービスを停止します。タブレットの回転検知など一部機能に影響することがあります。",
+          impact: "caution", impactNote: "画面回転などのセンサー機能に影響する場合があります",
+          disable: ["sc stop SensrSvc", "sc config SensrSvc start= disabled"],
+          restore: ["sc config SensrSvc start= demand"],
+          defaultOn: true,
+        },
+        {
+          id: "sensordata", category: "service",
+          title: "センサー データ サービス（SensorDataService）",
+          description: "センサーデータの収集・配信サービスを停止し、自動起動も無効化します。",
+          impact: "caution", impactNote: "センサー連携アプリに影響する場合があります",
+          disable: ["sc stop SensorDataService", "sc config SensorDataService start= disabled"],
+          restore: ["sc config SensorDataService start= demand"],
+          defaultOn: true,
+        },
+        {
+          id: "sysmain", category: "service",
+          title: "SysMain（旧 SuperFetch）",
+          description: "アプリの先読みサービスを停止します。HDD 環境では体感が落ちることがあり、SSD 環境では無効化で軽くなることがあります。",
+          impact: "caution", impactNote: "HDD 搭載 PC では起動が遅くなることがあります",
+          disable: ["sc stop SysMain", "sc config SysMain start= disabled"],
+          restore: ["sc config SysMain start= auto", "sc start SysMain"],
+          defaultOn: false,
+        },
+        {
+          id: "wersvc", category: "service",
+          title: "Windows エラー報告（WerSvc）",
+          description: "クラッシュ報告を Microsoft へ送るサービスを停止します。社内向けの独自ダンプ収集には影響しません。",
+          impact: "caution", impactNote: "問題報告の自動送信が止まります",
+          disable: ["sc stop WerSvc", "sc config WerSvc start= disabled"],
+          restore: ["sc config WerSvc start= demand"],
+          defaultOn: true,
+        },
+        {
+          id: "wuauserv", category: "service",
+          title: "Windows Update（wuauserv）",
+          description: "Windows Update サービス自体を停止します。セキュリティ更新が届かなくなるため、検証機やオフライン用途以外では推奨しません。",
+          impact: "danger", impactNote: "セキュリティ更新が届かなくなります。通常はオフのままにしてください",
+          disable: ["sc stop wuauserv", "sc config wuauserv start= disabled"],
+          restore: ["sc config wuauserv start= demand", "sc start wuauserv"],
+          defaultOn: false,
+        },
+        {
+          id: "compat-appraiser", category: "task",
+          title: "互換性データ収集（Compatibility Appraiser）",
+          description: "Microsoft Compatibility Appraiser を無効化します。バックグラウンドで CPU を大きく食うことで知られる収集タスクです。",
+          impact: "safe",
+          disable: ['schtasks /change /tn "\\Microsoft\\Windows\\Application Experience\\Microsoft Compatibility Appraiser" /disable'],
+          restore: ['schtasks /change /tn "\\Microsoft\\Windows\\Application Experience\\Microsoft Compatibility Appraiser" /enable'],
+          defaultOn: true,
+        },
+        {
+          id: "programdata-updater", category: "task",
+          title: "プログラムデータ収集（ProgramDataUpdater）",
+          description: "インストール済みプログラムの情報を収集するタスクを無効化します。",
+          impact: "safe",
+          disable: ['schtasks /change /tn "\\Microsoft\\Windows\\Application Experience\\ProgramDataUpdater" /disable'],
+          restore: ['schtasks /change /tn "\\Microsoft\\Windows\\Application Experience\\ProgramDataUpdater" /enable'],
+          defaultOn: true,
+        },
+        {
+          id: "startup-app-task", category: "task",
+          title: "アプリ起動トラッキング（StartupAppTask）",
+          description: "スタートアップアプリの追跡タスクを無効化し、起動プログラムの利用状況送信を止めます。",
+          impact: "safe",
+          disable: ['schtasks /change /tn "\\Microsoft\\Windows\\Application Experience\\StartupAppTask" /disable'],
+          restore: ['schtasks /change /tn "\\Microsoft\\Windows\\Application Experience\\StartupAppTask" /enable'],
+          defaultOn: true,
+        },
+        {
+          id: "ceip-consolidator", category: "task",
+          title: "カスタマー体験向上プログラム（Consolidator）",
+          description: "CEIP の集約タスクを無効化し、利用状況データのまとめ送信を止めます。",
+          impact: "safe",
+          disable: ['schtasks /change /tn "\\Microsoft\\Windows\\Customer Experience Improvement Program\\Consolidator" /disable'],
+          restore: ['schtasks /change /tn "\\Microsoft\\Windows\\Customer Experience Improvement Program\\Consolidator" /enable'],
+          defaultOn: true,
+        },
+        {
+          id: "kernel-ceip", category: "task",
+          title: "カーネル CEIP（KernelCeipTask）",
+          description: "OS カーネル層の利用データ収集タスクを無効化します。システムの根底に近い収集経路です。",
+          impact: "safe",
+          disable: ['schtasks /change /tn "\\Microsoft\\Windows\\Customer Experience Improvement Program\\KernelCeipTask" /disable'],
+          restore: ['schtasks /change /tn "\\Microsoft\\Windows\\Customer Experience Improvement Program\\KernelCeipTask" /enable'],
+          defaultOn: true,
+        },
+        {
+          id: "usb-ceip", category: "task",
+          title: "USB 利用状況データ（UsbCeip）",
+          description: "USB デバイスの利用状況を集める CEIP タスクを無効化します。",
+          impact: "safe",
+          disable: ['schtasks /change /tn "\\Microsoft\\Windows\\Customer Experience Improvement Program\\UsbCeip" /disable'],
+          restore: ['schtasks /change /tn "\\Microsoft\\Windows\\Customer Experience Improvement Program\\UsbCeip" /enable'],
+          defaultOn: true,
+        },
+        {
+          id: "disk-diagnostic", category: "task",
+          title: "ディスク診断データ収集",
+          description: "Microsoft-Windows-DiskDiagnosticDataCollector を無効化し、ディスク診断データの送信を止めます。",
+          impact: "safe",
+          disable: ['schtasks /change /tn "\\Microsoft\\Windows\\DiskDiagnostic\\Microsoft-Windows-DiskDiagnosticDataCollector" /disable'],
+          restore: ['schtasks /change /tn "\\Microsoft\\Windows\\DiskDiagnostic\\Microsoft-Windows-DiskDiagnosticDataCollector" /enable'],
+          defaultOn: true,
+        },
+        {
+          id: "tailored", category: "privacy",
+          title: "ユーザー行動追跡（Tailored Experiences）",
+          description: "診断データを使った「あなた向けのヒント」機能をオフにし、行動に基づくパーソナライズを止めます。",
+          impact: "safe",
+          disable: ['reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Privacy" /v "TailoredExperiencesWithDiagnosticDataEnabled" /t REG_DWORD /d 0 /f'],
+          restore: ['reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Privacy" /v "TailoredExperiencesWithDiagnosticDataEnabled" /t REG_DWORD /d 1 /f'],
+          defaultOn: true,
+        },
+        {
+          id: "advertising-id", category: "privacy",
+          title: "広告識別子（広告 ID）",
+          description: "アプリ間で使われる広告 ID を無効化し、横断的な追跡を防ぎます。",
+          impact: "safe",
+          disable: ['reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\AdvertisingInfo" /v "Enabled" /t REG_DWORD /d 0 /f'],
+          restore: ['reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\AdvertisingInfo" /v "Enabled" /t REG_DWORD /d 1 /f'],
+          defaultOn: true,
+        },
+        {
+          id: "tipc", category: "privacy",
+          title: "手書き / タイピング履歴の収集",
+          description: "入力改善プログラム（TIPC）をオフにし、キー入力やインクのサンプル送信を止めます。",
+          impact: "safe",
+          disable: ['reg add "HKLM\\Software\\Microsoft\\Input\\TIPC" /v "Enabled" /t REG_DWORD /d 0 /f'],
+          restore: ['reg add "HKLM\\Software\\Microsoft\\Input\\TIPC" /v "Enabled" /t REG_DWORD /d 1 /f'],
+          defaultOn: true,
+        },
+        {
+          id: "siuf", category: "privacy",
+          title: "フィードバック頻度を「なし」に固定",
+          description: "Windows の満足度アンケート（SIUF）を出さないよう、期間内の回数を 0 に固定します。",
+          impact: "safe",
+          disable: ['reg add "HKCU\\SOFTWARE\\Microsoft\\Siuf\\Rules" /v "NumberOfSIUFInPeriod" /t REG_DWORD /d 0 /f'],
+          restore: ['reg delete "HKCU\\SOFTWARE\\Microsoft\\Siuf\\Rules" /v "NumberOfSIUFInPeriod" /f'],
+          defaultOn: true,
+        },
+        {
+          id: "user-activities", category: "privacy",
+          title: "アクティビティ履歴（タイムライン）",
+          description: "PublishUserActivities を無効化し、タイムライン等に使う行動履歴の収集を止めます。",
+          impact: "safe",
+          disable: ['reg add "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\System" /v "PublishUserActivities" /t REG_DWORD /d 0 /f'],
+          restore: ['reg add "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\System" /v "PublishUserActivities" /t REG_DWORD /d 1 /f'],
+          defaultOn: true,
+        },
+        {
+          id: "search-suggestions", category: "search",
+          title: "スタートメニューの Web 検索（Bing）",
+          description: "検索ボックスのサジェストと Web 検索を無効化し、入力内容が Bing に送られないようにします。",
+          impact: "safe",
+          disable: ['reg add "HKCU\\Software\\Policies\\Microsoft\\Windows\\Explorer" /v "DisableSearchBoxSuggestions" /t REG_DWORD /d 1 /f'],
+          restore: ['reg add "HKCU\\Software\\Policies\\Microsoft\\Windows\\Explorer" /v "DisableSearchBoxSuggestions" /t REG_DWORD /d 0 /f'],
+          defaultOn: true,
+        },
+        {
+          id: "cortana", category: "search",
+          title: "Cortana のデータ収集",
+          description: "Cortana をポリシーで無効化し、音声アシスタント経由のデータ収集を止めます。",
+          impact: "safe",
+          disable: ['reg add "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Search" /v "AllowCortana" /t REG_DWORD /d 0 /f'],
+          restore: ['reg add "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Search" /v "AllowCortana" /t REG_DWORD /d 1 /f'],
+          defaultOn: true,
+        },
+      ];
+
+      const PRESETS = {
+        recommended: { id: "recommended", label: "推奨", description: "安全寄りの定番セット。Update と SysMain は触りません。" },
+        maximum: { id: "maximum", label: "最大遮断", description: "リストにある項目をすべて適用します。副作用に注意。" },
+        telemetry: { id: "telemetry", label: "テレメトリのみ", description: "診断データ・DiagTrack・CEIP だけを狙います。" },
+        none: { id: "none", label: "すべて解除", description: "選択をクリアして、自分で組み立てます。" },
+      };
+
+      function idsForPreset(preset) {
+        switch (preset) {
+          case "recommended":
+            return OPERATIONS.filter(op => op.defaultOn).map(op => op.id);
+          case "maximum":
+            return OPERATIONS.map(op => op.id);
+          case "telemetry":
+            return OPERATIONS.filter(op => [
+              "allow-telemetry","diagtrack-logger","diagtrack","dmwappush",
+              "compat-appraiser","programdata-updater","ceip-consolidator",
+              "kernel-ceip","usb-ceip","disk-diagnostic"
+            ].includes(op.id)).map(op => op.id);
+          case "none": return [];
+        }
+      }
+
+      // ============================================================
+      // Script Generation
+      // ============================================================
+      const UAC_BLOCK = `@echo off
+chcp 65001 >nul
+setlocal EnableExtensions EnableDelayedExpansion
+title TELEOFF - Windows Telemetry Control
+color 0B
+
+:: ============================================================
+::  管理者権限の確認と UAC 昇格
+:: ============================================================
+net session >nul 2>&1
+if %errorLevel% == 0 goto :ADMIN
+
+echo.
+echo  [!] 管理者権限が必要です。
+echo      UAC ダイアログが表示されたら「はい」を選んでください。
+echo.
+powershell -NoProfile -ExecutionPolicy Bypass -Command ^
+  "Start-Process -FilePath '%~f0' -Verb RunAs"
+if errorlevel 1 (
+  echo  [X] 昇格に失敗しました。このファイルを右クリックし、
+  echo      「管理者として実行」を選んでください。
+  pause
+)
+exit /b
+
+:ADMIN
+cd /d "%~dp0"
+color 0A
+`;
+
+      function restorePointBlock() {
+        return `
+echo  [*] システムの復元ポイントを作成しています...
+powershell -NoProfile -ExecutionPolicy Bypass -Command ^
+  "try { Checkpoint-Computer -Description 'TELEOFF' -RestorePointType 'MODIFY_SETTINGS'; Write-Host '    OK' } catch { Write-Host '    SKIP 復元ポイントを作成できませんでした' }"
+echo.
+`;
+      }
+
+      function banner(mode) {
+        const title = mode === "disable"
+          ? "TELEOFF  -  Windows テレメトリ遮断"
+          : "TELEOFF  -  設定の復元";
+        return [
+          "echo.",
+          "echo  ============================================================",
+          `echo    ${title}`,
+          "echo    Administrator 権限で実行中",
+          "echo  ============================================================",
+          "echo.",
+        ].join("\n");
+      }
+
+      function commandBlock(op, index, total, mode) {
+        const cmds = mode === "disable" ? op.disable : op.restore;
+        const lines = [`echo  [${index}/${total}] ${op.title}`];
+        for (const cmd of cmds) {
+          lines.push(cmd);
+          lines.push("if !errorlevel! == 0 (echo      OK) else (echo      WARN  失敗または対象なし & set /a FAILS+=1)");
+        }
+        lines.push("echo.");
+        return lines.join("\n");
+      }
+
+      function generateScript(options) {
+        const set = new Set(options.selectedIds);
+        const ops = OPERATIONS.filter(op => set.has(op.id));
+        const total = ops.length;
+        const modeLabel = options.mode === "disable" ? "遮断" : "復元";
+        const body = ops.map((op, i) => commandBlock(op, i + 1, total, options.mode)).join("\n");
+
+        const footer = options.mode === "disable"
+          ? `
+echo  ------------------------------------------------------------
+echo   遮断処理が完了しました。 失敗: !FAILS! 件 / 対象: ${total} 項目
+echo   一部の設定は再起動後に完全反映されます。
+echo  ------------------------------------------------------------
+echo.
+echo  再起動しますか？
+choice /C YN /M "今すぐ再起動する (Y) / 後で自分で再起動 (N)"
+if errorlevel 2 goto :END
+if errorlevel 1 shutdown /r /t 15 /c "TELEOFF: テレメトリ設定を反映するため再起動します"
+goto :END
+`
+          : `
+echo  ------------------------------------------------------------
+echo   復元処理が完了しました。 失敗: !FAILS! 件 / 対象: ${total} 項目
+echo   一部のサービスは再起動後に完全復帰します。
+echo  ------------------------------------------------------------
+echo.
+echo  再起動しますか？
+choice /C YN /M "今すぐ再起動する (Y) / 後で自分で再起動 (N)"
+if errorlevel 2 goto :END
+if errorlevel 1 shutdown /r /t 15 /c "TELEOFF: 復元設定を反映するため再起動します"
+goto :END
+`;
+
+        return `${UAC_BLOCK}
+set FAILS=0
+
+${banner(options.mode)}
+echo  モード        : ${modeLabel}
+echo  選択項目      : ${total}
+echo  実行ユーザ    : %USERNAME%
+echo  実行日時      : %DATE% %TIME%
+echo.
+${options.createRestorePoint ? restorePointBlock() : ""}
+${body}
+${footer}
+:END
+echo.
+echo  ウィンドウを閉じて終了します。
+pause
+endlocal
+`;
+      }
+
+      function scriptFileName(mode) {
+        const stamp = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+        return mode === "disable"
+          ? `TELEOFF_disable_${stamp}.bat`
+          : `TELEOFF_restore_${stamp}.bat`;
+      }
+
+      function downloadTextFile(content, filename) {
+        const bom = "\uFEFF";
+        const blob = new Blob([bom + content], { type: "application/octet-stream;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url; a.download = filename;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }
+
+      function countByCategory(ids) {
+        const set = new Set(ids);
+        const counts = { telemetry: 0, service: 0, task: 0, privacy: 0, search: 0, danger: 0, caution: 0 };
+        for (const op of OPERATIONS) {
+          if (!set.has(op.id)) continue;
+          counts[op.category] += 1;
+          if (op.impact === "danger") counts.danger += 1;
+          if (op.impact === "caution") counts.caution += 1;
+        }
+        return counts;
+      }
+
+      // ============================================================
+      // State + rendering
+      // ============================================================
+      const state = {
+        selected: idsForPreset("recommended"),
+        preset: "recommended",
+        mode: "disable",
+        restorePoint: true,
+        query: "",
+        copied: false,
+      };
+
+      const $ = (sel) => document.querySelector(sel);
+      const el = {
+        preset: $("#preset-grid"),
+        cats: $("#categories"),
+        empty: $("#empty"),
+        emptyQ: $("#empty-q"),
+        search: $("#search"),
+        statSelected: $("#stat-selected"),
+        scriptOut: $("#script-out"),
+        modeDisable: $("#mode-disable"),
+        modeRestore: $("#mode-restore"),
+        restorePoint: $("#restore-point"),
+        flagRow: $("#flag-row"),
+        dlLabel: $("#dl-label"),
+        copyLabel: $("#copy-label"),
+        kpiSvc: $("#kpi-svc"),
+        kpiTask: $("#kpi-task"),
+        kpiReg: $("#kpi-reg"),
+      };
+
+      function escapeHtml(s) {
+        return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+      }
+
+      function renderPresets() {
+        el.preset.innerHTML = Object.values(PRESETS).map(p => `
+          <button type="button" class="preset ${state.preset === p.id ? "active" : ""}" data-preset="${p.id}">
+            <div class="t">${p.label}</div>
+            <div class="d">${p.description}</div>
+          </button>
+        `).join("");
+        el.preset.querySelectorAll("[data-preset]").forEach(b => {
+          b.addEventListener("click", () => {
+            state.preset = b.dataset.preset;
+            state.selected = idsForPreset(state.preset);
+            renderAll();
+          });
+        });
+      }
+
+      function chip(impact) {
+        if (impact === "safe") return `<span class="chip safe">安全</span>`;
+        if (impact === "caution") return `<span class="chip caution"><svg width="12" height="12"><use href="#i-warn"/></svg>注意</span>`;
+        return `<span class="chip danger"><svg width="12" height="12"><use href="#i-danger"/></svg>危険</span>`;
+      }
+
+      function renderCategories() {
+        const q = state.query.trim().toLowerCase();
+        const filtered = !q ? OPERATIONS : OPERATIONS.filter(op =>
+          op.title.toLowerCase().includes(q) ||
+          op.description.toLowerCase().includes(q) ||
+          op.disable.some(c => c.toLowerCase().includes(q))
+        );
+
+        if (filtered.length === 0) {
+          el.cats.innerHTML = "";
+          el.empty.classList.remove("hidden");
+          el.emptyQ.textContent = state.query;
+          return;
+        }
+        el.empty.classList.add("hidden");
+
+        const selSet = new Set(state.selected);
+        el.cats.innerHTML = CATEGORIES.map(cat => {
+          const ops = filtered.filter(op => op.category === cat.id);
+          if (ops.length === 0) return "";
+          const ids = ops.map(o => o.id);
+          const onCount = ids.filter(id => selSet.has(id)).length;
+          const allOn = onCount === ids.length && ids.length > 0;
+
+          const rows = ops.map(op => `
+            <label class="op ${selSet.has(op.id) ? "checked" : ""}" data-op="${op.id}">
+              <input type="checkbox" ${selSet.has(op.id) ? "checked" : ""} />
+              <span class="checkbox"><svg><use href="#i-check"/></svg></span>
+              <span class="op-body">
+                <span class="op-title-row">
+                  <span class="op-title">${escapeHtml(op.title)}</span>
+                  ${chip(op.impact)}
+                </span>
+                <span class="op-desc">${escapeHtml(op.description)}</span>
+                ${op.impactNote ? `<span class="op-warn">⚠ ${escapeHtml(op.impactNote)}</span>` : ""}
+                <span class="op-cmd">${escapeHtml(op.disable.slice(0, 2).join("  ·  "))}</span>
+              </span>
+            </label>
+          `).join("");
+
+          return `
+            <div class="category">
+              <div class="category-head">
+                <div>
+                  <h3>${cat.label}</h3>
+                  <p>${cat.hint}</p>
+                </div>
+                <button type="button" class="cat-toggle" data-cat="${cat.id}" data-ids="${ids.join(",")}" data-allon="${allOn ? 1 : 0}">
+                  ${allOn ? "この分類を解除" : "この分類をすべて選択"}
+                  <span class="frac">${onCount}/${ids.length}</span>
+                </button>
+              </div>
+              <div class="op-list">${rows}</div>
+            </div>
+          `;
+        }).join("");
+
+        el.cats.querySelectorAll("[data-op]").forEach(row => {
+          row.addEventListener("click", (e) => {
+            e.preventDefault();
+            const id = row.dataset.op;
+            state.preset = "none";
+            state.selected = state.selected.includes(id)
+              ? state.selected.filter(x => x !== id)
+              : [...state.selected, id];
+            renderAll();
+          });
+        });
+        el.cats.querySelectorAll(".cat-toggle").forEach(btn => {
+          btn.addEventListener("click", () => {
+            const ids = btn.dataset.ids.split(",");
+            const allOn = btn.dataset.allon === "1";
+            state.preset = "none";
+            if (allOn) {
+              state.selected = state.selected.filter(id => !ids.includes(id));
+            } else {
+              const set = new Set(state.selected);
+              ids.forEach(id => set.add(id));
+              state.selected = Array.from(set);
+            }
+            renderAll();
+          });
+        });
+      }
+
+      function renderScript() {
+        const script = generateScript({
+          mode: state.mode,
+          selectedIds: state.selected,
+          createRestorePoint: state.restorePoint,
+        });
+        const lines = script.split("\n");
+        el.scriptOut.innerHTML = lines.map((line, i) => {
+          let cls = "";
+          if (line.startsWith("::") || line.startsWith("echo")) cls = "comment";
+          else if (line.startsWith("reg ") || line.startsWith("sc ") || line.startsWith("schtasks")) cls = "cmd";
+          return `<div class="ln"><span class="num">${i + 1}</span><span class="${cls}">${escapeHtml(line || " ")}</span></div>`;
+        }).join("");
+        return script;
+      }
+
+      function renderMode() {
+        el.modeDisable.classList.toggle("active-disable", state.mode === "disable");
+        el.modeRestore.classList.toggle("active-restore", state.mode === "restore");
+        el.dlLabel.textContent = state.mode === "disable" ? "遮断 .bat" : "復元 .bat";
+      }
+
+      function renderMeta() {
+        const c = countByCategory(state.selected);
+        el.statSelected.textContent = `${state.selected.length} / ${OPERATIONS.length}`;
+        el.kpiSvc.textContent = c.service;
+        el.kpiTask.textContent = c.task;
+        el.kpiReg.textContent = c.telemetry + c.privacy + c.search;
+
+        let flags = `<span class="flag">${state.selected.length} 項目</span>`;
+        if (c.caution > 0) flags += `<span class="flag caution">注意 ${c.caution}</span>`;
+        if (c.danger > 0) flags += `<span class="flag danger">危険 ${c.danger}</span>`;
+        flags += `<span class="flag cyan"><svg><use href="#i-shield"/></svg>UAC 自動要求</span>`;
+        el.flagRow.innerHTML = flags;
+
+        const dlBtn = document.getElementById("btn-download");
+        const cpBtn = document.getElementById("btn-copy");
+        dlBtn.disabled = state.selected.length === 0;
+        cpBtn.disabled = state.selected.length === 0;
+      }
+
+      function renderAll() {
+        renderPresets();
+        renderCategories();
+        renderMode();
+        renderScript();
+        renderMeta();
+      }
+
+      // ============================================================
+      // Events
+      // ============================================================
+      el.search.addEventListener("input", (e) => { state.query = e.target.value; renderCategories(); });
+      el.modeDisable.addEventListener("click", () => { state.mode = "disable"; renderAll(); });
+      el.modeRestore.addEventListener("click", () => { state.mode = "restore"; renderAll(); });
+      el.restorePoint.addEventListener("change", (e) => { state.restorePoint = e.target.checked; renderScript(); });
+
+      function download() {
+        if (state.selected.length === 0) return;
+        const script = renderScript();
+        downloadTextFile(script, scriptFileName(state.mode));
+      }
+
+      document.getElementById("btn-download").addEventListener("click", download);
+      document.getElementById("btn-hero-dl").addEventListener("click", download);
+
+      document.getElementById("btn-copy").addEventListener("click", async () => {
+        if (state.selected.length === 0) return;
+        const script = renderScript();
+        try {
+          await navigator.clipboard.writeText(script);
+          el.copyLabel.textContent = "コピー済";
+          setTimeout(() => { el.copyLabel.textContent = "コピー"; }, 1600);
+        } catch {
+          download();
+        }
+      });
+
+      const modal = document.getElementById("modal");
+      document.getElementById("btn-guide").addEventListener("click", () => modal.classList.add("open"));
+      document.getElementById("modal-close").addEventListener("click", () => modal.classList.remove("open"));
+      document.getElementById("modal-bg").addEventListener("click", () => modal.classList.remove("open"));
+
+      // init
+      renderAll();
+    </script>
+  </body>
+</html>
