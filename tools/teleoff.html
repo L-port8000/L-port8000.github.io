@@ -4,7 +4,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>TELEOFF | Windows テレメトリ遮断ツール</title>
+    <title>TeleGuard | Windows テレメトリ遮断ツール</title>
     <meta
       name="description"
       content="Windows の診断データ・DiagTrack・CEIP を止める管理者権限つき CMD スクリプトを生成します。"
@@ -975,7 +975,7 @@
             </svg>
           </span>
           <span class="brand-text">
-            <span class="brand-name">TELEOFF</span>
+            <span class="brand-name">TeleGuard</span>
             <span class="brand-sub">WINDOWS CMD TOOL</span>
           </span>
         </a>
@@ -1061,7 +1061,7 @@
           <div class="term-header">
             <div class="term-dots">
               <span></span><span></span><span></span>
-              <span class="term-title">TELEOFF.bat — cmd.exe</span>
+              <span class="term-title">TeleGuard.bat — cmd.exe</span>
             </div>
             <div class="mode-toggle">
               <button type="button" data-mode="disable" id="mode-disable">遮断</button>
@@ -1129,7 +1129,7 @@
       </div>
     </section>
 
-    <footer>TELEOFF — Windows テレメトリ遮断用 CMD ジェネレータ。設定変更は自己責任で。</footer>
+    <footer>TeleGuard — Windows テレメトリ遮断用 CMD ジェネレータ。設定変更は自己責任で。</footer>
 
     <!-- Guide modal -->
     <div class="modal" id="modal">
@@ -1443,7 +1443,7 @@
       const UAC_BLOCK = `@echo off
 chcp 65001 >nul
 setlocal EnableExtensions EnableDelayedExpansion
-title TELEOFF - Windows Telemetry Control
+title TeleGuard - Windows Telemetry Control
 color 0B
 
 :: ============================================================
@@ -1474,15 +1474,15 @@ color 0A
         return `
 echo  [*] システムの復元ポイントを作成しています...
 powershell -NoProfile -ExecutionPolicy Bypass -Command ^
-  "try { Checkpoint-Computer -Description 'TELEOFF' -RestorePointType 'MODIFY_SETTINGS'; Write-Host '    OK' } catch { Write-Host '    SKIP 復元ポイントを作成できませんでした' }"
+  "try { Checkpoint-Computer -Description 'TeleGuard' -RestorePointType 'MODIFY_SETTINGS'; Write-Host '    OK' } catch { Write-Host '    SKIP 復元ポイントを作成できませんでした' }"
 echo.
 `;
       }
 
       function banner(mode) {
         const title = mode === "disable"
-          ? "TELEOFF  -  Windows テレメトリ遮断"
-          : "TELEOFF  -  設定の復元";
+          ? "TeleGuard  -  Windows テレメトリ遮断"
+          : "TeleGuard  -  設定の復元";
         return [
           "echo.",
           "echo  ============================================================",
@@ -1521,7 +1521,7 @@ echo.
 echo  再起動しますか？
 choice /C YN /M "今すぐ再起動する (Y) / 後で自分で再起動 (N)"
 if errorlevel 2 goto :END
-if errorlevel 1 shutdown /r /t 15 /c "TELEOFF: テレメトリ設定を反映するため再起動します"
+if errorlevel 1 shutdown /r /t 15 /c "TeleGuard: テレメトリ設定を反映するため再起動します"
 goto :END
 `
           : `
@@ -1533,7 +1533,7 @@ echo.
 echo  再起動しますか？
 choice /C YN /M "今すぐ再起動する (Y) / 後で自分で再起動 (N)"
 if errorlevel 2 goto :END
-if errorlevel 1 shutdown /r /t 15 /c "TELEOFF: 復元設定を反映するため再起動します"
+if errorlevel 1 shutdown /r /t 15 /c "TeleGuard: 復元設定を反映するため再起動します"
 goto :END
 `;
 
@@ -1560,8 +1560,8 @@ endlocal
       function scriptFileName(mode) {
         const stamp = new Date().toISOString().slice(0, 10).replace(/-/g, "");
         return mode === "disable"
-          ? `TELEOFF_disable_${stamp}.bat`
-          : `TELEOFF_restore_${stamp}.bat`;
+          ? `TeleGuard_disable_${stamp}.bat`
+          : `TeleGuard_restore_${stamp}.bat`;
       }
 
       function downloadTextFile(content, filename) {
