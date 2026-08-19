@@ -53,6 +53,13 @@
   .sizePanel input:focus{ background:#fff; color:#171717; outline:none; }
   #toast{ position:fixed; left:50%; bottom:72px; transform:translateX(-50%); z-index:90; display:none;
     background:rgba(23,23,23,0.92); color:#fff; font-size:13px; padding:10px 18px; border-radius:999px; pointer-events:none; }
+  #progressOverlay{ position:fixed; inset:0; z-index:100; display:none; align-items:center; justify-content:center;
+    background:rgba(23,23,23,0.45); }
+  #progressBox{ background:#fff; border-radius:14px; padding:18px 22px; width:280px; box-shadow:0 20px 60px rgba(0,0,0,.30); }
+  #progressMsg{ font-size:13px; font-weight:600; margin-bottom:10px; }
+  #progressBarWrap{ height:8px; background:#e5e5e5; border-radius:999px; overflow:hidden; }
+  #progressBar{ height:100%; width:0%; background:#171717; border-radius:999px; transition:width .12s ease; }
+  #progressPct{ margin-top:8px; font-size:12px; color:#737373; text-align:right; }
 
   #zoomBar{ position:absolute; right:14px; bottom:14px; z-index:10; display:flex; align-items:center; gap:2px;
     background:#fff; border:1px solid #e5e5e5; border-radius:999px; padding:4px; box-shadow:0 4px 16px rgba(0,0,0,.10); }
@@ -143,6 +150,14 @@
       <span class="spLbl">長さ</span><input id="spL" type="number" min="1" step="1">
     </div>
     <div id="toast"></div>
+
+  <div id="progressOverlay">
+    <div id="progressBox">
+      <div id="progressMsg">処理中…</div>
+      <div id="progressBarWrap"><div id="progressBar"></div></div>
+      <div id="progressPct">0%</div>
+    </div>
+  </div>
     <div id="zoomBar">
       <button id="zoomOut" title="縮小">－</button>
       <span id="zoomLabel" title="クリックでリセット">100%</span>
@@ -200,6 +215,22 @@ function toast(msg){
   if (toastTimer) clearTimeout(toastTimer);
   toastTimer = setTimeout(function(){ toastEl.style.display = 'none'; }, 1600);
 }
+var progressOverlay = document.getElementById('progressOverlay');
+var progressMsg = document.getElementById('progressMsg');
+var progressBar = document.getElementById('progressBar');
+var progressPct = document.getElementById('progressPct');
+function showProgress(msg){
+  progressMsg.textContent = msg || '処理中…';
+  setProgress(0);
+  progressOverlay.style.display = 'flex';
+}
+function setProgress(p){
+  p = clamp(p, 0, 100);
+  progressBar.style.width = p + '%';
+  progressPct.textContent = Math.round(p) + '%';
+}
+function hideProgress(){ progressOverlay.style.display = 'none'; }
+function nextTick(cb){ requestAnimationFrame(function(){ setTimeout(cb, 0); }); }
 var ctxMenuEl = document.getElementById('contextMenu');
 var zoomLabel = document.getElementById('zoomLabel');
 var dimGroup = document.getElementById('dimGroup');
@@ -353,8 +384,22 @@ function getGroupHandle(world){
 }
 function normRect(x1, y1, x2, y2){ return { x: Math.min(x1,x2), y: Math.min(y1,y2), w: Math.abs(x2-x1), h: Math.abs(y2-y1) }; }
 
-/* ================= history ================= */
+/* ================= history / local persistence ================= */
 function snapshot(){ return deepClone(elements); }
+/* 元のバージョンと同じ保存場所（localStorage キー 'freeboard-data'、形式 { elements: [...] }） */
+function saveToLocalStorage(){
+  try { localStorage.setItem('freeboard-data', JSON.stringify({ elements: elements })); }
+  catch (e) { /* 容量不足・非対応環境は無視 */ }
+}
+function loadFromLocalStorage(){
+  try {
+    var raw = localStorage.getItem('freeboard-data');
+    if (raw){
+      var data = JSON.parse(raw);
+      if (data && Array.isArray(data.elements)) elements = data.elements;
+    }
+  } catch (e) { /* 壊れたデータは無視 */ }
+}
 function commitState(next, sel){
   elements = next;
   selectedIds = sel || selectedIds;
@@ -362,6 +407,7 @@ function commitState(next, sel){
   history.push(snapshot());
   if (history.length > 100) history.shift();
   historyIndex = history.length - 1;
+  saveToLocalStorage();
   updateUI();
   render();
 }
@@ -370,6 +416,7 @@ function undo(){
   historyIndex--;
   elements = deepClone(history[historyIndex]);
   selectedIds = [];
+  saveToLocalStorage();
   updateUI(); render();
 }
 function redo(){
@@ -377,6 +424,7 @@ function redo(){
   historyIndex++;
   elements = deepClone(history[historyIndex]);
   selectedIds = [];
+  saveToLocalStorage();
   updateUI(); render();
 }
 
@@ -789,8 +837,12 @@ textEditor.addEventListener('blur', function(){ closeEditor(true); });
 document.getElementById('imgInput').addEventListener('change', function(e){
   var f = e.target.files && e.target.files[0];
   if (!f) return;
+  e.target.value = '';
+  showProgress('画像を読み込み中…');
   var reader = new FileReader();
+  reader.onprogress = function(ev){ if (ev.lengthComputable) setProgress(clamp(ev.loaded / ev.total * 80, 2, 80)); };
   reader.onload = function(){
+    setProgress(88);
     var src = reader.result;
     var img = getImageEl(src);
     var add = function(){
@@ -804,12 +856,14 @@ document.getElementById('imgInput').addEventListener('change', function(e){
       elements.push(el);
       selectedIds = [el.id];
       commitState(deepClone(elements), selectedIds.slice());
+      setProgress(100);
+      setTimeout(hideProgress, 300);
     };
     if (img.complete && img.naturalWidth > 0) add();
     else img.onload = add;
   };
+  reader.onerror = function(){ hideProgress(); toast('画像を読み込めませんでした。'); };
   reader.readAsDataURL(f);
-  e.target.value = '';
 });
 
 /* ================= crop ================= */
@@ -897,25 +951,33 @@ document.getElementById('cropCancel').addEventListener('click', closeCrop);
 cropModal.addEventListener('pointerdown', function(e){ if (e.target === cropModal) closeCrop(); });
 document.getElementById('cropOk').addEventListener('click', function(){
   if (!cropState) return;
-  var img = getImageEl(cropState.src);
-  if (!img.complete || img.naturalWidth === 0) return;
-  var el = byId(cropState.id);
-  if (!el || el.type !== 'image'){ closeCrop(); return; }
-  var nw = img.naturalWidth, nh = img.naturalHeight;
-  var rc = cropState.rect;
-  var out = document.createElement('canvas');
-  out.width = Math.max(1, Math.round(rc.w));
-  out.height = Math.max(1, Math.round(rc.h));
-  var oc = out.getContext('2d');
-  oc.drawImage(img, rc.x, rc.y, rc.w, rc.h, 0, 0, out.width, out.height);
-  var src = out.toDataURL('image/png');
-  el.src = src;
-  el.x = el.x + (rc.x / nw) * el.w;
-  el.y = el.y + (rc.y / nh) * el.h;
-  el.w = (rc.w / nw) * el.w;
-  el.h = (rc.h / nh) * el.h;
-  commitState(deepClone(elements), selectedIds.slice());
-  closeCrop();
+  showProgress('画像を切り抜き中…');
+  nextTick(function(){
+    var img = getImageEl(cropState.src);
+    if (!img.complete || img.naturalWidth === 0){ hideProgress(); return; }
+    var el = byId(cropState.id);
+    if (!el || el.type !== 'image'){ hideProgress(); closeCrop(); return; }
+    var nw = img.naturalWidth, nh = img.naturalHeight;
+    var rc = cropState.rect;
+    var out = document.createElement('canvas');
+    out.width = Math.max(1, Math.round(rc.w));
+    out.height = Math.max(1, Math.round(rc.h));
+    var oc = out.getContext('2d');
+    oc.drawImage(img, rc.x, rc.y, rc.w, rc.h, 0, 0, out.width, out.height);
+    setProgress(55);
+    nextTick(function(){
+      var src = out.toDataURL('image/png');
+      el.src = src;
+      el.x = el.x + (rc.x / nw) * el.w;
+      el.y = el.y + (rc.y / nh) * el.h;
+      el.w = (rc.w / nw) * el.w;
+      el.h = (rc.h / nh) * el.h;
+      commitState(deepClone(elements), selectedIds.slice());
+      closeCrop();
+      setProgress(100);
+      setTimeout(hideProgress, 300);
+    });
+  });
 });
 
 /* ================= context menu ================= */
@@ -1423,49 +1485,111 @@ window.addEventListener('keydown', function(e){
 
 /* ================= save / load / export ================= */
 document.getElementById('btnSave').addEventListener('click', function(){
-  var blob = new Blob([JSON.stringify({ version: 1, elements: elements }, null, 2)], { type: 'application/json' });
-  var url = URL.createObjectURL(blob);
-  var a = document.createElement('a');
-  a.href = url;
-  a.download = 'freeboard-' + Date.now() + '.json';
-  a.click();
-  setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+  if (!elements.length){ toast('ボードに要素がありません。'); return; }
+  showProgress('データ(JSON)を保存中…');
+  nextTick(function(){
+    // 要素ごとに分割して文字列化し、実進捗を表示（重いファイルでもUIを詰まらせない）
+    var parts = [];
+    var n = elements.length;
+    var i = 0;
+    var step = function(){
+      var end = Math.min(n, i + 20);
+      for (; i < end; i++) parts.push(JSON.stringify(elements[i]));
+      setProgress(8 + (i / n) * 72);
+      if (i < n){ nextTick(step); return; }
+      setProgress(84);
+      nextTick(function(){
+        var text = '{"version":1,"elements":[' + parts.join(',') + ']}';
+        setProgress(92);
+        nextTick(function(){
+          var blob = new Blob([text], { type: 'application/json' });
+          var url = URL.createObjectURL(blob);
+          var a = document.createElement('a');
+          a.href = url;
+          a.download = 'freeboard-' + Date.now() + '.json';
+          a.click();
+          setProgress(100);
+          setTimeout(function(){ URL.revokeObjectURL(url); hideProgress(); }, 1200);
+        });
+      });
+    };
+    step();
+  });
 });
 document.getElementById('btnLoad').addEventListener('click', function(){ document.getElementById('jsonInput').click(); });
 document.getElementById('jsonInput').addEventListener('change', function(e){
   var f = e.target.files && e.target.files[0];
   if (!f) return;
-  var reader = new FileReader();
-  reader.onload = function(){
-    try {
-      var data = JSON.parse(reader.result);
-      var list = Array.isArray(data.elements) ? data.elements : [];
-      selectedIds = [];
-      commitState(list, []);
-    } catch (err) { toast('ファイルを読み込めませんでした。'); }
-  };
-  reader.readAsText(f);
   e.target.value = '';
+  showProgress('データを読み込み中…');
+  var reader = new FileReader();
+  reader.onprogress = function(ev){ if (ev.lengthComputable) setProgress(clamp(ev.loaded / ev.total * 55, 2, 55)); };
+  reader.onload = function(){
+    setProgress(60);
+    nextTick(function(){
+      try {
+        var data = JSON.parse(reader.result);
+        var list = Array.isArray(data.elements) ? data.elements : [];
+        selectedIds = [];
+        commitState(list, []);
+        setProgress(100);
+        setTimeout(hideProgress, 300);
+      } catch (err) {
+        hideProgress();
+        toast('ファイルを読み込めませんでした。');
+      }
+    });
+  };
+  reader.onerror = function(){ hideProgress(); toast('ファイルを読み込めませんでした。'); };
+  reader.readAsText(f);
 });
 document.getElementById('btnPNG').addEventListener('click', function(){
   if (!elements.length){ toast('ボードに要素がありません。'); return; }
-  var box = getGroupBBox(elements);
-  var pad = 40;
-  var off = document.createElement('canvas');
-  off.width = Math.ceil(box.w + pad * 2);
-  off.height = Math.ceil(box.h + pad * 2);
-  var oc = off.getContext('2d');
-  oc.fillStyle = '#fff';
-  oc.fillRect(0, 0, off.width, off.height);
-  oc.translate(-box.x + pad, -box.y + pad);
-  elements.forEach(function(el){ drawElement(oc, el); });
-  off.toBlob(function(blob){
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement('a');
-    a.href = url;
-    a.download = 'freeboard-' + Date.now() + '.png';
-    a.click();
-    setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+  showProgress('PNGを書き出し中…');
+  nextTick(function(){
+    var box = getGroupBBox(elements);
+    var pad = 40;
+    var off = document.createElement('canvas');
+    off.width = Math.ceil(box.w + pad * 2);
+    off.height = Math.ceil(box.h + pad * 2);
+    // ブラウザの最大サイズを超えないよう縮小
+    var maxDim = 16384;
+    var gs = 1;
+    if (off.width > maxDim || off.height > maxDim) gs = Math.min(maxDim / off.width, maxDim / off.height);
+    off.width = Math.max(1, Math.ceil(off.width * gs));
+    off.height = Math.max(1, Math.ceil(off.height * gs));
+    var oc = off.getContext('2d');
+    oc.fillStyle = '#fff';
+    oc.fillRect(0, 0, off.width, off.height);
+    oc.scale(gs, gs);
+    oc.translate(-box.x + pad, -box.y + pad);
+    setProgress(10);
+    var i = 0;
+    var n = elements.length;
+    var step = function(){
+      // 要素ごとに分割して描画し、実進捗を表示
+      var end = Math.min(n, i + 5);
+      for (; i < end; i++) drawElement(oc, elements[i]);
+      setProgress(10 + (i / n) * 75);
+      if (i < n){ nextTick(step); return; }
+      setProgress(90);
+      nextTick(function(){
+        off.toBlob(function(blob){
+          if (!blob){ hideProgress(); toast('PNGを保存できませんでした。'); return; }
+          setProgress(96);
+          nextTick(function(){
+            setProgress(100);
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = 'freeboard-' + Date.now() + '.png';
+            a.click();
+            setTimeout(function(){ URL.revokeObjectURL(url); hideProgress(); }, 1200);
+          });
+        }, 'image/png');
+      });
+    };
+    step();
   });
 });
 
@@ -1481,6 +1605,7 @@ function resizeCanvas(){
 }
 window.addEventListener('resize', function(){ resizeCanvas(); if (cropState) layoutCrop(); });
 
+loadFromLocalStorage();
 history = [snapshot()];
 historyIndex = 0;
 updateUI();
