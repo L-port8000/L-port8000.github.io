@@ -26,6 +26,7 @@
   .tbtn.active{ background:#171717; color:#fff; border-color:#171717; }
   .tbtn:disabled{ opacity:.3; cursor:default; }
   .tbtn:disabled:hover{ background:transparent; }
+  .tbtn svg{ width:19px; height:19px; display:block; }
 
   .swatch{ width:26px; height:26px; border-radius:50%; border:2px solid #e5e5e5; cursor:pointer; flex:0 0 auto; padding:0; }
   .swatch.selected{ border-color:#171717; box-shadow:0 0 0 2px #fff inset; }
@@ -102,17 +103,38 @@
 <div id="app">
   <div id="toolbar">
     <div class="group">
-      <button class="tbtn" data-tool="select" title="選択 (V) / 空白ドラッグで複数選択">V</button>
-      <button class="tbtn" data-tool="pan" title="手のひら (H) / 2本指で移動">✋</button>
+      <button class="tbtn" data-tool="select" title="選択 (V) / 空白ドラッグで複数選択">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/></svg>
+      </button>
+      <button class="tbtn" data-tool="pan" title="手のひら (H) / 2本指で移動">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 11V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2"/><path d="M14 10V4a2 2 0 0 0-2-2a2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg>
+      </button>
     </div>
     <div class="group">
-      <button class="tbtn" data-tool="pen" title="ペン (P)">✎</button>
-      <button class="tbtn" data-tool="rect" title="四角形 (R) / Shiftで正方形">▭</button>
-      <button class="tbtn" data-tool="ellipse" title="円 (O) / Shiftで正円">◯</button>
-      <button class="tbtn" data-tool="line" title="直線 (L)">╱</button>
-      <button class="tbtn" data-tool="arrow" title="矢印 (A)">↖</button>
-      <button class="tbtn" data-tool="text" title="テキスト (T)"><b>T</b></button>
-      <button class="tbtn" data-tool="eraser" title="消しゴム (E)">⌫</button>
+      <button class="tbtn" data-tool="pen" title="ペン (P)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+      </button>
+      <button class="tbtn" data-tool="rect" title="四角形 (R) / Shiftで正方形">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="6" width="16" height="12" rx="1.5"/></svg>
+      </button>
+      <button class="tbtn" data-tool="ellipse" title="円 (O) / Shiftで正円">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/></svg>
+      </button>
+      <button class="tbtn" data-tool="line" title="直線 (L)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19 19 5"/><circle cx="5" cy="19" r="1.4" fill="currentColor" stroke="none"/><circle cx="19" cy="5" r="1.4" fill="currentColor" stroke="none"/></svg>
+      </button>
+      <button class="tbtn" data-tool="arrow" title="矢印 (A)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 19 7 7"/><path d="M15 7H7v8"/></svg>
+      </button>
+      <button class="tbtn" data-tool="text" title="テキスト (T)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+      </button>
+      <button class="tbtn" data-tool="eraser" title="消しゴム (E)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></svg>
+      </button>
+      <button class="tbtn" id="btnImage" title="画像を挿入">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/></svg>
+      </button>
     </div>
     <div class="group">
       <span id="swatches" style="display:flex; gap:4px;"></span>
@@ -122,14 +144,21 @@
       <input type="range" id="strokeRange" min="0" max="24" value="3">
     </div>
     <div class="group">
-      <button class="tbtn" id="btnFill" title="塗りつぶし ON/OFF">▦</button>
+      <button class="tbtn" id="btnFill" title="塗りつぶし ON/OFF">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 11-8-8-8.6 8.6a2 2 0 0 0 0 2.8l5.2 5.2c.8.8 2 .8 2.8 0L19 11Z"/><path d="m5 2 5 5"/><path d="M2 13h15"/><path d="M22 20a2 2 0 1 1-4 0c0-1.6 1.7-2.4 2-4 .3 1.6 2 2.4 2 4Z"/></svg>
+      </button>
       <input type="color" id="fillColor" value="#e5e5e5" title="塗りつぶしの色">
-      <button class="tbtn" id="btnLock" title="縦横比を固定（選択中の図形）">🔗</button>
-      <button class="tbtn" id="btnImage" title="画像を挿入">🖼</button>
+      <button class="tbtn" id="btnLock" title="縦横比を固定（選択中の図形）">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+      </button>
     </div>
     <div class="group">
-      <button class="tbtn" id="btnUndo" title="元に戻す (Ctrl+Z)">↺</button>
-      <button class="tbtn" id="btnRedo" title="やり直す (Ctrl+Y)">↻</button>
+      <button class="tbtn" id="btnUndo" title="元に戻す (Ctrl+Z)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+      </button>
+      <button class="tbtn" id="btnRedo" title="やり直す (Ctrl+Y)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
+      </button>
     </div>
     <div class="group" id="dimGroup">
       <span class="lbl">角度</span>
@@ -369,15 +398,18 @@ function rotHandlePos(el){
 function getHandle(el, world){
   if (dist(world, rotHandlePos(el)) < ROT_HIT / scale) return { id: 'rotate' };
   var b = getBBox(el);
+  if (el.type === 'line' || el.type === 'arrow'){
+    // 直線・矢印は端点のみをハンドルとして扱う
+    var eps = [ { id:'p1', x:el.x1, y:el.y1 }, { id:'p2', x:el.x2, y:el.y2 } ];
+    for (var j = 0; j < eps.length; j++) if (dist(world, eps[j]) < 18 / scale) return eps[j];
+    return null;
+  }
   var corners = [
     { id:'nw', x:b.x, y:b.y }, { id:'ne', x:b.x+b.w, y:b.y },
     { id:'sw', x:b.x, y:b.y+b.h }, { id:'se', x:b.x+b.w, y:b.y+b.h }
   ];
-  if (el.type === 'line' || el.type === 'arrow'){
-    corners.push({ id:'p1', x:el.x1, y:el.y1 }, { id:'p2', x:el.x2, y:el.y2 });
-  }
   for (var i = 0; i < corners.length; i++){
-    if (el.type === 'freehand' && (corners[i].id === 'nw' || corners[i].id === 'ne' || corners[i].id === 'sw' || corners[i].id === 'se')) continue;
+    if (el.type === 'freehand') continue;
     if (dist(world, corners[i]) < 14 / scale) return corners[i];
   }
   return null;
@@ -385,6 +417,8 @@ function getHandle(el, world){
 function getGroupHandle(world){
   if (selectedIds.length < 2) return null;
   var b = getGroupBBox(selectedEls());
+  var rc = { x: b.x + b.w/2, y: b.y - ROT_OFFSET/scale };
+  if (dist(world, rc) < ROT_HIT / scale) return { id: 'rotate' };
   var corners = [
     { id:'nw', x:b.x, y:b.y }, { id:'ne', x:b.x+b.w, y:b.y },
     { id:'sw', x:b.x, y:b.y+b.h }, { id:'se', x:b.x+b.w, y:b.y+b.h }
@@ -538,6 +572,16 @@ function render(){
     ctx.strokeRect(b.x, b.y, b.w, b.h);
     ctx.setLineDash([]);
     drawHandles(ctx, b);
+    // 複数選択用の回転ハンドル
+    var rcm = { x: b.x + b.w/2, y: b.y - ROT_OFFSET/scale };
+    ctx.beginPath();
+    ctx.moveTo(b.x + b.w/2, b.y);
+    ctx.lineTo(rcm.x, rcm.y + 12/scale);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(rcm.x, rcm.y, 12/scale, 0, Math.PI*2);
+    ctx.fillStyle = '#fff'; ctx.fill();
+    ctx.lineWidth = 2/scale; ctx.stroke();
     ctx.restore();
   } else if (sel.length === 1){
     el = sel[0];
@@ -547,7 +591,15 @@ function render(){
     ctx.setLineDash([6/scale, 4/scale]);
     ctx.strokeRect(b.x, b.y, b.w, b.h);
     ctx.setLineDash([]);
-    if (el.type !== 'freehand') drawHandles(ctx, b);
+    if (el.type === 'line' || el.type === 'arrow'){
+      // 直線・矢印は端点の位置にハンドルを表示（端をドラッグで伸縮）
+      var hs3 = 10 / scale;
+      [[el.x1, el.y1], [el.x2, el.y2]].forEach(function(p){
+        ctx.fillStyle = '#fff'; ctx.strokeStyle = '#171717'; ctx.lineWidth = 1.5 / scale;
+        ctx.fillRect(p[0] - hs3/2, p[1] - hs3/2, hs3, hs3);
+        ctx.strokeRect(p[0] - hs3/2, p[1] - hs3/2, hs3, hs3);
+      });
+    } else if (el.type !== 'freehand') drawHandles(ctx, b);
     // 回転ハンドル（大きめ）
     var rc = rotHandlePos(el);
     ctx.beginPath();
@@ -649,31 +701,45 @@ spL.addEventListener('change', function(){
 });
 
 /* ================= dimension inputs ================= */
+function elementAngle(el){
+  if (el.type === 'line' || el.type === 'arrow') return Math.atan2(el.y2 - el.y1, el.x2 - el.x1);
+  return el.rotation || 0;
+}
 function updateDimInputs(){
-  var single = singleSel();
-  dimGroup.style.display = single ? 'flex' : 'none';
-  if (single && document.activeElement !== dimRot)
-    dimRot.value = Math.round((single.rotation || 0) * 180 / Math.PI);
+  var sel = selectedEls();
+  dimGroup.style.display = sel.length ? 'flex' : 'none';
+  if (sel.length && document.activeElement !== dimRot)
+    dimRot.value = Math.round(elementAngle(sel[0]) * 180 / Math.PI);
 }
 function applyRot(deg){
-  var single = singleSel();
-  if (!single) return;
-  var base = single.rotation || 0;
+  var sel = selectedEls();
+  if (!sel.length) return;
   var target = deg * Math.PI / 180;
-  if (single.type === 'line' || single.type === 'freehand'){
-    var b = getBBox(single);
-    var c = { x: b.x + b.w/2, y: b.y + b.h/2 };
-    var d = target - base;
-    if (single.type === 'line'){
-      var p1 = rotatePt({x:single.x1, y:single.y1}, c, d);
-      var p2 = rotatePt({x:single.x2, y:single.y2}, c, d);
-      single.x1 = p1.x; single.y1 = p1.y; single.x2 = p2.x; single.y2 = p2.y;
+  if (sel.length === 1){
+    var single = sel[0];
+    var base = single.rotation || 0;
+    if (single.type === 'line' || single.type === 'freehand'){
+      var b = getBBox(single);
+      var c = { x: b.x + b.w/2, y: b.y + b.h/2 };
+      var d = target - base;
+      if (single.type === 'line'){
+        var p1 = rotatePt({x:single.x1, y:single.y1}, c, d);
+        var p2 = rotatePt({x:single.x2, y:single.y2}, c, d);
+        single.x1 = p1.x; single.y1 = p1.y; single.x2 = p2.x; single.y2 = p2.y;
+      } else {
+        single.points = single.points.map(function(p){ return rotatePt(p, c, d); });
+      }
     } else {
-      single.points = single.points.map(function(p){ return rotatePt(p, c, d); });
+      single.rotation = target;
     }
-  } else {
-    single.rotation = target;
+    commitState(deepClone(elements), selectedIds.slice());
+    return;
   }
+  // 複数選択：グループ全体を同じ角度へ回転（先頭の要素の角度が入力値になる）
+  var gbox = getGroupBBox(sel);
+  var gc = { x: gbox.x + gbox.w/2, y: gbox.y + gbox.h/2 };
+  var delta = target - elementAngle(sel[0]);
+  sel.forEach(function(el){ rotateElInPlace(el, el, gc, delta); });
   commitState(deepClone(elements), selectedIds.slice());
 }
 dimRot.addEventListener('change', function(){ applyRot(parseFloat(dimRot.value) || 0); });
@@ -690,7 +756,23 @@ function updateUI(){
   document.getElementById('btnFill').classList.toggle('active', single && (single.type === 'rect' || single.type === 'ellipse') && single.fill ? true : fillEnabled);
   document.getElementById('btnLock').classList.toggle('active', !!(single && single.lockAspect));
   document.getElementById('btnLock').disabled = !selectedEls().some(function(e){ return e.type === 'rect' || e.type === 'ellipse'; });
+  syncToolFromSelection();
   canvas.style.cursor = tool === 'pan' ? 'grab' : (tool === 'select' ? 'default' : 'crosshair');
+}
+/* 選択された図形の色・太さをツールバーへ同期 */
+function syncToolFromSelection(){
+  var sel = selectedEls();
+  if (!sel.length) return;
+  var el = sel[sel.length - 1];
+  if ('color' in el){
+    color = el.color;
+    document.getElementById('colorCustom').value = color;
+  }
+  if ('strokeWidth' in el){
+    strokeWidth = el.strokeWidth;
+    strokeNumber.value = strokeWidth;
+    strokeRange.value = Math.min(strokeWidth, 24);
+  }
 }
 function setTool(t){
   closeEditor(true);
@@ -1168,7 +1250,13 @@ canvas.addEventListener('pointerdown', function(e){
     if (selectedIds.length > 1){
       var gh = getGroupHandle(world);
       if (gh){
-        gesture = { mode: 'resize', groupResize: true, handle: gh.id, snapshot: snapshot() };
+        if (gh.id === 'rotate'){
+          var gbox0 = getGroupBBox(selectedEls());
+          var gc0 = { x: gbox0.x + gbox0.w/2, y: gbox0.y + gbox0.h/2 };
+          gesture = { mode: 'rotate', groupRotate: true, center: gc0, initialAngle: Math.atan2(world.y - gc0.y, world.x - gc0.x), snapshot: snapshot() };
+        } else {
+          gesture = { mode: 'resize', groupResize: true, handle: gh.id, snapshot: snapshot() };
+        }
         return;
       }
     }
@@ -1370,16 +1458,24 @@ canvas.addEventListener('pointermove', function(e){
     return;
   }
 
-  if (gesture.mode === 'rotate' && gesture.activeId){
-    var rel = byId(gesture.activeId);
-    if (rel){
-      var base = gesture.snapshot.find(function(x){ return x.id === gesture.activeId; });
-      if (!base) return;
-      var cur = Math.atan2(world.y - gesture.center.y, world.x - gesture.center.x);
-      var dlt = cur - gesture.initialAngle;
-      rotateElInPlace(rel, base, gesture.center, dlt);
-      render();
+  if (gesture.mode === 'rotate'){
+    var cur2 = Math.atan2(world.y - gesture.center.y, world.x - gesture.center.x);
+    var dlt2 = cur2 - gesture.initialAngle;
+    if (gesture.groupRotate){
+      // 複数選択：グループ全体を回転
+      gesture.snapshot.forEach(function(base){
+        if (selectedIds.indexOf(base.id) < 0) return;
+        var el = byId(base.id);
+        if (el) rotateElInPlace(el, base, gesture.center, dlt2);
+      });
+    } else {
+      var rel = byId(gesture.activeId);
+      if (rel){
+        var base = gesture.snapshot.find(function(x){ return x.id === gesture.activeId; });
+        if (base) rotateElInPlace(rel, base, gesture.center, dlt2);
+      }
     }
+    render();
     return;
   }
 });
