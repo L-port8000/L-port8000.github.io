@@ -2,1457 +2,1489 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>フリーボード</title>
 <style>
-  :root{
-    --base:#ffffff;
-    --mantle:#ffffff;
-    --crust:#fafafa;
-    --surface0:#e5e5e5;
-    --surface1:#eeeeee;
-    --surface2:#d4d4d4;
-    --text:#171717;
-    --subtext0:#737373;
-    --overlay0:#a3a3a3;
-    --lavender:#171717;
-    --mauve:#171717;
-    --pink:#ec4899;
-    --red:#ef4444;
-    --peach:#f97316;
-    --yellow:#eab308;
-    --green:#22c55e;
-    --teal:#06b6d4;
-    --sky:#3b82f6;
-  }
-  *{ box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
-  html,body{
-    margin:0; padding:0; height:100%; overflow:hidden;
-    background:var(--crust); color:var(--text);
-    font-family:'Segoe UI','Hiragino Kaku Gothic ProN','Yu Gothic',sans-serif;
-    overscroll-behavior:none;
-  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ margin:0; padding:0; height:100%; overflow:hidden; overscroll-behavior:none;
+    background:#fafafa; color:#171717;
+    font-family:'Segoe UI','Hiragino Kaku Gothic ProN','Yu Gothic',sans-serif; }
   #app{ position:fixed; inset:0; display:flex; flex-direction:column; }
 
-  /* ---------- Toolbar ---------- */
-  #toolbar{
-    flex:0 0 auto;
-    display:flex; align-items:center; gap:6px;
-    padding:8px 10px;
-    background:var(--mantle);
-    border-bottom:1px solid var(--surface0);
-    overflow-x:auto; overflow-y:hidden;
-    white-space:nowrap;
-    scrollbar-width:thin;
-  }
+  #toolbar{ flex:0 0 auto; display:flex; align-items:center; gap:8px; padding:8px 10px;
+    background:#fff; border-bottom:1px solid #e5e5e5; overflow-x:auto; overflow-y:hidden; white-space:nowrap; scrollbar-width:thin; }
   #toolbar::-webkit-scrollbar{ height:5px; }
-  #toolbar::-webkit-scrollbar-thumb{ background:var(--surface1); border-radius:4px; }
-
-  .group{
-    display:flex; align-items:center; gap:4px;
-    padding:0 6px;
-    border-right:1px solid var(--surface0);
-    flex:0 0 auto;
-  }
+  #toolbar::-webkit-scrollbar-thumb{ background:#e5e5e5; border-radius:4px; }
+  .group{ display:flex; align-items:center; gap:6px; padding:0 8px; border-right:1px solid #e5e5e5; flex:0 0 auto; }
   .group:last-child{ border-right:none; }
 
-  .tbtn{
-    flex:0 0 auto;
-    width:40px; height:40px;
-    display:flex; align-items:center; justify-content:center;
-    background:transparent; border:1px solid transparent; border-radius:10px;
-    color:var(--text); font-size:18px; cursor:pointer;
-    transition:background .12s ease, border-color .12s ease, transform .08s ease;
-    user-select:none;
-  }
-  .tbtn:hover{ background:var(--surface0); }
+  .tbtn{ flex:0 0 auto; min-width:40px; height:40px; padding:0 8px; display:flex; align-items:center; justify-content:center;
+    background:transparent; border:1px solid transparent; border-radius:10px; color:#171717; font-size:16px; cursor:pointer;
+    transition:background .12s ease, transform .08s ease; user-select:none; font-family:inherit; }
+  .tbtn:hover{ background:#f0f0f0; }
   .tbtn:active{ transform:scale(0.92); }
-  .tbtn.active{ background:var(--mauve); color:var(--crust); border-color:var(--mauve); }
-  .tbtn:disabled{ opacity:.35; cursor:default; }
+  .tbtn.active{ background:#171717; color:#fff; border-color:#171717; }
+  .tbtn:disabled{ opacity:.3; cursor:default; }
   .tbtn:disabled:hover{ background:transparent; }
 
-  .swatch{
-    width:26px; height:26px; border-radius:50%;
-    border:2px solid var(--surface1); cursor:pointer; flex:0 0 auto;
-    padding:0;
-  }
-  .swatch.selected{ border-color:var(--text); box-shadow:0 0 0 2px var(--crust) inset; }
+  .swatch{ width:26px; height:26px; border-radius:50%; border:2px solid #e5e5e5; cursor:pointer; flex:0 0 auto; padding:0; }
+  .swatch.selected{ border-color:#171717; box-shadow:0 0 0 2px #fff inset; }
 
-  #colorCustom{
-    width:30px; height:30px; border:none; border-radius:8px; background:none;
-    cursor:pointer; padding:0; flex:0 0 auto;
-  }
+  .lbl{ font-size:11px; color:#737373; flex:0 0 auto; }
+  #colorCustom{ width:30px; height:30px; border:none; border-radius:8px; background:none; cursor:pointer; padding:0; }
+  #strokeRange{ width:80px; accent-color:#171717; }
+  .numInput{ width:64px; font-size:12px; padding:4px 6px; border:1px solid #e5e5e5; border-radius:6px; }
+  #dimGroup{ display:none; }
 
-  #strokeRange{ width:80px; accent-color:var(--mauve); }
-  .lbl{ font-size:11px; color:var(--subtext0); flex:0 0 auto; }
+  #boardWrap{ position:relative; flex:1 1 auto; overflow:hidden; background:#fafafa; }
+  #board{ position:absolute; inset:0; display:block; touch-action:none; -webkit-touch-callout:none; }
 
-  /* ---------- Canvas area ---------- */
-  #boardWrap{ position:relative; flex:1 1 auto; overflow:hidden; }
-  #board{ position:absolute; inset:0; display:block; touch-action:none; }
+  #textEditor{ position:absolute; z-index:20; display:none; background:transparent; color:inherit;
+    border:1px dashed #171717; outline:none; resize:none; overflow:hidden;
+    font-family:inherit; line-height:1.3; padding:2px; min-width:40px; min-height:26px; white-space:pre; }
 
-  #textEditor{
-    position:absolute; z-index:20; display:none;
-    background:transparent; color:inherit;
-    border:1px dashed var(--lavender);
-    outline:none; resize:none; overflow:hidden;
-    font-family:'Segoe UI','Hiragino Kaku Gothic ProN','Yu Gothic',sans-serif;
-    line-height:1.3; padding:2px; min-width:40px; min-height:1.3em;
-    white-space:pre;
-  }
+  .sizePanel{ position:absolute; z-index:30; display:none; transform:translateX(-50%);
+    background:rgba(23,23,23,0.88); color:#fff; font-size:11px; line-height:1;
+    padding:5px 7px; border-radius:7px; white-space:nowrap; user-select:none;
+    gap:5px; align-items:center; }
+  .sizePanel .spLbl{ color:#d4d4d4; font-size:10px; }
+  .sizePanel input{ width:54px; font-size:11px; padding:4px 4px; border:1px solid rgba(255,255,255,0.3);
+    border-radius:4px; background:rgba(255,255,255,0.14); color:#fff; font-family:inherit; }
+  .sizePanel input:focus{ background:#fff; color:#171717; outline:none; }
+  #toast{ position:fixed; left:50%; bottom:72px; transform:translateX(-50%); z-index:90; display:none;
+    background:rgba(23,23,23,0.92); color:#fff; font-size:13px; padding:10px 18px; border-radius:999px; pointer-events:none; }
 
-  /* ---------- Zoom controls ---------- */
-  #zoomBar{
-    position:absolute; right:14px; bottom:14px; z-index:10;
-    display:flex; align-items:center; gap:2px;
-    background:var(--mantle); border:1px solid var(--surface0);
-    border-radius:999px; padding:4px; box-shadow:0 4px 16px rgba(0,0,0,.10);
-  }
-  #zoomBar button{
-    width:34px; height:34px; border-radius:50%; border:none;
-    background:transparent; color:var(--text); font-size:16px; cursor:pointer;
-  }
-  #zoomBar button:hover{ background:var(--surface0); }
-  #zoomLabel{
-    font-size:12px; color:var(--subtext0); width:48px; text-align:center; cursor:pointer;
-    user-select:none;
-  }
+  #zoomBar{ position:absolute; right:14px; bottom:14px; z-index:10; display:flex; align-items:center; gap:2px;
+    background:#fff; border:1px solid #e5e5e5; border-radius:999px; padding:4px; box-shadow:0 4px 16px rgba(0,0,0,.10); }
+  #zoomBar button{ width:34px; height:34px; border-radius:50%; border:none; background:transparent; color:#171717; font-size:16px; cursor:pointer; }
+  #zoomBar button:hover{ background:#f0f0f0; }
+  #zoomLabel{ font-size:12px; color:#737373; width:48px; text-align:center; cursor:pointer; user-select:none; }
 
-  #hint{
-    position:absolute; left:50%; top:46%; transform:translate(-50%,-50%);
-    color:var(--subtext0); font-size:14px; text-align:center; pointer-events:none;
-    line-height:1.8; z-index:1;
-  }
+  #hint{ position:absolute; left:50%; top:46%; transform:translate(-50%,-50%);
+    color:#737373; font-size:14px; text-align:center; pointer-events:none; line-height:1.9; z-index:1; }
 
-  /* ---------- Context menu ---------- */
-  #contextMenu{
-    position:fixed; z-index:50; display:none;
-    background:var(--mantle); border:1px solid var(--surface0); border-radius:10px;
-    box-shadow:0 8px 28px rgba(0,0,0,.14); padding:6px; min-width:200px;
-  }
-  #contextMenu button{
-    display:flex; align-items:center; gap:10px; width:100%;
-    padding:9px 10px; background:none; border:none; border-radius:6px;
-    color:var(--text); text-align:left; cursor:pointer; font-size:14px;
-    font-family:inherit;
-  }
-  #contextMenu button:hover{ background:var(--surface0); }
+  #contextMenu{ position:fixed; z-index:60; display:none; width:180px;
+    background:#fff; border:1px solid #e5e5e5; border-radius:12px; box-shadow:0 8px 28px rgba(0,0,0,.16); padding:4px; }
+  #contextMenu button{ display:block; width:100%; padding:10px 12px; background:none; border:none; border-radius:8px;
+    color:#171717; text-align:left; cursor:pointer; font-size:14px; font-family:inherit; }
+  #contextMenu button:hover{ background:#f0f0f0; }
+  #contextMenu button.danger{ color:#dc2626; }
+  #contextMenu button.danger:hover{ background:#fef2f2; }
+
+  #cropModal{ position:fixed; inset:0; z-index:70; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,0.5); }
+  .cropPanel{ background:#fff; border-radius:16px; padding:16px; box-shadow:0 20px 60px rgba(0,0,0,.35); }
+  .cropHead{ display:flex; align-items:center; justify-content:space-between; gap:24px; margin-bottom:8px; }
+  .cropHead .t{ font-size:14px; font-weight:600; }
+  .cropHead .s{ font-size:12px; color:#737373; }
+  #cropStage{ position:relative; border:1px solid #d4d4d4; border-radius:8px; background:#e5e5e5; overflow:visible; touch-action:none; user-select:none; }
+  #cropImg{ position:absolute; inset:0; width:100%; height:100%; border-radius:8px; pointer-events:none; }
+  #cropBox{ position:absolute; border:2px solid #3b82f6; box-shadow:0 0 0 9999px rgba(0,0,0,0.5); cursor:move; }
+  .ch{ position:absolute; z-index:2; width:16px; height:16px; border-radius:50%;
+    background:#3b82f6; border:2px solid #fff; cursor:move; }
+  .cropBtns{ margin-top:12px; display:flex; justify-content:flex-end; gap:8px; }
+  .cropBtns button{ padding:8px 16px; border-radius:10px; border:1px solid #e5e5e5; background:#fff; font-size:14px; cursor:pointer; font-family:inherit; }
+  .cropBtns button.primary{ background:#171717; color:#fff; border-color:#171717; }
+  .cropBtns button:hover{ filter:brightness(0.96); }
 </style>
 </head>
 <body>
 <div id="app">
   <div id="toolbar">
     <div class="group">
-      <button class="tbtn" data-tool="select" title="選択 (V) / ドラッグで範囲選択・Shiftで追加選択">↖</button>
-      <button class="tbtn" data-tool="pan" title="手のひらツール (H)">✋</button>
+      <button class="tbtn" data-tool="select" title="選択 (V) / 空白ドラッグで複数選択">V</button>
+      <button class="tbtn" data-tool="pan" title="手のひら (H) / 2本指で移動">✋</button>
     </div>
     <div class="group">
       <button class="tbtn" data-tool="pen" title="ペン (P)">✎</button>
-      <button class="tbtn" data-tool="rect" title="四角形 (R)">▭</button>
-      <button class="tbtn" data-tool="ellipse" title="円 (O)">◯</button>
+      <button class="tbtn" data-tool="rect" title="四角形 (R) / Shiftで正方形">▭</button>
+      <button class="tbtn" data-tool="ellipse" title="円 (O) / Shiftで正円">◯</button>
       <button class="tbtn" data-tool="line" title="直線 (L)">╱</button>
-      <button class="tbtn" data-tool="arrow" title="矢印 (A)">➜</button>
+      <button class="tbtn" data-tool="arrow" title="矢印 (A)">↖</button>
       <button class="tbtn" data-tool="text" title="テキスト (T)"><b>T</b></button>
-      <button class="tbtn" id="btnImage" title="画像を挿入">🖼</button>
       <button class="tbtn" data-tool="eraser" title="消しゴム (E)">⌫</button>
     </div>
     <div class="group">
       <span id="swatches" style="display:flex; gap:4px;"></span>
-      <input type="color" id="colorCustom" value="#cdd6f4" title="色をカスタム選択">
+      <input type="color" id="colorCustom" value="#171717" title="色を選択">
       <span class="lbl">太さ</span>
+      <input type="number" id="strokeNumber" class="numInput" min="0" max="48" value="3" title="太さ（数値）">
       <input type="range" id="strokeRange" min="0" max="24" value="3">
     </div>
     <div class="group">
-      <button class="tbtn" id="btnFillToggle" title="塗りつぶし ON/OFF">▦</button>
+      <button class="tbtn" id="btnFill" title="塗りつぶし ON/OFF">▦</button>
       <input type="color" id="fillColor" value="#e5e5e5" title="塗りつぶしの色">
-      <button class="tbtn" id="btnLockAspect" title="縦横比を固定（選択中の図形・画像に適用）">🔗</button>
+      <button class="tbtn" id="btnLock" title="縦横比を固定（選択中の図形）">🔗</button>
+      <button class="tbtn" id="btnImage" title="画像を挿入">🖼</button>
     </div>
     <div class="group">
       <button class="tbtn" id="btnUndo" title="元に戻す (Ctrl+Z)">↺</button>
       <button class="tbtn" id="btnRedo" title="やり直す (Ctrl+Y)">↻</button>
-      <button class="tbtn" id="btnDuplicate" title="複製 (Ctrl+D / Ctrl+C→Ctrl+V)">⧉</button>
-      <button class="tbtn" id="btnCopyImage" title="画像をクリップボードにコピー（他のアプリに貼り付け可能）">📋</button>
-      <button class="tbtn" id="btnDelete" title="選択を削除 (Delete / Ctrl+X で切り取り)">🗑</button>
+    </div>
+    <div class="group" id="dimGroup">
+      <span class="lbl">角度</span>
+      <input type="number" id="dimRot" class="numInput" min="-360" max="360">
     </div>
     <div class="group">
-      <button class="tbtn" id="btnClear" title="全消去">🧹</button>
-      <button class="tbtn" id="btnExport" title="PNGとして保存">⬇</button>
+      <button class="tbtn" id="btnPNG" title="PNGとして保存">PNG</button>
+      <button class="tbtn" id="btnSave" title="データ(JSON)を保存">保存</button>
+      <button class="tbtn" id="btnLoad" title="データ(JSON)を読み込み">読込</button>
     </div>
   </div>
 
   <div id="boardWrap">
     <canvas id="board"></canvas>
-    <div id="hint">ここに描いたり、図形を配置したり<br>画像をドラッグ&ドロップ・貼り付けできます</div>
+    <div id="hint">ここに描いたり、図形を配置したりできます<br>空白をドラッグ＝複数選択 / 2本指＝拡大縮小・移動<br>長押し（右クリック）＝メニュー（画像は切り抜きも可能）</div>
     <textarea id="textEditor" spellcheck="false"></textarea>
+    <div class="sizePanel" id="sizePanel">
+      <span class="spLbl">W</span><input id="spW" type="number" min="1" step="1">
+      <span class="spLbl">H</span><input id="spH" type="number" min="1" step="1">
+    </div>
+    <div class="sizePanel" id="sizePanelLine">
+      <span class="spLbl">長さ</span><input id="spL" type="number" min="1" step="1">
+    </div>
+    <div id="toast"></div>
     <div id="zoomBar">
       <button id="zoomOut" title="縮小">－</button>
       <span id="zoomLabel" title="クリックでリセット">100%</span>
       <button id="zoomIn" title="拡大">＋</button>
     </div>
   </div>
-  <div id="contextMenu">
-    <button data-action="cut">✂️ 切り取り <span style="margin-left:auto;color:var(--subtext0);font-size:11px;">Ctrl+X</span></button>
-    <button data-action="copy">📄 コピー <span style="margin-left:auto;color:var(--subtext0);font-size:11px;">Ctrl+C</span></button>
-    <button data-action="paste">📋 貼り付け <span style="margin-left:auto;color:var(--subtext0);font-size:11px;">Ctrl+V</span></button>
-    <button data-action="duplicate">⧉ 複製 <span style="margin-left:auto;color:var(--subtext0);font-size:11px;">Ctrl+D</span></button>
-    <button data-action="copyImage">🖼 画像をクリップボードにコピー</button>
-    <button data-action="delete">🗑 削除</button>
+
+  <div id="contextMenu"></div>
+
+  <div id="cropModal">
+    <div class="cropPanel" id="cropPanel">
+      <div class="cropHead">
+        <span class="t">画像を切り抜く</span>
+        <span class="s" id="cropSize"></span>
+      </div>
+      <div id="cropStage">
+        <img id="cropImg" draggable="false">
+        <div id="cropBox"></div>
+        <div class="ch" id="chNW"></div>
+        <div class="ch" id="chNE"></div>
+        <div class="ch" id="chSW"></div>
+        <div class="ch" id="chSE"></div>
+      </div>
+      <div class="cropBtns">
+        <button id="cropCancel">キャンセル</button>
+        <button id="cropOk" class="primary">決定</button>
+      </div>
+    </div>
   </div>
-  <input type="file" id="fileInput" accept="image/*" multiple hidden>
+
+  <input type="file" id="jsonInput" accept=".json,application/json" hidden>
+  <input type="file" id="imgInput" accept="image/*" hidden>
 </div>
+
 <script>
 (function(){
 "use strict";
 
-var COLORS = {
-  base:'#ffffff', mantle:'#ffffff', crust:'#fafafa',
-  surface0:'#e5e5e5', surface1:'#eeeeee', surface2:'#d4d4d4',
-  text:'#171717', subtext0:'#737373', overlay0:'#a3a3a3',
-  lavender:'#171717', mauve:'#171717', pink:'#ec4899',
-  red:'#ef4444', peach:'#f97316', yellow:'#eab308',
-  green:'#22c55e', teal:'#06b6d4', sky:'#3b82f6', purple:'#a855f7'
-};
-var SWATCH_COLORS = [COLORS.text, COLORS.red, COLORS.peach, COLORS.yellow, COLORS.green, COLORS.teal, COLORS.sky, COLORS.purple];
-
+/* ================= DOM ================= */
 var canvas = document.getElementById('board');
 var ctx = canvas.getContext('2d');
-var boardWrap = document.getElementById('boardWrap');
+var wrap = document.getElementById('boardWrap');
 var hintEl = document.getElementById('hint');
 var textEditor = document.getElementById('textEditor');
-var fileInput = document.getElementById('fileInput');
-var contextMenuEl = document.getElementById('contextMenu');
+var sizePanel = document.getElementById('sizePanel');
+var sizePanelLine = document.getElementById('sizePanelLine');
+var spW = document.getElementById('spW');
+var spH = document.getElementById('spH');
+var spL = document.getElementById('spL');
+var toastEl = document.getElementById('toast');
+var toastTimer = null;
+function toast(msg){
+  toastEl.textContent = msg;
+  toastEl.style.display = 'block';
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ toastEl.style.display = 'none'; }, 1600);
+}
+var ctxMenuEl = document.getElementById('contextMenu');
+var zoomLabel = document.getElementById('zoomLabel');
+var dimGroup = document.getElementById('dimGroup');
+var dimRot = document.getElementById('dimRot');
+var cropModal = document.getElementById('cropModal');
+var cropPanel = document.getElementById('cropPanel');
+var cropStage = document.getElementById('cropStage');
+var cropImg = document.getElementById('cropImg');
+var cropBox = document.getElementById('cropBox');
+var cropSizeEl = document.getElementById('cropSize');
 var dpr = Math.max(1, window.devicePixelRatio || 1);
 
-var state = {
-  tool: 'select',
-  elements: [],
-  selectedIds: [],
-  scale: 1,
-  panX: 0,
-  panY: 0,
-  color: COLORS.text,
-  strokeWidth: 3,
-  fillEnabled: false,
-  fillColor: '#e5e5e5'
-};
+/* ================= state ================= */
+var SWATCHES = ['#171717','#ef4444','#f97316','#eab308','#22c55e','#06b6d4','#3b82f6','#a855f7'];
 
+var elements = [];
+var selectedIds = [];
+var scale = 1, panX = 0, panY = 0;
+var tool = 'select';
+var color = '#171717';
+var strokeWidth = 3;
+var fillEnabled = false;
+var fillColor = '#e5e5e5';
+
+var draft = null;
+var marquee = null;          // {x1,y1,x2,y2}
 var history = [];
 var historyIndex = -1;
-var idCounter = 1;
+var clipboard = null;
+var pasteCount = 0;
 
 var pointers = new Map();
-var dragMode = null;
-var dragHandle = null;
-var dragStart = null;
-var dragStartScreen = null;
-var panStart = null;
-var elStartSnapshot = null;
-var currentDraft = null;
-var lastPinchDist = null;
-var lastPinchCenter = null;
-var spacePressed = false;
-var marqueeRect = null;
-var marqueeAdditive = false;
-var elementClipboard = null;
-var pasteCascadeCount = 0;
-var longPressTimer = null;
-var contextMenuWorldPos = null;
+var gesture = { mode:'none' };
+var lpTimer = null;
+var ctxMenuInfo = null;      // {x, y, elId}
+var cropState = null;        // {id, src, nw, nh, dispScale, rect}
+var cropDrag = null;
+var idCounter = 0;
 
-var LONG_PRESS_MS = 550;
-var MOVE_THRESHOLD = 6;
+var imageCache = new Map();
 
-/* ---------------- utility ---------------- */
-function genId(){ return 'el' + (idCounter++) + '_' + Date.now().toString(36); }
-function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
+/* ================= helpers ================= */
+function genId(){ return 'el' + (++idCounter) + '_' + Date.now().toString(36); }
+function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
 function dist(a, b){ return Math.hypot(a.x - b.x, a.y - b.y); }
-function mid(a, b){ return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }; }
-function getElementById(id){
-  for (var i = 0; i < state.elements.length; i++){
-    if (state.elements[i].id === id) return state.elements[i];
-  }
-  return null;
-}
-function cloneEl(el){
-  var rest = {};
-  for (var k in el){ if (k !== 'img') rest[k] = el[k]; }
-  return JSON.parse(JSON.stringify(rest));
-}
-function getSelectedElements(){
-  return state.elements.filter(function(el){ return state.selectedIds.indexOf(el.id) >= 0; });
-}
+function deepClone(v){ return JSON.parse(JSON.stringify(v)); }
+function byId(id){ for (var i = 0; i < elements.length; i++) if (elements[i].id === id) return elements[i]; return null; }
+function selectedEls(){ return elements.filter(function(e){ return selectedIds.indexOf(e.id) >= 0; }); }
+function singleSel(){ return selectedIds.length === 1 ? byId(selectedIds[0]) : null; }
 
-function worldToScreen(x, y){ return { x: x * state.scale + state.panX, y: y * state.scale + state.panY }; }
-function screenToWorld(x, y){ return { x: (x - state.panX) / state.scale, y: (y - state.panY) / state.scale }; }
-function getPointerPos(e){
-  var rect = canvas.getBoundingClientRect();
-  return { x: e.clientX - rect.left, y: e.clientY - rect.top };
-}
+function worldToScreen(x, y){ return { x: x * scale + panX, y: y * scale + panY }; }
+function screenToWorld(x, y){ return { x: (x - panX) / scale, y: (y - panY) / scale }; }
 
-/* ---------------- bbox / hit test ---------------- */
-function getBBox(el){
-  switch (el.type){
-    case 'rect': case 'ellipse': case 'image': case 'text':
-      return { x: el.x, y: el.y, w: el.w, h: el.h };
-    case 'line': case 'arrow':
-      return {
-        x: Math.min(el.x1, el.x2), y: Math.min(el.y1, el.y2),
-        w: Math.abs(el.x2 - el.x1) || 1, h: Math.abs(el.y2 - el.y1) || 1
-      };
-    case 'freehand': {
-      var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-      for (var i = 0; i < el.points.length; i++){
-        var p = el.points[i];
-        minX = Math.min(minX, p.x); minY = Math.min(minY, p.y);
-        maxX = Math.max(maxX, p.x); maxY = Math.max(maxY, p.y);
-      }
-      return { x: minX, y: minY, w: (maxX - minX) || 1, h: (maxY - minY) || 1 };
-    }
-  }
-  return { x: 0, y: 0, w: 0, h: 0 };
-}
-
-function distToSegment(p, a, b){
-  var dx = b.x - a.x, dy = b.y - a.y;
-  var lenSq = dx * dx + dy * dy;
-  var t = lenSq === 0 ? 0 : clamp(((p.x - a.x) * dx + (p.y - a.y) * dy) / lenSq, 0, 1);
-  var cx = a.x + t * dx, cy = a.y + t * dy;
-  return Math.hypot(p.x - cx, p.y - cy);
-}
-
-function hitElement(el, world){
-  var pad = 8 / state.scale;
-  if (el.type === 'line' || el.type === 'arrow'){
-    return distToSegment(world, { x: el.x1, y: el.y1 }, { x: el.x2, y: el.y2 }) < pad;
-  }
-  if (el.type === 'freehand'){
-    for (var i = 0; i < el.points.length - 1; i++){
-      if (distToSegment(world, el.points[i], el.points[i + 1]) < pad) return true;
-    }
-    return false;
-  }
-  var b = getBBox(el);
-  return world.x >= b.x - pad && world.x <= b.x + b.w + pad &&
-         world.y >= b.y - pad && world.y <= b.y + b.h + pad;
-}
-
-function hitTestTopmost(world){
-  for (var i = state.elements.length - 1; i >= 0; i--){
-    if (hitElement(state.elements[i], world)) return i;
-  }
-  return -1;
-}
-
-function getHandles(el){
-  var b = getBBox(el);
-  if (el.type === 'line' || el.type === 'arrow'){
-    return [{ id: 'p1', x: el.x1, y: el.y1 }, { id: 'p2', x: el.x2, y: el.y2 }];
-  }
-  if (el.type === 'text'){
-    return [{ id: 'br', x: b.x + b.w, y: b.y + b.h }];
-  }
-  if (el.type === 'freehand'){
-    return [];
-  }
-  return [
-    { id: 'nw', x: b.x, y: b.y }, { id: 'n', x: b.x + b.w / 2, y: b.y }, { id: 'ne', x: b.x + b.w, y: b.y },
-    { id: 'e', x: b.x + b.w, y: b.y + b.h / 2 }, { id: 'se', x: b.x + b.w, y: b.y + b.h }, { id: 's', x: b.x + b.w / 2, y: b.y + b.h },
-    { id: 'sw', x: b.x, y: b.y + b.h }, { id: 'w', x: b.x, y: b.y + b.h / 2 }
-  ];
-}
-
-function hitHandle(el, screenPos){
-  var handles = getHandles(el);
-  for (var i = 0; i < handles.length; i++){
-    var s = worldToScreen(handles[i].x, handles[i].y);
-    if (Math.hypot(s.x - screenPos.x, s.y - screenPos.y) < 16) return handles[i];
-  }
-  return null;
-}
-
-/* ---------------- element creation / edit ---------------- */
-function createDraftElement(tool, world){
-  var base = { id: genId(), color: state.color, strokeWidth: state.strokeWidth };
-  if (tool === 'rect') return Object.assign(base, { type: 'rect', x: world.x, y: world.y, w: 0, h: 0, fill: state.fillEnabled, fillColor: state.fillColor, lockAspect: false });
-  if (tool === 'ellipse') return Object.assign(base, { type: 'ellipse', x: world.x, y: world.y, w: 0, h: 0, fill: state.fillEnabled, fillColor: state.fillColor, lockAspect: false });
-  if (tool === 'line') return Object.assign(base, { type: 'line', x1: world.x, y1: world.y, x2: world.x, y2: world.y });
-  if (tool === 'arrow') return Object.assign(base, { type: 'arrow', x1: world.x, y1: world.y, x2: world.x, y2: world.y });
-  if (tool === 'pen') return Object.assign(base, { type: 'freehand', points: [{ x: world.x, y: world.y }] });
-  return null;
-}
-
-function updateDraftElement(d, start, world){
-  if (d.type === 'rect' || d.type === 'ellipse'){
-    d.x = start.x; d.y = start.y; d.w = world.x - start.x; d.h = world.y - start.y;
-  } else if (d.type === 'line' || d.type === 'arrow'){
-    d.x2 = world.x; d.y2 = world.y;
-  } else if (d.type === 'freehand'){
-    var last = d.points[d.points.length - 1];
-    if (!last || Math.hypot(world.x - last.x, world.y - last.y) > 1.2 / state.scale){
-      d.points.push({ x: world.x, y: world.y });
-    }
-  }
-}
-
-function finalizeDraft(d){
-  if (d.type === 'rect' || d.type === 'ellipse'){
-    if (d.w < 0){ d.x += d.w; d.w = -d.w; }
-    if (d.h < 0){ d.y += d.h; d.h = -d.h; }
-    if (d.w < 2 && d.h < 2) return false;
-  }
-  if ((d.type === 'line' || d.type === 'arrow') && Math.hypot(d.x2 - d.x1, d.y2 - d.y1) < 2) return false;
-  if (d.type === 'freehand' && d.points.length < 2) return false;
-  state.elements.push(d);
-  if (d.type !== 'freehand') setSelection([d.id]);
-  return true;
-}
-
-function moveElement(el, snap, dx, dy){
-  if (el.type === 'rect' || el.type === 'ellipse' || el.type === 'image' || el.type === 'text'){
-    el.x = snap.x + dx; el.y = snap.y + dy;
-  } else if (el.type === 'line' || el.type === 'arrow'){
-    el.x1 = snap.x1 + dx; el.y1 = snap.y1 + dy; el.x2 = snap.x2 + dx; el.y2 = snap.y2 + dy;
-  } else if (el.type === 'freehand'){
-    el.points = snap.points.map(function(p){ return { x: p.x + dx, y: p.y + dy }; });
-  }
-}
-
-function offsetElement(el, dx, dy){
-  if (el.type === 'rect' || el.type === 'ellipse' || el.type === 'image' || el.type === 'text'){
-    el.x += dx; el.y += dy;
-  } else if (el.type === 'line' || el.type === 'arrow'){
-    el.x1 += dx; el.y1 += dy; el.x2 += dx; el.y2 += dy;
-  } else if (el.type === 'freehand'){
-    el.points = el.points.map(function(p){ return { x: p.x + dx, y: p.y + dy }; });
-  }
-}
-
-function attachImageIfNeeded(el){
-  if (el.type === 'image' && el.src){
-    var img = new Image();
+function getImageEl(src){
+  var img = imageCache.get(src);
+  if (!img) {
+    img = new Image();
     img.onload = render;
-    img.src = el.src;
-    el.img = img;
+    img.src = src;
+    imageCache.set(src, img);
   }
+  return img;
 }
 
-function resizeByHandle(el, handleId, world, snap){
-  if (el.type === 'line' || el.type === 'arrow'){
-    if (handleId === 'p1'){ el.x1 = world.x; el.y1 = world.y; }
-    else { el.x2 = world.x; el.y2 = world.y; }
-    return;
-  }
-  if (el.type === 'text'){
-    var newH = Math.max(10, world.y - snap.y);
-    var scaleF = newH / snap.h;
-    el.fontSize = Math.max(6, snap.fontSize * scaleF);
-    el.h = newH;
-    ctx.font = el.fontSize + "px 'Segoe UI',sans-serif";
-    var lines = el.text.split('\n');
-    var maxW = 0;
-    for (var i = 0; i < lines.length; i++) maxW = Math.max(maxW, ctx.measureText(lines[i]).width);
-    el.w = maxW;
-    return;
-  }
-  var x = snap.x, y = snap.y, x2 = snap.x + snap.w, y2 = snap.y + snap.h;
-  if (handleId.indexOf('n') >= 0) y = world.y;
-  if (handleId.indexOf('s') >= 0) y2 = world.y;
-  if (handleId.indexOf('w') >= 0) x = world.x;
-  if (handleId.indexOf('e') >= 0) x2 = world.x;
+function rotatePt(p, c, a){
+  var dx = p.x - c.x, dy = p.y - c.y;
+  var cs = Math.cos(a), sn = Math.sin(a);
+  return { x: c.x + dx * cs - dy * sn, y: c.y + dx * sn + dy * cs };
+}
 
-  if (el.lockAspect && snap.w > 0 && snap.h > 0){
-    var ratio = snap.w / snap.h;
-    var isCorner = handleId.length === 2;
-    if (isCorner){
-      var newW = x2 - x, newHgt = y2 - y;
-      var signW = newW < 0 ? -1 : 1, signH = newHgt < 0 ? -1 : 1;
-      if (Math.abs(newW) / ratio > Math.abs(newHgt)){
-        newHgt = (Math.abs(newW) / ratio) * signH;
-      } else {
-        newW = (Math.abs(newHgt) * ratio) * signW;
+/* ================= bbox / hit ================= */
+function getBBox(el){
+  if (el.type === 'rect' || el.type === 'ellipse' || el.type === 'text' || el.type === 'image') return { x: el.x, y: el.y, w: el.w, h: el.h };
+  if (el.type === 'line' || el.type === 'arrow') return { x: Math.min(el.x1, el.x2), y: Math.min(el.y1, el.y2), w: Math.abs(el.x2 - el.x1) || 1, h: Math.abs(el.y2 - el.y1) || 1 };
+  var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  el.points.forEach(function(p){ minX = Math.min(minX, p.x); minY = Math.min(minY, p.y); maxX = Math.max(maxX, p.x); maxY = Math.max(maxY, p.y); });
+  return { x: minX, y: minY, w: Math.max(1, maxX - minX), h: Math.max(1, maxY - minY) };
+}
+function getGroupBBox(list){
+  var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  list.forEach(function(el){
+    var b = getBBox(el);
+    minX = Math.min(minX, b.x); minY = Math.min(minY, b.y);
+    maxX = Math.max(maxX, b.x + b.w); maxY = Math.max(maxY, b.y + b.h);
+  });
+  return { x: minX, y: minY, w: Math.max(1, maxX - minX), h: Math.max(1, maxY - minY) };
+}
+function distToSeg(p, a, b){
+  var dx = b.x - a.x, dy = b.y - a.y;
+  var l2 = dx * dx + dy * dy;
+  var t = l2 === 0 ? 0 : clamp(((p.x - a.x) * dx + (p.y - a.y) * dy) / l2, 0, 1);
+  return Math.hypot(p.x - (a.x + t * dx), p.y - (a.y + t * dy));
+}
+function hitTest(world){
+  var pad = 8 / scale;
+  for (var i = elements.length - 1; i >= 0; i--){
+    var el = elements[i];
+    if (el.type === 'line' || el.type === 'arrow'){
+      if (distToSeg(world, {x:el.x1,y:el.y1}, {x:el.x2,y:el.y2}) <= pad) return el;
+    } else if (el.type === 'freehand'){
+      for (var j = 0; j < el.points.length - 1; j++){
+        if (distToSeg(world, el.points[j], el.points[j+1]) <= pad) return el;
       }
-      if (handleId.indexOf('n') >= 0) y = y2 - newHgt; else y2 = y + newHgt;
-      if (handleId.indexOf('w') >= 0) x = x2 - newW; else x2 = x + newW;
-    } else if (handleId === 'n' || handleId === 's'){
-      var hH = y2 - y;
-      var wW = Math.abs(hH) * ratio;
-      var cx = snap.x + snap.w / 2;
-      x = cx - wW / 2; x2 = cx + wW / 2;
-    } else if (handleId === 'e' || handleId === 'w'){
-      var wW2 = x2 - x;
-      var hH2 = Math.abs(wW2) / ratio;
-      var cy = snap.y + snap.h / 2;
-      y = cy - hH2 / 2; y2 = cy + hH2 / 2;
+    } else {
+      var b = getBBox(el);
+      if (world.x >= b.x - pad && world.x <= b.x + b.w + pad && world.y >= b.y - pad && world.y <= b.y + b.h + pad) return el;
     }
   }
-
-  el.x = Math.min(x, x2); el.y = Math.min(y, y2);
-  el.w = Math.abs(x2 - x); el.h = Math.abs(y2 - y);
+  return null;
+}
+function hitTestMarquee(m){
+  var x1 = Math.min(m.x1, m.x2), y1 = Math.min(m.y1, m.y2);
+  var x2 = Math.max(m.x1, m.x2), y2 = Math.max(m.y1, m.y2);
+  return elements.filter(function(el){
+    var b = getBBox(el);
+    return !(b.x + b.w < x1 || b.x > x2 || b.y + b.h < y1 || b.y > y2);
+  }).map(function(el){ return el.id; });
 }
 
-/* ---------------- selection ---------------- */
-function setSelection(ids){
-  state.selectedIds = ids.slice();
-  updateSelectionUI();
-}
-
-function updateSelectionUI(){
-  var hasSel = state.selectedIds.length > 0;
-  var single = state.selectedIds.length === 1 ? getElementById(state.selectedIds[0]) : null;
-  document.getElementById('btnDelete').disabled = !hasSel;
-  document.getElementById('btnDuplicate').disabled = !hasSel;
-  document.getElementById('btnCopyImage').disabled = !(single && single.type === 'image');
-  updateInspectorUI(single);
-}
-
-function updateInspectorUI(single){
-  if (single === undefined) single = state.selectedIds.length === 1 ? getElementById(state.selectedIds[0]) : null;
-  var fillBtn = document.getElementById('btnFillToggle');
-  var fillColorInput = document.getElementById('fillColor');
-  var lockBtn = document.getElementById('btnLockAspect');
-
-  var fillApplicable = !!(single && (single.type === 'rect' || single.type === 'ellipse'));
-  var currentFill = fillApplicable ? !!single.fill : state.fillEnabled;
-  fillBtn.classList.toggle('active', currentFill);
-  fillColorInput.value = (fillApplicable && single.fillColor) ? single.fillColor : state.fillColor;
-
-  var lockApplicable = !!(single && (single.type === 'rect' || single.type === 'ellipse' || single.type === 'image'));
-  lockBtn.disabled = !lockApplicable;
-  lockBtn.classList.toggle('active', lockApplicable && !!single.lockAspect);
-}
-
-function deleteSelected(){
-  if (!state.selectedIds.length) return;
-  var ids = state.selectedIds;
-  state.elements = state.elements.filter(function(el){ return ids.indexOf(el.id) === -1; });
-  setSelection([]);
-  pushHistory();
-  render();
-}
-
-function duplicateSelection(){
-  var els = getSelectedElements();
-  if (!els.length) return;
-  var offset = 24 / state.scale;
-  var newIds = [];
-  els.forEach(function(src){
-    var clone = cloneEl(src);
-    clone.id = genId();
-    offsetElement(clone, offset, offset);
-    attachImageIfNeeded(clone);
-    state.elements.push(clone);
-    newIds.push(clone.id);
-  });
-  setSelection(newIds);
-  pushHistory();
-  render();
-}
-
-function copySelection(){
-  var els = getSelectedElements();
-  if (!els.length) return;
-  elementClipboard = els.map(cloneEl);
-  pasteCascadeCount = 0;
-  if (els.length === 1 && els[0].type === 'image') copyImageToSystemClipboard(els[0]);
-}
-
-function cutSelection(){
-  var els = getSelectedElements();
-  if (!els.length) return;
-  elementClipboard = els.map(cloneEl);
-  pasteCascadeCount = 0;
-  if (els.length === 1 && els[0].type === 'image') copyImageToSystemClipboard(els[0]);
-  deleteSelected();
-}
-
-function pasteFromClipboard(targetWorldPos){
-  if (!elementClipboard || !elementClipboard.length) return;
-  var dx = 0, dy = 0;
-  if (targetWorldPos){
-    var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-    elementClipboard.forEach(function(e){
-      var b = getBBox(e);
-      minX = Math.min(minX, b.x); minY = Math.min(minY, b.y);
-      maxX = Math.max(maxX, b.x + b.w); maxY = Math.max(maxY, b.y + b.h);
-    });
-    var cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;
-    dx = targetWorldPos.x - cx; dy = targetWorldPos.y - cy;
-  } else {
-    pasteCascadeCount++;
-    dx = (24 / state.scale) * pasteCascadeCount;
-    dy = dx;
-  }
-  var newIds = [];
-  elementClipboard.forEach(function(src){
-    var clone = JSON.parse(JSON.stringify(src));
-    clone.id = genId();
-    offsetElement(clone, dx, dy);
-    attachImageIfNeeded(clone);
-    state.elements.push(clone);
-    newIds.push(clone.id);
-  });
-  setSelection(newIds);
-  pushHistory();
-  render();
-}
-
-function copyImageToSystemClipboard(el){
-  if (!el || el.type !== 'image') return;
-  if (!navigator.clipboard || typeof window.ClipboardItem === 'undefined'){
-    alert('このブラウザは画像のクリップボードコピーに対応していません。');
-    return;
-  }
-  var draw = function(image){
-    var c = document.createElement('canvas');
-    c.width = image.naturalWidth || Math.round(el.w) || 1;
-    c.height = image.naturalHeight || Math.round(el.h) || 1;
-    var cctx = c.getContext('2d');
-    cctx.drawImage(image, 0, 0, c.width, c.height);
-    c.toBlob(function(blob){
-      if (!blob) return;
-      navigator.clipboard.write([ new ClipboardItem({ 'image/png': blob }) ]).catch(function(err){
-        console.warn('clipboard write failed', err);
-        alert('クリップボードへのコピーに失敗しました（ブラウザの権限設定をご確認ください）。');
-      });
-    }, 'image/png');
-  };
-  if (el.img && el.img.complete && el.img.naturalWidth > 0){
-    draw(el.img);
-  } else if (el.src){
-    var tmp = new Image();
-    tmp.onload = function(){ draw(tmp); };
-    tmp.src = el.src;
-  }
-}
-
-/* ---------------- rendering ---------------- */
-function drawElement(cx, el){
-  cx.save();
-  cx.lineJoin = 'round'; cx.lineCap = 'round';
-  switch (el.type){
-    case 'rect':
-      if (el.fill){ cx.fillStyle = el.fillColor || el.color; cx.fillRect(el.x, el.y, el.w, el.h); }
-      if (el.strokeWidth > 0){
-        cx.strokeStyle = el.color; cx.lineWidth = el.strokeWidth;
-        cx.strokeRect(el.x, el.y, el.w, el.h);
-      }
-      break;
-    case 'ellipse':
-      cx.beginPath();
-      cx.ellipse(el.x + el.w / 2, el.y + el.h / 2, Math.abs(el.w / 2), Math.abs(el.h / 2), 0, 0, Math.PI * 2);
-      if (el.fill){ cx.fillStyle = el.fillColor || el.color; cx.fill(); }
-      if (el.strokeWidth > 0){
-        cx.strokeStyle = el.color; cx.lineWidth = el.strokeWidth;
-        cx.stroke();
-      }
-      break;
-    case 'line':
-      if (el.strokeWidth > 0){
-        cx.strokeStyle = el.color; cx.lineWidth = el.strokeWidth;
-        cx.beginPath(); cx.moveTo(el.x1, el.y1); cx.lineTo(el.x2, el.y2); cx.stroke();
-      }
-      break;
-    case 'arrow': {
-      cx.strokeStyle = el.color; cx.fillStyle = el.color; cx.lineWidth = el.strokeWidth;
-      cx.beginPath(); cx.moveTo(el.x1, el.y1); cx.lineTo(el.x2, el.y2); cx.stroke();
-      var angle = Math.atan2(el.y2 - el.y1, el.x2 - el.x1);
-      var headLen = 8 + el.strokeWidth * 2;
-      cx.beginPath();
-      cx.moveTo(el.x2, el.y2);
-      cx.lineTo(el.x2 - headLen * Math.cos(angle - Math.PI / 6), el.y2 - headLen * Math.sin(angle - Math.PI / 6));
-      cx.lineTo(el.x2 - headLen * Math.cos(angle + Math.PI / 6), el.y2 - headLen * Math.sin(angle + Math.PI / 6));
-      cx.closePath(); cx.fill();
-      break;
-    }
-    case 'freehand':
-      cx.strokeStyle = el.color; cx.lineWidth = el.strokeWidth;
-      cx.beginPath();
-      for (var i = 0; i < el.points.length; i++){
-        var p = el.points[i];
-        if (i === 0) cx.moveTo(p.x, p.y); else cx.lineTo(p.x, p.y);
-      }
-      cx.stroke();
-      break;
-    case 'text':
-      cx.fillStyle = el.color;
-      cx.font = el.fontSize + "px 'Segoe UI','Hiragino Kaku Gothic ProN','Yu Gothic',sans-serif";
-      cx.textBaseline = 'top';
-      var lines2 = el.text.split('\n');
-      for (var j = 0; j < lines2.length; j++){
-        cx.fillText(lines2[j], el.x, el.y + j * el.fontSize * 1.3);
-      }
-      break;
-    case 'image':
-      if (el.img && el.img.complete && el.img.naturalWidth > 0){
-        cx.drawImage(el.img, el.x, el.y, el.w, el.h);
-      } else {
-        cx.strokeStyle = COLORS.overlay0; cx.strokeRect(el.x, el.y, el.w, el.h);
-      }
-      break;
-  }
-  cx.restore();
-}
-
-function drawSelection(cx, el, showHandles){
+var ROT_OFFSET = 38;   // 回転ハンドルまでの距離（世界px）
+var ROT_HIT = 26;      // 回転ハンドルのヒット半径（世界px）
+function rotHandlePos(el){
   var b = getBBox(el);
-  var pad = 4 / state.scale;
-  cx.save();
-  cx.strokeStyle = COLORS.lavender;
-  cx.lineWidth = 1.5 / state.scale;
-  cx.setLineDash([6 / state.scale, 4 / state.scale]);
-  cx.strokeRect(b.x - pad, b.y - pad, b.w + pad * 2, b.h + pad * 2);
-  cx.setLineDash([]);
-  if (showHandles){
-    var handles = getHandles(el);
-    var hs = 9 / state.scale;
-    for (var i = 0; i < handles.length; i++){
-      var h = handles[i];
-      cx.fillStyle = COLORS.mantle;
-      cx.strokeStyle = COLORS.lavender;
-      cx.lineWidth = 1.5 / state.scale;
-      cx.fillRect(h.x - hs / 2, h.y - hs / 2, hs, hs);
-      cx.strokeRect(h.x - hs / 2, h.y - hs / 2, hs, hs);
-    }
+  return { x: b.x + b.w / 2, y: b.y - ROT_OFFSET / scale };
+}
+function getHandle(el, world){
+  if (dist(world, rotHandlePos(el)) < ROT_HIT / scale) return { id: 'rotate' };
+  var b = getBBox(el);
+  var corners = [
+    { id:'nw', x:b.x, y:b.y }, { id:'ne', x:b.x+b.w, y:b.y },
+    { id:'sw', x:b.x, y:b.y+b.h }, { id:'se', x:b.x+b.w, y:b.y+b.h }
+  ];
+  if (el.type === 'line' || el.type === 'arrow'){
+    corners.push({ id:'p1', x:el.x1, y:el.y1 }, { id:'p2', x:el.x2, y:el.y2 });
   }
-  cx.restore();
+  for (var i = 0; i < corners.length; i++){
+    if (el.type === 'freehand' && (corners[i].id === 'nw' || corners[i].id === 'ne' || corners[i].id === 'sw' || corners[i].id === 'se')) continue;
+    if (dist(world, corners[i]) < 14 / scale) return corners[i];
+  }
+  return null;
+}
+function getGroupHandle(world){
+  if (selectedIds.length < 2) return null;
+  var b = getGroupBBox(selectedEls());
+  var corners = [
+    { id:'nw', x:b.x, y:b.y }, { id:'ne', x:b.x+b.w, y:b.y },
+    { id:'sw', x:b.x, y:b.y+b.h }, { id:'se', x:b.x+b.w, y:b.y+b.h }
+  ];
+  for (var i = 0; i < corners.length; i++) if (dist(world, corners[i]) < 14 / scale) return corners[i];
+  return null;
+}
+function normRect(x1, y1, x2, y2){ return { x: Math.min(x1,x2), y: Math.min(y1,y2), w: Math.abs(x2-x1), h: Math.abs(y2-y1) }; }
+
+/* ================= history ================= */
+function snapshot(){ return deepClone(elements); }
+function commitState(next, sel){
+  elements = next;
+  selectedIds = sel || selectedIds;
+  history = history.slice(0, historyIndex + 1);
+  history.push(snapshot());
+  if (history.length > 100) history.shift();
+  historyIndex = history.length - 1;
+  updateUI();
+  render();
+}
+function undo(){
+  if (historyIndex <= 0) return;
+  historyIndex--;
+  elements = deepClone(history[historyIndex]);
+  selectedIds = [];
+  updateUI(); render();
+}
+function redo(){
+  if (historyIndex >= history.length - 1) return;
+  historyIndex++;
+  elements = deepClone(history[historyIndex]);
+  selectedIds = [];
+  updateUI(); render();
 }
 
-function drawMarquee(cx){
-  if (!marqueeRect) return;
-  var x = Math.min(marqueeRect.x1, marqueeRect.x2);
-  var y = Math.min(marqueeRect.y1, marqueeRect.y2);
-  var w = Math.abs(marqueeRect.x2 - marqueeRect.x1);
-  var h = Math.abs(marqueeRect.y2 - marqueeRect.y1);
-  cx.save();
-  cx.fillStyle = 'rgba(23,23,23,0.06)';
-  cx.fillRect(x, y, w, h);
-  cx.strokeStyle = COLORS.lavender;
-  cx.lineWidth = 1 / state.scale;
-  cx.setLineDash([4 / state.scale, 3 / state.scale]);
-  cx.strokeRect(x, y, w, h);
-  cx.restore();
-}
-
-function drawGrid(cx, w, h){
-  var spacing = 32 * state.scale;
-  if (spacing < 10) return;
-  var offsetX = state.panX % spacing; if (offsetX < 0) offsetX += spacing;
-  var offsetY = state.panY % spacing; if (offsetY < 0) offsetY += spacing;
-  cx.fillStyle = COLORS.surface0;
-  for (var x = offsetX; x < w; x += spacing){
-    for (var y = offsetY; y < h; y += spacing){
-      cx.beginPath();
-      cx.arc(x, y, 1.3, 0, Math.PI * 2);
-      cx.fill();
+/* ================= drawing ================= */
+function drawElement(c, el){
+  c.save();
+  c.lineJoin = 'round'; c.lineCap = 'round';
+  if (el.type === 'rect' || el.type === 'ellipse' || el.type === 'text' || el.type === 'image'){
+    var cx = el.x + el.w / 2, cy = el.y + el.h / 2;
+    var rot = el.rotation || 0;
+    c.translate(cx, cy); c.rotate(rot); c.translate(-cx, -cy);
+  }
+  if (el.type === 'rect'){
+    if (el.fill){ c.fillStyle = el.fillColor || el.color; c.fillRect(el.x, el.y, el.w, el.h); }
+    if (el.strokeWidth > 0){ c.strokeStyle = el.color; c.lineWidth = el.strokeWidth; c.strokeRect(el.x, el.y, el.w, el.h); }
+  } else if (el.type === 'ellipse'){
+    c.beginPath();
+    c.ellipse(el.x + el.w/2, el.y + el.h/2, Math.abs(el.w/2), Math.abs(el.h/2), 0, 0, Math.PI*2);
+    if (el.fill){ c.fillStyle = el.fillColor || el.color; c.fill(); }
+    if (el.strokeWidth > 0){ c.strokeStyle = el.color; c.lineWidth = el.strokeWidth; c.stroke(); }
+  } else if (el.type === 'line' || el.type === 'arrow'){
+    c.strokeStyle = el.color; c.lineWidth = el.strokeWidth;
+    c.beginPath(); c.moveTo(el.x1, el.y1); c.lineTo(el.x2, el.y2); c.stroke();
+    if (el.type === 'arrow'){
+      var ang = Math.atan2(el.y2 - el.y1, el.x2 - el.x1);
+      var hl = 10 + el.strokeWidth * 1.5;
+      c.fillStyle = el.color;
+      c.beginPath();
+      c.moveTo(el.x2, el.y2);
+      c.lineTo(el.x2 - hl * Math.cos(ang - Math.PI/6), el.y2 - hl * Math.sin(ang - Math.PI/6));
+      c.lineTo(el.x2 - hl * Math.cos(ang + Math.PI/6), el.y2 - hl * Math.sin(ang + Math.PI/6));
+      c.closePath(); c.fill();
+    }
+  } else if (el.type === 'text'){
+    c.fillStyle = el.color;
+    c.font = el.fontSize + "px 'Segoe UI','Hiragino Kaku Gothic ProN','Yu Gothic',sans-serif";
+    c.textBaseline = 'top';
+    el.text.split('\n').forEach(function(line, i){ c.fillText(line, el.x, el.y + i * el.fontSize * 1.3); });
+  } else if (el.type === 'freehand'){
+    c.strokeStyle = el.color; c.lineWidth = el.strokeWidth;
+    c.beginPath();
+    el.points.forEach(function(p, i){ if (i === 0) c.moveTo(p.x, p.y); else c.lineTo(p.x, p.y); });
+    c.stroke();
+  } else if (el.type === 'image'){
+    var img = imageCache.get(el.src);
+    if (img && img.complete && img.naturalWidth > 0){
+      c.drawImage(img, el.x, el.y, el.w, el.h);
+    } else {
+      c.strokeStyle = '#a3a3a3'; c.lineWidth = 1; c.strokeRect(el.x, el.y, el.w, el.h);
     }
   }
+  c.restore();
+}
+
+function drawHandles(c, box){
+  var hs = 10 / scale;
+  [[box.x, box.y], [box.x+box.w, box.y], [box.x, box.y+box.h], [box.x+box.w, box.y+box.h]].forEach(function(p){
+    c.fillStyle = '#fff'; c.strokeStyle = '#171717'; c.lineWidth = 1.5 / scale;
+    c.fillRect(p[0]-hs/2, p[1]-hs/2, hs, hs);
+    c.strokeRect(p[0]-hs/2, p[1]-hs/2, hs, hs);
+  });
 }
 
 function render(){
   var w = canvas.width / dpr, h = canvas.height / dpr;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, w, h);
-  ctx.fillStyle = COLORS.base;
+  ctx.fillStyle = '#fff';
   ctx.fillRect(0, 0, w, h);
-  drawGrid(ctx, w, h);
+  // グリッド
+  var sp = 32 * scale;
+  if (sp >= 14){
+    var ox = panX % sp; if (ox < 0) ox += sp;
+    var oy = panY % sp; if (oy < 0) oy += sp;
+    ctx.fillStyle = '#e5e5e5';
+    for (var gx = ox; gx < w; gx += sp) for (var gy = oy; gy < h; gy += sp){
+      ctx.beginPath(); ctx.arc(gx, gy, 1.2, 0, Math.PI*2); ctx.fill();
+    }
+  }
+
   ctx.save();
-  ctx.translate(state.panX, state.panY);
-  ctx.scale(state.scale, state.scale);
-  for (var i = 0; i < state.elements.length; i++) drawElement(ctx, state.elements[i]);
-  if (currentDraft) drawElement(ctx, currentDraft);
-  var selectedEls = getSelectedElements();
-  var showHandles = selectedEls.length === 1;
-  for (var j = 0; j < selectedEls.length; j++) drawSelection(ctx, selectedEls[j], showHandles);
-  if (dragMode === 'marquee') drawMarquee(ctx);
+  ctx.translate(panX, panY);
+  ctx.scale(scale, scale);
+  elements.forEach(function(el){ drawElement(ctx, el); });
+  if (draft) drawElement(ctx, draft);
+
+  // 選択枠
+  var sel = selectedEls();
+  var i, el, b;
+  if (sel.length > 1){
+    b = getGroupBBox(sel);
+    ctx.save();
+    ctx.strokeStyle = '#171717'; ctx.lineWidth = 1 / scale;
+    ctx.setLineDash([6/scale, 4/scale]);
+    ctx.strokeRect(b.x, b.y, b.w, b.h);
+    ctx.setLineDash([]);
+    drawHandles(ctx, b);
+    ctx.restore();
+  } else if (sel.length === 1){
+    el = sel[0];
+    b = getBBox(el);
+    ctx.save();
+    ctx.strokeStyle = '#171717'; ctx.lineWidth = 1 / scale;
+    ctx.setLineDash([6/scale, 4/scale]);
+    ctx.strokeRect(b.x, b.y, b.w, b.h);
+    ctx.setLineDash([]);
+    if (el.type !== 'freehand') drawHandles(ctx, b);
+    // 回転ハンドル（大きめ）
+    var rc = rotHandlePos(el);
+    ctx.beginPath();
+    ctx.moveTo(b.x + b.w/2, b.y);
+    ctx.lineTo(rc.x, rc.y + 12/scale);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(rc.x, rc.y, 12/scale, 0, Math.PI*2);
+    ctx.fillStyle = '#fff'; ctx.fill();
+    ctx.lineWidth = 2/scale; ctx.stroke();
+    // 回転アイコン
+    ctx.beginPath();
+    ctx.arc(rc.x, rc.y, 6/scale, -Math.PI*0.2, Math.PI*1.2);
+    ctx.lineWidth = 1.6/scale; ctx.stroke();
+    ctx.restore();
+  }
+
+  // 矩形選択中
+  if (marquee){
+    var mx = Math.min(marquee.x1, marquee.x2), my = Math.min(marquee.y1, marquee.y2);
+    var mw = Math.abs(marquee.x2 - marquee.x1), mh = Math.abs(marquee.y2 - marquee.y1);
+    ctx.save();
+    ctx.fillStyle = 'rgba(23,23,23,0.07)';
+    ctx.fillRect(mx, my, mw, mh);
+    ctx.strokeStyle = '#171717'; ctx.lineWidth = 1/scale;
+    ctx.setLineDash([4/scale, 3/scale]);
+    ctx.strokeRect(mx, my, mw, mh);
+    ctx.restore();
+  }
   ctx.restore();
 
-  hintEl.style.display = state.elements.length === 0 ? 'block' : 'none';
-  updateZoomLabel();
+  // HTMLオーバーレイ更新
+  zoomLabel.textContent = Math.round(scale * 100) + '%';
+  hintEl.style.display = elements.length === 0 && !draft ? 'block' : 'none';
+  updateSizePanel();
+  updateDimInputs();
 }
 
-function resizeCanvas(){
-  var rect = boardWrap.getBoundingClientRect();
-  canvas.width = Math.max(1, rect.width * dpr);
-  canvas.height = Math.max(1, rect.height * dpr);
-  canvas.style.width = rect.width + 'px';
-  canvas.style.height = rect.height + 'px';
-  render();
+/* ================= size panel（図形押下時の縦横表示・その場編集） ================= */
+function updateSizePanel(){
+  var single = singleSel();
+  if (!single){ sizePanel.style.display = 'none'; sizePanelLine.style.display = 'none'; return; }
+  var b = getBBox(single);
+  var s = worldToScreen(b.x + b.w/2, b.y + b.h + 14/scale);
+  var isLine = single.type === 'line' || single.type === 'arrow';
+  sizePanel.style.display = isLine ? 'none' : 'flex';
+  sizePanelLine.style.display = isLine ? 'flex' : 'none';
+  if (isLine){
+    sizePanelLine.style.left = s.x + 'px';
+    sizePanelLine.style.top = s.y + 'px';
+    if (document.activeElement !== spL) spL.value = Math.round(Math.hypot(single.x2 - single.x1, single.y2 - single.y1));
+  } else {
+    sizePanel.style.left = s.x + 'px';
+    sizePanel.style.top = s.y + 'px';
+    if (document.activeElement !== spW) spW.value = Math.round(single.w);
+    if (document.activeElement !== spH) spH.value = Math.round(single.h);
+  }
 }
+function commitDims(){ commitState(deepClone(elements), selectedIds.slice()); }
+spW.addEventListener('change', function(){
+  var single = singleSel();
+  if (!single || single.type === 'line' || single.type === 'arrow') return;
+  var v = parseFloat(spW.value);
+  if (isNaN(v) || v <= 0){ render(); return; }
+  if (single.type === 'image') single.h = single.h * (v / single.w);
+  single.w = v;
+  commitDims();
+});
+spH.addEventListener('change', function(){
+  var single = singleSel();
+  if (!single || single.type === 'line' || single.type === 'arrow') return;
+  var v = parseFloat(spH.value);
+  if (isNaN(v) || v <= 0){ render(); return; }
+  if (single.type === 'image') single.w = single.w * (v / single.h);
+  single.h = v;
+  commitDims();
+});
+spL.addEventListener('change', function(){
+  var single = singleSel();
+  if (!single || (single.type !== 'line' && single.type !== 'arrow')) return;
+  var v = parseFloat(spL.value);
+  if (isNaN(v) || v <= 0){ render(); return; }
+  var cur = Math.hypot(single.x2 - single.x1, single.y2 - single.y1);
+  if (cur <= 0) return;
+  var k = v / cur;
+  single.x2 = single.x1 + (single.x2 - single.x1) * k;
+  single.y2 = single.y1 + (single.y2 - single.y1) * k;
+  commitDims();
+});
+[spW, spH, spL].forEach(function(inp){
+  inp.addEventListener('keydown', function(e){
+    if (e.key === 'Enter' || e.key === 'Escape') inp.blur();
+  });
+});
 
-/* ---------------- zoom / pan ---------------- */
-function zoomAt(pt, factor){
-  var newScale = clamp(state.scale * factor, 0.1, 8);
-  var worldBefore = screenToWorld(pt.x, pt.y);
-  state.scale = newScale;
-  var after = worldToScreen(worldBefore.x, worldBefore.y);
-  state.panX += pt.x - after.x;
-  state.panY += pt.y - after.y;
+/* ================= dimension inputs ================= */
+function updateDimInputs(){
+  var single = singleSel();
+  dimGroup.style.display = single ? 'flex' : 'none';
+  if (single && document.activeElement !== dimRot)
+    dimRot.value = Math.round((single.rotation || 0) * 180 / Math.PI);
 }
-function updateZoomLabel(){
-  document.getElementById('zoomLabel').textContent = Math.round(state.scale * 100) + '%';
+function applyRot(deg){
+  var single = singleSel();
+  if (!single) return;
+  var base = single.rotation || 0;
+  var target = deg * Math.PI / 180;
+  if (single.type === 'line' || single.type === 'freehand'){
+    var b = getBBox(single);
+    var c = { x: b.x + b.w/2, y: b.y + b.h/2 };
+    var d = target - base;
+    if (single.type === 'line'){
+      var p1 = rotatePt({x:single.x1, y:single.y1}, c, d);
+      var p2 = rotatePt({x:single.x2, y:single.y2}, c, d);
+      single.x1 = p1.x; single.y1 = p1.y; single.x2 = p2.x; single.y2 = p2.y;
+    } else {
+      single.points = single.points.map(function(p){ return rotatePt(p, c, d); });
+    }
+  } else {
+    single.rotation = target;
+  }
+  commitState(deepClone(elements), selectedIds.slice());
 }
+dimRot.addEventListener('change', function(){ applyRot(parseFloat(dimRot.value) || 0); });
 
-/* ---------------- tool switching ---------------- */
-function setTool(tool){
-  if (textEditor.style.display === 'block') commitTextEditor();
-  hideContextMenu();
-  state.tool = tool;
-  setSelection([]);
-  updateToolbarUI();
-  render();
+/* ================= UI update ================= */
+function updateUI(){
+  var btns = document.querySelectorAll('.tbtn[data-tool]');
+  for (var i = 0; i < btns.length; i++){
+    btns[i].classList.toggle('active', btns[i].getAttribute('data-tool') === tool);
+  }
+  var sws = document.querySelectorAll('.swatch');
+  for (var j = 0; j < sws.length; j++) sws[j].classList.toggle('selected', sws[j].dataset.c === color);
+  var single = singleSel();
+  document.getElementById('btnFill').classList.toggle('active', single && (single.type === 'rect' || single.type === 'ellipse') && single.fill ? true : fillEnabled);
+  document.getElementById('btnLock').classList.toggle('active', !!(single && single.lockAspect));
+  document.getElementById('btnLock').disabled = !selectedEls().some(function(e){ return e.type === 'rect' || e.type === 'ellipse'; });
   canvas.style.cursor = tool === 'pan' ? 'grab' : (tool === 'select' ? 'default' : 'crosshair');
 }
-function updateToolbarUI(){
-  var btns = document.querySelectorAll('.tbtn[data-tool]');
-  btns.forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-tool') === state.tool); });
+function setTool(t){
+  closeEditor(true);
+  tool = t;
+  updateUI(); render();
 }
+document.querySelectorAll('.tbtn[data-tool]').forEach(function(btn){
+  btn.addEventListener('click', function(){ setTool(btn.getAttribute('data-tool')); });
+});
 
-/* ---------------- text editing ---------------- */
-function openTextEditor(screenPos, world, existingEl){
-  textEditor.style.display = 'block';
-  var fontSizeWorld = existingEl ? existingEl.fontSize : 20;
-  var left, top;
-  if (existingEl){
-    var s = worldToScreen(existingEl.x, existingEl.y);
-    left = s.x; top = s.y;
+/* swatches */
+var swWrap = document.getElementById('swatches');
+SWATCHES.forEach(function(c){
+  var b = document.createElement('button');
+  b.className = 'swatch';
+  b.style.background = c;
+  b.dataset.c = c;
+  b.title = c;
+  b.addEventListener('click', function(){
+    color = c;
+    document.getElementById('colorCustom').value = c;
+    applyColorToSelection();
+    updateUI();
+  });
+  swWrap.appendChild(b);
+});
+function applyColorToSelection(){
+  var els = selectedEls();
+  var changed = false;
+  els.forEach(function(el){ if ('color' in el){ el.color = color; changed = true; } });
+  if (changed) commitState(deepClone(elements), selectedIds.slice());
+  else render();
+}
+document.getElementById('colorCustom').addEventListener('input', function(e){
+  color = e.target.value;
+  applyColorToSelection();
+  updateUI();
+});
+
+var strokeNumber = document.getElementById('strokeNumber');
+var strokeRange = document.getElementById('strokeRange');
+function setStrokeWidth(v){
+  strokeWidth = clamp(Math.round(v), 0, 48);
+  strokeNumber.value = strokeWidth;
+  strokeRange.value = Math.min(strokeWidth, 24);
+  selectedEls().forEach(function(el){ if ('strokeWidth' in el) el.strokeWidth = strokeWidth; });
+  render();
+}
+strokeNumber.addEventListener('change', function(){ setStrokeWidth(strokeNumber.value); commitState(deepClone(elements), selectedIds.slice()); });
+strokeRange.addEventListener('input', function(){ setStrokeWidth(strokeRange.value); });
+strokeRange.addEventListener('change', function(){ commitState(deepClone(elements), selectedIds.slice()); });
+
+document.getElementById('btnFill').addEventListener('click', function(){
+  var els = selectedEls().filter(function(e){ return e.type === 'rect' || e.type === 'ellipse'; });
+  if (els.length){
+    els.forEach(function(el){ el.fill = !el.fill; if (el.fill && !el.fillColor) el.fillColor = fillColor; });
+    commitState(deepClone(elements), selectedIds.slice());
   } else {
-    left = screenPos.x; top = screenPos.y;
+    fillEnabled = !fillEnabled;
   }
-  textEditor.style.left = left + 'px';
-  textEditor.style.top = top + 'px';
-  textEditor.style.fontSize = (fontSizeWorld * state.scale) + 'px';
-  textEditor.style.color = existingEl ? existingEl.color : state.color;
-  textEditor.value = existingEl ? existingEl.text : '';
-  textEditor.dataset.mode = existingEl ? 'edit' : 'new';
-  textEditor.dataset.worldX = world.x;
-  textEditor.dataset.worldY = world.y;
-  textEditor.dataset.targetId = existingEl ? existingEl.id : '';
-  textEditor.style.height = 'auto';
-  setTimeout(function(){ textEditor.focus(); autoGrowEditor(); }, 0);
+  updateUI(); render();
+});
+document.getElementById('fillColor').addEventListener('change', function(e){
+  fillColor = e.target.value;
+  selectedEls().filter(function(x){ return x.type === 'rect' || x.type === 'ellipse'; }).forEach(function(el){ el.fillColor = fillColor; });
+  commitState(deepClone(elements), selectedIds.slice());
+});
+document.getElementById('btnLock').addEventListener('click', function(){
+  var single = singleSel();
+  if (!single) return;
+  if (single.type !== 'rect' && single.type !== 'ellipse') return;
+  single.lockAspect = !single.lockAspect;
+  commitState(deepClone(elements), selectedIds.slice());
+});
+document.getElementById('btnUndo').addEventListener('click', undo);
+document.getElementById('btnRedo').addEventListener('click', redo);
+document.getElementById('btnImage').addEventListener('click', function(){ document.getElementById('imgInput').click(); });
+
+/* ================= text editor ================= */
+var editing = null; // {id or null, worldX, worldY}
+function textUnits(text){
+  var lines = text.split('\n');
+  var m = 1;
+  lines.forEach(function(line){
+    var u = 0;
+    for (var i = 0; i < line.length; i++){
+      var code = line.charCodeAt(i);
+      var wide = (code >= 0x2e80 && code <= 0xa4cf) || (code >= 0xac00 && code <= 0xd7a3) ||
+        (code >= 0xf900 && code <= 0xfaff) || (code >= 0xff00 && code <= 0xffef) ||
+        (code >= 0x1100 && code <= 0x115f) || (code >= 0x20000 && code <= 0x3fffd);
+      u += wide ? 1 : 0.55;
+    }
+    m = Math.max(m, u);
+  });
+  return m;
+}
+function textFontFor(text){
+  var u = textUnits(text || 'あ');
+  return clamp(20 * Math.pow(u / 4, 0.6), 20, 180);
 }
 function autoGrowEditor(){
   textEditor.style.width = Math.max(60, textEditor.scrollWidth) + 'px';
-  textEditor.style.height = Math.max(24, textEditor.scrollHeight) + 'px';
+  textEditor.style.height = Math.max(26, textEditor.scrollHeight) + 'px';
 }
-function commitTextEditor(){
+function openEditor(screenPos, world, el){
+  closeEditor(true);
+  textEditor.style.display = 'block';
+  textEditor.style.left = screenPos.x + 'px';
+  textEditor.style.top = screenPos.y + 'px';
+  textEditor.style.color = el ? el.color : color;
+  textEditor.value = el ? el.text : '';
+  textEditor.style.fontSize = ((el && el.fontSize) ? el.fontSize : textFontFor('あ')) * scale + 'px';
+  editing = el ? { id: el.id, worldX: world.x, worldY: world.y } : { id: null, worldX: world.x, worldY: world.y };
+  autoGrowEditor();
+  setTimeout(function(){ textEditor.focus(); }, 0);
+}
+textEditor.addEventListener('input', function(){
+  // テキストボックスが拡大した分、文字も大きくする
+  textEditor.style.fontSize = textFontFor(textEditor.value) * scale + 'px';
+  autoGrowEditor();
+});
+function closeEditor(commit){
+  if (textEditor.style.display === 'none') return;
   textEditor.style.display = 'none';
-  var text = textEditor.value.replace(/\s+$/,'');
-  var mode = textEditor.dataset.mode;
-  if (!text){
-    if (state.tool === 'text') { state.tool = 'select'; updateToolbarUI(); }
-    render();
+  var prevEditing = editing;
+  editing = null;
+  if (commit && prevEditing){
+    var text = textEditor.value.replace(/\s+$/, '');
+    if (!text){
+      if (prevEditing.id){
+        // 編集していたテキストを空にした → 削除しない（元のまま）
+      }
+      render();
+      return;
+    }
+    var fs = textFontFor(text);
+    ctx.save();
+    ctx.font = fs + "px 'Segoe UI','Hiragino Kaku Gothic ProN','Yu Gothic',sans-serif";
+    var lines = text.split('\n');
+    var w = fs;
+    lines.forEach(function(line){ w = Math.max(w, ctx.measureText(line).width); });
+    ctx.restore();
+    var h = fs * 1.3 * lines.length;
+    if (prevEditing.id){
+      var el = byId(prevEditing.id);
+      if (el && el.type === 'text'){ el.text = text; el.w = w; el.h = h; el.fontSize = fs; }
+    } else {
+      var ne = { id: genId(), type: 'text', x: prevEditing.worldX, y: prevEditing.worldY, w: w, h: h, text: text, color: color, strokeWidth: 0, fontSize: fs, rotation: 0 };
+      elements.push(ne);
+      selectedIds = [ne.id];
+    }
+    commitState(deepClone(elements), selectedIds.slice());
     return;
   }
-  var fontSize = 20;
-  var isEdit = mode === 'edit';
-  var targetId = textEditor.dataset.targetId;
-  if (isEdit){
-    var el = getElementById(targetId);
-    if (el) fontSize = el.fontSize;
-  }
-  ctx.font = fontSize + "px 'Segoe UI',sans-serif";
-  var lines = text.split('\n');
-  var w = 0;
-  for (var i = 0; i < lines.length; i++) w = Math.max(w, ctx.measureText(lines[i]).width);
-  var h = fontSize * 1.3 * lines.length;
-  if (isEdit){
-    var target = getElementById(targetId);
-    if (target){ target.text = text; target.w = w; target.h = h; }
-  } else {
-    var x = parseFloat(textEditor.dataset.worldX), y = parseFloat(textEditor.dataset.worldY);
-    var newEl = { id: genId(), type: 'text', x: x, y: y, w: w, h: h, text: text, color: state.color, fontSize: fontSize };
-    state.elements.push(newEl);
-    setSelection([newEl.id]);
-  }
-  if (state.tool === 'text'){ state.tool = 'select'; updateToolbarUI(); }
-  pushHistory();
+  textEditor.value = '';
   render();
 }
+textEditor.addEventListener('keydown', function(e){
+  e.stopPropagation();
+  if (e.key === 'Escape'){ textEditor.value = ''; textEditor.blur(); }
+});
+textEditor.addEventListener('blur', function(){ closeEditor(true); });
 
-/* ---------------- images ---------------- */
-function loadImageFile(file){
+/* ================= images ================= */
+document.getElementById('imgInput').addEventListener('change', function(e){
+  var f = e.target.files && e.target.files[0];
+  if (!f) return;
   var reader = new FileReader();
-  reader.onload = function(ev){ addImageFromSrc(ev.target.result); };
-  reader.readAsDataURL(file);
-}
-function addImageFromSrc(src){
-  var img = new Image();
-  img.onload = function(){
-    var center = screenToWorld(canvas.clientWidth / 2, canvas.clientHeight / 2);
-    var w = img.width, h = img.height;
-    var maxDim = 420 / state.scale;
-    if (w > maxDim || h > maxDim){
-      var s = Math.min(maxDim / w, maxDim / h);
+  reader.onload = function(){
+    var src = reader.result;
+    var img = getImageEl(src);
+    var add = function(){
+      var rect = wrap.getBoundingClientRect();
+      var center = screenToWorld(rect.width / 2, rect.height / 2);
+      var w = img.naturalWidth, h = img.naturalHeight;
+      var maxDim = 400 / scale;
+      var s = Math.min(maxDim / w, maxDim / h, 1);
       w *= s; h *= s;
-    }
-    var el = { id: genId(), type: 'image', x: center.x - w / 2, y: center.y - h / 2, w: w, h: h, src: src, img: img, lockAspect: true };
-    state.elements.push(el);
-    setSelection([el.id]);
-    pushHistory();
-    render();
+      var el = { id: genId(), type: 'image', x: center.x - w/2, y: center.y - h/2, w: w, h: h, src: src, color: '#171717', strokeWidth: 0, lockAspect: true };
+      elements.push(el);
+      selectedIds = [el.id];
+      commitState(deepClone(elements), selectedIds.slice());
+    };
+    if (img.complete && img.naturalWidth > 0) add();
+    else img.onload = add;
   };
-  img.src = src;
-}
+  reader.readAsDataURL(f);
+  e.target.value = '';
+});
 
-/* ---------------- history / persistence ---------------- */
-function snapshot(){
-  return state.elements.map(function(el){
-    var rest = {};
-    for (var k in el){ if (k !== 'img') rest[k] = el[k]; }
-    return JSON.parse(JSON.stringify(rest));
-  });
+/* ================= crop ================= */
+function openCrop(el){
+  if (el.type !== 'image') return;
+  var img = getImageEl(el.src);
+  var nw = img.naturalWidth || Math.round(el.w);
+  var nh = img.naturalHeight || Math.round(el.h);
+  cropState = { id: el.id, src: el.src, nw: nw, nh: nh, dispScale: 1, rect: { x: 0, y: 0, w: nw, h: nh } };
+  cropImg.src = el.src;
+  layoutCrop();
+  cropModal.style.display = 'flex';
 }
-function restoreSnapshot(snap){
-  state.elements = snap.map(function(raw){
-    var el = {};
-    for (var k in raw) el[k] = raw[k];
-    if (el.type === 'image' && el.src){
-      var img = new Image();
-      img.onload = render;
-      img.src = el.src;
-      el.img = img;
+function layoutCrop(){
+  if (!cropState) return;
+  var c = cropState;
+  var maxW = Math.min(window.innerWidth - 48, 560);
+  var maxH = Math.min(window.innerHeight - 200, 420);
+  c.dispScale = Math.min(maxW / c.nw, maxH / c.nh, 1);
+  cropStage.style.width = (c.nw * c.dispScale) + 'px';
+  cropStage.style.height = (c.nh * c.dispScale) + 'px';
+  drawCropRect();
+}
+function drawCropRect(){
+  if (!cropState) return;
+  var c = cropState, d = c.dispScale, r = c.rect;
+  cropBox.style.left = (r.x * d) + 'px';
+  cropBox.style.top = (r.y * d) + 'px';
+  cropBox.style.width = (r.w * d) + 'px';
+  cropBox.style.height = (r.h * d) + 'px';
+  var H = 16;
+  var corners = {
+    chNW: { x: r.x * d - H/2, y: r.y * d - H/2 },
+    chNE: { x: (r.x + r.w) * d - H/2, y: r.y * d - H/2 },
+    chSW: { x: r.x * d - H/2, y: (r.y + r.h) * d - H/2 },
+    chSE: { x: (r.x + r.w) * d - H/2, y: (r.y + r.h) * d - H/2 }
+  };
+  for (var k in corners){
+    document.getElementById(k).style.left = corners[k].x + 'px';
+    document.getElementById(k).style.top = corners[k].y + 'px';
+  }
+  cropSizeEl.textContent = Math.round(r.w) + ' × ' + Math.round(r.h) + ' px';
+}
+function startCropDrag(mode){
+  return function(e){
+    e.preventDefault(); e.stopPropagation();
+    cropDrag = { mode: mode, sx: e.clientX, sy: e.clientY, rect: deepClone(cropState.rect) };
+  };
+}
+cropBox.addEventListener('pointerdown', startCropDrag('move'));
+document.getElementById('chNW').addEventListener('pointerdown', startCropDrag('nw'));
+document.getElementById('chNE').addEventListener('pointerdown', startCropDrag('ne'));
+document.getElementById('chSW').addEventListener('pointerdown', startCropDrag('sw'));
+document.getElementById('chSE').addEventListener('pointerdown', startCropDrag('se'));
+window.addEventListener('pointermove', function(e){
+  if (!cropDrag || !cropState) return;
+  var d = cropState.dispScale;
+  var dxN = (e.clientX - cropDrag.sx) / d;
+  var dyN = (e.clientY - cropDrag.sy) / d;
+  var r = deepClone(cropDrag.rect);
+  var c = cropState;
+  if (cropDrag.mode === 'move'){
+    r.x = clamp(r.x + dxN, 0, c.nw - r.w);
+    r.y = clamp(r.y + dyN, 0, c.nh - r.h);
+  } else {
+    if (cropDrag.mode.indexOf('e') >= 0) r.w = clamp(cropDrag.rect.w + dxN, 10, c.nw - cropDrag.rect.x);
+    if (cropDrag.mode.indexOf('s') >= 0) r.h = clamp(cropDrag.rect.h + dyN, 10, c.nh - cropDrag.rect.y);
+    if (cropDrag.mode.indexOf('w') >= 0){
+      var nx = clamp(cropDrag.rect.x + dxN, 0, cropDrag.rect.x + cropDrag.rect.w - 10);
+      r.w = cropDrag.rect.x + cropDrag.rect.w - nx;
+      r.x = nx;
     }
-    return el;
-  });
-}
-function pushHistory(){
-  history.splice(historyIndex + 1);
-  history.push(snapshot());
-  if (history.length > 60) history.shift();
-  historyIndex = history.length - 1;
-  saveToLocalStorage();
-}
-function undo(){
-  if (historyIndex > 0){
-    historyIndex--;
-    restoreSnapshot(history[historyIndex]);
-    setSelection([]);
-    render();
-    saveToLocalStorage();
-  }
-}
-function redo(){
-  if (historyIndex < history.length - 1){
-    historyIndex++;
-    restoreSnapshot(history[historyIndex]);
-    setSelection([]);
-    render();
-    saveToLocalStorage();
-  }
-}
-function saveToLocalStorage(){
-  try { localStorage.setItem('freeboard-data', JSON.stringify({ elements: snapshot() })); }
-  catch (e) { /* storage full or unavailable */ }
-}
-function loadFromLocalStorage(){
-  try {
-    var raw = localStorage.getItem('freeboard-data');
-    if (raw){
-      var data = JSON.parse(raw);
-      restoreSnapshot(data.elements || []);
+    if (cropDrag.mode.indexOf('n') >= 0){
+      var ny = clamp(cropDrag.rect.y + dyN, 0, cropDrag.rect.y + cropDrag.rect.h - 10);
+      r.h = cropDrag.rect.y + cropDrag.rect.h - ny;
+      r.y = ny;
     }
-  } catch (e) { /* ignore malformed data */ }
-}
-
-/* ---------------- export ---------------- */
-function exportPNG(){
-  if (state.elements.length === 0){ alert('ボードに要素がありません。'); return; }
-  var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-  for (var i = 0; i < state.elements.length; i++){
-    var b = getBBox(state.elements[i]);
-    minX = Math.min(minX, b.x); minY = Math.min(minY, b.y);
-    maxX = Math.max(maxX, b.x + b.w); maxY = Math.max(maxY, b.y + b.h);
   }
-  var pad = 40;
-  minX -= pad; minY -= pad; maxX += pad; maxY += pad;
-  var w = Math.ceil(maxX - minX), h = Math.ceil(maxY - minY);
-  var off = document.createElement('canvas');
-  off.width = w; off.height = h;
-  var octx = off.getContext('2d');
-  octx.fillStyle = COLORS.base;
-  octx.fillRect(0, 0, w, h);
-  octx.translate(-minX, -minY);
-  for (var j = 0; j < state.elements.length; j++) drawElement(octx, state.elements[j]);
-  off.toBlob(function(blob){
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement('a');
-    a.href = url;
-    a.download = 'freeboard-' + Date.now() + '.png';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
-  });
-}
+  cropState.rect = r;
+  drawCropRect();
+});
+window.addEventListener('pointerup', function(){ cropDrag = null; });
+function closeCrop(){ cropModal.style.display = 'none'; cropState = null; cropDrag = null; }
+document.getElementById('cropCancel').addEventListener('click', closeCrop);
+cropModal.addEventListener('pointerdown', function(e){ if (e.target === cropModal) closeCrop(); });
+document.getElementById('cropOk').addEventListener('click', function(){
+  if (!cropState) return;
+  var img = getImageEl(cropState.src);
+  if (!img.complete || img.naturalWidth === 0) return;
+  var el = byId(cropState.id);
+  if (!el || el.type !== 'image'){ closeCrop(); return; }
+  var nw = img.naturalWidth, nh = img.naturalHeight;
+  var rc = cropState.rect;
+  var out = document.createElement('canvas');
+  out.width = Math.max(1, Math.round(rc.w));
+  out.height = Math.max(1, Math.round(rc.h));
+  var oc = out.getContext('2d');
+  oc.drawImage(img, rc.x, rc.y, rc.w, rc.h, 0, 0, out.width, out.height);
+  var src = out.toDataURL('image/png');
+  el.src = src;
+  el.x = el.x + (rc.x / nw) * el.w;
+  el.y = el.y + (rc.y / nh) * el.h;
+  el.w = (rc.w / nw) * el.w;
+  el.h = (rc.h / nh) * el.h;
+  commitState(deepClone(elements), selectedIds.slice());
+  closeCrop();
+});
 
-/* ---------------- context menu ---------------- */
-function toggleMenuItem(action, show){
-  var btn = contextMenuEl.querySelector('[data-action="' + action + '"]');
-  if (btn) btn.style.display = show ? '' : 'none';
-}
-function openContextMenuAtScreen(clientX, clientY, world){
-  contextMenuWorldPos = world;
-  var hasSel = state.selectedIds.length > 0;
-  var single = state.selectedIds.length === 1 ? getElementById(state.selectedIds[0]) : null;
-  toggleMenuItem('cut', hasSel);
-  toggleMenuItem('copy', hasSel);
-  toggleMenuItem('duplicate', hasSel);
-  toggleMenuItem('delete', hasSel);
-  toggleMenuItem('copyImage', !!(single && single.type === 'image'));
-  toggleMenuItem('paste', !!(elementClipboard && elementClipboard.length));
-  contextMenuEl.style.display = 'block';
+/* ================= context menu ================= */
+function showContextMenu(x, y, elId){
+  var el = byId(elId);
+  if (!el) return;
+  ctxMenuInfo = { x: x, y: y, elId: elId };
+  var html = '';
+  if (el.type === 'image') html += '<button data-a="crop">画像を切り抜く</button>';
+  html += '<button data-a="dup">複製</button>';
+  html += '<button data-a="del" class="danger">削除</button>';
+  ctxMenuEl.innerHTML = html;
+  ctxMenuEl.style.display = 'block';
   var vw = window.innerWidth, vh = window.innerHeight;
-  var rect = contextMenuEl.getBoundingClientRect();
-  var left = Math.min(clientX, vw - rect.width - 8);
-  var top = Math.min(clientY, vh - rect.height - 8);
-  contextMenuEl.style.left = Math.max(4, left) + 'px';
-  contextMenuEl.style.top = Math.max(4, top) + 'px';
+  var left = Math.min(x, vw - 190), top = Math.min(y, vh - 150);
+  ctxMenuEl.style.left = Math.max(4, left) + 'px';
+  ctxMenuEl.style.top = Math.max(4, top) + 'px';
 }
-function hideContextMenu(){
-  contextMenuEl.style.display = 'none';
-}
-
-contextMenuEl.addEventListener('click', function(e){
+function hideContextMenu(){ ctxMenuEl.style.display = 'none'; ctxMenuInfo = null; }
+ctxMenuEl.addEventListener('click', function(e){
   var btn = e.target.closest('button');
   if (!btn) return;
-  var action = btn.getAttribute('data-action');
+  var a = btn.getAttribute('data-a');
+  var id = ctxMenuInfo ? ctxMenuInfo.elId : null;
   hideContextMenu();
-  if (action === 'cut') cutSelection();
-  else if (action === 'copy') copySelection();
-  else if (action === 'duplicate') duplicateSelection();
-  else if (action === 'delete') deleteSelected();
-  else if (action === 'copyImage'){
-    var single = state.selectedIds.length === 1 ? getElementById(state.selectedIds[0]) : null;
-    copyImageToSystemClipboard(single);
-  } else if (action === 'paste') pasteFromClipboard(contextMenuWorldPos);
+  if (a === 'crop'){ var el = byId(id); if (el) openCrop(el); }
+  else if (a === 'dup'){
+    var src = byId(id); if (!src) return;
+    var c = deepClone(src);
+    c.id = genId();
+    var off = 24 / scale;
+    if (c.type === 'rect' || c.type === 'ellipse' || c.type === 'text' || c.type === 'image'){ c.x += off; c.y += off; }
+    else if (c.type === 'line' || c.type === 'arrow'){ c.x1 += off; c.y1 += off; c.x2 += off; c.y2 += off; }
+    else c.points = c.points.map(function(p){ return { x: p.x + off, y: p.y + off }; });
+    elements.push(c);
+    selectedIds = [c.id];
+    commitState(deepClone(elements), selectedIds.slice());
+  }
+  else if (a === 'del'){
+    var delId = id;
+    elements = elements.filter(function(x){ return x.id !== delId; });
+    selectedIds = selectedIds.filter(function(x){ return x !== delId; });
+    commitState(deepClone(elements), selectedIds.slice());
+  }
 });
-window.addEventListener('pointerdown', function(e){
-  if (contextMenuEl.style.display === 'block' && !contextMenuEl.contains(e.target)) hideContextMenu();
+document.addEventListener('pointerdown', function(e){
+  if (ctxMenuEl.style.display === 'block' && !ctxMenuEl.contains(e.target)) hideContextMenu();
 });
 
-/* ---------------- long press (touch context menu) ---------------- */
-function startLongPress(pos, pointerType){
-  clearLongPress();
-  if (pointerType !== 'touch' && pointerType !== 'pen') return;
-  longPressTimer = setTimeout(function(){
-    longPressTimer = null;
-    if (dragMode === 'pending-move' || dragMode === 'pending-marquee'){
-      dragMode = null; marqueeRect = null;
-      render();
-      var world = screenToWorld(pos.x, pos.y);
-      var rect = canvas.getBoundingClientRect();
-      openContextMenuAtScreen(rect.left + pos.x, rect.top + pos.y, world);
-    }
-  }, LONG_PRESS_MS);
+/* ================= element edit ops ================= */
+function moveEl(el, snap, dx, dy){
+  if (el.type === 'rect' || el.type === 'ellipse' || el.type === 'text' || el.type === 'image'){ el.x = snap.x + dx; el.y = snap.y + dy; }
+  else if (el.type === 'line' || el.type === 'arrow'){ el.x1 = snap.x1 + dx; el.y1 = snap.y1 + dy; el.x2 = snap.x2 + dx; el.y2 = snap.y2 + dy; }
+  else el.points = snap.points.map(function(p){ return { x: p.x + dx, y: p.y + dy }; });
 }
-function clearLongPress(){
-  if (longPressTimer){ clearTimeout(longPressTimer); longPressTimer = null; }
+function rotateElInPlace(el, base, c, d){
+  if (el.type === 'rect' || el.type === 'ellipse' || el.type === 'text' || el.type === 'image'){
+    el.rotation = (base.rotation || 0) + d;
+  } else if (el.type === 'line' || el.type === 'arrow'){
+    var p1 = rotatePt({x: base.x1, y: base.y1}, c, d);
+    var p2 = rotatePt({x: base.x2, y: base.y2}, c, d);
+    el.x1 = p1.x; el.y1 = p1.y; el.x2 = p2.x; el.y2 = p2.y;
+  } else if (el.type === 'freehand'){
+    el.points = base.points.map(function(p){ return rotatePt(p, c, d); });
+  }
 }
 
-/* ---------------- pointer events ---------------- */
+/* ================= pointer handling ================= */
+function pointerPos(e){
+  var r = canvas.getBoundingClientRect();
+  return { x: e.clientX - r.left, y: e.clientY - r.top };
+}
+
+function createDraftElement(t, p){
+  if (t === 'rect' || t === 'ellipse') return { id: genId(), type: t, x: p.x, y: p.y, w: 0, h: 0, color: color, strokeWidth: strokeWidth, fill: fillEnabled, fillColor: fillColor, rotation: 0, lockAspect: false };
+  if (t === 'line' || t === 'arrow') return { id: genId(), type: t, x1: p.x, y1: p.y, x2: p.x, y2: p.y, color: color, strokeWidth: strokeWidth };
+  if (t === 'pen') return { id: genId(), type: 'freehand', points: [p], color: color, strokeWidth: strokeWidth };
+  return null;
+}
+function finalizeDraft(){
+  if (!draft) return;
+  var ok = true;
+  if (draft.type === 'rect' || draft.type === 'ellipse'){
+    if (draft.w < 0){ draft.x += draft.w; draft.w = -draft.w; }
+    if (draft.h < 0){ draft.y += draft.h; draft.h = -draft.h; }
+    if (draft.w < 2 && draft.h < 2) ok = false;
+  }
+  if ((draft.type === 'line' || draft.type === 'arrow') && Math.hypot(draft.x2 - draft.x1, draft.y2 - draft.y1) < 2) ok = false;
+  if (draft.type === 'freehand' && draft.points.length < 2) ok = false;
+  if (ok){
+    elements.push(draft);
+    if (draft.type !== 'freehand') selectedIds = [draft.id];
+    commitState(deepClone(elements), selectedIds.slice());
+    if (tool !== 'pen') setTool('select');
+  }
+  draft = null;
+}
+
 canvas.addEventListener('pointerdown', function(e){
-  if (textEditor.style.display === 'block') commitTextEditor();
-  hideContextMenu();
   canvas.setPointerCapture(e.pointerId);
-  var pos = getPointerPos(e);
-  pointers.set(e.pointerId, pos);
+  var screen = pointerPos(e);
+  var world = screenToWorld(screen.x, screen.y);
 
+  if (lpTimer){ clearTimeout(lpTimer); lpTimer = null; }
+  hideContextMenu();
+
+  pointers.set(e.pointerId, screen);
+
+  closeEditor(true);
+
+  // 2本指 → ピンチズーム（+移動）
   if (pointers.size === 2){
-    clearLongPress();
-    dragMode = 'pinch';
     var pts = Array.from(pointers.values());
-    lastPinchDist = dist(pts[0], pts[1]);
-    lastPinchCenter = mid(pts[0], pts[1]);
-    currentDraft = null;
+    var c = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 };
+    var d0 = Math.max(1, Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y));
+    gesture = { mode: 'pinch', pinch: { startDist: d0, startScale: scale, startWorld: screenToWorld(c.x, c.y) } };
+    draft = null;
+    marquee = null;
+    render();
     return;
   }
   if (pointers.size > 2) return;
 
-  var world = screenToWorld(pos.x, pos.y);
+  if (tool === 'text'){
+    var th = hitTest(world);
+    if (th && th.type === 'text'){
+      selectedIds = [th.id];
+      updateUI();
+      openEditor(worldToScreen(th.x, th.y), world, th);
+    } else {
+      openEditor(screen, world, null);
+    }
+    return;
+  }
 
-  if (state.tool === 'pan' || e.button === 1 || spacePressed){
-    dragMode = 'pan'; dragStart = pos; panStart = { x: state.panX, y: state.panY };
+  if (tool === 'eraser'){
+    var eh = hitTest(world);
+    if (eh){
+      var eid = eh.id;
+      elements = elements.filter(function(x){ return x.id !== eid; });
+      selectedIds = selectedIds.filter(function(x){ return x !== eid; });
+      commitState(deepClone(elements), selectedIds.slice());
+    }
+    return;
+  }
+
+  if (tool === 'pan' || e.button === 1){
+    gesture = { mode: 'pan', startScreen: screen, panStartX: panX, panStartY: panY };
     canvas.style.cursor = 'grabbing';
     return;
   }
 
-  if (state.tool === 'select'){
-    if (state.selectedIds.length === 1){
-      var soleEl = getElementById(state.selectedIds[0]);
-      if (soleEl){
-        var h = hitHandle(soleEl, pos);
-        if (h){ dragMode = 'resize'; dragHandle = h.id; elStartSnapshot = cloneEl(soleEl); dragStart = world; return; }
+  if (tool === 'select'){
+    // 複数選択のグループハンドル
+    if (selectedIds.length > 1){
+      var gh = getGroupHandle(world);
+      if (gh){
+        gesture = { mode: 'resize', groupResize: true, handle: gh.id, snapshot: snapshot() };
+        return;
       }
     }
-    var idx = hitTestTopmost(world);
-    if (idx >= 0){
-      var el = state.elements[idx];
-      var already = state.selectedIds.indexOf(el.id) >= 0;
-      if (e.shiftKey){
-        var ids = state.selectedIds.slice();
-        if (already) ids.splice(ids.indexOf(el.id), 1);
-        else ids.push(el.id);
-        setSelection(ids);
-        if (state.selectedIds.indexOf(el.id) === -1){ render(); return; }
-      } else if (!already){
-        setSelection([el.id]);
+    var hit = hitTest(world);
+    var startLongPress = function(id){
+      if (e.pointerType !== 'touch' && e.pointerType !== 'pen') return;
+      var sx = screen.x, sy = screen.y;
+      lpTimer = setTimeout(function(){
+        lpTimer = null;
+        var r = canvas.getBoundingClientRect();
+        showContextMenu(r.left + sx, r.top + sy, id);
+      }, 500);
+    };
+    if (hit && selectedIds.indexOf(hit.id) >= 0){
+      var h = getHandle(hit, world);
+      if (h && h.id === 'rotate'){
+        var b = getBBox(hit);
+        var cc = { x: b.x + b.w/2, y: b.y + b.h/2 };
+        gesture = { mode: 'rotate', activeId: hit.id, initialAngle: Math.atan2(world.y - cc.y, world.x - cc.x), center: cc, snapshot: snapshot() };
+        return;
       }
-      elStartSnapshot = {};
-      getSelectedElements().forEach(function(se){ elStartSnapshot[se.id] = cloneEl(se); });
-      dragMode = 'pending-move';
-      dragStart = world;
-      dragStartScreen = pos;
-      startLongPress(pos, e.pointerType);
-      render();
-    } else {
-      if (!e.shiftKey) setSelection([]);
-      marqueeAdditive = e.shiftKey;
-      dragMode = 'pending-marquee';
-      dragStart = world;
-      dragStartScreen = pos;
-      marqueeRect = { x1: world.x, y1: world.y, x2: world.x, y2: world.y };
-      startLongPress(pos, e.pointerType);
-      render();
+      if (h){
+        gesture = { mode: 'resize', activeId: hit.id, handle: h.id, snapshot: snapshot() };
+        return;
+      }
+      gesture = { mode: 'move', start: world, startScreen: screen, snapshot: snapshot() };
+      startLongPress(hit.id);
+      return;
     }
-    return;
-  }
-
-  if (state.tool === 'eraser'){
-    var idx2 = hitTestTopmost(world);
-    if (idx2 >= 0){
-      state.elements.splice(idx2, 1);
-      pushHistory();
+    if (hit){
+      selectedIds = [hit.id];
+      updateUI();
+      gesture = { mode: 'move', start: world, startScreen: screen, snapshot: snapshot() };
+      startLongPress(hit.id);
       render();
+      return;
     }
+    // 空白 → 矩形選択
+    marquee = { x1: world.x, y1: world.y, x2: world.x, y2: world.y };
+    gesture = { mode: 'marquee' };
+    render();
     return;
   }
 
-  if (state.tool === 'text'){
-    openTextEditor(pos, world, null);
-    return;
-  }
-
-  dragMode = 'draw';
-  dragStart = world;
-  currentDraft = createDraftElement(state.tool, world);
+  // 描画
+  gesture = { mode: 'draw', start: world };
+  draft = createDraftElement(tool, world);
 });
 
 canvas.addEventListener('pointermove', function(e){
-  var pos = getPointerPos(e);
-  if (pointers.has(e.pointerId)) pointers.set(e.pointerId, pos);
+  var screen = pointerPos(e);
+  var world = screenToWorld(screen.x, screen.y);
 
-  if (dragMode === 'pinch' && pointers.size >= 2){
-    var pts = Array.from(pointers.values());
-    var d = dist(pts[0], pts[1]);
-    var c = mid(pts[0], pts[1]);
-    if (lastPinchDist){
-      zoomAt(c, d / lastPinchDist);
-      state.panX += c.x - lastPinchCenter.x;
-      state.panY += c.y - lastPinchCenter.y;
+  if (pointers.has(e.pointerId)) pointers.set(e.pointerId, screen);
+
+  if (lpTimer && gesture.mode === 'move' && dist(screen, gesture.startScreen) > 10){
+    clearTimeout(lpTimer); lpTimer = null;
+  }
+
+  if (gesture.mode === 'pinch'){
+    if (pointers.size >= 2 && gesture.pinch){
+      var pts = Array.from(pointers.values());
+      var d = Math.max(1, Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y));
+      var c = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 };
+      var ns = clamp(gesture.pinch.startScale * (d / gesture.pinch.startDist), 0.2, 8);
+      scale = ns;
+      panX = c.x - gesture.pinch.startWorld.x * ns;
+      panY = c.y - gesture.pinch.startWorld.y * ns;
+      render();
     }
-    lastPinchDist = d; lastPinchCenter = c;
+    return;
+  }
+
+  if (gesture.mode === 'pan'){
+    panX = gesture.panStartX + (screen.x - gesture.startScreen.x);
+    panY = gesture.panStartY + (screen.y - gesture.startScreen.y);
     render();
     return;
   }
 
-  if (dragMode === 'pan'){
-    state.panX = panStart.x + (pos.x - dragStart.x);
-    state.panY = panStart.y + (pos.y - dragStart.y);
-    render();
-    return;
-  }
-
-  if (dragMode === 'pending-move' || dragMode === 'pending-marquee'){
-    if (dist(pos, dragStartScreen) > MOVE_THRESHOLD){
-      clearLongPress();
-      dragMode = (dragMode === 'pending-move') ? 'move' : 'marquee';
+  if (gesture.mode === 'marquee' && marquee){
+    if (dist(screen, pointerPos(e)) >= 0){
+      marquee.x2 = world.x; marquee.y2 = world.y;
+      render();
     }
+    return;
   }
 
-  var world = screenToWorld(pos.x, pos.y);
-
-  if (dragMode === 'draw' && currentDraft){
-    updateDraftElement(currentDraft, dragStart, world);
+  if (gesture.mode === 'draw' && draft){
+    if (draft.type === 'rect' || draft.type === 'ellipse'){
+      var x2 = world.x, y2 = world.y;
+      if (e.shiftKey){
+        var ddx = x2 - gesture.start.x, ddy = y2 - gesture.start.y;
+        var size = Math.max(Math.abs(ddx), Math.abs(ddy));
+        x2 = gesture.start.x + Math.sign(ddx || 1) * size;
+        y2 = gesture.start.y + Math.sign(ddy || 1) * size;
+      }
+      var n = normRect(gesture.start.x, gesture.start.y, x2, y2);
+      draft.x = n.x; draft.y = n.y; draft.w = n.w; draft.h = n.h;
+    } else if (draft.type === 'line' || draft.type === 'arrow'){
+      draft.x2 = world.x; draft.y2 = world.y;
+    } else if (draft.type === 'freehand'){
+      var last = draft.points[draft.points.length - 1];
+      if (!last || dist(last, world) > 1 / scale) draft.points.push({ x: world.x, y: world.y });
+    }
     render();
     return;
   }
-  if (dragMode === 'move'){
-    var dx = world.x - dragStart.x, dy = world.y - dragStart.y;
-    getSelectedElements().forEach(function(se){
-      var snap = elStartSnapshot[se.id];
-      if (snap) moveElement(se, snap, dx, dy);
+
+  if (gesture.mode === 'move' && gesture.snapshot){
+    var dx = world.x - gesture.start.x, dy = world.y - gesture.start.y;
+    gesture.snapshot.forEach(function(snap){
+      if (selectedIds.indexOf(snap.id) < 0) return;
+      var el = byId(snap.id);
+      if (el) moveEl(el, snap, dx, dy);
     });
     render();
     return;
   }
-  if (dragMode === 'resize'){
-    var el2 = state.selectedIds.length === 1 ? getElementById(state.selectedIds[0]) : null;
-    if (el2){
-      resizeByHandle(el2, dragHandle, world, elStartSnapshot);
+
+  if (gesture.mode === 'resize' && gesture.snapshot){
+    var i, snap, el;
+    if (gesture.groupResize){
+      var selList = gesture.snapshot.filter(function(x){ return selectedIds.indexOf(x.id) >= 0; });
+      var box = getGroupBBox(selList);
+      var gx1 = box.x, gy1 = box.y, gx2 = box.x + box.w, gy2 = box.y + box.h;
+      var hd = gesture.handle;
+      if (hd === 'nw'){ gx1 = world.x; gy1 = world.y; }
+      if (hd === 'ne'){ gx2 = world.x; gy1 = world.y; }
+      if (hd === 'sw'){ gx1 = world.x; gy2 = world.y; }
+      if (hd === 'se'){ gx2 = world.x; gy2 = world.y; }
+      var nn = normRect(gx1, gy1, gx2, gy2);
+      // 複数選択は必ず縦横比固定（等倍）
+      var s = Math.max(0.01, (nn.w / box.w + nn.h / box.h) / 2);
+      var anchor =
+        hd === 'nw' ? { x: box.x + box.w, y: box.y + box.h } :
+        hd === 'ne' ? { x: box.x, y: box.y + box.h } :
+        hd === 'sw' ? { x: box.x + box.w, y: box.y } :
+        { x: box.x, y: box.y };
+      var newW = box.w * s, newH = box.h * s;
+      var bxx = (hd === 'nw' || hd === 'sw') ? anchor.x - newW : anchor.x;
+      var byy = (hd === 'nw' || hd === 'ne') ? anchor.y - newH : anchor.y;
+      gesture.snapshot.forEach(function(snapEl){
+        if (selectedIds.indexOf(snapEl.id) < 0) return;
+        var t = byId(snapEl.id);
+        if (!t) return;
+        if (t.type === 'rect' || t.type === 'ellipse' || t.type === 'text' || t.type === 'image'){
+          t.x = bxx + (snapEl.x - box.x) * s;
+          t.y = byy + (snapEl.y - box.y) * s;
+          t.w = Math.max(1, snapEl.w * s);
+          t.h = Math.max(1, snapEl.h * s);
+        } else if (t.type === 'line' || t.type === 'arrow'){
+          t.x1 = bxx + (snapEl.x1 - box.x) * s; t.y1 = byy + (snapEl.y1 - box.y) * s;
+          t.x2 = bxx + (snapEl.x2 - box.x) * s; t.y2 = byy + (snapEl.y2 - box.y) * s;
+        } else if (t.type === 'freehand'){
+          t.points = snapEl.points.map(function(p){ return { x: bxx + (p.x - box.x) * s, y: byy + (p.y - box.y) * s }; });
+        }
+      });
+      render();
+      return;
+    }
+    if (gesture.activeId){
+      el = byId(gesture.activeId);
+      if (!el) return;
+      if (el.type === 'line' || el.type === 'arrow'){
+        if (gesture.handle === 'p1'){ el.x1 = world.x; el.y1 = world.y; }
+        if (gesture.handle === 'p2'){ el.x2 = world.x; el.y2 = world.y; }
+        render();
+        return;
+      }
+      if (el.type === 'rect' || el.type === 'ellipse' || el.type === 'text' || el.type === 'image'){
+        var b0 = getBBox(el);
+        var rx1 = b0.x, ry1 = b0.y, rx2 = b0.x + b0.w, ry2 = b0.y + b0.h;
+        if (gesture.handle === 'nw'){ rx1 = world.x; ry1 = world.y; }
+        if (gesture.handle === 'ne'){ rx2 = world.x; ry1 = world.y; }
+        if (gesture.handle === 'sw'){ rx1 = world.x; ry2 = world.y; }
+        if (gesture.handle === 'se'){ rx2 = world.x; ry2 = world.y; }
+        if (el.type === 'image' || e.shiftKey || el.lockAspect){
+          var sz = Math.max(Math.abs(rx2 - rx1), Math.abs(ry2 - ry1));
+          rx2 = rx1 + Math.sign(rx2 - rx1 || 1) * sz;
+          ry2 = ry1 + Math.sign(ry2 - ry1 || 1) * sz;
+        }
+        var nr = normRect(rx1, ry1, rx2, ry2);
+        el.x = nr.x; el.y = nr.y; el.w = Math.max(1, nr.w); el.h = Math.max(1, nr.h);
+        render();
+      }
+      return;
+    }
+    return;
+  }
+
+  if (gesture.mode === 'rotate' && gesture.activeId){
+    var rel = byId(gesture.activeId);
+    if (rel){
+      var base = gesture.snapshot.find(function(x){ return x.id === gesture.activeId; });
+      if (!base) return;
+      var cur = Math.atan2(world.y - gesture.center.y, world.x - gesture.center.x);
+      var dlt = cur - gesture.initialAngle;
+      rotateElInPlace(rel, base, gesture.center, dlt);
       render();
     }
     return;
   }
-  if (dragMode === 'marquee'){
-    marqueeRect.x2 = world.x; marqueeRect.y2 = world.y;
+});
+
+function endPointer(e){
+  if (e && pointers.has(e.pointerId)) pointers.delete(e.pointerId);
+  if (lpTimer){ clearTimeout(lpTimer); lpTimer = null; }
+
+  if (gesture.mode === 'pinch'){
+    if (pointers.size < 2) gesture = { mode: 'none' };
     render();
     return;
   }
-});
-
-function finalizeMarquee(){
-  if (!marqueeRect) return;
-  var rx1 = Math.min(marqueeRect.x1, marqueeRect.x2), ry1 = Math.min(marqueeRect.y1, marqueeRect.y2);
-  var rx2 = Math.max(marqueeRect.x1, marqueeRect.x2), ry2 = Math.max(marqueeRect.y1, marqueeRect.y2);
-  var hits = state.elements.filter(function(el){
-    var b = getBBox(el);
-    return !(b.x + b.w < rx1 || b.x > rx2 || b.y + b.h < ry1 || b.y > ry2);
-  }).map(function(el){ return el.id; });
-  if (marqueeAdditive){
-    var merged = state.selectedIds.slice();
-    hits.forEach(function(id){ if (merged.indexOf(id) === -1) merged.push(id); });
-    setSelection(merged);
-  } else {
-    setSelection(hits);
-  }
-}
-
-function endDrag(e){
-  pointers.delete(e.pointerId);
-  clearLongPress();
-
-  if (dragMode === 'pinch'){
-    if (pointers.size < 2){ dragMode = null; lastPinchDist = null; lastPinchCenter = null; }
+  if (gesture.mode === 'draw' && draft){
+    finalizeDraft();
+    gesture = { mode: 'none' };
     return;
   }
-  if (dragMode === 'draw' && currentDraft){
-    finalizeDraft(currentDraft);
-    currentDraft = null;
-    if (state.tool !== 'pen'){ state.tool = 'select'; updateToolbarUI(); }
-    pushHistory();
-  } else if (dragMode === 'move' || dragMode === 'resize'){
-    pushHistory();
-  } else if (dragMode === 'marquee'){
-    finalizeMarquee();
+  if (gesture.mode === 'marquee' && marquee){
+    var ids = hitTestMarquee(marquee);
+    selectedIds = ids;
+    marquee = null;
+    gesture = { mode: 'none' };
+    updateUI();
+    render();
+    return;
   }
-  if (dragMode === 'pan') canvas.style.cursor = state.tool === 'pan' ? 'grab' : 'default';
-  dragMode = null; dragHandle = null; elStartSnapshot = null; marqueeRect = null;
+  if (gesture.mode === 'move' || gesture.mode === 'resize' || gesture.mode === 'rotate'){
+    if (gesture.snapshot && JSON.stringify(gesture.snapshot) !== JSON.stringify(elements)){
+      commitState(deepClone(elements), selectedIds.slice());
+    }
+  }
+  if (gesture.mode === 'pan') canvas.style.cursor = tool === 'pan' ? 'grab' : 'default';
+  gesture = { mode: 'none' };
   render();
 }
-canvas.addEventListener('pointerup', endDrag);
-canvas.addEventListener('pointercancel', endDrag);
+canvas.addEventListener('pointerup', endPointer);
+canvas.addEventListener('pointercancel', endPointer);
 
 canvas.addEventListener('dblclick', function(e){
-  var pos = getPointerPos(e);
-  var world = screenToWorld(pos.x, pos.y);
-  var idx = hitTestTopmost(world);
-  if (idx >= 0 && state.elements[idx].type === 'text'){
-    setSelection([state.elements[idx].id]);
-    openTextEditor(pos, world, state.elements[idx]);
+  var screen = pointerPos(e);
+  var world = screenToWorld(screen.x, screen.y);
+  var hit = hitTest(world);
+  if (hit && hit.type === 'text'){
+    selectedIds = [hit.id];
+    updateUI();
+    openEditor(worldToScreen(hit.x, hit.y), world, hit);
   }
 });
 
 canvas.addEventListener('contextmenu', function(e){
   e.preventDefault();
-  clearLongPress();
-  dragMode = null; marqueeRect = null;
-  var pos = getPointerPos(e);
-  var world = screenToWorld(pos.x, pos.y);
-  if (state.tool === 'select'){
-    var idx = hitTestTopmost(world);
-    if (idx >= 0){
-      var el = state.elements[idx];
-      if (state.selectedIds.indexOf(el.id) === -1){ setSelection([el.id]); render(); }
-    }
+  var screen = pointerPos(e);
+  var world = screenToWorld(screen.x, screen.y);
+  var hit = hitTest(world);
+  if (hit){
+    if (selectedIds.indexOf(hit.id) < 0){ selectedIds = [hit.id]; updateUI(); }
+    var r = canvas.getBoundingClientRect();
+    showContextMenu(r.left + screen.x, r.top + screen.y, hit.id);
   }
-  openContextMenuAtScreen(e.clientX, e.clientY, world);
 });
 
 canvas.addEventListener('wheel', function(e){
   e.preventDefault();
-  var pos = getPointerPos(e);
-  var factor = e.deltaY < 0 ? 1.1 : 0.9;
-  zoomAt(pos, factor);
+  var screen = pointerPos(e);
+  var before = screenToWorld(screen.x, screen.y);
+  scale = clamp(scale * (e.deltaY < 0 ? 1.1 : 0.9), 0.2, 8);
+  panX = screen.x - before.x * scale;
+  panY = screen.y - before.y * scale;
   render();
 }, { passive: false });
 
-/* ---------------- drag & drop / paste ---------------- */
-canvas.addEventListener('dragover', function(e){ e.preventDefault(); });
-canvas.addEventListener('drop', function(e){
-  e.preventDefault();
-  var files = e.dataTransfer.files;
-  for (var i = 0; i < files.length; i++){
-    if (files[i].type.indexOf('image/') === 0) loadImageFile(files[i]);
-  }
-});
-window.addEventListener('paste', function(e){
-  var items = e.clipboardData && e.clipboardData.items;
-  if (!items) return;
-  for (var i = 0; i < items.length; i++){
-    if (items[i].type.indexOf('image/') === 0){
-      var file = items[i].getAsFile();
-      if (file) loadImageFile(file);
-    }
-  }
-});
+/* ================= zoom buttons ================= */
+function zoomAtCenter(f){
+  var r = wrap.getBoundingClientRect();
+  var c = { x: r.width / 2, y: r.height / 2 };
+  var before = screenToWorld(c.x, c.y);
+  scale = clamp(scale * f, 0.2, 8);
+  panX = c.x - before.x * scale;
+  panY = c.y - before.y * scale;
+  render();
+}
+document.getElementById('zoomIn').addEventListener('click', function(){ zoomAtCenter(1.2); });
+document.getElementById('zoomOut').addEventListener('click', function(){ zoomAtCenter(1 / 1.2); });
+zoomLabel.addEventListener('click', function(){ scale = 1; panX = 0; panY = 0; render(); });
 
-/* ---------------- keyboard ---------------- */
-window.addEventListener('keydown', function(e){
-  var activeTag = document.activeElement && document.activeElement.tagName;
-  if (activeTag === 'TEXTAREA' || activeTag === 'INPUT') return;
-
-  if (e.key === 'Escape'){ hideContextMenu(); return; }
-  if ((e.key === 'Delete' || e.key === 'Backspace') && state.selectedIds.length){
-    deleteSelected(); e.preventDefault(); return;
-  }
-  if (e.key === ' '){ spacePressed = true; canvas.style.cursor = 'grab'; e.preventDefault(); return; }
-  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z'){
-    e.preventDefault();
-    if (e.shiftKey) redo(); else undo();
-    return;
-  }
-  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y'){ e.preventDefault(); redo(); return; }
-  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'd'){ e.preventDefault(); duplicateSelection(); return; }
-  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'x'){ e.preventDefault(); cutSelection(); return; }
-  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'c'){ e.preventDefault(); copySelection(); return; }
-  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'v'){
-    if (elementClipboard && elementClipboard.length){ e.preventDefault(); pasteFromClipboard(null); }
-    return;
-  }
-
-  var map = { v: 'select', h: 'pan', p: 'pen', r: 'rect', o: 'ellipse', l: 'line', a: 'arrow', t: 'text', e: 'eraser' };
-  var k = e.key.toLowerCase();
-  if (map[k] && !e.ctrlKey && !e.metaKey && !e.altKey) setTool(map[k]);
-});
-window.addEventListener('keyup', function(e){
-  if (e.key === ' '){ spacePressed = false; canvas.style.cursor = state.tool === 'pan' ? 'grab' : 'default'; }
-});
-
-/* ---------------- toolbar wiring ---------------- */
-document.querySelectorAll('.tbtn[data-tool]').forEach(function(btn){
-  btn.addEventListener('click', function(){ setTool(btn.getAttribute('data-tool')); });
-});
-
-var swatchWrap = document.getElementById('swatches');
-SWATCH_COLORS.forEach(function(c){
-  var b = document.createElement('button');
-  b.className = 'swatch';
-  b.style.background = c;
-  b.title = c;
-  b.addEventListener('click', function(){
-    state.color = c;
-    document.getElementById('colorCustom').value = c;
-    applyColorToSelection();
+/* ================= clipboard ================= */
+function copySelection(){
+  var els = selectedEls();
+  if (!els.length) return;
+  clipboard = deepClone(els);
+  pasteCount = 0;
+}
+function cutSelection(){
+  copySelection();
+  var ids = selectedIds.slice();
+  elements = elements.filter(function(x){ return ids.indexOf(x.id) < 0; });
+  selectedIds = [];
+  commitState(deepClone(elements), selectedIds.slice());
+}
+function pasteToCenter(){
+  if (!clipboard || !clipboard.length) return;
+  var cb = getGroupBBox(clipboard);
+  var r = wrap.getBoundingClientRect();
+  var center = screenToWorld(r.width / 2, r.height / 2);
+  pasteCount++;
+  var off = pasteCount === 1 ? 0 : 24 / scale;
+  var ddx = center.x - (cb.x + cb.w/2) + off;
+  var ddy = center.y - (cb.y + cb.h/2) + off;
+  var newIds = [];
+  clipboard.forEach(function(src){
+    var c = deepClone(src);
+    c.id = genId();
+    if (c.type === 'rect' || c.type === 'ellipse' || c.type === 'text' || c.type === 'image'){ c.x += ddx; c.y += ddy; }
+    else if (c.type === 'line' || c.type === 'arrow'){ c.x1 += ddx; c.y1 += ddy; c.x2 += ddx; c.y2 += ddy; }
+    else c.points = c.points.map(function(p){ return { x: p.x + ddx, y: p.y + ddy }; });
+    elements.push(c);
+    newIds.push(c.id);
   });
-  swatchWrap.appendChild(b);
-});
-function applyColorToSelection(){
-  var els = getSelectedElements();
-  var changed = false;
-  els.forEach(function(el){ if ('color' in el){ el.color = state.color; changed = true; } });
-  if (changed){ pushHistory(); render(); }
+  selectedIds = newIds;
+  commitState(deepClone(elements), selectedIds.slice());
 }
 
-document.getElementById('colorCustom').addEventListener('input', function(e){
-  state.color = e.target.value;
-  applyColorToSelection();
-});
-document.getElementById('strokeRange').addEventListener('input', function(e){
-  state.strokeWidth = parseInt(e.target.value, 10);
-  var els = getSelectedElements();
-  els.forEach(function(el){ if ('strokeWidth' in el) el.strokeWidth = state.strokeWidth; });
-  render();
-});
-document.getElementById('strokeRange').addEventListener('change', function(){
-  var els = getSelectedElements().filter(function(el){ return 'strokeWidth' in el; });
-  if (els.length) pushHistory();
-});
-
-document.getElementById('btnFillToggle').addEventListener('click', function(){
-  state.fillEnabled = !state.fillEnabled;
-  var els = getSelectedElements().filter(function(el){ return el.type === 'rect' || el.type === 'ellipse'; });
-  if (els.length){
-    els.forEach(function(el){ el.fill = state.fillEnabled; if (!el.fillColor) el.fillColor = state.fillColor; });
-    pushHistory();
+/* ================= keyboard ================= */
+window.addEventListener('keydown', function(e){
+  var tag = document.activeElement ? document.activeElement.tagName : '';
+  if (tag === 'TEXTAREA' || tag === 'INPUT') return;
+  var k = e.key.toLowerCase();
+  if (k === 'escape'){ hideContextMenu(); closeCrop(); return; }
+  if ((e.ctrlKey || e.metaKey) && k === 'z'){ e.preventDefault(); if (e.shiftKey) redo(); else undo(); return; }
+  if ((e.ctrlKey || e.metaKey) && k === 'y'){ e.preventDefault(); redo(); return; }
+  if ((e.ctrlKey || e.metaKey) && k === 'c'){ e.preventDefault(); copySelection(); return; }
+  if ((e.ctrlKey || e.metaKey) && k === 'x'){ e.preventDefault(); cutSelection(); return; }
+  if ((e.ctrlKey || e.metaKey) && k === 'v'){ e.preventDefault(); pasteToCenter(); return; }
+  if ((e.key === 'Delete' || e.key === 'Backspace') && selectedIds.length){
+    e.preventDefault();
+    var ids = selectedIds.slice();
+    elements = elements.filter(function(x){ return ids.indexOf(x.id) < 0; });
+    selectedIds = [];
+    commitState(deepClone(elements), selectedIds.slice());
+    return;
   }
-  updateInspectorUI();
+  var map = { v:'select', h:'pan', p:'pen', r:'rect', o:'ellipse', l:'line', a:'arrow', t:'text', e:'eraser' };
+  if (map[k] && !e.ctrlKey && !e.metaKey && !e.altKey) setTool(map[k]);
+});
+
+/* ================= save / load / export ================= */
+document.getElementById('btnSave').addEventListener('click', function(){
+  var blob = new Blob([JSON.stringify({ version: 1, elements: elements }, null, 2)], { type: 'application/json' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'freeboard-' + Date.now() + '.json';
+  a.click();
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+});
+document.getElementById('btnLoad').addEventListener('click', function(){ document.getElementById('jsonInput').click(); });
+document.getElementById('jsonInput').addEventListener('change', function(e){
+  var f = e.target.files && e.target.files[0];
+  if (!f) return;
+  var reader = new FileReader();
+  reader.onload = function(){
+    try {
+      var data = JSON.parse(reader.result);
+      var list = Array.isArray(data.elements) ? data.elements : [];
+      selectedIds = [];
+      commitState(list, []);
+    } catch (err) { toast('ファイルを読み込めませんでした。'); }
+  };
+  reader.readAsText(f);
+  e.target.value = '';
+});
+document.getElementById('btnPNG').addEventListener('click', function(){
+  if (!elements.length){ toast('ボードに要素がありません。'); return; }
+  var box = getGroupBBox(elements);
+  var pad = 40;
+  var off = document.createElement('canvas');
+  off.width = Math.ceil(box.w + pad * 2);
+  off.height = Math.ceil(box.h + pad * 2);
+  var oc = off.getContext('2d');
+  oc.fillStyle = '#fff';
+  oc.fillRect(0, 0, off.width, off.height);
+  oc.translate(-box.x + pad, -box.y + pad);
+  elements.forEach(function(el){ drawElement(oc, el); });
+  off.toBlob(function(blob){
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'freeboard-' + Date.now() + '.png';
+    a.click();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+  });
+});
+
+/* ================= resize / init ================= */
+function resizeCanvas(){
+  dpr = Math.max(1, window.devicePixelRatio || 1);
+  var r = wrap.getBoundingClientRect();
+  canvas.width = Math.max(1, Math.round(r.width * dpr));
+  canvas.height = Math.max(1, Math.round(r.height * dpr));
+  canvas.style.width = r.width + 'px';
+  canvas.style.height = r.height + 'px';
   render();
-});
-document.getElementById('fillColor').addEventListener('input', function(e){
-  state.fillColor = e.target.value;
-  var els = getSelectedElements().filter(function(el){ return el.type === 'rect' || el.type === 'ellipse'; });
-  els.forEach(function(el){ el.fillColor = state.fillColor; });
-  render();
-});
-document.getElementById('fillColor').addEventListener('change', function(){
-  var els = getSelectedElements().filter(function(el){ return el.type === 'rect' || el.type === 'ellipse'; });
-  if (els.length) pushHistory();
-});
-document.getElementById('btnLockAspect').addEventListener('click', function(){
-  var els = getSelectedElements().filter(function(el){ return el.type === 'rect' || el.type === 'ellipse' || el.type === 'image'; });
-  if (!els.length) return;
-  var newVal = !(els[0].lockAspect);
-  els.forEach(function(el){ el.lockAspect = newVal; });
-  pushHistory();
-  updateInspectorUI();
-});
+}
+window.addEventListener('resize', function(){ resizeCanvas(); if (cropState) layoutCrop(); });
 
-document.getElementById('btnImage').addEventListener('click', function(){ fileInput.click(); });
-fileInput.addEventListener('change', function(e){
-  var files = e.target.files;
-  for (var i = 0; i < files.length; i++) loadImageFile(files[i]);
-  fileInput.value = '';
-});
-
-document.getElementById('btnUndo').addEventListener('click', undo);
-document.getElementById('btnRedo').addEventListener('click', redo);
-document.getElementById('btnDuplicate').addEventListener('click', duplicateSelection);
-document.getElementById('btnCopyImage').addEventListener('click', function(){
-  var single = state.selectedIds.length === 1 ? getElementById(state.selectedIds[0]) : null;
-  copyImageToSystemClipboard(single);
-});
-document.getElementById('btnDelete').addEventListener('click', deleteSelected);
-document.getElementById('btnClear').addEventListener('click', function(){
-  if (state.elements.length === 0) return;
-  if (confirm('ボード上のすべての内容を削除します。よろしいですか？')){
-    state.elements = [];
-    setSelection([]);
-    pushHistory();
-    render();
-  }
-});
-document.getElementById('btnExport').addEventListener('click', exportPNG);
-
-document.getElementById('zoomIn').addEventListener('click', function(){
-  zoomAt({ x: canvas.clientWidth / 2, y: canvas.clientHeight / 2 }, 1.2);
-  render();
-});
-document.getElementById('zoomOut').addEventListener('click', function(){
-  zoomAt({ x: canvas.clientWidth / 2, y: canvas.clientHeight / 2 }, 1 / 1.2);
-  render();
-});
-document.getElementById('zoomLabel').addEventListener('click', function(){
-  state.scale = 1; state.panX = 0; state.panY = 0; render();
-});
-
-textEditor.addEventListener('input', autoGrowEditor);
-textEditor.addEventListener('blur', commitTextEditor);
-textEditor.addEventListener('keydown', function(e){
-  e.stopPropagation();
-  if (e.key === 'Escape'){ textEditor.value = ''; textEditor.blur(); }
-});
-
-window.addEventListener('resize', resizeCanvas);
-
-/* ---------------- init ---------------- */
-loadFromLocalStorage();
-resizeCanvas();
 history = [snapshot()];
 historyIndex = 0;
-updateToolbarUI();
-setSelection([]);
-document.getElementById('strokeRange').value = state.strokeWidth;
-document.getElementById('fillColor').value = state.fillColor;
-render();
-
+updateUI();
+resizeCanvas();
 })();
 </script>
 </body>
