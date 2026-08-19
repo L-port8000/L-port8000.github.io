@@ -39,9 +39,10 @@
   #boardWrap{ position:relative; flex:1 1 auto; overflow:hidden; background:#fafafa; }
   #board{ position:absolute; inset:0; display:block; touch-action:none; -webkit-touch-callout:none; }
 
-  #textEditor{ position:absolute; z-index:20; display:none; background:transparent; color:inherit;
+  #textEditor{ position:absolute; z-index:20; display:none; background:#fff; color:inherit;
     border:1px dashed #171717; outline:none; resize:none; overflow:hidden;
-    font-family:inherit; line-height:1.3; padding:2px; min-width:40px; min-height:26px; white-space:pre; }
+    font-family:'Segoe UI','Hiragino Kaku Gothic ProN','Yu Gothic',sans-serif;
+    line-height:1.3; padding:0; margin:0; min-width:20px; white-space:pre; }
 
   .sizePanel{ position:absolute; z-index:30; display:none; transform:translateX(-50%);
     background:rgba(23,23,23,0.88); color:#fff; font-size:11px; line-height:1;
@@ -65,7 +66,10 @@
     background:#fff; border:1px solid #e5e5e5; border-radius:999px; padding:4px; box-shadow:0 4px 16px rgba(0,0,0,.10); }
   #zoomBar button{ width:34px; height:34px; border-radius:50%; border:none; background:transparent; color:#171717; font-size:16px; cursor:pointer; }
   #zoomBar button:hover{ background:#f0f0f0; }
-  #zoomLabel{ font-size:12px; color:#737373; width:48px; text-align:center; cursor:pointer; user-select:none; }
+  #zoomLabel{ font-size:12px; color:#737373; width:56px; text-align:center; cursor:pointer; user-select:none; }
+  #zoomInput{ display:none; width:62px; font-size:12px; padding:4px 6px; text-align:center;
+    border:1px solid #d4d4d4; border-radius:8px; font-family:inherit; }
+  #zoomInput:focus{ outline:none; border-color:#171717; }
 
   #hint{ position:absolute; left:50%; top:46%; transform:translate(-50%,-50%);
     color:#737373; font-size:14px; text-align:center; pointer-events:none; line-height:1.9; z-index:1; }
@@ -160,7 +164,8 @@
   </div>
     <div id="zoomBar">
       <button id="zoomOut" title="縮小">－</button>
-      <span id="zoomLabel" title="クリックでリセット">100%</span>
+      <span id="zoomLabel" title="クリックで100%に戻す / 長押し（右クリック）で倍率を入力（1〜1000%）">100%</span>
+      <input id="zoomInput" type="number" min="1" max="1000" step="1" title="倍率を入力（1〜1000%）">
       <button id="zoomIn" title="拡大">＋</button>
     </div>
   </div>
@@ -261,6 +266,11 @@ var history = [];
 var historyIndex = -1;
 var clipboard = null;
 var pasteCount = 0;
+
+var MIN_SCALE = 0.01;   // 1%
+var MAX_SCALE = 10;     // 1000%
+
+var editing = null;     // テキスト編集中の情報 {id or null, worldX, worldY}
 
 var pointers = new Map();
 var gesture = { mode:'none' };
@@ -495,8 +505,12 @@ function render(){
   ctx.fillStyle = '#fff';
   ctx.fillRect(0, 0, w, h);
   // グリッド
-  var sp = 32 * scale;
-  if (sp >= 14){
+  // 倍率に応じてグリッド間隔を自動調整（1%〜1000%でも見やすく）
+  var gridWorld = 32;
+  while (gridWorld * scale < 14) gridWorld *= 5;
+  while (gridWorld * scale > 160) gridWorld /= 5;
+  var sp = gridWorld * scale;
+  if (sp >= 14 && sp <= 400){
     var ox = panX % sp; if (ox < 0) ox += sp;
     var oy = panY % sp; if (oy < 0) oy += sp;
     ctx.fillStyle = '#e5e5e5';
@@ -508,7 +522,9 @@ function render(){
   ctx.save();
   ctx.translate(panX, panY);
   ctx.scale(scale, scale);
-  elements.forEach(function(el){ drawElement(ctx, el); });
+  // 編集中のテキストはテキストボックス側で表示するため、キャンバスには描かない（二重表示の防止）
+  var editingId = (editing && editing.id) ? editing.id : null;
+  elements.forEach(function(el){ if (el.id !== editingId) drawElement(ctx, el); });
   if (draft) drawElement(ctx, draft);
 
   // 選択枠
@@ -564,7 +580,8 @@ function render(){
   ctx.restore();
 
   // HTMLオーバーレイ更新
-  zoomLabel.textContent = Math.round(scale * 100) + '%';
+  var zp = scale * 100;
+  zoomLabel.textContent = (zp < 10 ? zp.toFixed(1) : Math.round(zp)) + '%';
   hintEl.style.display = elements.length === 0 && !draft ? 'block' : 'none';
   updateSizePanel();
   updateDimInputs();
@@ -596,7 +613,9 @@ spW.addEventListener('change', function(){
   if (!single || single.type === 'line' || single.type === 'arrow') return;
   var v = parseFloat(spW.value);
   if (isNaN(v) || v <= 0){ render(); return; }
-  if (single.type === 'image') single.h = single.h * (v / single.w);
+  var k = v / single.w;
+  if (single.type === 'image' || single.type === 'text') single.h = single.h * k;
+  if (single.type === 'text') single.fontSize = clamp((single.fontSize || 20) * k, 4, 2000);
   single.w = v;
   commitDims();
 });
@@ -605,7 +624,9 @@ spH.addEventListener('change', function(){
   if (!single || single.type === 'line' || single.type === 'arrow') return;
   var v = parseFloat(spH.value);
   if (isNaN(v) || v <= 0){ render(); return; }
-  if (single.type === 'image') single.w = single.w * (v / single.h);
+  var k = v / single.h;
+  if (single.type === 'image' || single.type === 'text') single.w = single.w * k;
+  if (single.type === 'text') single.fontSize = clamp((single.fontSize || 20) * k, 4, 2000);
   single.h = v;
   commitDims();
 });
@@ -749,7 +770,6 @@ document.getElementById('btnRedo').addEventListener('click', redo);
 document.getElementById('btnImage').addEventListener('click', function(){ document.getElementById('imgInput').click(); });
 
 /* ================= text editor ================= */
-var editing = null; // {id or null, worldX, worldY}
 function textUnits(text){
   var lines = text.split('\n');
   var m = 1;
@@ -770,26 +790,35 @@ function textFontFor(text){
   var u = textUnits(text || 'あ');
   return clamp(20 * Math.pow(u / 4, 0.6), 20, 180);
 }
+/* 現在の編集フォントサイズ（世界px）。既存要素の編集時はその大きさを保持する */
+var editFontSize = 20;
 function autoGrowEditor(){
-  textEditor.style.width = Math.max(60, textEditor.scrollWidth) + 'px';
-  textEditor.style.height = Math.max(26, textEditor.scrollHeight) + 'px';
+  textEditor.style.width = 'auto';
+  textEditor.style.height = 'auto';
+  textEditor.style.width = Math.max(20, textEditor.scrollWidth + 2) + 'px';
+  textEditor.style.height = Math.max(editFontSize * 1.3 * scale, textEditor.scrollHeight) + 'px';
+}
+function applyEditorFont(){
+  textEditor.style.fontSize = (editFontSize * scale) + 'px';
+  autoGrowEditor();
 }
 function openEditor(screenPos, world, el){
   closeEditor(true);
+  editFontSize = (el && el.fontSize) ? el.fontSize : textFontFor('あ');
   textEditor.style.display = 'block';
   textEditor.style.left = screenPos.x + 'px';
   textEditor.style.top = screenPos.y + 'px';
   textEditor.style.color = el ? el.color : color;
   textEditor.value = el ? el.text : '';
-  textEditor.style.fontSize = ((el && el.fontSize) ? el.fontSize : textFontFor('あ')) * scale + 'px';
-  editing = el ? { id: el.id, worldX: world.x, worldY: world.y } : { id: null, worldX: world.x, worldY: world.y };
-  autoGrowEditor();
+  editing = el ? { id: el.id, worldX: el.x, worldY: el.y } : { id: null, worldX: world.x, worldY: world.y };
+  applyEditorFont();
+  render(); // 編集対象をキャンバスから隠して二重表示を防ぐ
   setTimeout(function(){ textEditor.focus(); }, 0);
 }
 textEditor.addEventListener('input', function(){
-  // テキストボックスが拡大した分、文字も大きくする
-  textEditor.style.fontSize = textFontFor(textEditor.value) * scale + 'px';
-  autoGrowEditor();
+  // 新規入力のみ、テキストボックスが広がるのに合わせて文字も大きくする
+  if (editing && !editing.id) editFontSize = textFontFor(textEditor.value);
+  applyEditorFont();
 });
 function closeEditor(commit){
   if (textEditor.style.display === 'none') return;
@@ -802,10 +831,12 @@ function closeEditor(commit){
       if (prevEditing.id){
         // 編集していたテキストを空にした → 削除しない（元のまま）
       }
+      if (tool === 'text') setTool('select');
       render();
       return;
     }
-    var fs = textFontFor(text);
+    // 編集中に使っていたフォントサイズをそのまま確定（見た目のズレを防ぐ）
+    var fs = editFontSize;
     ctx.save();
     ctx.font = fs + "px 'Segoe UI','Hiragino Kaku Gothic ProN','Yu Gothic',sans-serif";
     var lines = text.split('\n');
@@ -822,9 +853,11 @@ function closeEditor(commit){
       selectedIds = [ne.id];
     }
     commitState(deepClone(elements), selectedIds.slice());
+    if (tool === 'text') setTool('select');
     return;
   }
   textEditor.value = '';
+  if (tool === 'text') setTool('select');
   render();
 }
 textEditor.addEventListener('keydown', function(e){
@@ -1200,7 +1233,7 @@ canvas.addEventListener('pointermove', function(e){
       var pts = Array.from(pointers.values());
       var d = Math.max(1, Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y));
       var c = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 };
-      var ns = clamp(gesture.pinch.startScale * (d / gesture.pinch.startDist), 0.01, 10);
+      var ns = clamp(gesture.pinch.startScale * (d / gesture.pinch.startDist), MIN_SCALE, MAX_SCALE);
       scale = ns;
       panX = c.x - gesture.pinch.startWorld.x * ns;
       panY = c.y - gesture.pinch.startWorld.y * ns;
@@ -1287,6 +1320,7 @@ canvas.addEventListener('pointermove', function(e){
           t.y = byy + (snapEl.y - box.y) * s;
           t.w = Math.max(1, snapEl.w * s);
           t.h = Math.max(1, snapEl.h * s);
+          if (t.type === 'text') t.fontSize = clamp((snapEl.fontSize || 20) * s, 4, 2000);
         } else if (t.type === 'line' || t.type === 'arrow'){
           t.x1 = bxx + (snapEl.x1 - box.x) * s; t.y1 = byy + (snapEl.y1 - box.y) * s;
           t.x2 = bxx + (snapEl.x2 - box.x) * s; t.y2 = byy + (snapEl.y2 - box.y) * s;
@@ -1307,19 +1341,28 @@ canvas.addEventListener('pointermove', function(e){
         return;
       }
       if (el.type === 'rect' || el.type === 'ellipse' || el.type === 'text' || el.type === 'image'){
-        var b0 = getBBox(el);
+        var snapEl0 = gesture.snapshot.find(function(x){ return x.id === gesture.activeId; });
+        var b0 = snapEl0 ? getBBox(snapEl0) : getBBox(el);
         var rx1 = b0.x, ry1 = b0.y, rx2 = b0.x + b0.w, ry2 = b0.y + b0.h;
         if (gesture.handle === 'nw'){ rx1 = world.x; ry1 = world.y; }
         if (gesture.handle === 'ne'){ rx2 = world.x; ry1 = world.y; }
         if (gesture.handle === 'sw'){ rx1 = world.x; ry2 = world.y; }
         if (gesture.handle === 'se'){ rx2 = world.x; ry2 = world.y; }
-        if (el.type === 'image' || e.shiftKey || el.lockAspect){
-          var sz = Math.max(Math.abs(rx2 - rx1), Math.abs(ry2 - ry1));
-          rx2 = rx1 + Math.sign(rx2 - rx1 || 1) * sz;
-          ry2 = ry1 + Math.sign(ry2 - ry1 || 1) * sz;
+        // 画像とテキストは常に縦横比固定（テキストは文字が歪まないように）
+        if (el.type === 'image' || el.type === 'text' || e.shiftKey || el.lockAspect){
+          var ratio = b0.h !== 0 ? b0.w / b0.h : 1;
+          var nwv = Math.abs(rx2 - rx1), nhv = Math.abs(ry2 - ry1);
+          if (nwv / (ratio || 1) > nhv) nhv = nwv / (ratio || 1); else nwv = nhv * ratio;
+          rx2 = rx1 + Math.sign(rx2 - rx1 || 1) * nwv;
+          ry2 = ry1 + Math.sign(ry2 - ry1 || 1) * nhv;
         }
         var nr = normRect(rx1, ry1, rx2, ry2);
         el.x = nr.x; el.y = nr.y; el.w = Math.max(1, nr.w); el.h = Math.max(1, nr.h);
+        // テキストは枠の拡大率に合わせて文字サイズも拡大縮小
+        if (el.type === 'text' && snapEl0 && b0.h > 0){
+          var k = el.h / b0.h;
+          el.fontSize = clamp((snapEl0.fontSize || 20) * k, 4, 2000);
+        }
         render();
       }
       return;
@@ -1403,7 +1446,7 @@ canvas.addEventListener('wheel', function(e){
   e.preventDefault();
   var screen = pointerPos(e);
   var before = screenToWorld(screen.x, screen.y);
-  scale = clamp(scale * (e.deltaY < 0 ? 1.1 : 0.9), 0.01, 10);
+  scale = clamp(scale * (e.deltaY < 0 ? 1.1 : 0.9), MIN_SCALE, MAX_SCALE);
   panX = screen.x - before.x * scale;
   panY = screen.y - before.y * scale;
   render();
@@ -1414,14 +1457,63 @@ function zoomAtCenter(f){
   var r = wrap.getBoundingClientRect();
   var c = { x: r.width / 2, y: r.height / 2 };
   var before = screenToWorld(c.x, c.y);
-  scale = clamp(scale * f, 0.01, 10);
+  scale = clamp(scale * f, MIN_SCALE, MAX_SCALE);
   panX = c.x - before.x * scale;
   panY = c.y - before.y * scale;
   render();
 }
 document.getElementById('zoomIn').addEventListener('click', function(){ zoomAtCenter(1.2); });
 document.getElementById('zoomOut').addEventListener('click', function(){ zoomAtCenter(1 / 1.2); });
-zoomLabel.addEventListener('click', function(){ scale = 1; panX = 0; panY = 0; render(); });
+
+/* 倍率を中心基準で設定 */
+function setZoom(pct){
+  var ns = clamp(pct / 100, MIN_SCALE, MAX_SCALE);
+  var r = wrap.getBoundingClientRect();
+  var c = { x: r.width / 2, y: r.height / 2 };
+  var before = screenToWorld(c.x, c.y);
+  scale = ns;
+  panX = c.x - before.x * scale;
+  panY = c.y - before.y * scale;
+  render();
+}
+
+/* ズーム倍率のインライン入力（長押し / 右クリック） */
+var zoomInput = document.getElementById('zoomInput');
+var zoomLpTimer = null;
+function openZoomInput(){
+  zoomLabel.style.display = 'none';
+  zoomInput.style.display = 'block';
+  zoomInput.value = Math.round(scale * 1000) / 10;
+  zoomInput.focus();
+  zoomInput.select();
+}
+function closeZoomInput(apply){
+  if (zoomInput.style.display === 'none') return;
+  if (apply){
+    var v = parseFloat(zoomInput.value);
+    if (!isNaN(v) && v > 0) setZoom(v);
+  }
+  zoomInput.style.display = 'none';
+  zoomLabel.style.display = 'block';
+  render();
+}
+zoomInput.addEventListener('blur', function(){ closeZoomInput(true); });
+zoomInput.addEventListener('keydown', function(e){
+  e.stopPropagation();
+  if (e.key === 'Enter') closeZoomInput(true);
+  if (e.key === 'Escape') closeZoomInput(false);
+});
+zoomLabel.addEventListener('click', function(){
+  if (zoomLpTimer){ clearTimeout(zoomLpTimer); zoomLpTimer = null; }
+  scale = 1; panX = 0; panY = 0; render();
+});
+zoomLabel.addEventListener('contextmenu', function(e){ e.preventDefault(); openZoomInput(); });
+zoomLabel.addEventListener('pointerdown', function(e){
+  if (e.pointerType !== 'touch' && e.pointerType !== 'pen') return;
+  zoomLpTimer = setTimeout(function(){ zoomLpTimer = null; openZoomInput(); }, 500);
+});
+zoomLabel.addEventListener('pointerup', function(){ if (zoomLpTimer){ clearTimeout(zoomLpTimer); zoomLpTimer = null; } });
+zoomLabel.addEventListener('pointercancel', function(){ if (zoomLpTimer){ clearTimeout(zoomLpTimer); zoomLpTimer = null; } });
 
 /* ================= clipboard ================= */
 function copySelection(){
