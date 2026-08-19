@@ -1200,7 +1200,7 @@ canvas.addEventListener('pointermove', function(e){
       var pts = Array.from(pointers.values());
       var d = Math.max(1, Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y));
       var c = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 };
-      var ns = clamp(gesture.pinch.startScale * (d / gesture.pinch.startDist), 0.2, 8);
+      var ns = clamp(gesture.pinch.startScale * (d / gesture.pinch.startDist), 0.01, 10);
       scale = ns;
       panX = c.x - gesture.pinch.startWorld.x * ns;
       panY = c.y - gesture.pinch.startWorld.y * ns;
@@ -1403,7 +1403,7 @@ canvas.addEventListener('wheel', function(e){
   e.preventDefault();
   var screen = pointerPos(e);
   var before = screenToWorld(screen.x, screen.y);
-  scale = clamp(scale * (e.deltaY < 0 ? 1.1 : 0.9), 0.2, 8);
+  scale = clamp(scale * (e.deltaY < 0 ? 1.1 : 0.9), 0.01, 10);
   panX = screen.x - before.x * scale;
   panY = screen.y - before.y * scale;
   render();
@@ -1414,7 +1414,7 @@ function zoomAtCenter(f){
   var r = wrap.getBoundingClientRect();
   var c = { x: r.width / 2, y: r.height / 2 };
   var before = screenToWorld(c.x, c.y);
-  scale = clamp(scale * f, 0.2, 8);
+  scale = clamp(scale * f, 0.01, 10);
   panX = c.x - before.x * scale;
   panY = c.y - before.y * scale;
   render();
