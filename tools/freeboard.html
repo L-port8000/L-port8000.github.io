@@ -41,6 +41,7 @@
   .tbtn:disabled{ opacity:.3; cursor:default; }
   .tbtn:disabled:hover{ background:transparent; }
   .tbtn svg{ width:19px; height:19px; display:block; }
+  .tbtn.arrowGlyph{ font-size:20px; line-height:1; }
 
   .swatch{ width:26px; height:26px; border-radius:50%; border:2px solid #e5e5e5; cursor:pointer; flex:0 0 auto; padding:0; }
   .swatch.selected{ border-color:#171717; box-shadow:0 0 0 2px #fff inset; }
@@ -160,9 +161,7 @@
       <button class="tbtn" data-tool="line" title="直線 (L)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19 19 5"/><circle cx="5" cy="19" r="1.4" fill="currentColor" stroke="none"/><circle cx="19" cy="5" r="1.4" fill="currentColor" stroke="none"/></svg>
       </button>
-      <button class="tbtn" data-tool="arrow" title="矢印 (A)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 19 7 7"/><path d="M15 7H7v8"/></svg>
-      </button>
+      <button class="tbtn arrowGlyph" data-tool="arrow" title="矢印 (A)">↖</button>
       <button class="tbtn" data-tool="text" title="テキスト (T)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
       </button>
@@ -611,16 +610,40 @@ function drawElement(c, el){
     if (el.strokeWidth > 0){ c.strokeStyle = el.color; c.lineWidth = el.strokeWidth; c.stroke(); }
   } else if (el.type === 'line' || el.type === 'arrow'){
     c.strokeStyle = el.color; c.lineWidth = el.strokeWidth;
-    c.beginPath(); c.moveTo(el.x1, el.y1); c.lineTo(el.x2, el.y2); c.stroke();
+    var ang = Math.atan2(el.y2 - el.y1, el.x2 - el.x1);
     if (el.type === 'arrow'){
-      var ang = Math.atan2(el.y2 - el.y1, el.x2 - el.x1);
-      var hl = 10 + el.strokeWidth * 1.5;
+      // 太さに応じて線分と矢じりを補正（太いときにズレないよう）
+      var tipBack = Math.max(el.strokeWidth / 2, 4);
+      var hl = Math.max(el.strokeWidth * 2.6, 13);
+      var halfAng = 2 * Math.PI / 9;                       // 40°
+      var baseDepth = (hl * Math.tan(halfAng)) / 2;        // 矢じり底辺の軸方向深さ
+      var endOnLineX = el.x2 - Math.cos(ang) * (tipBack + baseDepth * 0.6);
+      var endOnLineY = el.y2 - Math.sin(ang) * (tipBack + baseDepth * 0.6);
+      c.beginPath();
+      c.moveTo(el.x1, el.y1);
+      c.lineTo(endOnLineX, endOnLineY);
+      c.stroke();
       c.fillStyle = el.color;
+      c.lineJoin = 'round';
+      var bx = el.x2 - Math.cos(ang) * tipBack;
+      var by = el.y2 - Math.sin(ang) * tipBack;
       c.beginPath();
       c.moveTo(el.x2, el.y2);
-      c.lineTo(el.x2 - hl * Math.cos(ang - Math.PI/6), el.y2 - hl * Math.sin(ang - Math.PI/6));
-      c.lineTo(el.x2 - hl * Math.cos(ang + Math.PI/6), el.y2 - hl * Math.sin(ang + Math.PI/6));
+      c.lineTo(bx - hl * Math.cos(ang - halfAng), by - hl * Math.sin(ang - halfAng));
+      c.lineTo(bx - hl * Math.cos(ang + halfAng), by - hl * Math.sin(ang + halfAng));
       c.closePath(); c.fill();
+      if (el.strokeWidth > 1){
+        c.lineWidth = Math.max(1, el.strokeWidth * 0.35);
+        c.strokeStyle = el.color;
+        c.beginPath();
+        c.moveTo(el.x2, el.y2);
+        c.lineTo(bx - hl * Math.cos(ang - halfAng), by - hl * Math.sin(ang - halfAng));
+        c.lineTo(bx - hl * Math.cos(ang + halfAng), by - hl * Math.sin(ang + halfAng));
+        c.closePath();
+        c.stroke();
+      }
+    } else {
+      c.beginPath(); c.moveTo(el.x1, el.y1); c.lineTo(el.x2, el.y2); c.stroke();
     }
   } else if (el.type === 'text'){
     c.fillStyle = el.color;
