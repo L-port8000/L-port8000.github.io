@@ -100,10 +100,6 @@
   .confirmBox .cbBtns{ display:flex; justify-content:flex-end; gap:8px; }
   .confirmBox .cbBtns button{ padding:8px 14px; border-radius:10px; border:1px solid #e5e5e5; background:#fff; font-size:13px; cursor:pointer; font-family:inherit; }
   .confirmBox .cbBtns .danger{ background:#dc2626; color:#fff; border-color:#dc2626; }
-  .confirmBox .cbBtns .primary{ background:#171717; color:#fff; border-color:#171717; }
-  #renameInput{ width:100%; padding:9px 10px; border:1px solid #d4d4d4; border-radius:8px;
-    font-size:14px; font-family:inherit; margin-bottom:16px; box-sizing:border-box; }
-  #renameInput:focus{ outline:none; border-color:#171717; }
 
   #zoomBar{ position:absolute; right:14px; bottom:14px; z-index:10; display:flex; align-items:center; gap:2px;
     background:#fff; border:1px solid #e5e5e5; border-radius:999px; padding:4px; box-shadow:0 4px 16px rgba(0,0,0,.10); }
@@ -216,7 +212,7 @@
 
   <div id="boardWrap">
     <canvas id="board"></canvas>
-    <div id="hint">ここに描いたり、図形を配置したりできます<br>空白をドラッグ＝複数選択 / 2本指＝拡大縮小・移動<br>長押し（右クリック）＝メニュー（画像は切り抜きも可能）<br>クリップボードの画像は Ctrl+V で貼り付け</div>
+    <div id="hint">ここに描いたり、図形を配置したりできます<br>空白をドラッグ＝複数選択 / 2本指＝拡大縮小・移動<br>長押し（右クリック）＝メニュー（画像は切り抜きも可能）</div>
     <textarea id="textEditor" spellcheck="false"></textarea>
     <div class="sizePanel" id="sizePanel">
       <span class="spLbl">W</span><input id="spW" type="number" min="1" step="1">
@@ -240,17 +236,6 @@
       <div class="cbBtns">
         <button id="confirmNo">キャンセル</button>
         <button id="confirmYes" class="danger">削除する</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="renameModal">
-    <div class="confirmBox">
-      <div class="t">ボード名を変更</div>
-      <input id="renameInput" type="text" maxlength="30" autocomplete="off">
-      <div class="cbBtns">
-        <button id="renameNo">キャンセル</button>
-        <button id="renameYes" class="primary">変更する</button>
       </div>
     </div>
   </div>
@@ -294,7 +279,7 @@
   </div>
 
   <input type="file" id="jsonInput" accept=".json,application/json" hidden>
-  <input type="file" id="imgInput" accept="image/*" hidden>
+  <input type="file" id="imgInput" accept="image/*" multiple hidden>
 </div>
 
 <script>
@@ -398,11 +383,21 @@ function getImageEl(src){
   var img = imageCache.get(src);
   if (!img) {
     img = new Image();
-    img.onload = render;
+    img.onload = function(){ render(); };
+    img.onerror = function(){ render(); };
     img.src = src;
     imageCache.set(src, img);
+  } else if (!img.complete){
+    // 既に読み込み中でも、完了時にrenderが呼ばれるよう多重登録
+    var prev = img.onload;
+    if (typeof prev === 'function' && prev !== render){
+      img.onload = function(){ try { prev(); } catch(e){} render(); };
+    }
   }
   return img;
+}
+function preloadImages(list){
+  list.forEach(function(el){ if (el.type === 'image' && el.src) getImageEl(el.src); });
 }
 
 function rotatePt(p, c, a){
@@ -525,45 +520,117 @@ function getBoardName(id){
   for (var i = 0; i < boardList.length; i++) if (boardList[i].id === id) return boardList[i].name;
   return 'ボード';
 }
+/* ---------- IndexedDB（本格的なブラウザ内DB。大容量の画像も保存可能） ---------- */
+var DB_NAME = 'freeboard-db';
+var DB_STORE = 'boards';
+var db = null;
+var dbReady = null;
+function openDB(){
+  if (dbReady) return dbReady;
+  dbReady = new Promise(function(resolve){
+    if (!window.indexedDB){ resolve(null); return; }
+    try {
+      var req = indexedDB.open(DB_NAME, 1);
+      req.onupgradeneeded = function(){
+        var d = req.result;
+        if (!d.objectStoreNames.contains(DB_STORE)) d.createObjectStore(DB_STORE, { keyPath: 'id' });
+      };
+      req.onsuccess = function(){ db = req.result; resolve(db); };
+      req.onerror = function(){ resolve(null); };
+      req.onblocked = function(){ resolve(null); };
+    } catch (e) { resolve(null); }
+  });
+  return dbReady;
+}
+function dbSave(id, els, name){
+  openDB().then(function(d){
+    if (!d) return;
+    try {
+      var tx = d.transaction(DB_STORE, 'readwrite');
+      tx.objectStore(DB_STORE).put({ id: id, name: name || getBoardName(id), elements: els, updated: Date.now() });
+    } catch (e) { /* 無視 */ }
+  });
+}
+function dbLoad(id, cb){
+  openDB().then(function(d){
+    if (!d){ cb(null); return; }
+    try {
+      var tx = d.transaction(DB_STORE, 'readonly');
+      var req = tx.objectStore(DB_STORE).get(id);
+      req.onsuccess = function(){ cb(req.result || null); };
+      req.onerror = function(){ cb(null); };
+    } catch (e) { cb(null); }
+  });
+}
+function dbRemove(id){
+  openDB().then(function(d){
+    if (!d) return;
+    try {
+      var tx = d.transaction(DB_STORE, 'readwrite');
+      tx.objectStore(DB_STORE).delete(id);
+    } catch (e) { /* 無視 */ }
+  });
+}
+/* ---------- 保存（IndexedDB へ保存しつつ、1枚目は従来の localStorage にも二重保存） ---------- */
 function saveToLocalStorage(){
+  dbSave(currentBoardId, elements);
   try { localStorage.setItem(boardKey(currentBoardId), JSON.stringify({ elements: elements })); }
-  catch (e) { /* 容量不足・非対応環境は無視 */ }
+  catch (e) { /* 容量不足・非対応環境は無視（IndexedDB 側には保存済み） */ }
 }
-function restoreElements(list){
-  elements = list;
-  // 画像はキャッシュへ先に読み込み（復元後に描画されるように）
-  elements.forEach(function(el){ if (el.type === 'image' && el.src) getImageEl(el.src); });
-}
-function loadFromLocalStorage(){
-  try {
-    var raw = localStorage.getItem(boardKey(currentBoardId));
-    if (raw){
-      var data = JSON.parse(raw);
-      if (data && Array.isArray(data.elements)) restoreElements(data.elements);
-      else elements = [];
+function loadFromLocalStorage(cb){
+  var fallback = function(){
+    // IndexedDB に無い場合は従来の localStorage から読む
+    try {
+      var raw = localStorage.getItem(boardKey(currentBoardId));
+      if (raw){
+        var data = JSON.parse(raw);
+        if (data && Array.isArray(data.elements)){
+          elements = data.elements;
+          preloadImages(elements);
+          if (cb) cb();
+          return;
+        }
+      }
+    } catch (e) { /* 壊れたデータは無視 */ }
+    if (cb) cb();
+  };
+  dbLoad(currentBoardId, function(rec){
+    if (rec && Array.isArray(rec.elements)){
+      elements = rec.elements;
+      preloadImages(elements);
+      if (cb) cb();
+    } else {
+      fallback();
     }
-  } catch (e) { /* 壊れたデータは無視 */ }
+  });
 }
 function switchBoard(id){
   if (id === currentBoardId) return;
   closeEditor(true);
   saveToLocalStorage();
   currentBoardId = id;
-  var list = [];
-  try {
-    var raw = localStorage.getItem(boardKey(id));
-    if (raw){
-      var data = JSON.parse(raw);
-      if (data && Array.isArray(data.elements)) list = data.elements;
-    }
-  } catch (e) { /* 空ボード */ }
-  restoreElements(list);
-  selectedIds = [];
-  history = [snapshot()];
-  historyIndex = 0;
-  saveBoardList();
-  updateUI();
-  render();
+  var apply = function(list){
+    elements = list;
+    preloadImages(elements);
+    selectedIds = [];
+    history = [snapshot()];
+    historyIndex = 0;
+    saveBoardList();
+    updateUI();
+    render();
+  };
+  dbLoad(id, function(rec){
+    if (rec && Array.isArray(rec.elements)){ apply(rec.elements); return; }
+    var list = [];
+    try {
+      var raw = localStorage.getItem(boardKey(id));
+      if (raw){
+        var data = JSON.parse(raw);
+        if (data && Array.isArray(data.elements)) list = data.elements;
+      }
+    } catch (e) { /* 空ボード */ }
+    apply(list);
+  });
 }
 function addBoard(){
   var maxId = 1;
@@ -577,6 +644,7 @@ function addBoard(){
 function requestDeleteBoard(id){
   if (id === 1){ toast('1枚目のボードは削除できません。'); return; }
   showConfirm('「' + getBoardName(id) + '」を削除しますか？', function(){
+    dbRemove(id);
     try { localStorage.removeItem(boardKey(id)); } catch (e) { /* 無視 */ }
     boardList = boardList.filter(function(b){ return b.id !== id; });
     saveBoardList();
@@ -672,27 +740,13 @@ function drawElement(c, el){
     c.textBaseline = 'top';
     el.text.split('\n').forEach(function(line, i){ c.fillText(line, el.x, el.y + i * el.fontSize * 1.3); });
   } else if (el.type === 'freehand'){
-    var fp = el.points;
     c.strokeStyle = el.color; c.lineWidth = el.strokeWidth;
     c.beginPath();
-    if (fp.length < 3){
-      // 点が少ない場合はそのまま線分（1点なら極小の線分で点を描く）
-      if (fp.length === 1){ c.moveTo(fp[0].x, fp[0].y); c.lineTo(fp[0].x + 0.01, fp[0].y); }
-      else fp.forEach(function(p, i){ if (i === 0) c.moveTo(p.x, p.y); else c.lineTo(p.x, p.y); });
-    } else {
-      // 各点の中間をパスとして二次曲線でなぞる（カクカクを解消）
-      c.moveTo(fp[0].x, fp[0].y);
-      for (var fpi = 1; fpi < fp.length - 1; fpi++){
-        var mx = (fp[fpi].x + fp[fpi + 1].x) / 2;
-        var my = (fp[fpi].y + fp[fpi + 1].y) / 2;
-        c.quadraticCurveTo(fp[fpi].x, fp[fpi].y, mx, my);
-      }
-      c.lineTo(fp[fp.length - 1].x, fp[fp.length - 1].y);
-    }
+    el.points.forEach(function(p, i){ if (i === 0) c.moveTo(p.x, p.y); else c.lineTo(p.x, p.y); });
     c.stroke();
   } else if (el.type === 'image'){
-    var img = imageCache.get(el.src);
-    if (img && img.complete && img.naturalWidth > 0){
+    var img = getImageEl(el.src);
+    if (img.complete && img.naturalWidth > 0){
       c.drawImage(img, el.x, el.y, el.w, el.h);
     } else {
       c.strokeStyle = '#a3a3a3'; c.lineWidth = 1; c.strokeRect(el.x, el.y, el.w, el.h);
@@ -949,8 +1003,7 @@ function syncToolFromSelection(){
   if ('strokeWidth' in el){
     strokeWidth = el.strokeWidth;
     strokeNumber.value = strokeWidth;
-    if (strokeWidth > parseInt(strokeRange.getAttribute('max'), 10)) strokeRange.setAttribute('max', strokeWidth);
-    strokeRange.value = strokeWidth;
+    strokeRange.value = Math.min(strokeWidth, 24);
   }
 }
 function setTool(t){
@@ -996,9 +1049,7 @@ var strokeRange = document.getElementById('strokeRange');
 function setStrokeWidth(v){
   strokeWidth = clamp(Math.round(v), 0, 48);
   strokeNumber.value = strokeWidth;
-  // スライダーは入力値に合わせて範囲を広げ、追従させる
-  if (strokeWidth > parseInt(strokeRange.getAttribute('max'), 10)) strokeRange.setAttribute('max', strokeWidth);
-  strokeRange.value = strokeWidth;
+  strokeRange.value = Math.min(strokeWidth, 24);
   selectedEls().forEach(function(el){ if ('strokeWidth' in el) el.strokeWidth = strokeWidth; });
   render();
 }
@@ -1130,91 +1181,48 @@ textEditor.addEventListener('keydown', function(e){
 textEditor.addEventListener('blur', function(){ closeEditor(true); });
 
 /* ================= images ================= */
-/* 大きな画像は縮小・JPEG化してデータ化（localStorageの容量を保護） */
-function imageToStorableData(img){
-  var MAX_STORE = 1600;
-  var nw = img.naturalWidth, nh = img.naturalHeight;
-  if (nw <= MAX_STORE && nh <= MAX_STORE){
-    var small = document.createElement('canvas');
-    small.width = nw; small.height = nh;
-    var sc = small.getContext('2d');
-    sc.fillStyle = '#fff'; sc.fillRect(0, 0, nw, nh);
-    sc.drawImage(img, 0, 0);
-    return small.toDataURL('image/jpeg', 0.86);
-  }
-  var s = Math.min(MAX_STORE / nw, MAX_STORE / nh);
-  var out = document.createElement('canvas');
-  out.width = Math.max(1, Math.round(nw * s));
-  out.height = Math.max(1, Math.round(nh * s));
-  var oc = out.getContext('2d');
-  oc.fillStyle = '#fff'; oc.fillRect(0, 0, out.width, out.height);
-  oc.drawImage(img, 0, 0, out.width, out.height);
-  return out.toDataURL('image/jpeg', 0.86);
-}
-function addImageFile(f){
-  showProgress('画像を読み込み中…');
-  var reader = new FileReader();
-  reader.onprogress = function(ev){ if (ev.lengthComputable) setProgress(clamp(ev.loaded / ev.total * 70, 2, 70)); };
-  reader.onload = function(){
-    setProgress(80);
-    var origSrc = reader.result;
-    var img = new Image();
-    img.onload = function(){
-      setProgress(88);
-      nextTick(function(){
-        var src = imageToStorableData(img);
-        setProgress(94);
-        nextTick(function(){
-          var nw = img.naturalWidth, nh = img.naturalHeight;
-          var st = document.createElement('canvas');
-          st.width = nw; st.height = nh;
-          st.getContext('2d').drawImage(img, 0, 0);
-          // 縮小後の実際のサイズを把握して配置
-          var tmp = new Image();
-          tmp.onload = function(){
-            var rect = wrap.getBoundingClientRect();
-            var center = screenToWorld(rect.width / 2, rect.height / 2);
-            var w = tmp.naturalWidth, h = tmp.naturalHeight;
-            var maxDim = 400 / scale;
-            var s2 = Math.min(maxDim / w, maxDim / h, 1);
-            w *= s2; h *= s2;
-            var el = { id: genId(), type: 'image', x: center.x - w/2, y: center.y - h/2, w: w, h: h, src: src, color: '#171717', strokeWidth: 0, lockAspect: true };
-            elements.push(el);
-            selectedIds = [el.id];
-            commitState(deepClone(elements), selectedIds.slice());
-            setProgress(100);
-            setTimeout(hideProgress, 300);
-          };
-          tmp.src = src;
-        });
-      });
-    };
-    img.onerror = function(){ hideProgress(); toast('画像を読み込めませんでした。'); };
-    img.src = origSrc;
+function insertImageFromSrc(src, atWorld){
+  var tmp = new Image();
+  tmp.onload = function(){
+    var rect = wrap.getBoundingClientRect();
+    var center = atWorld || screenToWorld(rect.width / 2, rect.height / 2);
+    var w = tmp.naturalWidth || 200, h = tmp.naturalHeight || 200;
+    var maxDim = Math.min(600 / scale, Math.max(w, h));
+    var s = Math.min(maxDim / w, maxDim / h, 1);
+    w *= s; h *= s;
+    // キャッシュに登録（描画用）— 既に読み込んだ Image をそのまま利用して二重読み込みを避ける
+    imageCache.set(src, tmp);
+    var el = { id: genId(), type: 'image', x: center.x - w/2, y: center.y - h/2, w: w, h: h, src: src, color: '#171717', strokeWidth: 0, lockAspect: true, rotation: 0 };
+    elements.push(el);
+    selectedIds = [el.id];
+    commitState(deepClone(elements), selectedIds.slice());
+    setProgress(100);
+    setTimeout(hideProgress, 300);
   };
-  reader.onerror = function(){ hideProgress(); toast('画像を読み込めませんでした。'); };
-  reader.readAsDataURL(f);
+  tmp.onerror = function(){ hideProgress(); toast('画像を読み込めませんでした。'); };
+  tmp.src = src;
 }
 document.getElementById('imgInput').addEventListener('change', function(e){
-  var f = e.target.files && e.target.files[0];
+  var files = e.target.files ? Array.from(e.target.files) : [];
+  if (!files.length) return;
   e.target.value = '';
-  if (!f) return;
-  addImageFile(f);
-});
-/* クリップボードからの画像貼り付け（Ctrl+V / 長押しメニュー等） */
-window.addEventListener('paste', function(e){
-  var items = e.clipboardData && e.clipboardData.items;
-  if (!items) return;
-  for (var i = 0; i < items.length; i++){
-    if (items[i].type && items[i].type.indexOf('image/') === 0){
-      var f = items[i].getAsFile();
-      if (f){
-        e.preventDefault();
-        addImageFile(f);
-        break;
-      }
-    }
+  var idx = 0;
+  function next(){
+    if (idx >= files.length){ hideProgress(); return; }
+    var f = files[idx++];
+    showProgress('画像を読み込み中… ' + idx + '/' + files.length);
+    setProgress(10);
+    var reader = new FileReader();
+    reader.onprogress = function(ev){ if (ev.lengthComputable) setProgress(10 + clamp(ev.loaded / ev.total * 70, 0, 70)); };
+    reader.onload = function(){
+      setProgress(85);
+      insertImageFromSrc(reader.result);
+      setTimeout(function(){ if (idx < files.length) next(); }, 250);
+    };
+    reader.onerror = function(){ toast('画像を読み込めませんでした。'); next(); };
+    reader.readAsDataURL(f);
   }
+  next();
 });
 
 /* ================= crop ================= */
@@ -1954,6 +1962,7 @@ document.getElementById('jsonInput').addEventListener('change', function(e){
       try {
         var data = JSON.parse(reader.result);
         var list = Array.isArray(data.elements) ? data.elements : [];
+        preloadImages(list);
         selectedIds = [];
         commitState(list, []);
         setProgress(100);
@@ -2052,9 +2061,7 @@ document.getElementById('btnAddBoard').addEventListener('click', function(){
   addBoard();
   renderBoardPanel();
 });
-var suppressRowClick = false;
 boardListEl.addEventListener('click', function(e){
-  if (suppressRowClick){ suppressRowClick = false; return; }
   var delBtn = e.target.closest('.delBtn');
   if (delBtn){
     e.stopPropagation();
@@ -2084,76 +2091,57 @@ document.getElementById('confirmYes').addEventListener('click', function(){
 document.getElementById('confirmNo').addEventListener('click', hideConfirm);
 confirmModal.addEventListener('pointerdown', function(e){ if (e.target === confirmModal) hideConfirm(); });
 
-/* ボード名の変更（長押し / 右クリック） */
-var renameModal = document.getElementById('renameModal');
-var renameInput = document.getElementById('renameInput');
-var renameTargetId = null;
-var renameLpTimer = null;
-var renameLpPos = null;
-function openRename(id){
-  var b = null;
-  boardList.forEach(function(x){ if (x.id === id) b = x; });
-  if (!b) return;
-  renameTargetId = id;
-  renameInput.value = b.name;
-  renameModal.style.display = 'flex';
-  setTimeout(function(){ renameInput.focus(); renameInput.select(); }, 0);
-}
-function closeRename(){
-  renameModal.style.display = 'none';
-  renameTargetId = null;
-  if (renameLpTimer){ clearTimeout(renameLpTimer); renameLpTimer = null; }
-}
-document.getElementById('renameYes').addEventListener('click', function(){
-  if (renameTargetId === null) return;
-  var name = renameInput.value.replace(/\s+$/, '');
-  if (name){
-    boardList.forEach(function(x){ if (x.id === renameTargetId) x.name = name; });
-    saveBoardList();
-    renderBoardPanel();
-  }
-  closeRename();
-});
-document.getElementById('renameNo').addEventListener('click', closeRename);
-renameModal.addEventListener('pointerdown', function(e){ if (e.target === renameModal) closeRename(); });
-renameInput.addEventListener('keydown', function(e){
-  e.stopPropagation();
-  if (e.key === 'Enter') document.getElementById('renameYes').click();
-  if (e.key === 'Escape') closeRename();
-});
-boardListEl.addEventListener('pointerdown', function(e){
-  var nameEl = e.target.closest('.bname');
-  if (!nameEl || e.pointerType === 'mouse') return;
-  var row = e.target.closest('.boardRow');
-  if (!row) return;
-  var id = parseInt(row.getAttribute('data-id'), 10);
-  renameLpPos = { x: e.clientX, y: e.clientY };
-  renameLpTimer = setTimeout(function(){
-    renameLpTimer = null;
-    suppressRowClick = true;
-    setTimeout(function(){ suppressRowClick = false; }, 600);
-    openRename(id);
-  }, 500);
-});
-boardListEl.addEventListener('pointermove', function(e){
-  if (renameLpTimer && renameLpPos && Math.hypot(e.clientX - renameLpPos.x, e.clientY - renameLpPos.y) > 10){
-    clearTimeout(renameLpTimer); renameLpTimer = null;
-  }
-});
-['pointerup', 'pointercancel'].forEach(function(ev){
-  boardListEl.addEventListener(ev, function(){
-    if (renameLpTimer){ clearTimeout(renameLpTimer); renameLpTimer = null; }
-  });
-});
-boardListEl.addEventListener('contextmenu', function(e){
-  var nameEl = e.target.closest('.bname');
-  if (!nameEl) return;
+/* ================= drag & drop / paste image ================= */
+wrap.addEventListener('dragover', function(e){ e.preventDefault(); });
+wrap.addEventListener('drop', function(e){
   e.preventDefault();
-  var row = e.target.closest('.boardRow');
-  if (row) openRename(parseInt(row.getAttribute('data-id'), 10));
+  var files = [];
+  if (e.dataTransfer && e.dataTransfer.files){
+    for (var i = 0; i < e.dataTransfer.files.length; i++){
+      var f = e.dataTransfer.files[i];
+      if (f.type && f.type.indexOf('image/') === 0) files.push(f);
+    }
+  }
+  if (!files.length) return;
+  // ドロップ位置に挿入
+  var screen = { x: e.clientX - wrap.getBoundingClientRect().left, y: e.clientY - wrap.getBoundingClientRect().top };
+  var world = screenToWorld(screen.x, screen.y);
+  var idx = 0;
+  function nextDrop(){
+    if (idx >= files.length){ hideProgress(); return; }
+    var file = files[idx++];
+    showProgress('画像を読み込み中… ' + idx + '/' + files.length);
+    var reader = new FileReader();
+    reader.onload = function(){ insertImageFromSrc(reader.result, world); if (idx < files.length) setTimeout(nextDrop, 200); };
+    reader.onerror = function(){ nextDrop(); };
+    reader.readAsDataURL(file);
+  }
+  nextDrop();
 });
-document.addEventListener('keydown', function(e){
-  if (e.key === 'Escape' && renameModal.style.display === 'flex') closeRename();
+window.addEventListener('paste', function(e){
+  var active = document.activeElement ? document.activeElement.tagName : '';
+  if (active === 'TEXTAREA' || active === 'INPUT') return;
+  var items = e.clipboardData && e.clipboardData.items;
+  if (!items) return;
+  var imgFiles = [];
+  for (var i = 0; i < items.length; i++){
+    if (items[i].type && items[i].type.indexOf('image/') === 0){
+      var f = items[i].getAsFile();
+      if (f) imgFiles.push(f);
+    }
+  }
+  if (!imgFiles.length) return;
+  e.preventDefault();
+  var fi = 0;
+  function nextPaste(){
+    if (fi >= imgFiles.length){ hideProgress(); return; }
+    var file = imgFiles[fi++];
+    showProgress('画像を貼り付け中…');
+    var reader = new FileReader();
+    reader.onload = function(){ insertImageFromSrc(reader.result); if (fi < imgFiles.length) setTimeout(nextPaste, 150); };
+    reader.readAsDataURL(file);
+  }
+  nextPaste();
 });
 
 /* ================= resize / init ================= */
@@ -2170,11 +2158,12 @@ window.addEventListener('resize', function(){ resizeCanvas(); if (cropState) lay
 
 loadBoardList();
 currentBoardId = 1;
-loadFromLocalStorage();
-history = [snapshot()];
-historyIndex = 0;
-updateUI();
-resizeCanvas();
+loadFromLocalStorage(function(){
+  history = [snapshot()];
+  historyIndex = 0;
+  updateUI();
+  resizeCanvas();
+});
 })();
 </script>
 </body>
