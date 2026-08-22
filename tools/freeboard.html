@@ -41,6 +41,7 @@
   .tbtn:disabled{ opacity:.3; cursor:default; }
   .tbtn:disabled:hover{ background:transparent; }
   .tbtn svg{ width:19px; height:19px; display:block; }
+  .tbtn.arrowGlyph{ font-size:20px; line-height:1; }
 
   .swatch{ width:26px; height:26px; border-radius:50%; border:2px solid #e5e5e5; cursor:pointer; flex:0 0 auto; padding:0; }
   .swatch.selected{ border-color:#171717; box-shadow:0 0 0 2px #fff inset; }
@@ -76,6 +77,29 @@
   #progressBarWrap{ height:8px; background:#e5e5e5; border-radius:999px; overflow:hidden; }
   #progressBar{ height:100%; width:0%; background:#171717; border-radius:999px; transition:width .12s ease; }
   #progressPct{ margin-top:8px; font-size:12px; color:#737373; text-align:right; }
+  #boardPanel{ position:fixed; top:64px; right:10px; z-index:80; width:264px; display:none;
+    background:#fff; border:1px solid #e5e5e5; border-radius:14px; box-shadow:0 12px 40px rgba(0,0,0,.18); overflow:hidden; }
+  .bpHead{ display:flex; align-items:center; justify-content:space-between; padding:11px 12px;
+    border-bottom:1px solid #f0f0f0; font-size:13px; font-weight:600; }
+  .bpHead button{ border:none; background:none; font-size:15px; cursor:pointer; color:#737373; line-height:1; }
+  .bpHead button:hover{ color:#171717; }
+  #boardList{ max-height:300px; overflow-y:auto; }
+  .boardRow{ display:flex; align-items:center; gap:8px; padding:11px 12px; border-bottom:1px solid #f5f5f5; cursor:pointer; font-size:13px; }
+  .boardRow:hover{ background:#f7f7f7; }
+  .boardRow .bname{ flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .boardRow .dot{ width:8px; height:8px; border-radius:50%; background:#22c55e; flex:0 0 auto; }
+  .boardRow .dotoff{ flex:0 0 8px; }
+  .boardRow .delBtn{ border:none; background:none; color:#a3a3a3; cursor:pointer; padding:3px; display:flex; }
+  .boardRow .delBtn:hover{ color:#dc2626; }
+  #btnAddBoard{ display:block; width:100%; padding:13px; border:none; background:#171717; color:#fff; font-size:13px; cursor:pointer; font-family:inherit; }
+  #btnAddBoard:hover{ filter:brightness(1.3); }
+  #confirmModal{ position:fixed; inset:0; z-index:110; display:none; align-items:center; justify-content:center; background:rgba(23,23,23,.45); }
+  .confirmBox{ background:#fff; border-radius:14px; padding:18px 20px; width:290px; box-shadow:0 20px 60px rgba(0,0,0,.3); }
+  .confirmBox .t{ font-size:14px; font-weight:600; margin-bottom:6px; }
+  .confirmBox .m{ font-size:13px; color:#737373; margin-bottom:16px; }
+  .confirmBox .cbBtns{ display:flex; justify-content:flex-end; gap:8px; }
+  .confirmBox .cbBtns button{ padding:8px 14px; border-radius:10px; border:1px solid #e5e5e5; background:#fff; font-size:13px; cursor:pointer; font-family:inherit; }
+  .confirmBox .cbBtns .danger{ background:#dc2626; color:#fff; border-color:#dc2626; }
 
   #zoomBar{ position:absolute; right:14px; bottom:14px; z-index:10; display:flex; align-items:center; gap:2px;
     background:#fff; border:1px solid #e5e5e5; border-radius:999px; padding:4px; box-shadow:0 4px 16px rgba(0,0,0,.10); }
@@ -137,9 +161,7 @@
       <button class="tbtn" data-tool="line" title="直線 (L)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19 19 5"/><circle cx="5" cy="19" r="1.4" fill="currentColor" stroke="none"/><circle cx="19" cy="5" r="1.4" fill="currentColor" stroke="none"/></svg>
       </button>
-      <button class="tbtn" data-tool="arrow" title="矢印 (A)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 19 7 7"/><path d="M15 7H7v8"/></svg>
-      </button>
+      <button class="tbtn arrowGlyph" data-tool="arrow" title="矢印 (A)">↖</button>
       <button class="tbtn" data-tool="text" title="テキスト (T)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
       </button>
@@ -182,6 +204,9 @@
       <button class="tbtn" id="btnPNG" title="PNGとして保存">PNG</button>
       <button class="tbtn" id="btnSave" title="データ(JSON)を保存">保存</button>
       <button class="tbtn" id="btnLoad" title="データ(JSON)を読み込み">読込</button>
+      <button class="tbtn" id="btnBoards" title="ボード一覧">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="7" rx="1.5"/><rect x="3" y="14" width="18" height="7" rx="1.5"/></svg>
+      </button>
     </div>
   </div>
 
@@ -197,6 +222,23 @@
       <span class="spLbl">長さ</span><input id="spL" type="number" min="1" step="1">
     </div>
     <div id="toast"></div>
+
+  <div id="boardPanel">
+    <div class="bpHead">ボード一覧 <button id="btnCloseBoards" title="閉じる">×</button></div>
+    <div id="boardList"></div>
+    <button id="btnAddBoard">＋ ボードを追加</button>
+  </div>
+
+  <div id="confirmModal">
+    <div class="confirmBox">
+      <div class="t">ボードを削除</div>
+      <div class="m" id="confirmMsg"></div>
+      <div class="cbBtns">
+        <button id="confirmNo">キャンセル</button>
+        <button id="confirmYes" class="danger">削除する</button>
+      </div>
+    </div>
+  </div>
 
   <div id="progressOverlay">
     <div id="progressBox">
@@ -237,7 +279,7 @@
   </div>
 
   <input type="file" id="jsonInput" accept=".json,application/json" hidden>
-  <input type="file" id="imgInput" accept="image/*" hidden>
+  <input type="file" id="imgInput" accept="image/*" multiple hidden>
 </div>
 
 <script>
@@ -341,11 +383,21 @@ function getImageEl(src){
   var img = imageCache.get(src);
   if (!img) {
     img = new Image();
-    img.onload = render;
+    img.onload = function(){ render(); };
+    img.onerror = function(){ render(); };
     img.src = src;
     imageCache.set(src, img);
+  } else if (!img.complete){
+    // 既に読み込み中でも、完了時にrenderが呼ばれるよう多重登録
+    var prev = img.onload;
+    if (typeof prev === 'function' && prev !== render){
+      img.onload = function(){ try { prev(); } catch(e){} render(); };
+    }
   }
   return img;
+}
+function preloadImages(list){
+  list.forEach(function(el){ if (el.type === 'image' && el.src) getImageEl(el.src); });
 }
 
 function rotatePt(p, c, a){
@@ -444,19 +496,161 @@ function normRect(x1, y1, x2, y2){ return { x: Math.min(x1,x2), y: Math.min(y1,y
 
 /* ================= history / local persistence ================= */
 function snapshot(){ return deepClone(elements); }
-/* 元のバージョンと同じ保存場所（localStorage キー 'freeboard-data'、形式 { elements: [...] }） */
-function saveToLocalStorage(){
-  try { localStorage.setItem('freeboard-data', JSON.stringify({ elements: elements })); }
-  catch (e) { /* 容量不足・非対応環境は無視 */ }
-}
-function loadFromLocalStorage(){
+/* ボード管理
+   - 1枚目のボードは必ず元の保存場所（キー 'freeboard-data'、形式 { elements: [...] }）
+   - 2枚目以降は 'freeboard-data-<id>'、一覧メタは 'freeboard-list' */
+var KEY_LIST = 'freeboard-list';
+var currentBoardId = 1;
+var boardList = [{ id: 1, name: 'ボード 1' }];
+function boardKey(id){ return id === 1 ? 'freeboard-data' : 'freeboard-data-' + id; }
+function loadBoardList(){
   try {
-    var raw = localStorage.getItem('freeboard-data');
+    var raw = localStorage.getItem(KEY_LIST);
     if (raw){
-      var data = JSON.parse(raw);
-      if (data && Array.isArray(data.elements)) elements = data.elements;
+      var arr = JSON.parse(raw);
+      if (Array.isArray(arr) && arr.length && arr[0] && arr[0].id === 1){ boardList = arr; return; }
     }
-  } catch (e) { /* 壊れたデータは無視 */ }
+  } catch (e) { /* 壊れた場合は既定値 */ }
+  boardList = [{ id: 1, name: 'ボード 1' }];
+}
+function saveBoardList(){
+  try { localStorage.setItem(KEY_LIST, JSON.stringify(boardList)); } catch (e) { /* 無視 */ }
+}
+function getBoardName(id){
+  for (var i = 0; i < boardList.length; i++) if (boardList[i].id === id) return boardList[i].name;
+  return 'ボード';
+}
+/* ---------- IndexedDB（本格的なブラウザ内DB。大容量の画像も保存可能） ---------- */
+var DB_NAME = 'freeboard-db';
+var DB_STORE = 'boards';
+var db = null;
+var dbReady = null;
+function openDB(){
+  if (dbReady) return dbReady;
+  dbReady = new Promise(function(resolve){
+    if (!window.indexedDB){ resolve(null); return; }
+    try {
+      var req = indexedDB.open(DB_NAME, 1);
+      req.onupgradeneeded = function(){
+        var d = req.result;
+        if (!d.objectStoreNames.contains(DB_STORE)) d.createObjectStore(DB_STORE, { keyPath: 'id' });
+      };
+      req.onsuccess = function(){ db = req.result; resolve(db); };
+      req.onerror = function(){ resolve(null); };
+      req.onblocked = function(){ resolve(null); };
+    } catch (e) { resolve(null); }
+  });
+  return dbReady;
+}
+function dbSave(id, els, name){
+  openDB().then(function(d){
+    if (!d) return;
+    try {
+      var tx = d.transaction(DB_STORE, 'readwrite');
+      tx.objectStore(DB_STORE).put({ id: id, name: name || getBoardName(id), elements: els, updated: Date.now() });
+    } catch (e) { /* 無視 */ }
+  });
+}
+function dbLoad(id, cb){
+  openDB().then(function(d){
+    if (!d){ cb(null); return; }
+    try {
+      var tx = d.transaction(DB_STORE, 'readonly');
+      var req = tx.objectStore(DB_STORE).get(id);
+      req.onsuccess = function(){ cb(req.result || null); };
+      req.onerror = function(){ cb(null); };
+    } catch (e) { cb(null); }
+  });
+}
+function dbRemove(id){
+  openDB().then(function(d){
+    if (!d) return;
+    try {
+      var tx = d.transaction(DB_STORE, 'readwrite');
+      tx.objectStore(DB_STORE).delete(id);
+    } catch (e) { /* 無視 */ }
+  });
+}
+/* ---------- 保存（IndexedDB へ保存しつつ、1枚目は従来の localStorage にも二重保存） ---------- */
+function saveToLocalStorage(){
+  dbSave(currentBoardId, elements);
+  try { localStorage.setItem(boardKey(currentBoardId), JSON.stringify({ elements: elements })); }
+  catch (e) { /* 容量不足・非対応環境は無視（IndexedDB 側には保存済み） */ }
+}
+function loadFromLocalStorage(cb){
+  var fallback = function(){
+    // IndexedDB に無い場合は従来の localStorage から読む
+    try {
+      var raw = localStorage.getItem(boardKey(currentBoardId));
+      if (raw){
+        var data = JSON.parse(raw);
+        if (data && Array.isArray(data.elements)){
+          elements = data.elements;
+          preloadImages(elements);
+          if (cb) cb();
+          return;
+        }
+      }
+    } catch (e) { /* 壊れたデータは無視 */ }
+    if (cb) cb();
+  };
+  dbLoad(currentBoardId, function(rec){
+    if (rec && Array.isArray(rec.elements)){
+      elements = rec.elements;
+      preloadImages(elements);
+      if (cb) cb();
+    } else {
+      fallback();
+    }
+  });
+}
+function switchBoard(id){
+  if (id === currentBoardId) return;
+  closeEditor(true);
+  saveToLocalStorage();
+  currentBoardId = id;
+  var apply = function(list){
+    elements = list;
+    preloadImages(elements);
+    selectedIds = [];
+    history = [snapshot()];
+    historyIndex = 0;
+    saveBoardList();
+    updateUI();
+    render();
+  };
+  dbLoad(id, function(rec){
+    if (rec && Array.isArray(rec.elements)){ apply(rec.elements); return; }
+    var list = [];
+    try {
+      var raw = localStorage.getItem(boardKey(id));
+      if (raw){
+        var data = JSON.parse(raw);
+        if (data && Array.isArray(data.elements)) list = data.elements;
+      }
+    } catch (e) { /* 空ボード */ }
+    apply(list);
+  });
+}
+function addBoard(){
+  var maxId = 1;
+  boardList.forEach(function(b){ if (b.id > maxId) maxId = b.id; });
+  var nb = { id: maxId + 1, name: 'ボード ' + (boardList.length + 1) };
+  boardList.push(nb);
+  saveBoardList();
+  switchBoard(nb.id);
+  renderBoardPanel();
+}
+function requestDeleteBoard(id){
+  if (id === 1){ toast('1枚目のボードは削除できません。'); return; }
+  showConfirm('「' + getBoardName(id) + '」を削除しますか？', function(){
+    dbRemove(id);
+    try { localStorage.removeItem(boardKey(id)); } catch (e) { /* 無視 */ }
+    boardList = boardList.filter(function(b){ return b.id !== id; });
+    saveBoardList();
+    if (currentBoardId === id) switchBoard(1);
+    renderBoardPanel();
+  });
 }
 function commitState(next, sel){
   elements = next;
@@ -505,16 +699,40 @@ function drawElement(c, el){
     if (el.strokeWidth > 0){ c.strokeStyle = el.color; c.lineWidth = el.strokeWidth; c.stroke(); }
   } else if (el.type === 'line' || el.type === 'arrow'){
     c.strokeStyle = el.color; c.lineWidth = el.strokeWidth;
-    c.beginPath(); c.moveTo(el.x1, el.y1); c.lineTo(el.x2, el.y2); c.stroke();
+    var ang = Math.atan2(el.y2 - el.y1, el.x2 - el.x1);
     if (el.type === 'arrow'){
-      var ang = Math.atan2(el.y2 - el.y1, el.x2 - el.x1);
-      var hl = 10 + el.strokeWidth * 1.5;
+      // 太さに応じて線分と矢じりを補正（太いときにズレないよう）
+      var tipBack = Math.max(el.strokeWidth / 2, 4);
+      var hl = Math.max(el.strokeWidth * 2.6, 13);
+      var halfAng = 2 * Math.PI / 9;                       // 40°
+      var baseDepth = (hl * Math.tan(halfAng)) / 2;        // 矢じり底辺の軸方向深さ
+      var endOnLineX = el.x2 - Math.cos(ang) * (tipBack + baseDepth * 0.6);
+      var endOnLineY = el.y2 - Math.sin(ang) * (tipBack + baseDepth * 0.6);
+      c.beginPath();
+      c.moveTo(el.x1, el.y1);
+      c.lineTo(endOnLineX, endOnLineY);
+      c.stroke();
       c.fillStyle = el.color;
+      c.lineJoin = 'round';
+      var bx = el.x2 - Math.cos(ang) * tipBack;
+      var by = el.y2 - Math.sin(ang) * tipBack;
       c.beginPath();
       c.moveTo(el.x2, el.y2);
-      c.lineTo(el.x2 - hl * Math.cos(ang - Math.PI/6), el.y2 - hl * Math.sin(ang - Math.PI/6));
-      c.lineTo(el.x2 - hl * Math.cos(ang + Math.PI/6), el.y2 - hl * Math.sin(ang + Math.PI/6));
+      c.lineTo(bx - hl * Math.cos(ang - halfAng), by - hl * Math.sin(ang - halfAng));
+      c.lineTo(bx - hl * Math.cos(ang + halfAng), by - hl * Math.sin(ang + halfAng));
       c.closePath(); c.fill();
+      if (el.strokeWidth > 1){
+        c.lineWidth = Math.max(1, el.strokeWidth * 0.35);
+        c.strokeStyle = el.color;
+        c.beginPath();
+        c.moveTo(el.x2, el.y2);
+        c.lineTo(bx - hl * Math.cos(ang - halfAng), by - hl * Math.sin(ang - halfAng));
+        c.lineTo(bx - hl * Math.cos(ang + halfAng), by - hl * Math.sin(ang + halfAng));
+        c.closePath();
+        c.stroke();
+      }
+    } else {
+      c.beginPath(); c.moveTo(el.x1, el.y1); c.lineTo(el.x2, el.y2); c.stroke();
     }
   } else if (el.type === 'text'){
     c.fillStyle = el.color;
@@ -527,8 +745,8 @@ function drawElement(c, el){
     el.points.forEach(function(p, i){ if (i === 0) c.moveTo(p.x, p.y); else c.lineTo(p.x, p.y); });
     c.stroke();
   } else if (el.type === 'image'){
-    var img = imageCache.get(el.src);
-    if (img && img.complete && img.naturalWidth > 0){
+    var img = getImageEl(el.src);
+    if (img.complete && img.naturalWidth > 0){
       c.drawImage(img, el.x, el.y, el.w, el.h);
     } else {
       c.strokeStyle = '#a3a3a3'; c.lineWidth = 1; c.strokeRect(el.x, el.y, el.w, el.h);
@@ -963,36 +1181,48 @@ textEditor.addEventListener('keydown', function(e){
 textEditor.addEventListener('blur', function(){ closeEditor(true); });
 
 /* ================= images ================= */
-document.getElementById('imgInput').addEventListener('change', function(e){
-  var f = e.target.files && e.target.files[0];
-  if (!f) return;
-  e.target.value = '';
-  showProgress('画像を読み込み中…');
-  var reader = new FileReader();
-  reader.onprogress = function(ev){ if (ev.lengthComputable) setProgress(clamp(ev.loaded / ev.total * 80, 2, 80)); };
-  reader.onload = function(){
-    setProgress(88);
-    var src = reader.result;
-    var img = getImageEl(src);
-    var add = function(){
-      var rect = wrap.getBoundingClientRect();
-      var center = screenToWorld(rect.width / 2, rect.height / 2);
-      var w = img.naturalWidth, h = img.naturalHeight;
-      var maxDim = 400 / scale;
-      var s = Math.min(maxDim / w, maxDim / h, 1);
-      w *= s; h *= s;
-      var el = { id: genId(), type: 'image', x: center.x - w/2, y: center.y - h/2, w: w, h: h, src: src, color: '#171717', strokeWidth: 0, lockAspect: true };
-      elements.push(el);
-      selectedIds = [el.id];
-      commitState(deepClone(elements), selectedIds.slice());
-      setProgress(100);
-      setTimeout(hideProgress, 300);
-    };
-    if (img.complete && img.naturalWidth > 0) add();
-    else img.onload = add;
+function insertImageFromSrc(src, atWorld){
+  var tmp = new Image();
+  tmp.onload = function(){
+    var rect = wrap.getBoundingClientRect();
+    var center = atWorld || screenToWorld(rect.width / 2, rect.height / 2);
+    var w = tmp.naturalWidth || 200, h = tmp.naturalHeight || 200;
+    var maxDim = Math.min(600 / scale, Math.max(w, h));
+    var s = Math.min(maxDim / w, maxDim / h, 1);
+    w *= s; h *= s;
+    // キャッシュに登録（描画用）— 既に読み込んだ Image をそのまま利用して二重読み込みを避ける
+    imageCache.set(src, tmp);
+    var el = { id: genId(), type: 'image', x: center.x - w/2, y: center.y - h/2, w: w, h: h, src: src, color: '#171717', strokeWidth: 0, lockAspect: true, rotation: 0 };
+    elements.push(el);
+    selectedIds = [el.id];
+    commitState(deepClone(elements), selectedIds.slice());
+    setProgress(100);
+    setTimeout(hideProgress, 300);
   };
-  reader.onerror = function(){ hideProgress(); toast('画像を読み込めませんでした。'); };
-  reader.readAsDataURL(f);
+  tmp.onerror = function(){ hideProgress(); toast('画像を読み込めませんでした。'); };
+  tmp.src = src;
+}
+document.getElementById('imgInput').addEventListener('change', function(e){
+  var files = e.target.files ? Array.from(e.target.files) : [];
+  if (!files.length) return;
+  e.target.value = '';
+  var idx = 0;
+  function next(){
+    if (idx >= files.length){ hideProgress(); return; }
+    var f = files[idx++];
+    showProgress('画像を読み込み中… ' + idx + '/' + files.length);
+    setProgress(10);
+    var reader = new FileReader();
+    reader.onprogress = function(ev){ if (ev.lengthComputable) setProgress(10 + clamp(ev.loaded / ev.total * 70, 0, 70)); };
+    reader.onload = function(){
+      setProgress(85);
+      insertImageFromSrc(reader.result);
+      setTimeout(function(){ if (idx < files.length) next(); }, 250);
+    };
+    reader.onerror = function(){ toast('画像を読み込めませんでした。'); next(); };
+    reader.readAsDataURL(f);
+  }
+  next();
 });
 
 /* ================= crop ================= */
@@ -1732,6 +1962,7 @@ document.getElementById('jsonInput').addEventListener('change', function(e){
       try {
         var data = JSON.parse(reader.result);
         var list = Array.isArray(data.elements) ? data.elements : [];
+        preloadImages(list);
         selectedIds = [];
         commitState(list, []);
         setProgress(100);
@@ -1751,28 +1982,16 @@ document.getElementById('btnPNG').addEventListener('click', function(){
   nextTick(function(){
     var box = getGroupBBox(elements);
     var pad = 40;
-    var rawW = Math.ceil(box.w + pad * 2);
-    var rawH = Math.ceil(box.h + pad * 2);
-    // iPad/iPhone の Safari はキャンバスの「1辺の長さ」だけでなく「総ピクセル数」にも
-    // 厳しい上限があり（目安：1辺 4096px、総面積 約1677万px＝4096×4096相当）、
-    // これを超えると書き出しが失敗する（toBlob が null を返す／描画がクラッシュする）。
-    // 図形が多い・大きいボードではこの上限を超えやすいため、面積ベースで安全に縮小する。
-    var maxDim = 4096;
-    var maxArea = 16777216; // 4096 * 4096
-    var gs = 1;
-    if (rawW > maxDim) gs = Math.min(gs, maxDim / rawW);
-    if (rawH > maxDim) gs = Math.min(gs, maxDim / rawH);
-    var rawArea = rawW * rawH;
-    if (rawArea * gs * gs > maxArea) gs = Math.min(gs, Math.sqrt(maxArea / rawArea));
-
     var off = document.createElement('canvas');
-    off.width = Math.max(1, Math.round(rawW * gs));
-    off.height = Math.max(1, Math.round(rawH * gs));
-
-    var oc;
-    try { oc = off.getContext('2d'); } catch (e) { oc = null; }
-    if (!oc){ hideProgress(); toast('この端末ではPNGの書き出しに対応していません。'); return; }
-
+    off.width = Math.ceil(box.w + pad * 2);
+    off.height = Math.ceil(box.h + pad * 2);
+    // ブラウザの最大サイズを超えないよう縮小
+    var maxDim = 16384;
+    var gs = 1;
+    if (off.width > maxDim || off.height > maxDim) gs = Math.min(maxDim / off.width, maxDim / off.height);
+    off.width = Math.max(1, Math.ceil(off.width * gs));
+    off.height = Math.max(1, Math.ceil(off.height * gs));
+    var oc = off.getContext('2d');
     oc.fillStyle = '#fff';
     oc.fillRect(0, 0, off.width, off.height);
     oc.scale(gs, gs);
@@ -1788,40 +2007,141 @@ document.getElementById('btnPNG').addEventListener('click', function(){
       if (i < n){ nextTick(step); return; }
       setProgress(90);
       nextTick(function(){
-        var finishDownload = function(url, revoke){
-          setProgress(100);
-          var a = document.createElement('a');
-          a.href = url;
-          a.download = 'freeboard-' + Date.now() + '.png';
-          a.click();
-          if (revoke) setTimeout(function(){ URL.revokeObjectURL(url); }, 1200);
-          setTimeout(hideProgress, 300);
-          if (gs < 0.999){
-            toast('端末の上限に合わせて ' + Math.round(gs * 100) + '% に縮小して書き出しました。');
-          }
-        };
-        var fallbackDataUrl = function(){
-          try {
-            var durl = off.toDataURL('image/png');
-            finishDownload(durl, false);
-          } catch (e2) {
-            hideProgress();
-            toast('PNGを保存できませんでした（データ量が多すぎる可能性があります）。');
-          }
-        };
-        try {
-          off.toBlob(function(blob){
-            if (!blob){ fallbackDataUrl(); return; }
-            setProgress(96);
-            nextTick(function(){ finishDownload(URL.createObjectURL(blob), true); });
-          }, 'image/png');
-        } catch (e3){
-          fallbackDataUrl();
-        }
+        off.toBlob(function(blob){
+          if (!blob){ hideProgress(); toast('PNGを保存できませんでした。'); return; }
+          setProgress(96);
+          nextTick(function(){
+            setProgress(100);
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = 'freeboard-' + Date.now() + '.png';
+            a.click();
+            setTimeout(function(){ URL.revokeObjectURL(url); hideProgress(); }, 1200);
+          });
+        }, 'image/png');
       });
     };
     step();
   });
+});
+
+/* ================= board panel / confirm ================= */
+var boardPanel = document.getElementById('boardPanel');
+var boardListEl = document.getElementById('boardList');
+var confirmModal = document.getElementById('confirmModal');
+var confirmMsg = document.getElementById('confirmMsg');
+var confirmCb = null;
+function escapeHtml(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+var TRASH_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
+function renderBoardPanel(){
+  var html = '';
+  boardList.forEach(function(b){
+    html += '<div class="boardRow" data-id="' + b.id + '">' +
+      (b.id === currentBoardId ? '<span class="dot" title="編集中"></span>' : '<span class="dotoff"></span>') +
+      '<span class="bname">' + escapeHtml(b.name) + '</span>' +
+      (b.id === 1 ? '' : '<button class="delBtn" data-del="' + b.id + '" title="このボードを削除">' + TRASH_SVG + '</button>') +
+      '</div>';
+  });
+  boardListEl.innerHTML = html;
+}
+function showBoardPanel(){
+  renderBoardPanel();
+  boardPanel.style.display = 'block';
+}
+function hideBoardPanel(){ boardPanel.style.display = 'none'; }
+document.getElementById('btnBoards').addEventListener('click', function(){
+  if (boardPanel.style.display === 'block') hideBoardPanel();
+  else showBoardPanel();
+});
+document.getElementById('btnCloseBoards').addEventListener('click', hideBoardPanel);
+document.getElementById('btnAddBoard').addEventListener('click', function(){
+  addBoard();
+  renderBoardPanel();
+});
+boardListEl.addEventListener('click', function(e){
+  var delBtn = e.target.closest('.delBtn');
+  if (delBtn){
+    e.stopPropagation();
+    requestDeleteBoard(parseInt(delBtn.getAttribute('data-del'), 10));
+    return;
+  }
+  var row = e.target.closest('.boardRow');
+  if (row){
+    switchBoard(parseInt(row.getAttribute('data-id'), 10));
+    renderBoardPanel();
+  }
+});
+document.addEventListener('pointerdown', function(e){
+  if (boardPanel.style.display === 'block' && !boardPanel.contains(e.target) && e.target.id !== 'btnBoards' && !e.target.closest('#btnBoards')){
+    hideBoardPanel();
+  }
+});
+function showConfirm(msg, cb){
+  confirmMsg.textContent = msg;
+  confirmCb = cb;
+  confirmModal.style.display = 'flex';
+}
+function hideConfirm(){ confirmModal.style.display = 'none'; confirmCb = null; }
+document.getElementById('confirmYes').addEventListener('click', function(){
+  if (confirmCb){ var cb = confirmCb; confirmCb = null; confirmModal.style.display = 'none'; cb(); }
+});
+document.getElementById('confirmNo').addEventListener('click', hideConfirm);
+confirmModal.addEventListener('pointerdown', function(e){ if (e.target === confirmModal) hideConfirm(); });
+
+/* ================= drag & drop / paste image ================= */
+wrap.addEventListener('dragover', function(e){ e.preventDefault(); });
+wrap.addEventListener('drop', function(e){
+  e.preventDefault();
+  var files = [];
+  if (e.dataTransfer && e.dataTransfer.files){
+    for (var i = 0; i < e.dataTransfer.files.length; i++){
+      var f = e.dataTransfer.files[i];
+      if (f.type && f.type.indexOf('image/') === 0) files.push(f);
+    }
+  }
+  if (!files.length) return;
+  // ドロップ位置に挿入
+  var screen = { x: e.clientX - wrap.getBoundingClientRect().left, y: e.clientY - wrap.getBoundingClientRect().top };
+  var world = screenToWorld(screen.x, screen.y);
+  var idx = 0;
+  function nextDrop(){
+    if (idx >= files.length){ hideProgress(); return; }
+    var file = files[idx++];
+    showProgress('画像を読み込み中… ' + idx + '/' + files.length);
+    var reader = new FileReader();
+    reader.onload = function(){ insertImageFromSrc(reader.result, world); if (idx < files.length) setTimeout(nextDrop, 200); };
+    reader.onerror = function(){ nextDrop(); };
+    reader.readAsDataURL(file);
+  }
+  nextDrop();
+});
+window.addEventListener('paste', function(e){
+  var active = document.activeElement ? document.activeElement.tagName : '';
+  if (active === 'TEXTAREA' || active === 'INPUT') return;
+  var items = e.clipboardData && e.clipboardData.items;
+  if (!items) return;
+  var imgFiles = [];
+  for (var i = 0; i < items.length; i++){
+    if (items[i].type && items[i].type.indexOf('image/') === 0){
+      var f = items[i].getAsFile();
+      if (f) imgFiles.push(f);
+    }
+  }
+  if (!imgFiles.length) return;
+  e.preventDefault();
+  var fi = 0;
+  function nextPaste(){
+    if (fi >= imgFiles.length){ hideProgress(); return; }
+    var file = imgFiles[fi++];
+    showProgress('画像を貼り付け中…');
+    var reader = new FileReader();
+    reader.onload = function(){ insertImageFromSrc(reader.result); if (fi < imgFiles.length) setTimeout(nextPaste, 150); };
+    reader.readAsDataURL(file);
+  }
+  nextPaste();
 });
 
 /* ================= resize / init ================= */
@@ -1836,11 +2156,14 @@ function resizeCanvas(){
 }
 window.addEventListener('resize', function(){ resizeCanvas(); if (cropState) layoutCrop(); });
 
-loadFromLocalStorage();
-history = [snapshot()];
-historyIndex = 0;
-updateUI();
-resizeCanvas();
+loadBoardList();
+currentBoardId = 1;
+loadFromLocalStorage(function(){
+  history = [snapshot()];
+  historyIndex = 0;
+  updateUI();
+  resizeCanvas();
+});
 })();
 </script>
 </body>
