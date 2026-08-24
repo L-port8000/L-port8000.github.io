@@ -1982,16 +1982,28 @@ document.getElementById('btnPNG').addEventListener('click', function(){
   nextTick(function(){
     var box = getGroupBBox(elements);
     var pad = 40;
-    var off = document.createElement('canvas');
-    off.width = Math.ceil(box.w + pad * 2);
-    off.height = Math.ceil(box.h + pad * 2);
-    // ブラウザの最大サイズを超えないよう縮小
-    var maxDim = 16384;
+    var rawW = Math.ceil(box.w + pad * 2);
+    var rawH = Math.ceil(box.h + pad * 2);
+    // iPad/iPhone の Safari はキャンバスの「1辺の長さ」だけでなく「総ピクセル数」にも
+    // 厳しい上限があり（目安：1辺 4096px、総面積 約1677万px＝4096×4096相当）、
+    // これを超えると書き出しが失敗する（toBlob が null を返す／描画がクラッシュする）。
+    // 図形が多い・大きいボードではこの上限を超えやすいため、面積ベースで安全に縮小する。
+    var maxDim = 4096;
+    var maxArea = 16777216; // 4096 * 4096
     var gs = 1;
-    if (off.width > maxDim || off.height > maxDim) gs = Math.min(maxDim / off.width, maxDim / off.height);
-    off.width = Math.max(1, Math.ceil(off.width * gs));
-    off.height = Math.max(1, Math.ceil(off.height * gs));
-    var oc = off.getContext('2d');
+    if (rawW > maxDim) gs = Math.min(gs, maxDim / rawW);
+    if (rawH > maxDim) gs = Math.min(gs, maxDim / rawH);
+    var rawArea = rawW * rawH;
+    if (rawArea * gs * gs > maxArea) gs = Math.min(gs, Math.sqrt(maxArea / rawArea));
+
+    var off = document.createElement('canvas');
+    off.width = Math.max(1, Math.round(rawW * gs));
+    off.height = Math.max(1, Math.round(rawH * gs));
+
+    var oc;
+    try { oc = off.getContext('2d'); } catch (e) { oc = null; }
+    if (!oc){ hideProgress(); toast('この端末ではPNGの書き出しに対応していません。'); return; }
+
     oc.fillStyle = '#fff';
     oc.fillRect(0, 0, off.width, off.height);
     oc.scale(gs, gs);
@@ -2007,19 +2019,36 @@ document.getElementById('btnPNG').addEventListener('click', function(){
       if (i < n){ nextTick(step); return; }
       setProgress(90);
       nextTick(function(){
-        off.toBlob(function(blob){
-          if (!blob){ hideProgress(); toast('PNGを保存できませんでした。'); return; }
-          setProgress(96);
-          nextTick(function(){
-            setProgress(100);
-            var url = URL.createObjectURL(blob);
-            var a = document.createElement('a');
-            a.href = url;
-            a.download = 'freeboard-' + Date.now() + '.png';
-            a.click();
-            setTimeout(function(){ URL.revokeObjectURL(url); hideProgress(); }, 1200);
-          });
-        }, 'image/png');
+        var finishDownload = function(url, revoke){
+          setProgress(100);
+          var a = document.createElement('a');
+          a.href = url;
+          a.download = 'freeboard-' + Date.now() + '.png';
+          a.click();
+          if (revoke) setTimeout(function(){ URL.revokeObjectURL(url); }, 1200);
+          setTimeout(hideProgress, 300);
+          if (gs < 0.999){
+            toast('端末の上限に合わせて ' + Math.round(gs * 100) + '% に縮小して書き出しました。');
+          }
+        };
+        var fallbackDataUrl = function(){
+          try {
+            var durl = off.toDataURL('image/png');
+            finishDownload(durl, false);
+          } catch (e2) {
+            hideProgress();
+            toast('PNGを保存できませんでした（データ量が多すぎる可能性があります）。');
+          }
+        };
+        try {
+          off.toBlob(function(blob){
+            if (!blob){ fallbackDataUrl(); return; }
+            setProgress(96);
+            nextTick(function(){ finishDownload(URL.createObjectURL(blob), true); });
+          }, 'image/png');
+        } catch (e3){
+          fallbackDataUrl();
+        }
       });
     };
     step();
