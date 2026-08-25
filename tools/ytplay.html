@@ -4,6 +4,24 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>YTPlay</title>
+<!-- Favicon -->
+<link rel="icon" type="image/svg+xml" href="">
+<link rel="icon" type="image/png" sizes="32x32" href="https://www.youtube.com/s/desktop/8a76fb04/img/favicon_32x32.png">
+<link rel="apple-touch-icon" href="">
+
+<!-- OGP -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="YTPlay">
+<meta property="og:description" content="YouTube動画をプレイリストで楽しめるシンプルなプレイヤー">
+<meta property="og:url" content="https://site.l-ituki8000.workers.dev/tools/ytplay">
+<meta property="og:image" content="https://youtube.com/favicon.ico">
+<meta property="og:site_name" content="YTPlay">
+
+<!-- X / Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="YTPlay">
+<meta name="twitter:description" content="YT動画をプレイリストで楽しめるシンプルなプレイヤー">
+<meta name="twitter:image" content="https://youtube.com/favicon.ico">
 <style>
   :root{
     --bg:#0f0f0f; --surface:#212121; --surface2:#3d3d3d; --divider:#2f2f2f;
@@ -47,6 +65,21 @@
   .info-title{ flex:1; font-size:15px; font-weight:600; line-height:1.4; }
   .info-sub{ font-size:12px; color:var(--text2); margin-top:2px; padding:0 16px; }
   .icon-plain{ background:none; border:none; color:var(--text2); font-size:16px; width:30px; height:30px; cursor:pointer; }
+
+  .svg-icon{
+    width:1em;
+    height:1em;
+    display:block;
+    fill:none;
+    stroke:currentColor;
+    stroke-width:2;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+  }
+  .svg-icon.fill{ fill:currentColor; stroke:none; }
+  .svg-wrap{ display:flex; align-items:center; }
+  .inline-icon{ display:inline-block; vertical-align:-0.15em; }
+
 
   .transport-row{ display:flex; align-items:center; justify-content:center; gap:26px; padding:12px 0 6px; }
   .transport-row button{
@@ -151,11 +184,11 @@
 <div class="app">
   <div class="topbar">
     <button class="topbar-title-btn" id="openLibraryBtn">
-      <span id="topTitle">プレイリスト</span><span>&#8964;</span>
+      <span id="topTitle">プレイリスト</span><span class="svg-wrap"><svg class="svg-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></span>
     </button>
     <div class="topbar-actions">
-      <button id="openAddBtn" title="動画を追加">&#65291;</button>
-      <button id="openMoreBtn" title="その他">&#8942;</button>
+      <button id="openAddBtn" title="動画を追加"><svg class="svg-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+      <button id="openMoreBtn" title="その他"><svg class="svg-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="1.5" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="12" cy="19" r="1.5" fill="currentColor" stroke="none"/></svg></button>
     </div>
   </div>
 
@@ -168,21 +201,21 @@
 
   <div class="info-bar">
     <div class="info-title" id="nowPlayingTitle">プレイリストは空です</div>
-    <button class="icon-plain" id="editCurrentBtn" title="編集">&#9998;</button>
+    <button class="icon-plain" id="editCurrentBtn" title="編集"><svg class="svg-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l4.5-1 10.7-10.7a2.1 2.1 0 0 0-3-3L5.5 16z"/><path d="M14.5 6.5l3 3"/></svg></button>
   </div>
   <div class="info-sub" id="nowPlayingSub"></div>
 
   <div class="transport-row">
-    <button id="prevBtn" title="前へ">&#9198;</button>
-    <button id="playPauseBtn" title="再生/一時停止">&#9654;</button>
-    <button id="nextBtn" title="次へ">&#9197;</button>
+    <button id="prevBtn" title="前へ"><svg class="svg-icon fill" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h3v14H6zM20 6.5L10.5 12 20 17.5z"/></svg></button>
+    <button id="playPauseBtn" title="再生/一時停止"><svg class="svg-icon fill" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13L19 12z"/></svg></button>
+    <button id="nextBtn" title="次へ"><svg class="svg-icon fill" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5h3v14h-3zM4 6.5L13.5 12 4 17.5z"/></svg></button>
   </div>
 
   <div class="queue-header">
     <h2>次の動画 <span id="queueCount"></span></h2>
     <div class="queue-header-right">
-      <button id="shuffleBtn" title="シャッフル">&#128256;</button>
-      <button id="repeatBtn" title="繰り返し">&#128257;</button>
+      <button id="shuffleBtn" title="シャッフル"><svg class="svg-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h3c4 0 5 10 10 10h3"/><path d="M17 14l3 3-3 3"/><path d="M4 17h3c1.8 0 3-1.2 4-3"/><path d="M14 7c1 1.7 2.2 3 4 3h2"/><path d="M17 4l3 3-3 3"/></svg></button>
+      <button id="repeatBtn" title="繰り返し"><svg class="svg-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M17 2l4 4-4 4"/><path d="M3 6h14a4 4 0 0 1 4 4"/><path d="M7 22l-4-4 4-4"/><path d="M21 18H7a4 4 0 0 1-4-4"/></svg></button>
     </div>
   </div>
 
@@ -205,7 +238,7 @@
 
 <div id="sheetOverlay"></div>
 <div id="sheet">
-  <button id="sheetCloseBtn">&#10005;</button>
+  <button id="sheetCloseBtn" title="閉じる"><svg class="svg-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
   <div id="sheetBody"></div>
 </div>
 
@@ -371,6 +404,16 @@
     }catch(e){}
   }
 
+  function iconSvg(name){
+    var icons = {
+      play: '<svg class="svg-icon fill" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13L19 12z"/></svg>',
+      pause: '<svg class="svg-icon fill" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>',
+      repeat: '<svg class="svg-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M17 2l4 4-4 4"/><path d="M3 6h14a4 4 0 0 1 4 4"/><path d="M7 22l-4-4 4-4"/><path d="M21 18H7a4 4 0 0 1-4-4"/></svg>',
+      repeatOne: '<svg class="svg-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M17 2l4 4-4 4"/><path d="M3 6h14a4 4 0 0 1 4 4"/><path d="M7 22l-4-4 4-4"/><path d="M21 18H7a4 4 0 0 1-4-4"/><path d="M12 9v6M10.5 10.5L12 9l1.5 1.5"/></svg>'
+    };
+    return icons[name] || "";
+  }
+
   function stopPlayback(){
     var iframe = document.getElementById("ytplayer");
     if(iframe) iframe.src = "about:blank";
@@ -379,7 +422,7 @@
   }
   function updatePlayPauseIcon(){
     var btn = document.getElementById("playPauseBtn");
-    btn.innerHTML = isPlayingFlag ? "&#10074;&#10074;" : "&#9654;";
+    btn.innerHTML = isPlayingFlag ? iconSvg("pause") : iconSvg("play");
   }
   window.addEventListener("message", function(e){
     if(typeof e.data !== "string") return;
@@ -558,7 +601,7 @@
     var listEl = document.getElementById("queueList");
     document.getElementById("queueCount").textContent = items.length ? ("(" + items.length + ")") : "";
     if(items.length === 0){
-      listEl.innerHTML = '<li class="empty-queue">まだ動画がありません。右上の &#65291; から追加してください。</li>';
+      listEl.innerHTML = '<li class="empty-queue">まだ動画がありません。右上の <svg class="svg-icon inline-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> から追加してください。</li>';
     } else {
       listEl.innerHTML = items.map(function(item, i){
         var active = (i === state.currentIndex) ? " active" : "";
@@ -570,8 +613,8 @@
             '<img class="thumb" src="' + thumb + '" alt="" onerror="this.style.visibility=\'hidden\'">' +
             '<div class="meta"><div class="title">' + title + '</div><div class="subtext">' + sub + '</div></div>' +
             '<div class="row-actions">' +
-              '<button data-action="edit" title="編集">&#8942;</button>' +
-              '<button class="drag-handle" title="並べ替え">&#9776;</button>' +
+              '<button data-action="edit" title="編集"><svg class="svg-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="1.5" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="12" cy="19" r="1.5" fill="currentColor" stroke="none"/></svg></button>' +
+              '<button class="drag-handle" title="並べ替え"><svg class="svg-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>' +
             '</div>' +
           '</li>'
         );
@@ -603,7 +646,7 @@
   function updateModeButtons(){
     var rb = document.getElementById("repeatBtn");
     rb.classList.toggle("active", state.repeatMode !== "none");
-    rb.innerHTML = state.repeatMode === "one" ? "&#128258;" : "&#128257;";
+    rb.innerHTML = state.repeatMode === "one" ? iconSvg("repeatOne") : iconSvg("repeat");
     document.getElementById("shuffleBtn").classList.toggle("active", state.shuffle);
   }
 
@@ -634,8 +677,8 @@
             '<span>' + escapeHtml(p.name) + '</span>' +
             '<span class="lib-count">' + p.items.length + ' 本</span>' +
           '</div>' +
-          '<button class="icon-btn" data-action="rename" title="名前を変更">&#9998;</button>' +
-          '<button class="icon-btn" data-action="delete" title="削除">&#128465;</button>' +
+          '<button class="icon-btn" data-action="rename" title="名前を変更"><svg class="svg-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l4.5-1 10.7-10.7a2.1 2.1 0 0 0-3-3L5.5 16z"/><path d="M14.5 6.5l3 3"/></svg></button>' +
+          '<button class="icon-btn" data-action="delete" title="削除"><svg class="svg-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5"/></svg></button>' +
         '</div>'
       );
     }).join("");
