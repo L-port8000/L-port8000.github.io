@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>YTPlay</title>
+<style>
+  :root{
+    --bg:#0f0f0f; --surface:#212121; --surface2:#3d3d3d; --divider:#2f2f2f;
+    --text:#ffffff; --text2:#aaaaaa; --red:#ff0000;
+  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{
+    margin:0; padding:0; background:var(--bg); color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic",Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  button, input, textarea{ font-family:inherit; }
+  .app{ max-width:520px; margin:0 auto; min-height:100vh; padding-bottom:48px; }
+
+  .topbar{
+    position:sticky; top:0; z-index:20; display:flex; align-items:center; justify-content:space-between;
+    padding:0 6px; height:52px; background:var(--bg); border-bottom:1px solid var(--divider);
+  }
+  .topbar-title-btn{
+    display:flex; align-items:center; gap:4px; background:none; border:none; color:var(--text);
+    font-size:16px; font-weight:700; max-width:62vw; overflow:hidden; text-overflow:ellipsis;
+    white-space:nowrap; padding:10px 8px; cursor:pointer;
+  }
+  .topbar-title-btn span:last-child{ color:var(--text2); font-size:11px; }
+  .topbar-actions{ display:flex; gap:2px; }
+  .topbar-actions button{
+    background:none; border:none; color:var(--text); width:40px; height:40px; font-size:18px; cursor:pointer;
+    border-radius:50%;
+  }
+  .topbar-actions button:active{ background:var(--surface); }
+
+  .player-sticky{ position:sticky; top:52px; z-index:15; background:#000; }
+  .player-ratio{ position:relative; width:100%; aspect-ratio:16/9; }
+  .player-ratio > div, .player-ratio iframe{ position:absolute; inset:0; width:100%; height:100%; border:0; }
+  .empty-player{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    color:#666; font-size:12.5px; padding:20px; text-align:center; pointer-events:none;
+  }
+
+  .info-bar{ padding:10px 16px 2px; display:flex; align-items:flex-start; gap:8px; }
+  .info-title{ flex:1; font-size:15px; font-weight:600; line-height:1.4; }
+  .info-sub{ font-size:12px; color:var(--text2); margin-top:2px; padding:0 16px; }
+  .icon-plain{ background:none; border:none; color:var(--text2); font-size:16px; width:30px; height:30px; cursor:pointer; }
+
+  .transport-row{ display:flex; align-items:center; justify-content:center; gap:26px; padding:12px 0 6px; }
+  .transport-row button{
+    background:none; border:none; color:var(--text); font-size:22px; width:44px; height:44px;
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+  }
+  .transport-row button#playPauseBtn{
+    background:#fff; color:#000; border-radius:50%; width:54px; height:54px; font-size:19px;
+  }
+  .transport-row button:disabled{ opacity:.3; }
+
+  .queue-header{ display:flex; align-items:center; justify-content:space-between; padding:16px 16px 6px; }
+  .queue-header h2{ font-size:14px; margin:0; font-weight:700; }
+  .queue-header h2 span{ color:var(--text2); font-weight:400; font-size:12px; }
+  .queue-header-right{ display:flex; align-items:center; gap:2px; }
+  .queue-header-right button{
+    background:none; border:none; color:var(--text2); font-size:17px; width:34px; height:34px; cursor:pointer;
+  }
+  .queue-header-right button.active{ color:var(--red); }
+
+  ul#queueList{ list-style:none; margin:0; padding:0 6px; }
+  .empty-queue{ text-align:center; color:var(--text2); font-size:13px; padding:36px 24px; line-height:1.7; }
+
+  .queue-row{ display:flex; align-items:center; gap:10px; padding:7px 8px; border-radius:8px; touch-action:pan-y; }
+  .queue-row.active{ background:#241616; }
+  .queue-row .thumb{ width:104px; height:58px; object-fit:cover; border-radius:6px; background:#000; flex:0 0 auto; }
+  .queue-row .meta{ flex:1; min-width:0; }
+  .queue-row .title{
+    font-size:13.5px; font-weight:500; color:var(--text); overflow:hidden; text-overflow:ellipsis;
+    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
+  }
+  .queue-row.active .title{ color:#ff6b6b; }
+  .queue-row .subtext{ font-size:11px; color:var(--text2); margin-top:3px; }
+  .queue-row .row-actions{ display:flex; align-items:center; gap:0; flex:0 0 auto; }
+  .queue-row .row-actions button{
+    background:none; border:none; color:var(--text2); width:30px; height:36px; font-size:16px; cursor:pointer;
+  }
+  .drag-handle{ cursor:grab; touch-action:none; font-size:18px !important; }
+  .queue-row.dragging{
+    position:relative; z-index:30; background:var(--surface); opacity:.92;
+    box-shadow:0 6px 16px rgba(0,0,0,.5); border-radius:8px;
+  }
+
+  details.limits-note{ margin:26px 16px 0; font-size:11.5px; color:#777; }
+  details.limits-note summary{ cursor:pointer; color:#999; }
+  details.limits-note ul{ padding-left:18px; line-height:1.7; margin:8px 0 0; }
+
+  #sheetOverlay{
+    position:fixed; inset:0; background:rgba(0,0,0,0); z-index:200; display:none;
+    transition:background .25s ease;
+  }
+  #sheetOverlay.open{ display:block; background:rgba(0,0,0,.6); }
+  #sheet{
+    position:fixed; left:0; right:0; bottom:0; margin:0 auto; max-width:520px;
+    background:var(--surface); border-radius:16px 16px 0 0; max-height:80vh; overflow-y:auto;
+    z-index:201; transform:translateY(100%); transition:transform .25s ease;
+    padding:10px 18px calc(24px + env(safe-area-inset-bottom));
+  }
+  #sheet.open{ transform:translateY(0); }
+  #sheet::before{
+    content:''; display:block; width:36px; height:4px; background:var(--surface2);
+    border-radius:2px; margin:2px auto 14px;
+  }
+  #sheetCloseBtn{
+    position:absolute; top:10px; right:12px; background:none; border:none; color:var(--text2);
+    font-size:16px; width:32px; height:32px; cursor:pointer;
+  }
+  .sheet-title{ font-size:16px; font-weight:700; margin:0 0 12px; padding-right:24px; }
+  .sheet-label{ display:block; font-size:12px; color:var(--text2); margin:10px 0 0; }
+  .sheet-input{
+    width:100%; background:var(--surface2); border:none; border-radius:8px; color:var(--text);
+    padding:11px 12px; font-size:14px; margin-top:5px; resize:vertical;
+  }
+  .primary-btn{
+    width:100%; background:var(--red); color:#fff; padding:12px; border:none; border-radius:22px;
+    font-weight:700; font-size:14px; margin-top:16px; cursor:pointer;
+  }
+  .danger-btn{
+    width:100%; background:transparent; color:#ff6b6b; padding:11px; border:1px solid #ff6b6b55;
+    border-radius:22px; font-size:13.5px; margin-top:10px; cursor:pointer;
+  }
+  .sheet-action{
+    display:block; width:100%; text-align:left; background:none; border:none; color:var(--text);
+    padding:14px 2px; font-size:14.5px; border-bottom:1px solid var(--divider); cursor:pointer;
+  }
+  .sheet-action:last-child{ border-bottom:none; }
+  .sheet-action.danger{ color:#ff6b6b; }
+
+  .lib-list{ margin-top:2px; }
+  .lib-row{ display:flex; align-items:center; gap:4px; padding:9px 0; border-bottom:1px solid var(--divider); }
+  .lib-row-main{ flex:1; display:flex; flex-direction:column; gap:2px; cursor:pointer; padding:4px 2px; min-width:0; }
+  .lib-row-main span:first-child{ font-size:14.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .lib-row.active .lib-row-main span:first-child{ color:var(--red); font-weight:700; }
+  .lib-count{ font-size:11.5px; color:var(--text2); }
+  .lib-row button.icon-btn{
+    background:none; border:none; color:var(--text2); width:34px; height:34px; font-size:15px; cursor:pointer;
+  }
+  .lib-new-row{ margin-top:14px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <button class="topbar-title-btn" id="openLibraryBtn">
+      <span id="topTitle">プレイリスト</span><span>&#8964;</span>
+    </button>
+    <div class="topbar-actions">
+      <button id="openAddBtn" title="動画を追加">&#65291;</button>
+      <button id="openMoreBtn" title="その他">&#8942;</button>
+    </div>
+  </div>
+
+  <div class="player-sticky">
+    <div class="player-ratio">
+      <iframe id="ytplayer" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen frameborder="0" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+      <div class="empty-player" id="emptyPlayerMsg">動画を追加して再生してください</div>
+    </div>
+  </div>
+
+  <div class="info-bar">
+    <div class="info-title" id="nowPlayingTitle">プレイリストは空です</div>
+    <button class="icon-plain" id="editCurrentBtn" title="編集">&#9998;</button>
+  </div>
+  <div class="info-sub" id="nowPlayingSub"></div>
+
+  <div class="transport-row">
+    <button id="prevBtn" title="前へ">&#9198;</button>
+    <button id="playPauseBtn" title="再生/一時停止">&#9654;</button>
+    <button id="nextBtn" title="次へ">&#9197;</button>
+  </div>
+
+  <div class="queue-header">
+    <h2>次の動画 <span id="queueCount"></span></h2>
+    <div class="queue-header-right">
+      <button id="shuffleBtn" title="シャッフル">&#128256;</button>
+      <button id="repeatBtn" title="繰り返し">&#128257;</button>
+    </div>
+  </div>
+
+  <ul id="queueList"></ul>
+
+  <details class="limits-note">
+    <summary>制限事項</summary>
+    <ul>
+      <li>タイトルは自動取得しません（YouTube Data APIキーが必要なため）。編集メニューから手動で入力できます。</li>
+      <li>動画によっては埋め込みが許可されておらず、再生できない場合があります。</li>
+      <li>ブラウザの自動再生制限により、ページ読み込み直後は自動再生されません。項目をタップすると再生されます。</li>
+      <li>「次へ自動的に進む」機能は埋め込みプレーヤーからの再生状態通知（postMessage）に依存しており、環境によっては動作しないことがあります。その場合は「次へ」ボタンを手動で押してください。</li>
+      <li>動画の埋め込みには YouTube の youtube-nocookie.com/embed/ を使用しています。Cookie利用を抑えるためのドメインですが、動画やブラウザの条件によってはCookie等が利用される場合があります。</li>
+      <li>データはこの端末のブラウザ内（localStorage）にのみ保存され、他端末とは同期されません。JSONエクスポート/インポートで手動移行できます。</li>
+    </ul>
+  </details>
+</div>
+
+<input type="file" id="importFileInput" accept="application/json,.json" style="display:none">
+
+<div id="sheetOverlay"></div>
+<div id="sheet">
+  <button id="sheetCloseBtn">&#10005;</button>
+  <div id="sheetBody"></div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var STORAGE_KEY_V2 = "yt_playlist_tool_state_v2";
+  var STORAGE_KEY_V1 = "yt_playlist_tool_state_v1";
+
+  var state = { playlists: [], activePlaylistId: null, currentIndex: -1, repeatMode: "none", shuffle: false };
+  var editingIndex = -1;
+  var dragState = null;
+  var isPlayingFlag = false;
+
+  function genId(){ return "p_" + Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
+  function escapeHtml(s){
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
+      return { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c];
+    });
+  }
+
+  // ---------- state ----------
+  function loadState(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY_V2);
+      if(raw){
+        var parsed = JSON.parse(raw);
+        if(Array.isArray(parsed.playlists) && parsed.playlists.length){
+          state.playlists = parsed.playlists;
+          state.activePlaylistId = parsed.activePlaylistId || parsed.playlists[0].id;
+          state.currentIndex = typeof parsed.currentIndex === "number" ? parsed.currentIndex : -1;
+          state.repeatMode = parsed.repeatMode || "none";
+          state.shuffle = !!parsed.shuffle;
+          return;
+        }
+      }
+      var rawV1 = localStorage.getItem(STORAGE_KEY_V1);
+      if(rawV1){
+        var v1 = JSON.parse(rawV1);
+        if(Array.isArray(v1.items) && v1.items.length){
+          var p = { id: genId(), name: "マイプレイリスト", items: v1.items };
+          state.playlists = [p];
+          state.activePlaylistId = p.id;
+          state.currentIndex = typeof v1.currentIndex === "number" ? v1.currentIndex : -1;
+          state.repeatMode = v1.repeatMode || "none";
+          state.shuffle = !!v1.shuffle;
+          return;
+        }
+      }
+    }catch(e){ console.warn("state load failed", e); }
+    var def = { id: genId(), name: "マイプレイリスト", items: [] };
+    state.playlists = [def];
+    state.activePlaylistId = def.id;
+    state.currentIndex = -1;
+    state.repeatMode = "none";
+    state.shuffle = false;
+  }
+  function saveState(){
+    try{ localStorage.setItem(STORAGE_KEY_V2, JSON.stringify(state)); }
+    catch(e){ console.warn("state save failed", e); }
+  }
+  function getActivePlaylist(){
+    var found = null;
+    state.playlists.forEach(function(p){ if(p.id === state.activePlaylistId) found = p; });
+    return found || state.playlists[0] || null;
+  }
+  function getActiveItems(){
+    var p = getActivePlaylist();
+    return p ? p.items : [];
+  }
+
+  // ---------- url / time parsing ----------
+  function parseTimeParam(t){
+    if(/^\d+$/.test(t)) return parseInt(t,10);
+    var m = t.match(/^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?$/);
+    if(!m) return 0;
+    var h=parseInt(m[1]||0,10), mi=parseInt(m[2]||0,10), s=parseInt(m[3]||0,10);
+    return h*3600+mi*60+s;
+  }
+  function parseMMSS(str){
+    str = (str||"").trim();
+    if(!str) return 0;
+    if(/^\d+$/.test(str)) return parseInt(str,10);
+    var parts = str.split(":").map(Number);
+    if(parts.some(isNaN)) return 0;
+    if(parts.length===2) return parts[0]*60+parts[1];
+    if(parts.length===3) return parts[0]*3600+parts[1]*60+parts[2];
+    return 0;
+  }
+  function formatTime(sec){
+    sec = Math.max(0, Math.floor(sec||0));
+    var m = Math.floor(sec/60), s = sec%60;
+    return m+":"+String(s).padStart(2,"0");
+  }
+  function extractVideoId(input){
+    input = (input||"").trim();
+    if(!input) return null;
+    if(/^[a-zA-Z0-9_-]{11}$/.test(input)) return { id: input, start: 0 };
+    var url;
+    try{ url = new URL(input); }catch(e){ return null; }
+    var host = url.hostname.replace(/^www\.|^m\.|^music\./,"");
+    var id = null;
+    if(host === "youtu.be"){
+      id = url.pathname.split("/").filter(Boolean)[0] || null;
+    } else if(host === "youtube.com" || host === "youtube-nocookie.com"){
+      if(url.pathname === "/watch"){ id = url.searchParams.get("v"); }
+      else if(url.pathname.indexOf("/embed/") === 0){ id = url.pathname.split("/")[2]; }
+      else if(url.pathname.indexOf("/shorts/") === 0){ id = url.pathname.split("/")[2]; }
+      else if(url.pathname.indexOf("/live/") === 0){ id = url.pathname.split("/")[2]; }
+    }
+    if(!id) return null;
+    var start = 0;
+    var t = url.searchParams.get("t") || url.searchParams.get("start");
+    if(t) start = parseTimeParam(t);
+    return { id: id, start: start };
+  }
+  function buildEmbedUrl(item){
+    var params = new URLSearchParams({
+      autoplay: 1,
+      iv_load_policy: 3,
+      rel: 0,
+      playsinline: 1,
+      start: item.start || 0
+    });
+    return "https://www.youtube-nocookie.com/embed/" +
+      encodeURIComponent(item.id) + "?" + params.toString();
+  }
+
+  function buildIframeSrc(item, autoplay){
+    var shouldAutoplay = (autoplay !== false);
+    var params = new URLSearchParams({
+      enablejsapi: 1,
+      autoplay: shouldAutoplay ? 1 : 0,
+      iv_load_policy: 3,
+      rel: 0,
+      playsinline: 1,
+      start: item.start || 0
+    });
+
+    try{
+      if(window.location.origin && window.location.origin.indexOf("http") === 0){
+        params.set("origin", window.location.origin);
+      }
+    }catch(e){}
+
+    return "https://www.youtube-nocookie.com/embed/" +
+      encodeURIComponent(item.id) + "?" + params.toString();
+  }
+
+  function sendPlayerCommand(func, args){
+    var iframe = document.getElementById("ytplayer");
+    if(!iframe || !iframe.contentWindow) return;
+    try{
+      iframe.contentWindow.postMessage(
+        JSON.stringify({
+          event: "command",
+          func: func,
+          args: args || []
+        }),
+        "*"
+      );
+    }catch(e){}
+  }
+
+  function stopPlayback(){
+    var iframe = document.getElementById("ytplayer");
+    if(iframe) iframe.src = "about:blank";
+    isPlayingFlag = false;
+    updatePlayPauseIcon();
+  }
+  function updatePlayPauseIcon(){
+    var btn = document.getElementById("playPauseBtn");
+    btn.innerHTML = isPlayingFlag ? "&#10074;&#10074;" : "&#9654;";
+  }
+  window.addEventListener("message", function(e){
+    if(typeof e.data !== "string") return;
+    var data;
+    try{ data = JSON.parse(e.data); }catch(err){ return; }
+    var ytState = null;
+    if(data.event === "infoDelivery" && data.info && typeof data.info.playerState === "number") ytState = data.info.playerState;
+    else if(data.event === "onStateChange" && typeof data.info === "number") ytState = data.info;
+    if(ytState === null) return;
+    handleStateChange(ytState);
+  });
+  function handleStateChange(ytState){
+    if(ytState === 1){ isPlayingFlag = true; updatePlayPauseIcon(); }
+    else if(ytState === 2){ isPlayingFlag = false; updatePlayPauseIcon(); }
+    else if(ytState === 0){
+      if(state.repeatMode === "one"){
+        sendPlayerCommand("seekTo", [0, true]);
+        sendPlayerCommand("playVideo");
+      } else {
+        var next = computeNextIndex();
+        if(next !== -1) playIndex(next, true);
+      }
+    }
+  }
+  function restorePlayerFromState(){
+    var items = getActiveItems();
+    var iframe = document.getElementById("ytplayer");
+    if(state.currentIndex >= 0 && items[state.currentIndex]){
+      iframe.src = buildIframeSrc(items[state.currentIndex], true);
+      document.getElementById("emptyPlayerMsg").style.display = "none";
+
+      // autoplay=1 is requested directly in the embed URL.
+      var onRestoreLoad = function(){
+        iframe.removeEventListener("load", onRestoreLoad);
+        setTimeout(function(){
+          sendPlayerCommand("playVideo");
+        }, 150);
+      };
+      iframe.addEventListener("load", onRestoreLoad);
+    } else {
+      iframe.src = "about:blank";
+      document.getElementById("emptyPlayerMsg").style.display = "flex";
+    }
+  }
+
+  // ---------- playback control ----------
+  function computeNextIndex(){
+    var n = getActiveItems().length;
+    if(n === 0) return -1;
+    if(state.shuffle){
+      if(n === 1) return 0;
+      var r;
+      do{ r = Math.floor(Math.random()*n); }while(r === state.currentIndex);
+      return r;
+    }
+    var next = state.currentIndex + 1;
+    if(next >= n) return (state.repeatMode === "all") ? 0 : -1;
+    return next;
+  }
+  function computePrevIndex(){
+    var n = getActiveItems().length;
+    if(n === 0) return -1;
+    if(state.shuffle) return computeNextIndex();
+    var prev = state.currentIndex - 1;
+    if(prev < 0) return (state.repeatMode === "all") ? n-1 : 0;
+    return prev;
+  }
+  function playIndex(idx, autoplay){
+    var items = getActiveItems();
+    if(idx < 0 || idx >= items.length) return;
+
+    state.currentIndex = idx;
+    var item = items[idx];
+    var iframe = document.getElementById("ytplayer");
+    document.getElementById("emptyPlayerMsg").style.display = "none";
+
+    var shouldAutoplay = autoplay !== false;
+    iframe.src = buildIframeSrc(item, shouldAutoplay);
+    isPlayingFlag = shouldAutoplay;
+    updatePlayPauseIcon();
+
+    // autoplay=1 is requested in the iframe URL.
+    // As a fallback, send playVideo after the iframe has loaded.
+    if(shouldAutoplay){
+      var onPlayerLoad = function(){
+        iframe.removeEventListener("load", onPlayerLoad);
+        setTimeout(function(){
+          sendPlayerCommand("playVideo");
+        }, 150);
+      };
+      iframe.addEventListener("load", onPlayerLoad);
+    }
+
+    renderQueue();
+    saveState();
+  }
+
+  // ---------- playlist CRUD ----------
+  function createPlaylist(name){
+    var p = { id: genId(), name: name, items: [] };
+    state.playlists.push(p);
+    state.activePlaylistId = p.id;
+    state.currentIndex = -1;
+    stopPlayback();
+    document.getElementById("emptyPlayerMsg").style.display = "flex";
+    saveState(); closeSheet(); renderAll();
+  }
+  function switchPlaylist(id){
+    if(id === state.activePlaylistId){ closeSheet(); return; }
+    state.activePlaylistId = id;
+    state.currentIndex = -1;
+    stopPlayback();
+    document.getElementById("emptyPlayerMsg").style.display = "flex";
+    saveState(); closeSheet(); renderAll();
+  }
+  function deletePlaylistFlow(id){
+    if(state.playlists.length <= 1){ window.alert("最後のプレイリストは削除できません"); return; }
+    var pl = null;
+    state.playlists.forEach(function(p){ if(p.id===id) pl = p; });
+    if(!pl) return;
+    if(!window.confirm('「' + pl.name + '」を削除しますか？')) return;
+    state.playlists = state.playlists.filter(function(p){ return p.id !== id; });
+    if(state.activePlaylistId === id){
+      state.activePlaylistId = state.playlists[0].id;
+      state.currentIndex = -1;
+      stopPlayback();
+      document.getElementById("emptyPlayerMsg").style.display = "flex";
+    }
+    saveState(); closeSheet(); renderAll();
+  }
+  function clearActivePlaylistFlow(){
+    var items = getActiveItems();
+    if(items.length === 0){ closeSheet(); return; }
+    if(!window.confirm("このプレイリストの項目をすべて削除しますか？")) return;
+    items.length = 0;
+    state.currentIndex = -1;
+    stopPlayback();
+    document.getElementById("emptyPlayerMsg").style.display = "flex";
+    saveState(); closeSheet(); renderAll();
+  }
+
+  // ---------- item mutation ----------
+  function removeItem(idx){
+    var items = getActiveItems();
+    items.splice(idx, 1);
+    if(state.currentIndex === idx){
+      stopPlayback();
+      state.currentIndex = -1;
+      document.getElementById("emptyPlayerMsg").style.display = "flex";
+    } else if(state.currentIndex > idx){
+      state.currentIndex -= 1;
+    }
+    saveState(); renderQueue();
+  }
+  function copyEmbedUrl(idx, btnEl){
+    var url = buildEmbedUrl(getActiveItems()[idx]);
+    var done = function(){
+      if(!btnEl) return;
+      var orig = btnEl.textContent;
+      btnEl.textContent = "コピーしました";
+      setTimeout(function(){ btnEl.textContent = orig; }, 1200);
+    };
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(url).then(done).catch(function(){ window.prompt("コピーしてください:", url); });
+    } else { window.prompt("コピーしてください:", url); }
+  }
+
+  // ---------- rendering ----------
+  function renderAll(){ renderTopBar(); renderQueue(); }
+  function renderTopBar(){
+    var pl = getActivePlaylist();
+    document.getElementById("topTitle").textContent = pl ? pl.name : "プレイリスト";
+  }
+  function renderQueue(){
+    var items = getActiveItems();
+    var listEl = document.getElementById("queueList");
+    document.getElementById("queueCount").textContent = items.length ? ("(" + items.length + ")") : "";
+    if(items.length === 0){
+      listEl.innerHTML = '<li class="empty-queue">まだ動画がありません。右上の &#65291; から追加してください。</li>';
+    } else {
+      listEl.innerHTML = items.map(function(item, i){
+        var active = (i === state.currentIndex) ? " active" : "";
+        var thumb = "https://i.ytimg.com/vi/" + item.id + "/mqdefault.jpg";
+        var title = escapeHtml(item.label || item.id);
+        var sub = (item.start ? formatTime(item.start) + " から ・ " : "") + item.id;
+        return (
+          '<li class="queue-row' + active + '" data-index="' + i + '">' +
+            '<img class="thumb" src="' + thumb + '" alt="" onerror="this.style.visibility=\'hidden\'">' +
+            '<div class="meta"><div class="title">' + title + '</div><div class="subtext">' + sub + '</div></div>' +
+            '<div class="row-actions">' +
+              '<button data-action="edit" title="編集">&#8942;</button>' +
+              '<button class="drag-handle" title="並べ替え">&#9776;</button>' +
+            '</div>' +
+          '</li>'
+        );
+      }).join("");
+    }
+    updateNowPlaying();
+    updateTransportDisabled();
+    updateModeButtons();
+  }
+  function updateNowPlaying(){
+    var items = getActiveItems();
+    var titleEl = document.getElementById("nowPlayingTitle");
+    var subEl = document.getElementById("nowPlayingSub");
+    if(state.currentIndex < 0 || !items[state.currentIndex]){
+      titleEl.textContent = items.length ? "再生する動画をタップしてください" : "プレイリストは空です";
+      subEl.textContent = "";
+      return;
+    }
+    var item = items[state.currentIndex];
+    titleEl.textContent = item.label || item.id;
+    subEl.textContent = (state.currentIndex+1) + " / " + items.length;
+  }
+  function updateTransportDisabled(){
+    var empty = getActiveItems().length === 0;
+    document.getElementById("prevBtn").disabled = empty;
+    document.getElementById("nextBtn").disabled = empty;
+    document.getElementById("playPauseBtn").disabled = empty;
+  }
+  function updateModeButtons(){
+    var rb = document.getElementById("repeatBtn");
+    rb.classList.toggle("active", state.repeatMode !== "none");
+    rb.innerHTML = state.repeatMode === "one" ? "&#128258;" : "&#128257;";
+    document.getElementById("shuffleBtn").classList.toggle("active", state.shuffle);
+  }
+
+  // ---------- sheets ----------
+  function openSheetWithContext(ctx, html){
+    document.getElementById("sheet").dataset.context = ctx;
+    document.getElementById("sheetBody").innerHTML = html;
+    document.getElementById("sheetOverlay").classList.add("open");
+    document.getElementById("sheet").classList.add("open");
+    if(ctx === "add"){
+      setTimeout(function(){
+        var el = document.getElementById("addUrlInput");
+        if(el) el.focus();
+      }, 260);
+    }
+  }
+  function closeSheet(){
+    document.getElementById("sheet").classList.remove("open");
+    document.getElementById("sheetOverlay").classList.remove("open");
+  }
+
+  function buildLibrarySheet(){
+    var rows = state.playlists.map(function(p){
+      var active = (p.id === state.activePlaylistId) ? " active" : "";
+      return (
+        '<div class="lib-row' + active + '" data-id="' + p.id + '">' +
+          '<div class="lib-row-main" data-action="switch">' +
+            '<span>' + escapeHtml(p.name) + '</span>' +
+            '<span class="lib-count">' + p.items.length + ' 本</span>' +
+          '</div>' +
+          '<button class="icon-btn" data-action="rename" title="名前を変更">&#9998;</button>' +
+          '<button class="icon-btn" data-action="delete" title="削除">&#128465;</button>' +
+        '</div>'
+      );
+    }).join("");
+    return (
+      '<div class="sheet-title">プレイリスト</div>' +
+      '<div class="lib-list">' + rows + '</div>' +
+      '<div class="lib-new-row">' +
+        '<input id="newPlaylistName" class="sheet-input" type="text" placeholder="新しいプレイリスト名">' +
+        '<button class="primary-btn" data-action="create">作成</button>' +
+      '</div>'
+    );
+  }
+  function buildAddSheet(){
+    return (
+      '<div class="sheet-title">動画を追加</div>' +
+      '<textarea id="addUrlInput" class="sheet-input" rows="4" placeholder="YouTubeのURLを貼り付け（複数可・改行区切り）"></textarea>' +
+      '<label class="sheet-label">開始時間（任意・全件に適用）</label>' +
+      '<input id="addStartInput" class="sheet-input" type="text" placeholder="0:00">' +
+      '<button class="primary-btn" data-action="submit-add">追加</button>'
+    );
+  }
+  function buildEditSheet(item){
+    return (
+      '<div class="sheet-title">動画を編集</div>' +
+      '<label class="sheet-label">タイトル</label>' +
+      '<input id="editLabelInput" class="sheet-input" type="text" value="' + escapeHtml(item.label||"") + '" placeholder="' + escapeHtml(item.id) + '">' +
+      '<label class="sheet-label">開始時間</label>' +
+      '<input id="editStartInput" class="sheet-input" type="text" value="' + escapeHtml(formatTime(item.start||0)) + '">' +
+      '<button class="primary-btn" data-action="submit-edit">保存</button>' +
+      '<button class="sheet-action" data-action="copy-embed" style="margin-top:14px;border-bottom:none;">埋め込みURLをコピーする</button>' +
+      '<button class="danger-btn" data-action="delete-item">この動画をプレイリストから削除</button>'
+    );
+  }
+  function buildMoreSheet(){
+    var pl = getActivePlaylist();
+    return (
+      '<div class="sheet-title">' + escapeHtml(pl ? pl.name : "") + '</div>' +
+      '<button class="sheet-action" data-action="export-current">このプレイリストをエクスポート</button>' +
+      '<button class="sheet-action" data-action="export-all">全プレイリストをエクスポート</button>' +
+      '<button class="sheet-action" data-action="import">JSONをインポート</button>' +
+      '<button class="sheet-action" data-action="clear-current">このプレイリストを空にする</button>' +
+      '<button class="sheet-action danger" data-action="delete-playlist">このプレイリストを削除</button>'
+    );
+  }
+
+  function submitAddSheet(){
+    var raw = document.getElementById("addUrlInput").value;
+    if(!raw.trim()) { closeSheet(); return; }
+    var lines = raw.split(/[\n,]+/).map(function(s){return s.trim();}).filter(Boolean);
+    var manualStart = document.getElementById("addStartInput").value.trim();
+    var globalStart = manualStart ? parseMMSS(manualStart) : null;
+    var items = getActiveItems();
+    var added = 0, failed = 0;
+    lines.forEach(function(line){
+      var parsed = extractVideoId(line);
+      if(parsed){
+        items.push({ id: parsed.id, start: (globalStart !== null ? globalStart : parsed.start), label: "" });
+        added++;
+      } else failed++;
+    });
+    closeSheet();
+    if(added > 0){
+      saveState(); renderQueue();
+      if(state.currentIndex === -1) playIndex(items.length - added, true);
+    }
+    if(failed > 0) setTimeout(function(){ window.alert(added + "件追加しました（" + failed + "件は認識できませんでした）"); }, 300);
+  }
+  function submitEditSheet(){
+    var items = getActiveItems();
+    var item = items[editingIndex];
+    if(!item){ closeSheet(); return; }
+    item.label = document.getElementById("editLabelInput").value;
+    item.start = parseMMSS(document.getElementById("editStartInput").value);
+    saveState(); renderQueue(); closeSheet();
+  }
+
+  function cleanItem(it){
+    var id = it.id || (it.url ? (extractVideoId(it.url)||{}).id : null);
+    if(!id) return null;
+    return { id: String(id), start: Number(it.start)||0, label: String(it.label||"") };
+  }
+  function downloadJSON(obj, filename){
+    var blob = new Blob([JSON.stringify(obj,null,2)], { type: "application/json" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+  function sanitizeFilename(name){ return (name||"playlist").replace(/[\\\/:*?"<>|]/g, "_").slice(0,60); }
+  function exportActivePlaylist(){
+    var pl = getActivePlaylist();
+    if(!pl) return;
+    downloadJSON({ name: pl.name, items: pl.items, exportedAt: new Date().toISOString() }, sanitizeFilename(pl.name) + ".json");
+  }
+  function exportAllPlaylists(){
+    downloadJSON({
+      playlists: state.playlists.map(function(p){ return { name: p.name, items: p.items }; }),
+      exportedAt: new Date().toISOString()
+    }, "playlists-all.json");
+  }
+  function importJSONFile(file){
+    var reader = new FileReader();
+    reader.onload = function(){
+      try{
+        var parsed = JSON.parse(reader.result);
+        if(Array.isArray(parsed.playlists)){
+          var incoming = parsed.playlists.map(function(pl){
+            return {
+              id: genId(),
+              name: String(pl.name || "無題のプレイリスト"),
+              items: (Array.isArray(pl.items) ? pl.items : []).map(cleanItem).filter(Boolean)
+            };
+          });
+          if(incoming.length === 0) throw new Error("プレイリストが見つかりません");
+          var replaceAll = window.confirm(incoming.length + "件のプレイリストが見つかりました。\nOK: 全て置き換え / キャンセル: 追加");
+          if(replaceAll) state.playlists = incoming;
+          else state.playlists = state.playlists.concat(incoming);
+          state.activePlaylistId = state.playlists[0].id;
+          state.currentIndex = -1;
+        } else {
+          var items = Array.isArray(parsed) ? parsed : parsed.items;
+          if(!Array.isArray(items)) throw new Error("items配列が見つかりません");
+          var cleaned = items.map(cleanItem).filter(Boolean);
+          if(cleaned.length === 0) throw new Error("有効な項目がありません");
+          var name = window.prompt("プレイリスト名を入力してください", parsed.name || "インポートしたプレイリスト") || "インポートしたプレイリスト";
+          var newPl = { id: genId(), name: name, items: cleaned };
+          state.playlists.push(newPl);
+          state.activePlaylistId = newPl.id;
+          state.currentIndex = -1;
+        }
+        stopPlayback();
+        document.getElementById("emptyPlayerMsg").style.display = "flex";
+        saveState(); renderAll();
+      }catch(err){
+        window.alert("JSONの読み込みに失敗しました: " + err.message);
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  // ---------- drag reorder ----------
+  function attachDragHandlers(){
+    var listEl = document.getElementById("queueList");
+    listEl.addEventListener("pointerdown", function(e){
+      var handle = e.target.closest(".drag-handle");
+      if(!handle) return;
+      var row = handle.closest(".queue-row");
+      if(!row) return;
+      var idx = +row.dataset.index;
+      var rect = row.getBoundingClientRect();
+      dragState = { index: idx, currentIndex: idx, startY: e.clientY, rowTop: rect.top, rowHeight: rect.height, row: row, pointerId: e.pointerId };
+      row.classList.add("dragging");
+      try{ row.setPointerCapture(e.pointerId); }catch(err){}
+      e.preventDefault();
+    });
+    listEl.addEventListener("pointermove", function(e){
+      if(!dragState || e.pointerId !== dragState.pointerId) return;
+      var dy = e.clientY - dragState.startY;
+      dragState.row.style.transform = "translateY(" + dy + "px)";
+      var rows = Array.prototype.slice.call(listEl.querySelectorAll(".queue-row"));
+      var draggedMid = dragState.rowTop + dragState.rowHeight/2 + dy;
+      var newIndex = dragState.currentIndex;
+      rows.forEach(function(r){
+        if(r === dragState.row) return;
+        var ri = +r.dataset.index;
+        var rr = r.getBoundingClientRect();
+        var rMid = rr.top + rr.height/2;
+        if(draggedMid > rMid && ri > newIndex) newIndex = ri;
+        if(draggedMid < rMid && ri < newIndex) newIndex = ri;
+      });
+      dragState.currentIndex = newIndex;
+    });
+    function finishDrag(cancel){
+      if(!dragState) return;
+      var row = dragState.row;
+      row.style.transform = "";
+      row.classList.remove("dragging");
+      var from = dragState.index, to = dragState.currentIndex;
+      dragState = null;
+      if(!cancel && from !== to){
+        var items = getActiveItems();
+        var moved = items.splice(from,1)[0];
+        items.splice(to,0,moved);
+        if(state.currentIndex === from) state.currentIndex = to;
+        else if(from < state.currentIndex && to >= state.currentIndex) state.currentIndex -= 1;
+        else if(from > state.currentIndex && to <= state.currentIndex) state.currentIndex += 1;
+        saveState();
+      }
+      renderQueue();
+    }
+    listEl.addEventListener("pointerup", function(e){
+      if(!dragState || e.pointerId !== dragState.pointerId) return;
+      finishDrag(false);
+    });
+    listEl.addEventListener("pointercancel", function(){ finishDrag(true); });
+  }
+
+  // ---------- wire up ----------
+  document.addEventListener("DOMContentLoaded", function(){
+    loadState();
+    renderAll();
+    restorePlayerFromState();
+    attachDragHandlers();
+
+    document.getElementById("openLibraryBtn").addEventListener("click", function(){
+      openSheetWithContext("library", buildLibrarySheet());
+    });
+    document.getElementById("openAddBtn").addEventListener("click", function(){
+      openSheetWithContext("add", buildAddSheet());
+    });
+    document.getElementById("openMoreBtn").addEventListener("click", function(){
+      openSheetWithContext("more", buildMoreSheet());
+    });
+    document.getElementById("editCurrentBtn").addEventListener("click", function(){
+      var items = getActiveItems();
+      if(state.currentIndex < 0 || !items[state.currentIndex]) return;
+      editingIndex = state.currentIndex;
+      openSheetWithContext("edit", buildEditSheet(items[editingIndex]));
+    });
+    document.getElementById("sheetCloseBtn").addEventListener("click", closeSheet);
+    document.getElementById("sheetOverlay").addEventListener("click", closeSheet);
+
+    document.getElementById("prevBtn").addEventListener("click", function(){
+      var p = computePrevIndex(); if(p !== -1) playIndex(p, true);
+    });
+    document.getElementById("nextBtn").addEventListener("click", function(){
+      var n = computeNextIndex(); if(n !== -1) playIndex(n, true);
+    });
+    document.getElementById("playPauseBtn").addEventListener("click", function(){
+      var items = getActiveItems();
+      if(state.currentIndex === -1){
+        if(items.length > 0) playIndex(0, true);
+        return;
+      }
+      if(isPlayingFlag){ sendPlayerCommand("pauseVideo"); isPlayingFlag = false; }
+      else { sendPlayerCommand("playVideo"); isPlayingFlag = true; }
+      updatePlayPauseIcon();
+    });
+    document.getElementById("repeatBtn").addEventListener("click", function(){
+      var order = ["none","all","one"];
+      var idx = order.indexOf(state.repeatMode);
+      state.repeatMode = order[(idx+1) % order.length];
+      saveState(); updateModeButtons();
+    });
+    document.getElementById("shuffleBtn").addEventListener("click", function(){
+      state.shuffle = !state.shuffle;
+      saveState(); updateModeButtons();
+    });
+
+    document.getElementById("queueList").addEventListener("click", function(e){
+      if(e.target.closest(".drag-handle")) return;
+      var row = e.target.closest(".queue-row");
+      if(!row) return;
+      var idx = +row.dataset.index;
+      var editBtn = e.target.closest('[data-action="edit"]');
+      if(editBtn){
+        editingIndex = idx;
+        openSheetWithContext("edit", buildEditSheet(getActiveItems()[idx]));
+        return;
+      }
+      playIndex(idx, true);
+    });
+
+    document.getElementById("sheetBody").addEventListener("click", function(e){
+      var btn = e.target.closest("[data-action]");
+      if(!btn) return;
+      var ctx = document.getElementById("sheet").dataset.context;
+      var action = btn.dataset.action;
+
+      if(ctx === "library"){
+        var row = btn.closest(".lib-row");
+        if(action === "switch"){
+          switchPlaylist(row.dataset.id);
+        } else if(action === "rename"){
+          var pl = null;
+          state.playlists.forEach(function(p){ if(p.id===row.dataset.id) pl = p; });
+          if(!pl) return;
+          var newName = window.prompt("新しい名前", pl.name);
+          if(newName && newName.trim()){
+            pl.name = newName.trim();
+            saveState(); renderTopBar();
+            openSheetWithContext("library", buildLibrarySheet());
+          }
+        } else if(action === "delete"){
+          deletePlaylistFlow(row.dataset.id);
+        } else if(action === "create"){
+          var input = document.getElementById("newPlaylistName");
+          var name = input.value.trim();
+          if(!name){ input.focus(); return; }
+          createPlaylist(name);
+        }
+      } else if(ctx === "add"){
+        if(action === "submit-add") submitAddSheet();
+      } else if(ctx === "edit"){
+        if(action === "submit-edit") submitEditSheet();
+        else if(action === "copy-embed") copyEmbedUrl(editingIndex, btn);
+        else if(action === "delete-item"){
+          if(window.confirm("この動画をプレイリストから削除しますか？")){ removeItem(editingIndex); closeSheet(); }
+        }
+      } else if(ctx === "more"){
+        if(action === "export-current"){ exportActivePlaylist(); closeSheet(); }
+        else if(action === "export-all"){ exportAllPlaylists(); closeSheet(); }
+        else if(action === "import"){ closeSheet(); setTimeout(function(){ document.getElementById("importFileInput").click(); }, 260); }
+        else if(action === "clear-current"){ clearActivePlaylistFlow(); }
+        else if(action === "delete-playlist"){ deletePlaylistFlow(state.activePlaylistId); }
+      }
+    });
+
+    document.getElementById("importFileInput").addEventListener("change", function(e){
+      var file = e.target.files[0];
+      if(file) importJSONFile(file);
+      e.target.value = "";
+    });
+  });
+})();
+</script>
+</body>
+</html>
