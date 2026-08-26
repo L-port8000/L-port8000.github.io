@@ -1,0 +1,1868 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>お絵かきツール</title>
+<style>
+:root{
+  --base:#1e1e2e; --mantle:#181825; --crust:#11111b;
+  --surface0:#313244; --surface1:#45475a; --surface2:#585b70;
+  --overlay0:#6c7086; --overlay1:#7f849c; --overlay2:#9399b2;
+  --text:#cdd6f4; --subtext1:#bac2de; --subtext0:#a6adc8;
+  --blue:#89b4fa; --lavender:#b4befe; --sapphire:#74c7ec; --sky:#89dceb;
+  --teal:#94e2d5; --green:#a6e3a1; --yellow:#f9e2af; --peach:#fab387;
+  --maroon:#eba0ac; --red:#f38ba8; --mauve:#cba6f7; --pink:#f5c2e7;
+  --rosewater:#f5e0dc; --flamingo:#f2cdcd;
+  --topbar-h:52px; --toolrail-w:56px; --panel-w:300px;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+[hidden]{display:none !important;}
+html,body{height:100%; margin:0;}
+body{
+  background:var(--crust); color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;
+  overflow:hidden; user-select:none; -webkit-user-select:none;
+}
+button{font-family:inherit; color:inherit; background:none; border:none; cursor:pointer;}
+input,select{font-family:inherit; color:inherit;}
+svg.icon{width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; display:block;}
+*:focus-visible{outline:2px solid var(--mauve); outline-offset:2px; border-radius:4px;}
+@media (prefers-reduced-motion: reduce){ *{transition:none !important; animation:none !important;} }
+
+#app{height:100dvh; height:100vh; display:flex; flex-direction:column;}
+
+/* ---------- Top bar ---------- */
+#topbar{
+  height:var(--topbar-h); flex:0 0 auto; display:flex; align-items:center; justify-content:space-between;
+  padding:0 10px; gap:8px; background:rgba(24,24,37,.86); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px);
+  border-bottom:1px solid rgba(255,255,255,.06); z-index:30; position:relative;
+}
+.topbar-group{display:flex; align-items:center; gap:2px; position:relative;}
+.brand{display:flex; align-items:center; gap:6px; padding-right:8px; margin-right:4px; border-right:1px solid rgba(255,255,255,.08); color:var(--subtext0); font-size:13px; font-weight:600; letter-spacing:.02em;}
+.brand svg.icon{width:16px;height:16px; color:var(--mauve);}
+.icon-btn{
+  width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center;
+  color:var(--subtext1); transition:background .12s, color .12s, transform .08s;
+}
+.icon-btn:hover{background:var(--surface0); color:var(--text);}
+.icon-btn:active{transform:scale(.92);}
+.icon-btn:disabled{opacity:.35; pointer-events:none;}
+.icon-btn.small{width:26px; height:26px; border-radius:7px;}
+.btn-save{
+  display:flex; align-items:center; gap:6px; padding:0 14px; height:36px; border-radius:10px;
+  background:var(--mauve); color:var(--crust); font-weight:600; font-size:13px;
+}
+.btn-save:hover{background:var(--lavender);}
+.btn-save:active{transform:scale(.96);}
+#canvasSizeLabel{font-size:12px; color:var(--overlay1); font-variant-numeric:tabular-nums;}
+.zoom-control{display:flex; align-items:center; gap:4px; background:var(--surface0); border-radius:10px; padding:2px;}
+.zoom-control input[type=range]{width:70px;}
+#zoomLabel{font-size:12px; width:42px; text-align:center; color:var(--subtext0); font-variant-numeric:tabular-nums;}
+.divider-v{width:1px; align-self:stretch; margin:8px 4px; background:rgba(255,255,255,.08);}
+.export-format-select{background:var(--surface0); border:none; border-radius:8px; padding:0 6px; height:30px; font-size:11.5px; color:var(--subtext1);}
+
+/* ---------- Main layout ---------- */
+#main{flex:1 1 auto; display:flex; min-height:0; position:relative;}
+
+/* ---------- Tool rail ---------- */
+#toolbar{
+  width:var(--toolrail-w); flex:0 0 auto; display:flex; flex-direction:column; align-items:center; gap:4px;
+  padding:10px 0; background:rgba(24,24,37,.86); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px);
+  border-right:1px solid rgba(255,255,255,.06); overflow-y:auto; z-index:20;
+}
+.tool-btn{
+  width:42px; height:42px; border-radius:12px; display:flex; align-items:center; justify-content:center;
+  color:var(--subtext0); position:relative; transition:background .15s, color .15s;
+}
+.tool-btn svg.icon{width:21px; height:21px;}
+.tool-btn:hover{background:var(--surface0); color:var(--text);}
+.tool-btn.active{background:var(--surface1); color:var(--mauve); box-shadow:0 0 0 1px rgba(203,166,247,.35), 0 0 14px rgba(203,166,247,.25);}
+.tool-divider{width:26px; height:1px; background:rgba(255,255,255,.08); margin:6px 0;}
+
+/* ---------- Canvas viewport ---------- */
+#canvasViewport{
+  flex:1 1 auto; overflow:auto; position:relative; background:var(--mantle);
+  display:flex; align-items:flex-start; justify-content:flex-start;
+  background-image:radial-gradient(rgba(255,255,255,.035) 1px, transparent 1px);
+  background-size:22px 22px;
+}
+#canvasStage{position:relative; margin:auto; flex:0 0 auto;}
+#mainCanvas{
+  display:block; touch-action:none; cursor:crosshair;
+  box-shadow:0 6px 30px rgba(0,0,0,.55);
+  background-image:
+    linear-gradient(45deg,#30303f 25%,transparent 25%),
+    linear-gradient(-45deg,#30303f 25%,transparent 25%),
+    linear-gradient(45deg,transparent 75%,#30303f 75%),
+    linear-gradient(-45deg,transparent 75%,#30303f 75%);
+  background-size:20px 20px;
+  background-position:0 0,0 10px,10px -10px,-10px 0px;
+  background-color:#3a3a4a;
+}
+#symmetryGuide{position:absolute; top:0; left:0; pointer-events:none;}
+#symmetryGuide .guide-line{stroke:var(--mauve); stroke-width:1.5; stroke-dasharray:6 6; opacity:.65;}
+
+/* ---------- Side panel ---------- */
+#sidePanel{
+  width:var(--panel-w); flex:0 0 auto; display:flex; flex-direction:column;
+  background:rgba(24,24,37,.9); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px);
+  border-left:1px solid rgba(255,255,255,.06); z-index:20; transition:transform .22s ease;
+}
+.panel-tabs{display:flex; padding:8px 8px 0; gap:4px;}
+.panel-tab{flex:1; padding:9px 0; font-size:12.5px; font-weight:600; color:var(--overlay1); border-radius:9px 9px 0 0; transition:background .15s,color .15s;}
+.panel-tab.active{color:var(--text); background:var(--surface0);}
+.panel-content{flex:1; overflow-y:auto; padding:14px; display:flex; flex-direction:column; gap:14px; background:var(--surface0);}
+.panel-section-label{font-size:11px; font-weight:700; letter-spacing:.06em; color:var(--overlay1); text-transform:uppercase;}
+.slider-row{display:flex; align-items:center; gap:8px;}
+.slider-row .row-label{width:76px; flex:0 0 auto; font-size:11.5px; color:var(--subtext0);}
+.slider-row input[type=range]{flex:1; accent-color:var(--mauve);}
+.slider-row .val{width:44px; text-align:right; font-size:12px; color:var(--subtext0); font-variant-numeric:tabular-nums;}
+
+/* color panel */
+.current-color-row{display:flex; align-items:center; gap:12px;}
+#currentColorSwatch{width:44px; height:44px; border-radius:12px; border:2px solid rgba(255,255,255,.15); flex:0 0 auto;}
+#colorPicker{width:100%; height:38px; border:none; border-radius:10px; background:var(--surface1); padding:2px; cursor:pointer;}
+.swatch-grid{display:grid; grid-template-columns:repeat(6,1fr); gap:6px;}
+.swatch{width:100%; aspect-ratio:1; border-radius:8px; border:1px solid rgba(255,255,255,.12); cursor:pointer; transition:transform .1s;}
+.swatch:hover{transform:scale(1.1);}
+#recentColors{display:flex; gap:6px; flex-wrap:wrap;}
+#recentColors .swatch{width:22px; height:22px; aspect-ratio:auto;}
+
+/* brush panel */
+.brush-list-header{display:flex; align-items:center; justify-content:space-between;}
+.brush-chip-list{display:flex; flex-wrap:wrap; gap:6px;}
+.brush-chip{display:flex; align-items:center; gap:6px; padding:5px 10px 5px 5px; border-radius:20px; background:var(--surface1); font-size:11.5px; color:var(--subtext1); border:1.5px solid transparent; max-width:100%;}
+.brush-chip.active{border-color:var(--mauve); color:var(--text); background:var(--surface2);}
+.brush-chip-swatch{width:22px; height:22px; border-radius:50%; background:var(--crust); object-fit:contain; flex:0 0 auto;}
+.brush-chip span{white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:110px;}
+.brush-editor{display:flex; flex-direction:column; gap:9px; padding-top:10px; border-top:1px solid rgba(255,255,255,.08);}
+.brush-preview{
+  height:64px; border-radius:12px; display:flex; align-items:center; justify-content:center;
+  background-image:
+    linear-gradient(45deg,#30303f 25%,transparent 25%),linear-gradient(-45deg,#30303f 25%,transparent 25%),
+    linear-gradient(45deg,transparent 75%,#30303f 75%),linear-gradient(-45deg,transparent 75%,#30303f 75%);
+  background-size:14px 14px; background-position:0 0,0 7px,7px -7px,-7px 0px; background-color:#3a3a4a;
+}
+#brushPreviewImg{max-width:80%; max-height:80%;}
+.brush-name-input{width:100%; background:var(--surface1); border:none; border-radius:8px; padding:8px 10px; font-size:12.5px; color:var(--text);}
+.brush-select-row{display:flex; gap:6px;}
+.brush-select-row select{flex:1; background:var(--surface1); border:none; border-radius:8px; padding:7px; font-size:11.5px; color:var(--text); min-width:0;}
+.brush-select-row select:disabled{opacity:.4;}
+.brush-checkbox-row{display:flex; align-items:center; gap:7px; font-size:12px; color:var(--subtext1);}
+.brush-action-row{display:flex; gap:6px; justify-content:flex-end;}
+.brush-io-section{display:flex; flex-direction:column; gap:8px; padding-top:10px; border-top:1px solid rgba(255,255,255,.08);}
+.io-buttons{display:flex; flex-direction:column; gap:6px;}
+.io-btn{padding:9px 6px; background:var(--surface1); border-radius:10px; font-size:12px; text-align:center;}
+.io-btn:hover{background:var(--surface2);}
+
+/* layer panel */
+.layer-toolbar{display:flex; gap:6px;}
+#layerList{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:6px; overflow-y:auto;}
+.layer-item{
+  display:flex; align-items:center; gap:8px; padding:7px; border-radius:11px; background:var(--surface1);
+  border:1.5px solid transparent; cursor:pointer;
+}
+.layer-item.active{border-color:var(--mauve); background:var(--surface2);}
+.layer-item.dragging{opacity:.4;}
+.layer-thumb{width:44px; height:33px; border-radius:6px; object-fit:cover; border:1px solid rgba(255,255,255,.15); flex:0 0 auto;}
+.layer-info{flex:1; min-width:0; display:flex; flex-direction:column; gap:4px;}
+.layer-name{font-size:12.5px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.layer-row2{display:flex; align-items:center; gap:6px;}
+.layer-blend{font-size:10.5px; background:var(--surface0); border:none; border-radius:5px; padding:2px 3px; max-width:78px; color:var(--subtext0);}
+.layer-opacity-row{flex:1;}
+.layer-opacity-row input[type=range]{width:100%; accent-color:var(--mauve); height:14px;}
+
+/* popovers */
+.popover{
+  position:absolute; background:var(--surface0); border:1px solid rgba(255,255,255,.1); border-radius:14px;
+  padding:10px; z-index:60; box-shadow:0 10px 30px rgba(0,0,0,.5); display:flex; flex-direction:column; gap:8px;
+}
+#symmetryPopover{left:calc(var(--toolrail-w) + 8px); bottom:12px; width:220px;}
+.seg-control{display:flex; background:var(--surface1); border-radius:9px; padding:3px; gap:2px;}
+.seg-btn{flex:1; padding:7px 0; font-size:11.5px; border-radius:7px; color:var(--subtext0);}
+.seg-btn.active{background:var(--mauve); color:var(--crust); font-weight:600;}
+#projectMenuPopover{top:calc(var(--topbar-h) + 6px); right:10px; width:236px;}
+.popover-item{display:flex; align-items:center; gap:9px; padding:9px 10px; border-radius:9px; font-size:12.5px; color:var(--subtext1); text-align:left;}
+.popover-item:hover{background:var(--surface1); color:var(--text);}
+.popover-item svg.icon{width:17px;height:17px; flex:0 0 auto;}
+
+/* modal */
+#modalOverlay{position:fixed; inset:0; background:rgba(0,0,0,.55); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; z-index:100;}
+#newCanvasModal{width:320px; background:var(--surface0); border-radius:18px; padding:20px; display:flex; flex-direction:column; gap:14px; box-shadow:0 20px 60px rgba(0,0,0,.5);}
+#newCanvasModal h2{margin:0; font-size:16px; font-weight:700;}
+.preset-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+.preset-btn{padding:10px 6px; background:var(--surface1); border-radius:10px; font-size:12px; text-align:center; line-height:1.4;}
+.preset-btn:hover{background:var(--surface2);}
+.dim-row{display:flex; align-items:center; gap:8px;}
+.dim-row input[type=number]{width:100%; background:var(--surface1); border:none; border-radius:8px; padding:9px; font-size:13px; color:var(--text);}
+.dim-row span{color:var(--overlay1); font-size:12px;}
+.modal-actions{display:flex; gap:8px; margin-top:4px;}
+.modal-actions button{flex:1; padding:11px 0; border-radius:10px; font-size:13px; font-weight:600;}
+.btn-cancel{background:var(--surface1); color:var(--subtext1);}
+.btn-confirm{background:var(--mauve); color:var(--crust);}
+
+/* ---------- Mobile layout ---------- */
+@media (max-width:820px){
+  :root{--toolrail-w:0px;}
+  #topbar{padding:0 6px;}
+  .brand span.brand-text{display:none;}
+  #canvasSizeLabel{display:none;}
+  #toolbar{
+    position:fixed; left:0; right:0; bottom:0; width:100%; height:60px; flex-direction:row;
+    padding:0 6px; overflow-x:auto; overflow-y:hidden; border-right:none; border-top:1px solid rgba(255,255,255,.08);
+    z-index:50;
+  }
+  .tool-divider{width:1px; height:26px; margin:0 4px;}
+  #main{padding-bottom:60px;}
+  #sidePanel{
+    position:fixed; right:0; bottom:60px; top:auto; height:64vh; width:100%;
+    border-radius:18px 18px 0 0; transform:translateY(110%); border-left:none; border-top:1px solid rgba(255,255,255,.1);
+  }
+  #sidePanel.open{transform:translateY(0);}
+  #symmetryPopover{left:8px; right:8px; width:auto; bottom:68px;}
+  #projectMenuPopover{right:8px; width:220px;}
+}
+</style>
+</head>
+<body>
+
+<!-- Icon sprite sheet -->
+<svg width="0" height="0" style="position:absolute">
+<defs>
+<symbol id="i-new" viewBox="0 0 24 24"><path d="M6 3h8l5 5v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M14 3v5h5"/><path d="M9.5 15h5M12 12.5v5"/></symbol>
+<symbol id="i-open" viewBox="0 0 24 24"><path d="M3 7a1 1 0 0 1 1-1h5l2 2h9a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7z"/></symbol>
+<symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 7 4 12l5 5"/><path d="M4 12h11a5 5 0 0 1 0 10h-2"/></symbol>
+<symbol id="i-redo" viewBox="0 0 24 24"><path d="M15 7l5 5-5 5"/><path d="M20 12H9a5 5 0 0 0 0 10h2"/></symbol>
+<symbol id="i-save" viewBox="0 0 24 24"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 19h16"/></symbol>
+<symbol id="i-brush" viewBox="0 0 24 24"><path d="M5 21c-1 0-1.6-.8-1.3-1.7C4.3 17 6 15.5 8 15.5c1.7 0 3 1.3 3 3 0 1.4-1.4 2.5-3 2.5-1 0-2-.2-3 0z"/><path d="M9.5 15 18 6.5a2.1 2.1 0 0 0-3-3L7 12"/></symbol>
+<symbol id="i-pencil" viewBox="0 0 24 24"><path d="M4 20l.9-3.9L15.5 5.5l3.4 3.4L8.3 19.5 4 20z"/><path d="M13.8 6.7l3.4 3.4"/></symbol>
+<symbol id="i-marker" viewBox="0 0 24 24"><rect x="13.2" y="2.8" width="4.4" height="7.5" rx="1" transform="rotate(45 15.4 6.5)"/><path d="M12.5 9.3 6 15.8l-2 5 5-2 6.5-6.5z"/></symbol>
+<symbol id="i-eraser" viewBox="0 0 24 24"><path d="M16.5 3.5 21 8l-9.5 9.5H8L3.5 13z"/><path d="M8 17.5 3.5 13"/><path d="M9 21h11"/></symbol>
+<symbol id="i-bucket" viewBox="0 0 24 24"><path d="M4 10.5 12 4l8 6.5-8 6.5-8-6.5z"/><path d="M6.5 12l3.5 8h4l3.5-8"/><circle cx="19" cy="18" r="1.6"/></symbol>
+<symbol id="i-eyedrop" viewBox="0 0 24 24"><path d="M17 3.3 20.7 7l-2.7 2.7-3.7-3.7z"/><path d="M14.8 6.5 5 16.3l-1.7 5.4 5.4-1.7L18.5 10.3"/></symbol>
+<symbol id="i-hand" viewBox="0 0 24 24"><path d="M8.5 12V4.8a1.4 1.4 0 0 1 2.8 0V11"/><path d="M11.3 11V3.5a1.4 1.4 0 0 1 2.8 0V11"/><path d="M14.1 11V5.8a1.4 1.4 0 0 1 2.8 0v6.7"/><path d="M6 13.2v-3a1.4 1.4 0 0 1 2.5-.8"/><path d="M6 13.2c0 5 3 8.5 7.4 8.5 4 0 7.5-3 7.5-8.5v-1.5"/></symbol>
+<symbol id="i-mirror" viewBox="0 0 24 24"><path d="M12 2.5v19"/><path d="M5 7l3 5-3 5"/><path d="M19 7l-3 5 3 5"/></symbol>
+<symbol id="i-layers" viewBox="0 0 24 24"><path d="M12 3 21 8l-9 5-9-5 9-5z"/><path d="M3 12l9 5 9-5"/><path d="M3 16l9 5 9-5"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+<symbol id="i-dup" viewBox="0 0 24 24"><rect x="8.5" y="8.5" width="12" height="12" rx="2.5"/><path d="M15.5 5.5H6a2.5 2.5 0 0 0-2.5 2.5v9.5"/></symbol>
+<symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M9 7V4.5h6V7"/><path d="M6.5 7l1 12.5A1.5 1.5 0 0 0 9 21h6a1.5 1.5 0 0 0 1.5-1.5L17.5 7"/></symbol>
+<symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></symbol>
+<symbol id="i-eyeoff" viewBox="0 0 24 24"><path d="M3 3l18 18"/><path d="M10.6 10.7a3 3 0 0 0 4.2 4.1"/><path d="M6.4 6.6C4 8.2 2 12 2 12s4 7 10 7c1.8 0 3.4-.5 4.8-1.3"/><path d="M17.9 17.9C20.4 16.2 22 12 22 12s-1.7-3.1-4.7-5.1"/></symbol>
+<symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+<symbol id="i-merge" viewBox="0 0 24 24"><path d="M7 4v6a4 4 0 0 0 4 4h6"/><path d="M14 11l3 3-3 3"/></symbol>
+<symbol id="i-clear" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M9 9l6 6M15 9l-6 6"/></symbol>
+<symbol id="i-project" viewBox="0 0 24 24"><path d="M4 6a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6z"/><path d="M12 11v6M9 14h6"/></symbol>
+<symbol id="i-link" viewBox="0 0 24 24"><path d="M9 15l6-6"/><path d="M11 6l1.5-1.5a3.5 3.5 0 0 1 5 5L16 11"/><path d="M13 18l-1.5 1.5a3.5 3.5 0 0 1-5-5L8 13"/></symbol>
+<symbol id="i-reset" viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 1 2.5 5.8"/><path d="M4 17v-5h5"/></symbol>
+</defs>
+</svg>
+
+<div id="app">
+
+  <header id="topbar">
+    <div class="topbar-group">
+      <div class="brand"><svg class="icon"><use href="#i-brush"/></svg><span class="brand-text">お絵かきツール</span></div>
+      <button class="icon-btn" id="btnNew" title="新規キャンバス"><svg class="icon"><use href="#i-new"/></svg></button>
+      <button class="icon-btn" id="btnOpen" title="画像を読み込み（レイヤーとして）"><svg class="icon"><use href="#i-open"/></svg></button>
+      <input type="file" id="fileInput" accept="image/*" hidden>
+      <button class="icon-btn" id="btnProjectMenu" title="プロジェクト（保存/読み込み）"><svg class="icon"><use href="#i-project"/></svg></button>
+      <div id="projectMenuPopover" class="popover" hidden>
+        <button class="popover-item" id="menuExportProject"><svg class="icon"><use href="#i-save"/></svg>プロジェクトを保存 (JSON)</button>
+        <button class="popover-item" id="menuImportProject"><svg class="icon"><use href="#i-open"/></svg>プロジェクトを開く (JSON)</button>
+        <button class="popover-item" id="menuLoadURL"><svg class="icon"><use href="#i-link"/></svg>URLから読み込み</button>
+      </div>
+      <input type="file" id="projectFileInput" accept=".json" hidden>
+      <div class="divider-v"></div>
+      <button class="icon-btn" id="btnUndo" title="元に戻す (Ctrl+Z)"><svg class="icon"><use href="#i-undo"/></svg></button>
+      <button class="icon-btn" id="btnRedo" title="やり直す (Ctrl+Shift+Z)"><svg class="icon"><use href="#i-redo"/></svg></button>
+    </div>
+    <div class="topbar-group">
+      <span id="canvasSizeLabel">1024 × 1024</span>
+    </div>
+    <div class="topbar-group">
+      <div class="zoom-control">
+        <button class="icon-btn small" id="zoomOut" title="縮小">−</button>
+        <input type="range" id="zoomSlider" min="10" max="400" value="100">
+        <button class="icon-btn small" id="zoomIn" title="拡大">＋</button>
+        <span id="zoomLabel">100%</span>
+      </div>
+      <div class="divider-v"></div>
+      <select id="exportFormat" class="export-format-select" title="書き出し形式">
+        <option value="png">PNG</option>
+        <option value="jpeg">JPEG</option>
+      </select>
+      <button class="btn-save" id="btnSave" title="画像として保存 (Ctrl+S)"><svg class="icon" style="width:16px;height:16px"><use href="#i-save"/></svg>保存</button>
+      <button class="icon-btn" id="btnPanelToggle" title="パネル"><svg class="icon"><use href="#i-layers"/></svg></button>
+    </div>
+  </header>
+
+  <div id="main">
+    <nav id="toolbar">
+      <button class="tool-btn active" data-tool="brush" title="ブラシ (B)"><svg class="icon"><use href="#i-brush"/></svg></button>
+      <button class="tool-btn" data-tool="pencil" title="鉛筆 (N)"><svg class="icon"><use href="#i-pencil"/></svg></button>
+      <button class="tool-btn" data-tool="marker" title="マーカー (M)"><svg class="icon"><use href="#i-marker"/></svg></button>
+      <button class="tool-btn" data-tool="eraser" title="消しゴム (E)"><svg class="icon"><use href="#i-eraser"/></svg></button>
+      <div class="tool-divider"></div>
+      <button class="tool-btn" data-tool="bucket" title="塗りつぶし (G)"><svg class="icon"><use href="#i-bucket"/></svg></button>
+      <button class="tool-btn" data-tool="eyedropper" title="スポイト (I)"><svg class="icon"><use href="#i-eyedrop"/></svg></button>
+      <button class="tool-btn" data-tool="hand" title="手のひらツール (Space)"><svg class="icon"><use href="#i-hand"/></svg></button>
+      <div class="tool-divider"></div>
+      <button class="tool-btn" id="btnSymmetry" title="対称定規"><svg class="icon"><use href="#i-mirror"/></svg></button>
+    </nav>
+
+    <div id="canvasViewport">
+      <div id="canvasStage">
+        <canvas id="mainCanvas"></canvas>
+        <svg id="symmetryGuide" style="display:none"></svg>
+      </div>
+    </div>
+
+    <div id="symmetryPopover" class="popover" hidden>
+      <div class="panel-section-label">対称定規</div>
+      <div class="seg-control" id="symModeControl">
+        <button class="seg-btn active" data-mode="off">オフ</button>
+        <button class="seg-btn" data-mode="vertical">縦</button>
+        <button class="seg-btn" data-mode="horizontal">横</button>
+        <button class="seg-btn" data-mode="both">十字</button>
+        <button class="seg-btn" data-mode="radial">放射</button>
+      </div>
+      <div class="slider-row" id="radialSegRow" hidden>
+        <span style="font-size:12px;color:var(--subtext0)">分割数</span>
+        <input type="range" id="radialSegments" min="2" max="16" value="6">
+        <span class="val" id="radialSegVal">6</span>
+      </div>
+    </div>
+
+    <aside id="sidePanel">
+      <div class="panel-tabs">
+        <button class="panel-tab active" data-panel="brush">ブラシ</button>
+        <button class="panel-tab" data-panel="color">カラー</button>
+        <button class="panel-tab" data-panel="layers">レイヤー</button>
+      </div>
+
+      <div class="panel-content" id="panelBrush">
+        <div class="brush-list-header">
+          <div class="panel-section-label">ブラシ一覧</div>
+          <button class="icon-btn small" id="btnAddBrush" title="新しいブラシを作成"><svg class="icon"><use href="#i-plus"/></svg></button>
+        </div>
+        <div class="brush-chip-list" id="brushList"></div>
+
+        <div class="brush-editor">
+          <div class="brush-preview"><img id="brushPreviewImg" alt="ブラシプレビュー"></div>
+          <input type="text" id="brushNameInput" class="brush-name-input" placeholder="ブラシ名">
+
+          <div class="slider-row"><span class="row-label">サイズ</span><input type="range" id="brushSize" min="1" max="300" value="14"><span class="val" id="brushSizeVal">14px</span></div>
+          <div class="slider-row"><span class="row-label">不透明度</span><input type="range" id="brushOpacity" min="0" max="100" value="100"><span class="val" id="brushOpacityVal">100%</span></div>
+          <div class="slider-row"><span class="row-label">硬さ</span><input type="range" id="brushHardness" min="0" max="100" value="100"><span class="val" id="brushHardnessVal">100%</span></div>
+          <div class="slider-row"><span class="row-label">間隔</span><input type="range" id="brushSpacing" min="2" max="100" value="10"><span class="val" id="brushSpacingVal">10%</span></div>
+          <div class="slider-row"><span class="row-label">筆圧→太さ</span><input type="range" id="brushSizePressure" min="0" max="100" value="50"><span class="val" id="brushSizePressureVal">50%</span></div>
+          <div class="slider-row"><span class="row-label">筆圧→濃さ</span><input type="range" id="brushOpacityPressure" min="0" max="100" value="0"><span class="val" id="brushOpacityPressureVal">0%</span></div>
+          <div class="slider-row"><span class="row-label">散布</span><input type="range" id="brushScatter" min="0" max="100" value="0"><span class="val" id="brushScatterVal">0%</span></div>
+
+          <div class="brush-select-row">
+            <select id="brushShape" title="形状">
+              <option value="round">丸形</option>
+              <option value="square">四角形</option>
+              <option value="texture">テクスチャ</option>
+            </select>
+            <select id="brushBlend" title="合成モード"></select>
+          </div>
+          <label class="brush-checkbox-row"><input type="checkbox" id="brushIsEraser"> 消しゴムとして使う</label>
+
+          <div id="textureUploadRow" hidden>
+            <button class="io-btn" id="btnUploadTexture" style="width:100%">画像をブラシ先端に設定</button>
+            <input type="file" id="textureFileInput" accept="image/*" hidden>
+          </div>
+
+          <div class="brush-action-row">
+            <button class="icon-btn small" id="btnDupBrush" title="複製"><svg class="icon"><use href="#i-dup"/></svg></button>
+            <button class="icon-btn small" id="btnResetBrush" title="初期値に戻す"><svg class="icon"><use href="#i-reset"/></svg></button>
+            <button class="icon-btn small" id="btnDeleteBrush" title="削除"><svg class="icon"><use href="#i-trash"/></svg></button>
+          </div>
+        </div>
+
+        <div id="fillToleranceRow" style="display:none">
+          <div class="panel-section-label">塗りつぶしの許容誤差</div>
+          <div class="slider-row"><input type="range" id="fillTolerance" min="0" max="128" value="24"><span class="val" id="fillToleranceVal">24</span></div>
+        </div>
+
+        <div class="brush-io-section">
+          <div class="panel-section-label">ブラシの共有</div>
+          <div class="io-buttons">
+            <button class="io-btn" id="btnExportBrush">このブラシを書き出し (JSON)</button>
+            <button class="io-btn" id="btnExportAllBrushes">全ブラシを書き出し (ZIP)</button>
+            <button class="io-btn" id="btnImportBrushes">読み込み (JSON / ZIP)</button>
+          </div>
+          <input type="file" id="brushFileInput" accept=".json,.zip" multiple hidden>
+        </div>
+      </div>
+
+      <div class="panel-content" id="panelColor" hidden>
+        <div class="current-color-row">
+          <div id="currentColorSwatch"></div>
+          <input type="color" id="colorPicker" value="#1e1e2e">
+        </div>
+        <div>
+          <div class="panel-section-label" style="margin-bottom:8px">パレット</div>
+          <div class="swatch-grid" id="swatchGrid"></div>
+        </div>
+        <div>
+          <div class="panel-section-label" style="margin-bottom:8px">最近使った色</div>
+          <div id="recentColors"></div>
+        </div>
+      </div>
+
+      <div class="panel-content" id="panelLayers" hidden>
+        <div class="layer-toolbar">
+          <button class="icon-btn small" id="btnAddLayer" title="レイヤーを追加"><svg class="icon"><use href="#i-plus"/></svg></button>
+          <button class="icon-btn small" id="btnDupLayer" title="レイヤーを複製"><svg class="icon"><use href="#i-dup"/></svg></button>
+          <button class="icon-btn small" id="btnMergeLayer" title="下のレイヤーと結合"><svg class="icon"><use href="#i-merge"/></svg></button>
+          <button class="icon-btn small" id="btnClearLayer" title="レイヤーを消去"><svg class="icon"><use href="#i-clear"/></svg></button>
+          <button class="icon-btn small" id="btnDelLayer" title="レイヤーを削除"><svg class="icon"><use href="#i-trash"/></svg></button>
+        </div>
+        <ul id="layerList"></ul>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<div id="modalOverlay" hidden>
+  <div id="newCanvasModal">
+    <h2>新規キャンバス</h2>
+    <div class="preset-grid">
+      <button class="preset-btn" data-w="1024" data-h="1024">正方形<br>1024×1024</button>
+      <button class="preset-btn" data-w="1600" data-h="1000">横長<br>1600×1000</button>
+      <button class="preset-btn" data-w="1000" data-h="1600">縦長<br>1000×1600</button>
+      <button class="preset-btn" data-w="1240" data-h="1754">A4相当<br>1240×1754</button>
+    </div>
+    <div class="dim-row">
+      <input type="number" id="newCanvasWidth" value="1024" min="64" max="4000"><span>×</span>
+      <input type="number" id="newCanvasHeight" value="1024" min="64" max="4000">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="btnModalCancel">キャンセル</button>
+      <button class="btn-confirm" id="btnModalConfirm">作成</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+/* ======================================================================
+   CRC32 / ZIP writer & reader (with a from-scratch DEFLATE/INFLATE
+   decoder) — no external dependencies, works fully offline.
+   ====================================================================== */
+const CRC_TABLE = (() => {
+  const t = new Uint32Array(256);
+  for (let n = 0; n < 256; n++) {
+    let c = n;
+    for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+    t[n] = c >>> 0;
+  }
+  return t;
+})();
+function crc32(bytes) {
+  let c = 0xFFFFFFFF;
+  for (let i = 0; i < bytes.length; i++) c = CRC_TABLE[(c ^ bytes[i]) & 0xFF] ^ (c >>> 8);
+  return (c ^ 0xFFFFFFFF) >>> 0;
+}
+
+function inflate(data, startOffset, expectedLength) {
+  let pos = startOffset * 8;
+  const out = new Uint8Array(expectedLength);
+  let outPos = 0;
+
+  function readBits(n) {
+    let val = 0;
+    for (let i = 0; i < n; i++) {
+      const byteIdx = pos >>> 3, bitIdx = pos & 7;
+      val |= ((data[byteIdx] >>> bitIdx) & 1) << i;
+      pos++;
+    }
+    return val;
+  }
+  function buildHuffman(lengths) {
+    const maxBits = Math.max(0, ...lengths);
+    const blCount = new Array(maxBits + 1).fill(0);
+    for (const l of lengths) if (l > 0) blCount[l]++;
+    const nextCode = new Array(maxBits + 1).fill(0);
+    let code = 0;
+    for (let bits = 1; bits <= maxBits; bits++) { code = (code + blCount[bits - 1]) << 1; nextCode[bits] = code; }
+    const map = new Map();
+    for (let sym = 0; sym < lengths.length; sym++) {
+      const len = lengths[sym];
+      if (len === 0) continue;
+      const c = nextCode[len]++;
+      let bitstr = c.toString(2);
+      while (bitstr.length < len) bitstr = '0' + bitstr;
+      map.set(len + ':' + bitstr, sym);
+    }
+    return { map, maxBits };
+  }
+  function decodeSymbol(table) {
+    let code = 0, len = 0;
+    while (len < table.maxBits + 1) {
+      code = (code << 1) | readBits(1);
+      len++;
+      const key = len + ':' + code.toString(2).padStart(len, '0');
+      if (table.map.has(key)) return table.map.get(key);
+    }
+    throw new Error('inflate: invalid huffman code');
+  }
+  const LEN_BASE = [3,4,5,6,7,8,9,10,11,13,15,17,19,23,27,31,35,43,51,59,67,83,99,115,131,163,195,227,258];
+  const LEN_EXTRA = [0,0,0,0,0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3,4,4,4,4,5,5,5,5,0];
+  const DIST_BASE = [1,2,3,4,5,7,9,13,17,25,33,49,65,97,129,193,257,385,513,769,1025,1537,2049,3073,4097,6145,8193,12289,16385,24577];
+  const DIST_EXTRA = [0,0,0,0,1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11,12,12,13,13];
+  const CLC_ORDER = [16,17,18,0,8,7,9,6,10,5,11,4,12,3,13,2,14,1,15];
+
+  let fixedLit = null, fixedDist = null;
+  function getFixedTables() {
+    if (fixedLit) return [fixedLit, fixedDist];
+    const litLengths = new Array(288);
+    for (let i=0;i<=143;i++) litLengths[i]=8;
+    for (let i=144;i<=255;i++) litLengths[i]=9;
+    for (let i=256;i<=279;i++) litLengths[i]=7;
+    for (let i=280;i<=287;i++) litLengths[i]=8;
+    const distLengths = new Array(30).fill(5);
+    fixedLit = buildHuffman(litLengths); fixedDist = buildHuffman(distLengths);
+    return [fixedLit, fixedDist];
+  }
+
+  let finalBlock = false;
+  while (!finalBlock) {
+    finalBlock = readBits(1) === 1;
+    const btype = readBits(2);
+    if (btype === 0) {
+      pos = Math.ceil(pos / 8) * 8;
+      const byteOff = pos >>> 3;
+      const len = data[byteOff] | (data[byteOff+1] << 8);
+      const start = byteOff + 4;
+      for (let i = 0; i < len; i++) out[outPos++] = data[start+i];
+      pos = (start + len) * 8;
+    } else if (btype === 1 || btype === 2) {
+      let litTable, distTable;
+      if (btype === 1) {
+        [litTable, distTable] = getFixedTables();
+      } else {
+        const hlit = readBits(5) + 257, hdist = readBits(5) + 1, hclen = readBits(4) + 4;
+        const clcLengths = new Array(19).fill(0);
+        for (let i = 0; i < hclen; i++) clcLengths[CLC_ORDER[i]] = readBits(3);
+        const clcTable = buildHuffman(clcLengths);
+        const allLengths = [];
+        while (allLengths.length < hlit + hdist) {
+          const sym = decodeSymbol(clcTable);
+          if (sym <= 15) { allLengths.push(sym); }
+          else if (sym === 16) { const rep = readBits(2)+3; const prev = allLengths[allLengths.length-1]; for (let i=0;i<rep;i++) allLengths.push(prev); }
+          else if (sym === 17) { const rep = readBits(3)+3; for (let i=0;i<rep;i++) allLengths.push(0); }
+          else if (sym === 18) { const rep = readBits(7)+11; for (let i=0;i<rep;i++) allLengths.push(0); }
+        }
+        litTable = buildHuffman(allLengths.slice(0, hlit));
+        distTable = buildHuffman(allLengths.slice(hlit, hlit + hdist));
+      }
+      while (true) {
+        const sym = decodeSymbol(litTable);
+        if (sym < 256) { out[outPos++] = sym; }
+        else if (sym === 256) { break; }
+        else {
+          const li = sym - 257;
+          const length = LEN_BASE[li] + readBits(LEN_EXTRA[li]);
+          const dsym = decodeSymbol(distTable);
+          const distance = DIST_BASE[dsym] + readBits(DIST_EXTRA[dsym]);
+          let srcPos = outPos - distance;
+          for (let i = 0; i < length; i++) out[outPos++] = out[srcPos++];
+        }
+      }
+    } else { throw new Error('inflate: invalid block type'); }
+  }
+  return out;
+}
+
+function readZip(arrayBuffer) {
+  const data = new Uint8Array(arrayBuffer);
+  const dv = new DataView(arrayBuffer);
+  let eocdOffset = -1;
+  for (let i = data.length - 22; i >= 0 && i >= data.length - 22 - 65536; i--) {
+    if (dv.getUint32(i, true) === 0x06054b50) { eocdOffset = i; break; }
+  }
+  if (eocdOffset === -1) throw new Error('ZIPファイルの終端が見つかりません');
+  const entryCount = dv.getUint16(eocdOffset + 10, true);
+  const cdOffset = dv.getUint32(eocdOffset + 16, true);
+  const entries = [];
+  let ptr = cdOffset;
+  for (let i = 0; i < entryCount; i++) {
+    const sig = dv.getUint32(ptr, true);
+    if (sig !== 0x02014b50) break;
+    const compMethod = dv.getUint16(ptr + 10, true);
+    const uncompSize = dv.getUint32(ptr + 24, true);
+    const nameLen = dv.getUint16(ptr + 28, true);
+    const extraLen = dv.getUint16(ptr + 30, true);
+    const commentLen = dv.getUint16(ptr + 32, true);
+    const localHeaderOffset = dv.getUint32(ptr + 42, true);
+    const name = new TextDecoder('utf-8').decode(data.slice(ptr + 46, ptr + 46 + nameLen));
+    entries.push({ name, compMethod, uncompSize, localHeaderOffset });
+    ptr += 46 + nameLen + extraLen + commentLen;
+  }
+  const results = [];
+  for (const e of entries) {
+    if (e.name.endsWith('/')) continue;
+    const lh = e.localHeaderOffset;
+    if (dv.getUint32(lh, true) !== 0x04034b50) continue;
+    const lNameLen = dv.getUint16(lh + 26, true);
+    const lExtraLen = dv.getUint16(lh + 28, true);
+    const dataStart = lh + 30 + lNameLen + lExtraLen;
+    let bytes;
+    if (e.compMethod === 0) bytes = data.slice(dataStart, dataStart + e.uncompSize);
+    else if (e.compMethod === 8) bytes = inflate(data, dataStart, e.uncompSize);
+    else throw new Error('未対応の圧縮方式です: ' + e.name);
+    results.push({ name: e.name, bytes, text: () => new TextDecoder('utf-8').decode(bytes) });
+  }
+  return results;
+}
+
+function writeZip(files) {
+  const encoder = new TextEncoder();
+  const localParts = [], centralParts = [];
+  let offset = 0;
+  const now = new Date();
+  const dosTime = ((now.getHours() << 11) | (now.getMinutes() << 5) | (now.getSeconds() >> 1)) & 0xFFFF;
+  const dosDate = (((now.getFullYear()-1980) << 9) | ((now.getMonth()+1) << 5) | now.getDate()) & 0xFFFF;
+  for (const f of files) {
+    const nameBytes = encoder.encode(f.name);
+    const crc = crc32(f.bytes), size = f.bytes.length;
+    const local = new Uint8Array(30 + nameBytes.length);
+    const ldv = new DataView(local.buffer);
+    ldv.setUint32(0, 0x04034b50, true); ldv.setUint16(4, 20, true); ldv.setUint16(6, 0, true); ldv.setUint16(8, 0, true);
+    ldv.setUint16(10, dosTime, true); ldv.setUint16(12, dosDate, true); ldv.setUint32(14, crc, true);
+    ldv.setUint32(18, size, true); ldv.setUint32(22, size, true); ldv.setUint16(26, nameBytes.length, true); ldv.setUint16(28, 0, true);
+    local.set(nameBytes, 30);
+    localParts.push(local, f.bytes);
+    const central = new Uint8Array(46 + nameBytes.length);
+    const cdv = new DataView(central.buffer);
+    cdv.setUint32(0, 0x02014b50, true); cdv.setUint16(4, 20, true); cdv.setUint16(6, 20, true); cdv.setUint16(8, 0, true);
+    cdv.setUint16(10, 0, true); cdv.setUint16(12, dosTime, true); cdv.setUint16(14, dosDate, true); cdv.setUint32(16, crc, true);
+    cdv.setUint32(20, size, true); cdv.setUint32(24, size, true); cdv.setUint16(28, nameBytes.length, true); cdv.setUint16(30, 0, true);
+    cdv.setUint16(32, 0, true); cdv.setUint16(34, 0, true); cdv.setUint16(36, 0, true); cdv.setUint32(38, 0, true); cdv.setUint32(42, offset, true);
+    central.set(nameBytes, 46);
+    centralParts.push(central);
+    offset += local.length + f.bytes.length;
+  }
+  const centralStart = offset;
+  let centralSize = 0;
+  for (const c of centralParts) centralSize += c.length;
+  const eocd = new Uint8Array(22);
+  const edv = new DataView(eocd.buffer);
+  edv.setUint32(0, 0x06054b50, true); edv.setUint16(4, 0, true); edv.setUint16(6, 0, true);
+  edv.setUint16(8, files.length, true); edv.setUint16(10, files.length, true);
+  edv.setUint32(12, centralSize, true); edv.setUint32(16, centralStart, true); edv.setUint16(20, 0, true);
+  const out = new Uint8Array(offset + centralSize + eocd.length);
+  let w = 0;
+  for (const p of localParts) { out.set(p, w); w += p.length; }
+  for (const p of centralParts) { out.set(p, w); w += p.length; }
+  out.set(eocd, w);
+  return out;
+}
+
+/* ======================================================================
+   Element references
+   ====================================================================== */
+const mainCanvas = document.getElementById('mainCanvas');
+const canvasStage = document.getElementById('canvasStage');
+const canvasViewport = document.getElementById('canvasViewport');
+const symmetryGuide = document.getElementById('symmetryGuide');
+const layerList = document.getElementById('layerList');
+const colorPicker = document.getElementById('colorPicker');
+const currentColorSwatch = document.getElementById('currentColorSwatch');
+const fillToleranceInput = document.getElementById('fillTolerance');
+const fillToleranceVal = document.getElementById('fillToleranceVal');
+const zoomLabel = document.getElementById('zoomLabel');
+const zoomSlider = document.getElementById('zoomSlider');
+const canvasSizeLabel = document.getElementById('canvasSizeLabel');
+const recentColorsEl = document.getElementById('recentColors');
+
+const BLEND_MODES = [
+  ['source-over','通常'], ['multiply','乗算'], ['screen','スクリーン'], ['overlay','オーバーレイ'],
+  ['darken','比較(暗)'], ['lighten','比較(明)'], ['color-dodge','覆い焼き'], ['color-burn','焼き込み'],
+  ['difference','差の絶対値'], ['hard-light','ハードライト'], ['soft-light','ソフトライト']
+];
+const SWATCH_COLORS = ['#f38ba8','#eba0ac','#fab387','#f9e2af','#a6e3a1','#94e2d5','#89dceb','#74c7ec','#89b4fa','#b4befe','#cba6f7','#f5c2e7','#f2cdcd','#cdd6f4','#a6adc8','#585b70','#313244','#11111b'];
+
+const DEFAULT_BRUSHES = [
+  { id:'brush',   name:'ブラシ',     shape:'round',  size:14, opacity:1,    hardness:1,    spacing:0.10, sizePressure:0.5, opacityPressure:0,    scatter:0,    blend:'source-over', isEraser:false, builtin:true },
+  { id:'pencil',  name:'鉛筆',       shape:'round',  size:9,  opacity:0.85, hardness:0.7,  spacing:0.06, sizePressure:0.7, opacityPressure:0.35, scatter:0.03, blend:'source-over', isEraser:false, builtin:true },
+  { id:'marker',  name:'マーカー',   shape:'square', size:20, opacity:0.55, hardness:1,    spacing:0.15, sizePressure:0,   opacityPressure:0,    scatter:0,    blend:'multiply',    isEraser:false, builtin:true },
+  { id:'eraser',  name:'消しゴム',   shape:'round',  size:22, opacity:1,    hardness:1,    spacing:0.10, sizePressure:0,   opacityPressure:0,    scatter:0,    blend:'source-over', isEraser:true,  builtin:true },
+  { id:'airbrush',name:'エアブラシ', shape:'round',  size:44, opacity:0.35, hardness:0.12, spacing:0.12, sizePressure:0.3, opacityPressure:0.6,  scatter:0.12, blend:'source-over', isEraser:false, builtin:true }
+];
+const RAIL_BRUSH_IDS = new Set(['brush','pencil','marker','eraser']);
+const AUTOSAVE_KEY = 'oekaki_autosave_v1';
+const BRUSHES_STORAGE_KEY = 'oekaki_custom_brushes_v1';
+
+/* ======================================================================
+   State
+   ====================================================================== */
+const state = {
+  width: 1024, height: 1024, zoom: 1,
+  layers: [], activeLayerIndex: 0, layerCounter: 1,
+  tool: 'draw',
+  brushes: DEFAULT_BRUSHES.map(d => ({...d, textureData:null, textureImg:null})),
+  activeBrushId: 'brush',
+  color: '#1e1e2e',
+  fillTolerance: 24,
+  symmetry: { mode: 'off', segments: 6 },
+  history: [], future: [],
+  recentColors: []
+};
+let uidCounter = 0;
+function uid(){ return 'l' + (uidCounter++) + '_' + Date.now().toString(36); }
+function activeBrush(){ return state.brushes.find(b => b.id === state.activeBrushId) || state.brushes[0]; }
+
+/* ======================================================================
+   Layers
+   ====================================================================== */
+function createLayer(name, w, h){
+  const canvas = document.createElement('canvas');
+  canvas.width = w || state.width; canvas.height = h || state.height;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  return { id: uid(), name, canvas, ctx, visible: true, opacity: 1, blend: 'source-over', thumb: null };
+}
+function activeLayer(){ return state.layers[state.activeLayerIndex]; }
+
+/* ======================================================================
+   History (command pattern) + autosave hook
+   ====================================================================== */
+let autosaveDirty = false, autosaveTimer = null;
+function pushHistory(undoFn, redoFn){
+  state.history.push({ undo: undoFn, redo: redoFn });
+  if (state.history.length > 40) state.history.shift();
+  state.future = [];
+  updateHistoryButtons();
+  scheduleAutosave();
+}
+function undo(){ const c = state.history.pop(); if (!c) return; c.undo(); state.future.push(c); updateHistoryButtons(); scheduleAutosave(); }
+function redo(){ const c = state.future.pop(); if (!c) return; c.redo(); state.history.push(c); updateHistoryButtons(); scheduleAutosave(); }
+function updateHistoryButtons(){
+  document.getElementById('btnUndo').disabled = state.history.length === 0;
+  document.getElementById('btnRedo').disabled = state.future.length === 0;
+}
+
+/* ======================================================================
+   Render
+   ====================================================================== */
+function render(){
+  const ctx = mainCanvas.getContext('2d');
+  ctx.clearRect(0, 0, state.width, state.height);
+  for (const layer of state.layers){
+    if (!layer.visible) continue;
+    ctx.globalAlpha = layer.opacity;
+    ctx.globalCompositeOperation = layer.blend;
+    ctx.drawImage(layer.canvas, 0, 0);
+  }
+  ctx.globalAlpha = 1;
+  ctx.globalCompositeOperation = 'source-over';
+}
+
+function createNewCanvas(w, h){
+  state.width = w; state.height = h;
+  mainCanvas.width = w; mainCanvas.height = h;
+  setZoom(1);
+  state.layers = [];
+  state.layerCounter = 1;
+  state.layers.push(createLayer('背景'));
+  state.activeLayerIndex = 0;
+  state.history = []; state.future = [];
+  updateHistoryButtons();
+  renderLayerList();
+  render();
+  canvasSizeLabel.textContent = w + ' × ' + h;
+  updateSymmetryGuide();
+}
+
+function setZoom(z){
+  state.zoom = Math.min(4, Math.max(0.1, z));
+  mainCanvas.style.width = (state.width * state.zoom) + 'px';
+  mainCanvas.style.height = (state.height * state.zoom) + 'px';
+  zoomLabel.textContent = Math.round(state.zoom * 100) + '%';
+  zoomSlider.value = Math.round(state.zoom * 100);
+  updateSymmetryGuide();
+}
+
+function getCanvasPoint(e){
+  const rect = mainCanvas.getBoundingClientRect();
+  const scaleX = mainCanvas.width / rect.width, scaleY = mainCanvas.height / rect.height;
+  let pressure = 0.5;
+  if (typeof e.pressure === 'number' && e.pressure > 0) pressure = e.pressure;
+  return { x: (e.clientX - rect.left) * scaleX, y: (e.clientY - rect.top) * scaleY, pressure };
+}
+
+/* ======================================================================
+   Symmetry
+   ====================================================================== */
+function getSymmetryTransforms(){
+  const cx = state.width/2, cy = state.height/2;
+  const m = state.symmetry.mode;
+  if (m === 'vertical') return [p=>p, p=>({x:2*cx-p.x, y:p.y})];
+  if (m === 'horizontal') return [p=>p, p=>({x:p.x, y:2*cy-p.y})];
+  if (m === 'both') return [p=>p, p=>({x:2*cx-p.x,y:p.y}), p=>({x:p.x,y:2*cy-p.y}), p=>({x:2*cx-p.x,y:2*cy-p.y})];
+  if (m === 'radial'){
+    const n = Math.max(2, state.symmetry.segments), arr = [];
+    for (let i=0;i<n;i++){
+      const angle = (2*Math.PI/n)*i, cos = Math.cos(angle), sin = Math.sin(angle);
+      arr.push(p => { const dx=p.x-cx, dy=p.y-cy; return { x: cx+dx*cos-dy*sin, y: cy+dx*sin+dy*cos }; });
+    }
+    return arr;
+  }
+  return [p=>p];
+}
+function updateSymmetryGuide(){
+  symmetryGuide.innerHTML = '';
+  const mode = state.symmetry.mode;
+  if (mode === 'off'){ symmetryGuide.style.display = 'none'; return; }
+  symmetryGuide.style.display = 'block';
+  symmetryGuide.setAttribute('viewBox', `0 0 ${state.width} ${state.height}`);
+  symmetryGuide.setAttribute('width', state.width * state.zoom);
+  symmetryGuide.setAttribute('height', state.height * state.zoom);
+  const cx = state.width/2, cy = state.height/2, ns = 'http://www.w3.org/2000/svg';
+  function line(x1,y1,x2,y2){
+    const l = document.createElementNS(ns,'line');
+    l.setAttribute('x1',x1); l.setAttribute('y1',y1); l.setAttribute('x2',x2); l.setAttribute('y2',y2);
+    l.setAttribute('class','guide-line');
+    symmetryGuide.appendChild(l);
+  }
+  if (mode==='vertical'||mode==='both') line(cx,0,cx,state.height);
+  if (mode==='horizontal'||mode==='both') line(0,cy,state.width,cy);
+  if (mode==='radial'){
+    const n = state.symmetry.segments, r = Math.max(state.width,state.height);
+    for (let i=0;i<n;i++){ const a = (2*Math.PI/n)*i; line(cx,cy, cx+Math.cos(a)*r, cy+Math.sin(a)*r); }
+  }
+}
+
+/* ======================================================================
+   Brush stamping engine
+   ====================================================================== */
+const dabCache = new Map();
+function getDabCanvas(brush, size, color){
+  const s = Math.max(2, Math.round(size));
+  const key = brush.id + '|' + brush.shape + '|' + Math.round(brush.hardness*100) + '|' + s + '|' + color + '|' + (brush.textureImg ? 'tex' : 'notex');
+  if (dabCache.has(key)) return dabCache.get(key);
+  const c = document.createElement('canvas'); c.width = s; c.height = s;
+  const dctx = c.getContext('2d');
+  if (brush.shape === 'texture' && brush.textureImg){
+    dctx.drawImage(brush.textureImg, 0, 0, s, s);
+    dctx.globalCompositeOperation = 'source-in';
+    dctx.fillStyle = color; dctx.fillRect(0, 0, s, s);
+  } else if (brush.shape === 'square'){
+    dctx.fillStyle = color; dctx.fillRect(0, 0, s, s);
+  } else {
+    dctx.fillStyle = color; dctx.beginPath(); dctx.arc(s/2, s/2, s/2, 0, Math.PI*2); dctx.fill();
+  }
+  if (brush.hardness < 0.98){
+    dctx.globalCompositeOperation = 'destination-in';
+    const inner = Math.max(0, (s/2) * brush.hardness);
+    const grad = dctx.createRadialGradient(s/2, s/2, inner, s/2, s/2, s/2);
+    grad.addColorStop(0, 'rgba(0,0,0,1)'); grad.addColorStop(1, 'rgba(0,0,0,0)');
+    dctx.fillStyle = grad; dctx.fillRect(0, 0, s, s);
+  }
+  if (dabCache.size > 300) dabCache.clear();
+  dabCache.set(key, c);
+  return c;
+}
+function computeDabSize(brush, pressure){ return Math.max(1, brush.size * (1 - brush.sizePressure + brush.sizePressure*pressure)); }
+function computeDabAlpha(brush, pressure){ return Math.min(1, Math.max(0, brush.opacity * (1 - brush.opacityPressure + brush.opacityPressure*pressure))); }
+function stampAt(ctx, brush, x, y, size, alpha){
+  const dab = getDabCanvas(brush, size, state.color);
+  ctx.globalAlpha = alpha;
+  ctx.globalCompositeOperation = brush.isEraser ? 'destination-out' : brush.blend;
+  for (const t of getSymmetryTransforms()){
+    const p = t({x, y});
+    ctx.drawImage(dab, p.x - dab.width/2, p.y - dab.height/2);
+  }
+  ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+}
+function stampPoint(ctx, brush, pt){
+  const size = computeDabSize(brush, pt.pressure), alpha = computeDabAlpha(brush, pt.pressure);
+  let x = pt.x, y = pt.y;
+  if (brush.scatter > 0){
+    const jitter = (Math.random()-0.5) * 2 * brush.scatter * size, angle = Math.random() * Math.PI * 2;
+    x += Math.cos(angle) * jitter; y += Math.sin(angle) * jitter;
+  }
+  stampAt(ctx, brush, x, y, size, alpha);
+}
+let strokeDistanceLeft = 0;
+function walkAndStamp(ctx, brush, p0, p1){
+  const dx = p1.x - p0.x, dy = p1.y - p0.y, dist = Math.hypot(dx, dy);
+  if (dist === 0) return;
+  const spacingPx = Math.max(1, brush.size * brush.spacing);
+  let traveled = 0;
+  while (strokeDistanceLeft <= dist - traveled){
+    traveled += strokeDistanceLeft;
+    const t = traveled / dist;
+    stampPoint(ctx, brush, { x: p0.x + dx*t, y: p0.y + dy*t, pressure: p0.pressure + (p1.pressure-p0.pressure)*t });
+    strokeDistanceLeft = spacingPx;
+  }
+  strokeDistanceLeft -= (dist - traveled);
+}
+function subdivideQuad(p0, c, p1){
+  const approxLen = Math.hypot(c.x-p0.x,c.y-p0.y) + Math.hypot(p1.x-c.x,p1.y-c.y);
+  const steps = Math.max(2, Math.ceil(approxLen / 3));
+  const pts = [];
+  for (let i=0;i<=steps;i++){
+    const t = i/steps, mt = 1-t;
+    pts.push({ x: mt*mt*p0.x + 2*mt*t*c.x + t*t*p1.x, y: mt*mt*p0.y + 2*mt*t*c.y + t*t*p1.y, pressure: p0.pressure + (p1.pressure-p0.pressure)*t });
+  }
+  return pts;
+}
+
+/* ======================================================================
+   Drawing interaction
+   ====================================================================== */
+let drawing = false, lastPoint = null, lastMid = null, beforeImageData = null;
+let panning = false, panStart = null;
+let spaceDown = false, prevToolBeforeSpace = 'draw';
+
+mainCanvas.addEventListener('contextmenu', e => e.preventDefault());
+
+mainCanvas.addEventListener('pointerdown', e => {
+  if (e.button > 0) return;
+  mainCanvas.setPointerCapture(e.pointerId);
+  const pt = getCanvasPoint(e);
+  if (state.tool === 'hand'){
+    panning = true;
+    panStart = { x:e.clientX, y:e.clientY, scrollLeft:canvasViewport.scrollLeft, scrollTop:canvasViewport.scrollTop };
+    return;
+  }
+  if (state.tool === 'eyedropper'){ pickColor(pt); return; }
+  if (state.tool === 'bucket'){ floodFill(pt); return; }
+  if (state.tool !== 'draw') return;
+  const layer = activeLayer();
+  if (!layer) return;
+  beforeImageData = layer.ctx.getImageData(0, 0, state.width, state.height);
+  drawing = true;
+  lastPoint = pt; lastMid = pt;
+  strokeDistanceLeft = 0;
+  stampPoint(layer.ctx, activeBrush(), pt);
+  render();
+});
+
+mainCanvas.addEventListener('pointermove', e => {
+  if (panning){
+    canvasViewport.scrollLeft = panStart.scrollLeft - (e.clientX - panStart.x);
+    canvasViewport.scrollTop = panStart.scrollTop - (e.clientY - panStart.y);
+    return;
+  }
+  if (!drawing) return;
+  const layer = activeLayer(), brush = activeBrush();
+  const events = (e.getCoalescedEvents && e.getCoalescedEvents().length) ? e.getCoalescedEvents() : [e];
+  for (const ev of events){
+    const pt = getCanvasPoint(ev);
+    const mid = { x:(lastPoint.x+pt.x)/2, y:(lastPoint.y+pt.y)/2, pressure:(lastPoint.pressure+pt.pressure)/2 };
+    const curvePts = subdivideQuad(lastMid, lastPoint, mid);
+    for (let i=0;i<curvePts.length-1;i++) walkAndStamp(layer.ctx, brush, curvePts[i], curvePts[i+1]);
+    lastMid = mid; lastPoint = pt;
+  }
+  render();
+});
+
+function endStroke(){
+  if (panning){ panning = false; panStart = null; return; }
+  if (!drawing) return;
+  drawing = false;
+  const layer = activeLayer();
+  const before = beforeImageData;
+  const after = layer.ctx.getImageData(0, 0, state.width, state.height);
+  beforeImageData = null;
+  updateActiveLayerThumbnail();
+  pushHistory(
+    () => { layer.ctx.putImageData(before, 0, 0); render(); updateActiveLayerThumbnail(); },
+    () => { layer.ctx.putImageData(after, 0, 0); render(); updateActiveLayerThumbnail(); }
+  );
+}
+mainCanvas.addEventListener('pointerup', endStroke);
+mainCanvas.addEventListener('pointercancel', endStroke);
+mainCanvas.addEventListener('pointerleave', e => { if ((drawing || panning) && e.buttons === 0) endStroke(); });
+
+/* ======================================================================
+   Eyedropper / color helpers
+   ====================================================================== */
+function pickColor(pt){
+  const ctx = mainCanvas.getContext('2d');
+  const x = Math.floor(pt.x), y = Math.floor(pt.y);
+  if (x<0||y<0||x>=state.width||y>=state.height) return;
+  const d = ctx.getImageData(x, y, 1, 1).data;
+  if (d[3] === 0) return;
+  setColor(rgbToHex(d[0], d[1], d[2]));
+  commitRecentColor(state.color);
+}
+function rgbToHex(r,g,b){ return '#' + [r,g,b].map(v=>v.toString(16).padStart(2,'0')).join(''); }
+function hexToRgb(hex){
+  hex = hex.replace('#','');
+  if (hex.length===3) hex = hex.split('').map(c=>c+c).join('');
+  const num = parseInt(hex,16);
+  return [(num>>16)&255, (num>>8)&255, num&255];
+}
+
+/* ======================================================================
+   Bucket fill
+   ====================================================================== */
+function getPixelAt(data,x,y,w){ const i=(y*w+x)*4; return [data[i],data[i+1],data[i+2],data[i+3]]; }
+function setPixelAt(data,x,y,w,c){ const i=(y*w+x)*4; data[i]=c[0]; data[i+1]=c[1]; data[i+2]=c[2]; data[i+3]=c[3]; }
+function colorsMatch(a,b,tol){ return Math.abs(a[0]-b[0])<=tol && Math.abs(a[1]-b[1])<=tol && Math.abs(a[2]-b[2])<=tol && Math.abs(a[3]-b[3])<=tol; }
+function floodFill(pt){
+  const layer = activeLayer();
+  if (!layer) return;
+  const w = state.width, h = state.height;
+  const x0 = Math.floor(pt.x), y0 = Math.floor(pt.y);
+  if (x0<0||y0<0||x0>=w||y0>=h) return;
+  const ctx = layer.ctx;
+  const before = ctx.getImageData(0,0,w,h);
+  const working = ctx.getImageData(0,0,w,h);
+  const data = working.data;
+  const target = getPixelAt(data,x0,y0,w);
+  const fillColor = [...hexToRgb(state.color), 255];
+  const tol = state.fillTolerance;
+  if (colorsMatch(target, fillColor, 0)) return;
+  const visited = new Uint8Array(w*h);
+  const stack = [[x0,y0]];
+  while (stack.length){
+    const [x,y] = stack.pop();
+    const idx = y*w+x;
+    if (visited[idx]) continue;
+    if (!colorsMatch(getPixelAt(data,x,y,w), target, tol)) continue;
+    let xl = x;
+    while (xl-1>=0 && !visited[y*w+(xl-1)] && colorsMatch(getPixelAt(data,xl-1,y,w),target,tol)) xl--;
+    let xr = x;
+    while (xr+1<w && !visited[y*w+(xr+1)] && colorsMatch(getPixelAt(data,xr+1,y,w),target,tol)) xr++;
+    for (let xi=xl; xi<=xr; xi++){
+      visited[y*w+xi] = 1;
+      setPixelAt(data,xi,y,w,fillColor);
+      if (y>0 && !visited[(y-1)*w+xi] && colorsMatch(getPixelAt(data,xi,y-1,w),target,tol)) stack.push([xi,y-1]);
+      if (y<h-1 && !visited[(y+1)*w+xi] && colorsMatch(getPixelAt(data,xi,y+1,w),target,tol)) stack.push([xi,y+1]);
+    }
+  }
+  ctx.putImageData(working,0,0);
+  render();
+  updateActiveLayerThumbnail();
+  pushHistory(
+    () => { ctx.putImageData(before,0,0); render(); updateActiveLayerThumbnail(); },
+    () => { ctx.putImageData(working,0,0); render(); updateActiveLayerThumbnail(); }
+  );
+}
+
+/* ======================================================================
+   Layer operations
+   ====================================================================== */
+function addLayer(){
+  const layer = createLayer('レイヤー ' + (state.layerCounter++));
+  const index = state.activeLayerIndex + 1;
+  state.layers.splice(index, 0, layer);
+  state.activeLayerIndex = index;
+  renderLayerList(); render();
+  pushHistory(
+    () => { state.layers.splice(index,1); state.activeLayerIndex = Math.max(0,index-1); renderLayerList(); render(); },
+    () => { state.layers.splice(index,0,layer); state.activeLayerIndex = index; renderLayerList(); render(); }
+  );
+}
+function duplicateLayer(index){
+  const src = state.layers[index];
+  const copy = createLayer(src.name + ' コピー');
+  copy.ctx.drawImage(src.canvas,0,0);
+  copy.opacity = src.opacity; copy.blend = src.blend; copy.visible = src.visible;
+  state.layers.splice(index+1,0,copy);
+  state.activeLayerIndex = index+1;
+  renderLayerList(); render();
+  pushHistory(
+    () => { state.layers.splice(index+1,1); state.activeLayerIndex = index; renderLayerList(); render(); },
+    () => { state.layers.splice(index+1,0,copy); state.activeLayerIndex = index+1; renderLayerList(); render(); }
+  );
+}
+function deleteLayer(index){
+  if (state.layers.length <= 1) return;
+  const removed = state.layers[index];
+  state.layers.splice(index,1);
+  if (state.activeLayerIndex >= state.layers.length) state.activeLayerIndex = state.layers.length-1;
+  renderLayerList(); render();
+  pushHistory(
+    () => { state.layers.splice(index,0,removed); state.activeLayerIndex = index; renderLayerList(); render(); },
+    () => { state.layers.splice(index,1); if (state.activeLayerIndex>=state.layers.length) state.activeLayerIndex = state.layers.length-1; renderLayerList(); render(); }
+  );
+}
+function mergeDown(index){
+  if (index <= 0) return;
+  const top = state.layers[index], bottom = state.layers[index-1];
+  const w = state.width, h = state.height;
+  const before = bottom.ctx.getImageData(0,0,w,h);
+  bottom.ctx.globalAlpha = top.opacity;
+  bottom.ctx.globalCompositeOperation = top.blend;
+  bottom.ctx.drawImage(top.canvas,0,0);
+  bottom.ctx.globalAlpha = 1; bottom.ctx.globalCompositeOperation = 'source-over';
+  const after = bottom.ctx.getImageData(0,0,w,h);
+  state.layers.splice(index,1);
+  if (state.activeLayerIndex >= state.layers.length) state.activeLayerIndex = state.layers.length-1;
+  renderLayerList(); render();
+  pushHistory(
+    () => { state.layers.splice(index,0,top); bottom.ctx.putImageData(before,0,0); state.activeLayerIndex = index; renderLayerList(); render(); },
+    () => { bottom.ctx.putImageData(after,0,0); state.layers.splice(index,1); if (state.activeLayerIndex>=state.layers.length) state.activeLayerIndex = state.layers.length-1; renderLayerList(); render(); }
+  );
+}
+function clearActiveLayer(){
+  const layer = activeLayer();
+  if (!layer) return;
+  const w = state.width, h = state.height;
+  const before = layer.ctx.getImageData(0,0,w,h);
+  layer.ctx.clearRect(0,0,w,h);
+  render(); updateActiveLayerThumbnail();
+  const after = layer.ctx.getImageData(0,0,w,h);
+  pushHistory(
+    () => { layer.ctx.putImageData(before,0,0); render(); updateActiveLayerThumbnail(); },
+    () => { layer.ctx.putImageData(after,0,0); render(); updateActiveLayerThumbnail(); }
+  );
+}
+function moveLayer(from, to){
+  if (from === to) return;
+  const [item] = state.layers.splice(from,1);
+  state.layers.splice(to,0,item);
+  state.activeLayerIndex = to;
+  renderLayerList(); render();
+  pushHistory(
+    () => { const [it] = state.layers.splice(to,1); state.layers.splice(from,0,it); renderLayerList(); render(); },
+    () => { const [it] = state.layers.splice(from,1); state.layers.splice(to,0,it); renderLayerList(); render(); }
+  );
+}
+function toggleLayerVisibility(i){
+  const layer = state.layers[i];
+  const before = layer.visible;
+  layer.visible = !before;
+  render(); renderLayerList();
+  pushHistory(
+    () => { layer.visible = before; render(); renderLayerList(); },
+    () => { layer.visible = !before; render(); renderLayerList(); }
+  );
+}
+function setLayerBlend(i, val){
+  const layer = state.layers[i];
+  const before = layer.blend;
+  layer.blend = val;
+  render();
+  pushHistory(
+    () => { layer.blend = before; render(); renderLayerList(); },
+    () => { layer.blend = val; render(); renderLayerList(); }
+  );
+}
+function commitOpacityChange(layer, before, after){
+  layer.opacity = after;
+  pushHistory(
+    () => { layer.opacity = before; render(); renderLayerList(); },
+    () => { layer.opacity = after; render(); renderLayerList(); }
+  );
+}
+function renameLayer(i){
+  const layer = state.layers[i];
+  const name = window.prompt('レイヤー名', layer.name);
+  if (name && name.trim()){ layer.name = name.trim(); renderLayerList(); }
+}
+function makeThumbnail(layer){
+  const c = document.createElement('canvas');
+  c.width = 44; c.height = 33;
+  const tctx = c.getContext('2d');
+  tctx.fillStyle = '#3a3a4a'; tctx.fillRect(0,0,44,33);
+  tctx.drawImage(layer.canvas, 0,0,state.width,state.height, 0,0,44,33);
+  return c.toDataURL();
+}
+function updateActiveLayerThumbnail(){
+  const layer = activeLayer();
+  if (!layer) return;
+  layer.thumb = makeThumbnail(layer);
+  const idx = state.layers.indexOf(layer);
+  const img = document.querySelector('.layer-item[data-index="'+idx+'"] .layer-thumb');
+  if (img) img.src = layer.thumb;
+}
+
+function renderLayerList(){
+  layerList.innerHTML = '';
+  for (let i = state.layers.length-1; i >= 0; i--){
+    const layer = state.layers[i];
+    const li = document.createElement('li');
+    li.className = 'layer-item' + (i === state.activeLayerIndex ? ' active' : '');
+    li.draggable = true;
+    li.dataset.index = i;
+
+    const eyeBtn = document.createElement('button');
+    eyeBtn.className = 'icon-btn small';
+    eyeBtn.innerHTML = '<svg class="icon"><use href="#' + (layer.visible ? 'i-eye' : 'i-eyeoff') + '"/></svg>';
+    eyeBtn.title = '表示/非表示';
+    eyeBtn.onclick = ev => { ev.stopPropagation(); toggleLayerVisibility(i); };
+
+    const thumb = document.createElement('img');
+    thumb.className = 'layer-thumb';
+    thumb.src = layer.thumb || makeThumbnail(layer);
+
+    const info = document.createElement('div');
+    info.className = 'layer-info';
+    const nameEl = document.createElement('div');
+    nameEl.className = 'layer-name';
+    nameEl.textContent = layer.name;
+    nameEl.ondblclick = ev => { ev.stopPropagation(); renameLayer(i); };
+
+    const row2 = document.createElement('div');
+    row2.className = 'layer-row2';
+    const blendSelect = document.createElement('select');
+    blendSelect.className = 'layer-blend';
+    for (const [val,label] of BLEND_MODES){
+      const opt = document.createElement('option');
+      opt.value = val; opt.textContent = label;
+      if (layer.blend === val) opt.selected = true;
+      blendSelect.appendChild(opt);
+    }
+    blendSelect.onclick = ev => ev.stopPropagation();
+    blendSelect.onchange = ev => setLayerBlend(i, ev.target.value);
+
+    const opacityRow = document.createElement('div');
+    opacityRow.className = 'layer-opacity-row';
+    const opacityInput = document.createElement('input');
+    opacityInput.type = 'range'; opacityInput.min = 0; opacityInput.max = 100;
+    opacityInput.value = Math.round(layer.opacity*100);
+    opacityInput.onclick = ev => ev.stopPropagation();
+    let opDragStart = layer.opacity;
+    opacityInput.onpointerdown = () => { opDragStart = layer.opacity; };
+    opacityInput.oninput = ev => { layer.opacity = ev.target.value/100; render(); };
+    opacityInput.onchange = ev => commitOpacityChange(layer, opDragStart, ev.target.value/100);
+    opacityRow.appendChild(opacityInput);
+
+    row2.appendChild(blendSelect);
+    row2.appendChild(opacityRow);
+    info.appendChild(nameEl);
+    info.appendChild(row2);
+
+    li.appendChild(eyeBtn);
+    li.appendChild(thumb);
+    li.appendChild(info);
+
+    li.onclick = () => { state.activeLayerIndex = i; renderLayerList(); };
+    li.addEventListener('dragstart', ev => { ev.dataTransfer.setData('text/plain', String(i)); li.classList.add('dragging'); });
+    li.addEventListener('dragend', () => li.classList.remove('dragging'));
+    li.addEventListener('dragover', ev => ev.preventDefault());
+    li.addEventListener('drop', ev => { ev.preventDefault(); moveLayer(parseInt(ev.dataTransfer.getData('text/plain'),10), i); });
+
+    layerList.appendChild(li);
+  }
+  document.getElementById('btnDelLayer').disabled = state.layers.length <= 1;
+}
+
+/* ======================================================================
+   Tool selection
+   ====================================================================== */
+function selectBrushTool(brushId){
+  state.tool = 'draw';
+  state.activeBrushId = brushId;
+  syncToolUI();
+  renderBrushList();
+  renderBrushEditor();
+}
+function setUtilityTool(tool){
+  state.tool = tool;
+  syncToolUI();
+}
+function syncToolUI(){
+  document.querySelectorAll('.tool-btn[data-tool]').forEach(b => {
+    const isRailBrush = RAIL_BRUSH_IDS.has(b.dataset.tool);
+    const active = isRailBrush ? (state.tool==='draw' && state.activeBrushId===b.dataset.tool) : (state.tool===b.dataset.tool);
+    b.classList.toggle('active', active);
+  });
+  mainCanvas.style.cursor = state.tool==='hand' ? 'grab' : (state.tool==='eyedropper' ? 'copy' : 'crosshair');
+  document.getElementById('fillToleranceRow').style.display = state.tool==='bucket' ? 'block' : 'none';
+}
+document.querySelectorAll('.tool-btn[data-tool]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const t = btn.dataset.tool;
+    if (RAIL_BRUSH_IDS.has(t)) selectBrushTool(t);
+    else setUtilityTool(t);
+  });
+});
+
+/* ======================================================================
+   Color
+   ====================================================================== */
+function setColor(hex){
+  state.color = hex;
+  colorPicker.value = hex;
+  currentColorSwatch.style.background = hex;
+  dabCache.clear();
+  renderBrushList();
+  updateBrushPreview();
+}
+function commitRecentColor(hex){
+  state.recentColors = state.recentColors.filter(c => c !== hex);
+  state.recentColors.unshift(hex);
+  if (state.recentColors.length > 12) state.recentColors.pop();
+  renderRecentColors();
+}
+function renderRecentColors(){
+  recentColorsEl.innerHTML = '';
+  for (const hex of state.recentColors){
+    const sw = document.createElement('div');
+    sw.className = 'swatch'; sw.style.background = hex; sw.title = hex;
+    sw.onclick = () => setColor(hex);
+    recentColorsEl.appendChild(sw);
+  }
+}
+const swatchGrid = document.getElementById('swatchGrid');
+for (const hex of SWATCH_COLORS){
+  const sw = document.createElement('div');
+  sw.className = 'swatch'; sw.style.background = hex; sw.title = hex;
+  sw.onclick = () => { setColor(hex); commitRecentColor(hex); };
+  swatchGrid.appendChild(sw);
+}
+colorPicker.addEventListener('input', e => setColor(e.target.value));
+colorPicker.addEventListener('change', e => commitRecentColor(e.target.value));
+
+/* ======================================================================
+   Brush editor
+   ====================================================================== */
+function populateBlendSelect(selectEl){
+  selectEl.innerHTML = '';
+  for (const [val,label] of BLEND_MODES){
+    const opt = document.createElement('option'); opt.value = val; opt.textContent = label;
+    selectEl.appendChild(opt);
+  }
+}
+function setSlider(inputId, value, labelId, fmt){
+  document.getElementById(inputId).value = value;
+  document.getElementById(labelId).textContent = fmt(value);
+}
+function renderBrushEditor(){
+  const b = activeBrush();
+  document.getElementById('brushNameInput').value = b.name;
+  setSlider('brushSize', Math.round(b.size), 'brushSizeVal', v=>v+'px');
+  setSlider('brushOpacity', Math.round(b.opacity*100), 'brushOpacityVal', v=>v+'%');
+  setSlider('brushHardness', Math.round(b.hardness*100), 'brushHardnessVal', v=>v+'%');
+  setSlider('brushSpacing', Math.round(b.spacing*100), 'brushSpacingVal', v=>v+'%');
+  setSlider('brushSizePressure', Math.round(b.sizePressure*100), 'brushSizePressureVal', v=>v+'%');
+  setSlider('brushOpacityPressure', Math.round(b.opacityPressure*100), 'brushOpacityPressureVal', v=>v+'%');
+  setSlider('brushScatter', Math.round(b.scatter*100), 'brushScatterVal', v=>v+'%');
+  document.getElementById('brushShape').value = b.shape;
+  document.getElementById('brushBlend').value = b.blend;
+  document.getElementById('brushBlend').disabled = b.isEraser;
+  document.getElementById('brushIsEraser').checked = b.isEraser;
+  document.getElementById('textureUploadRow').hidden = b.shape !== 'texture';
+  document.getElementById('btnResetBrush').style.visibility = b.builtin ? 'visible' : 'hidden';
+  document.getElementById('btnDeleteBrush').style.visibility = b.builtin ? 'hidden' : 'visible';
+  updateBrushPreview();
+}
+function updateBrushPreview(){
+  const b = activeBrush();
+  const previewSize = Math.round(Math.min(56, Math.max(10, b.size)));
+  document.getElementById('brushPreviewImg').src = getDabCanvas(b, previewSize, state.color).toDataURL();
+}
+function bindBrushSlider(inputId, labelId, prop, isPercent, fmt){
+  document.getElementById(inputId).addEventListener('input', e => {
+    const raw = Number(e.target.value);
+    activeBrush()[prop] = isPercent ? raw/100 : raw;
+    document.getElementById(labelId).textContent = fmt(raw);
+    dabCache.clear();
+    updateBrushPreview();
+    renderBrushList();
+  });
+}
+bindBrushSlider('brushSize','brushSizeVal','size', false, v=>v+'px');
+bindBrushSlider('brushOpacity','brushOpacityVal','opacity', true, v=>v+'%');
+bindBrushSlider('brushHardness','brushHardnessVal','hardness', true, v=>v+'%');
+bindBrushSlider('brushSpacing','brushSpacingVal','spacing', true, v=>v+'%');
+bindBrushSlider('brushSizePressure','brushSizePressureVal','sizePressure', true, v=>v+'%');
+bindBrushSlider('brushOpacityPressure','brushOpacityPressureVal','opacityPressure', true, v=>v+'%');
+bindBrushSlider('brushScatter','brushScatterVal','scatter', true, v=>v+'%');
+
+document.getElementById('brushNameInput').addEventListener('input', e => { activeBrush().name = e.target.value; renderBrushList(); });
+document.getElementById('brushShape').addEventListener('change', e => {
+  const b = activeBrush(); b.shape = e.target.value;
+  document.getElementById('textureUploadRow').hidden = b.shape !== 'texture';
+  dabCache.clear(); updateBrushPreview(); renderBrushList();
+});
+document.getElementById('brushBlend').addEventListener('change', e => { activeBrush().blend = e.target.value; });
+document.getElementById('brushIsEraser').addEventListener('change', e => {
+  const b = activeBrush(); b.isEraser = e.target.checked;
+  document.getElementById('brushBlend').disabled = b.isEraser;
+});
+document.getElementById('btnUploadTexture').addEventListener('click', () => document.getElementById('textureFileInput').click());
+document.getElementById('textureFileInput').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    const b = activeBrush();
+    b.textureData = reader.result;
+    const img = new Image();
+    img.onload = () => { b.textureImg = img; dabCache.clear(); updateBrushPreview(); renderBrushList(); };
+    img.src = b.textureData;
+  };
+  reader.readAsDataURL(file);
+  e.target.value = '';
+});
+
+function cloneBrush(src, name, builtin){
+  return {
+    id: uid(), name, shape:src.shape, size:src.size, opacity:src.opacity, hardness:src.hardness,
+    spacing:src.spacing, sizePressure:src.sizePressure, opacityPressure:src.opacityPressure,
+    scatter:src.scatter, blend:src.blend, isEraser:src.isEraser, builtin,
+    textureData: src.textureData||null, textureImg: src.textureImg||null
+  };
+}
+function addBrush(){
+  const b = cloneBrush(activeBrush(), '新しいブラシ', false);
+  state.brushes.push(b);
+  state.activeBrushId = b.id;
+  renderBrushList(); renderBrushEditor();
+}
+function duplicateBrush(){
+  const src = activeBrush();
+  const b = cloneBrush(src, src.name+' コピー', false);
+  state.brushes.splice(state.brushes.indexOf(src)+1, 0, b);
+  state.activeBrushId = b.id;
+  renderBrushList(); renderBrushEditor();
+}
+function deleteBrush(){
+  const b = activeBrush();
+  if (b.builtin) return;
+  if (state.brushes.length<=1){ alert('最後のブラシは削除できません。'); return; }
+  if (!confirm('「'+b.name+'」を削除しますか？')) return;
+  const idx = state.brushes.indexOf(b);
+  state.brushes.splice(idx,1);
+  state.activeBrushId = state.brushes[Math.max(0,idx-1)].id;
+  renderBrushList(); renderBrushEditor();
+}
+function resetBrush(){
+  const b = activeBrush();
+  if (!b.builtin) return;
+  const def = DEFAULT_BRUSHES.find(d => d.id === b.id);
+  if (!def) return;
+  b.shape=def.shape; b.size=def.size; b.opacity=def.opacity; b.hardness=def.hardness; b.spacing=def.spacing;
+  b.sizePressure=def.sizePressure; b.opacityPressure=def.opacityPressure; b.scatter=def.scatter;
+  b.blend=def.blend; b.isEraser=def.isEraser; b.name=def.name; b.textureData=null; b.textureImg=null;
+  dabCache.clear();
+  renderBrushList(); renderBrushEditor();
+}
+document.getElementById('btnAddBrush').addEventListener('click', addBrush);
+document.getElementById('btnDupBrush').addEventListener('click', duplicateBrush);
+document.getElementById('btnDeleteBrush').addEventListener('click', deleteBrush);
+document.getElementById('btnResetBrush').addEventListener('click', resetBrush);
+
+function renderBrushList(){
+  const el = document.getElementById('brushList');
+  el.innerHTML = '';
+  for (const b of state.brushes){
+    const chip = document.createElement('button');
+    chip.className = 'brush-chip' + (b.id === state.activeBrushId ? ' active' : '');
+    const img = document.createElement('img');
+    img.className = 'brush-chip-swatch';
+    img.src = getDabCanvas(b, 22, state.color).toDataURL();
+    chip.appendChild(img);
+    const label = document.createElement('span');
+    label.textContent = b.name;
+    chip.appendChild(label);
+    chip.onclick = () => selectBrushTool(b.id);
+    el.appendChild(chip);
+  }
+  persistCustomBrushes();
+}
+
+/* ---- brush import/export ---- */
+function sanitizeFilename(name){
+  const s = String(name||'brush').replace(/[\/\\:*?"<>|]/g,'_').trim();
+  return s || 'brush';
+}
+function clampNum(v, lo, hi, dflt){ const n = Number(v); return isFinite(n) ? Math.min(hi, Math.max(lo, n)) : dflt; }
+function brushToPlainObject(b){
+  return { formatVersion:1, type:'brush', name:b.name, shape:b.shape, size:b.size, opacity:b.opacity,
+    hardness:b.hardness, spacing:b.spacing, sizePressure:b.sizePressure, opacityPressure:b.opacityPressure,
+    scatter:b.scatter, blend:b.blend, isEraser:b.isEraser, textureData:b.textureData||null };
+}
+function importBrushObject(obj){
+  if (!obj || typeof obj !== 'object') throw new Error('不正なブラシデータです');
+  const b = {
+    id: uid(), name: obj.name || 'インポートしたブラシ',
+    shape: (obj.shape==='square'||obj.shape==='texture') ? obj.shape : 'round',
+    size: clampNum(obj.size,1,300,14), opacity: clampNum(obj.opacity,0,1,1), hardness: clampNum(obj.hardness,0,1,1),
+    spacing: clampNum(obj.spacing,0.02,2,0.1), sizePressure: clampNum(obj.sizePressure,0,1,0.5),
+    opacityPressure: clampNum(obj.opacityPressure,0,1,0), scatter: clampNum(obj.scatter,0,1,0),
+    blend: typeof obj.blend === 'string' ? obj.blend : 'source-over', isEraser: !!obj.isEraser,
+    builtin:false, textureData: obj.textureData || null, textureImg: null
+  };
+  state.brushes.push(b);
+  if (b.textureData){
+    const img = new Image();
+    img.onload = () => { b.textureImg = img; dabCache.clear(); renderBrushList(); if (activeBrush()===b) renderBrushEditor(); };
+    img.src = b.textureData;
+  }
+  return b;
+}
+function persistCustomBrushes(){
+  try {
+    const arr = state.brushes.filter(b=>!b.builtin).map(brushToPlainObject);
+    localStorage.setItem(BRUSHES_STORAGE_KEY, JSON.stringify(arr));
+  } catch(e){ /* storage unavailable or full — skip silently */ }
+}
+function restoreCustomBrushesFromStorage(){
+  try {
+    const raw = localStorage.getItem(BRUSHES_STORAGE_KEY);
+    if (!raw) return;
+    const arr = JSON.parse(raw);
+    if (Array.isArray(arr)) for (const item of arr) importBrushObject(item);
+  } catch(e){ /* ignore corrupt data */ }
+}
+function downloadTextFile(text, filename, mime){
+  const blob = new Blob([text], {type:mime});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+}
+function timestamp(){ return new Date().toISOString().replace(/[:.]/g,'-'); }
+function exportBrushJSON(brush){
+  downloadTextFile(JSON.stringify(brushToPlainObject(brush), null, 2), sanitizeFilename(brush.name)+'.brush.json', 'application/json');
+}
+function exportAllBrushesZip(){
+  const encoder = new TextEncoder();
+  const used = new Map();
+  const files = state.brushes.map(brush => {
+    let base = sanitizeFilename(brush.name);
+    const count = used.get(base) || 0;
+    const name = (count>0 ? base+'-'+(count+1) : base) + '.brush.json';
+    used.set(base, count+1);
+    return { name, bytes: encoder.encode(JSON.stringify(brushToPlainObject(brush), null, 2)) };
+  });
+  const zipBytes = writeZip(files);
+  const blob = new Blob([zipBytes], {type:'application/zip'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'brushes-'+timestamp()+'.zip';
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+}
+document.getElementById('btnExportBrush').addEventListener('click', () => exportBrushJSON(activeBrush()));
+document.getElementById('btnExportAllBrushes').addEventListener('click', exportAllBrushesZip);
+document.getElementById('btnImportBrushes').addEventListener('click', () => document.getElementById('brushFileInput').click());
+document.getElementById('brushFileInput').addEventListener('change', async e => {
+  const files = Array.from(e.target.files || []);
+  if (!files.length) return;
+  let imported = 0; const errors = [];
+  for (const file of files){
+    try {
+      if (file.name.toLowerCase().endsWith('.zip')){
+        const buf = await file.arrayBuffer();
+        const entries = readZip(buf);
+        for (const entry of entries){
+          if (!entry.name.toLowerCase().endsWith('.json')) continue;
+          try { importBrushObject(JSON.parse(entry.text())); imported++; }
+          catch(err){ errors.push(entry.name+': '+err.message); }
+        }
+      } else {
+        importBrushObject(JSON.parse(await file.text()));
+        imported++;
+      }
+    } catch(err){ errors.push(file.name+': '+err.message); }
+  }
+  renderBrushList();
+  if (errors.length) alert(imported+'個のブラシを読み込みました。\n一部エラー:\n'+errors.join('\n'));
+  else if (imported) alert(imported+'個のブラシを読み込みました。');
+  document.getElementById('brushFileInput').value = '';
+});
+
+/* ======================================================================
+   Panel tabs / popovers
+   ====================================================================== */
+document.querySelectorAll('.panel-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.panel-tab').forEach(t => t.classList.toggle('active', t===tab));
+    document.getElementById('panelBrush').hidden = tab.dataset.panel !== 'brush';
+    document.getElementById('panelColor').hidden = tab.dataset.panel !== 'color';
+    document.getElementById('panelLayers').hidden = tab.dataset.panel !== 'layers';
+  });
+});
+document.getElementById('btnPanelToggle').addEventListener('click', () => {
+  document.getElementById('sidePanel').classList.toggle('open');
+});
+
+document.getElementById('btnAddLayer').addEventListener('click', addLayer);
+document.getElementById('btnDupLayer').addEventListener('click', () => duplicateLayer(state.activeLayerIndex));
+document.getElementById('btnDelLayer').addEventListener('click', () => deleteLayer(state.activeLayerIndex));
+document.getElementById('btnMergeLayer').addEventListener('click', () => mergeDown(state.activeLayerIndex));
+document.getElementById('btnClearLayer').addEventListener('click', clearActiveLayer);
+
+const symmetryPopover = document.getElementById('symmetryPopover');
+const btnSymmetry = document.getElementById('btnSymmetry');
+const projectMenuPopover = document.getElementById('projectMenuPopover');
+const btnProjectMenu = document.getElementById('btnProjectMenu');
+function setupPopoverToggle(btn, popover){
+  btn.addEventListener('click', e => {
+    e.stopPropagation();
+    const willOpen = popover.hidden;
+    document.querySelectorAll('.popover').forEach(p => p.hidden = true);
+    popover.hidden = !willOpen;
+  });
+}
+setupPopoverToggle(btnSymmetry, symmetryPopover);
+setupPopoverToggle(btnProjectMenu, projectMenuPopover);
+document.addEventListener('click', e => {
+  document.querySelectorAll('.popover').forEach(p => {
+    if (p.hidden) return;
+    const trigger = p === symmetryPopover ? btnSymmetry : btnProjectMenu;
+    if (!p.contains(e.target) && e.target !== trigger && !trigger.contains(e.target)) p.hidden = true;
+  });
+});
+document.getElementById('symModeControl').addEventListener('click', e => {
+  const btn = e.target.closest('.seg-btn');
+  if (!btn) return;
+  state.symmetry.mode = btn.dataset.mode;
+  document.querySelectorAll('#symModeControl .seg-btn').forEach(b => b.classList.toggle('active', b===btn));
+  document.getElementById('radialSegRow').hidden = btn.dataset.mode !== 'radial';
+  btnSymmetry.classList.toggle('active', btn.dataset.mode !== 'off');
+  updateSymmetryGuide();
+});
+document.getElementById('radialSegments').addEventListener('input', e => {
+  state.symmetry.segments = Number(e.target.value);
+  document.getElementById('radialSegVal').textContent = e.target.value;
+  updateSymmetryGuide();
+});
+fillToleranceInput.addEventListener('input', e => {
+  state.fillTolerance = Number(e.target.value);
+  fillToleranceVal.textContent = e.target.value;
+});
+
+/* ======================================================================
+   Zoom
+   ====================================================================== */
+document.getElementById('zoomIn').addEventListener('click', () => setZoom(state.zoom + 0.1));
+document.getElementById('zoomOut').addEventListener('click', () => setZoom(state.zoom - 0.1));
+zoomSlider.addEventListener('input', e => setZoom(Number(e.target.value)/100));
+canvasViewport.addEventListener('wheel', e => {
+  if (e.ctrlKey || e.metaKey){ e.preventDefault(); setZoom(state.zoom * (1 - e.deltaY*0.001)); }
+}, { passive:false });
+
+/* ======================================================================
+   Image export (PNG / JPEG)
+   ====================================================================== */
+function exportImage(){
+  const format = document.getElementById('exportFormat').value;
+  const tmp = document.createElement('canvas');
+  tmp.width = state.width; tmp.height = state.height;
+  const tctx = tmp.getContext('2d');
+  if (format === 'jpeg'){ tctx.fillStyle = '#ffffff'; tctx.fillRect(0,0,state.width,state.height); }
+  for (const layer of state.layers){
+    if (!layer.visible) continue;
+    tctx.globalAlpha = layer.opacity;
+    tctx.globalCompositeOperation = layer.blend;
+    tctx.drawImage(layer.canvas, 0, 0);
+  }
+  const mime = format==='jpeg' ? 'image/jpeg' : 'image/png';
+  const ext = format==='jpeg' ? 'jpg' : 'png';
+  tmp.toBlob(blob => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'drawing-'+timestamp()+'.'+ext;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  }, mime, format==='jpeg' ? 0.92 : undefined);
+}
+document.getElementById('btnUndo').addEventListener('click', undo);
+document.getElementById('btnRedo').addEventListener('click', redo);
+document.getElementById('btnSave').addEventListener('click', exportImage);
+
+/* ======================================================================
+   Open image as new layer
+   ====================================================================== */
+const fileInput = document.getElementById('fileInput');
+document.getElementById('btnOpen').addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const img = new Image();
+  img.onload = () => {
+    const layer = createLayer('画像');
+    const scale = Math.min(state.width/img.width, state.height/img.height);
+    const w = img.width*scale, h = img.height*scale;
+    layer.ctx.drawImage(img, (state.width-w)/2, (state.height-h)/2, w, h);
+    const index = state.activeLayerIndex + 1;
+    state.layers.splice(index, 0, layer);
+    state.activeLayerIndex = index;
+    renderLayerList(); render();
+    pushHistory(
+      () => { state.layers.splice(index,1); state.activeLayerIndex = Math.max(0,index-1); renderLayerList(); render(); },
+      () => { state.layers.splice(index,0,layer); state.activeLayerIndex = index; renderLayerList(); render(); }
+    );
+    URL.revokeObjectURL(img.src);
+  };
+  img.src = URL.createObjectURL(file);
+  fileInput.value = '';
+});
+
+/* ======================================================================
+   New canvas modal
+   ====================================================================== */
+const modalOverlay = document.getElementById('modalOverlay');
+const newCanvasWidth = document.getElementById('newCanvasWidth');
+const newCanvasHeight = document.getElementById('newCanvasHeight');
+document.getElementById('btnNew').addEventListener('click', () => { modalOverlay.hidden = false; });
+document.getElementById('btnModalCancel').addEventListener('click', () => { modalOverlay.hidden = true; });
+document.querySelectorAll('.preset-btn').forEach(btn => {
+  btn.addEventListener('click', () => { newCanvasWidth.value = btn.dataset.w; newCanvasHeight.value = btn.dataset.h; });
+});
+document.getElementById('btnModalConfirm').addEventListener('click', () => {
+  const w = Math.min(4000, Math.max(64, parseInt(newCanvasWidth.value,10) || 1024));
+  const h = Math.min(4000, Math.max(64, parseInt(newCanvasHeight.value,10) || 1024));
+  if (state.history.length > 0 && !window.confirm('現在の作業内容は失われます。よろしいですか？')) return;
+  createNewCanvas(w, h);
+  modalOverlay.hidden = true;
+});
+
+/* ======================================================================
+   Project (drawing data) JSON export / import / URL load / autosave
+   ====================================================================== */
+function serializeProject(){
+  return JSON.stringify({
+    formatVersion: 1, type: 'oekaki-project', width: state.width, height: state.height,
+    activeLayerIndex: state.activeLayerIndex,
+    layers: state.layers.map(l => ({ name:l.name, visible:l.visible, opacity:l.opacity, blend:l.blend, data:l.canvas.toDataURL('image/png') })),
+    savedAt: new Date().toISOString()
+  });
+}
+function loadProjectFromData(obj){
+  return new Promise((resolve, reject) => {
+    if (!obj || obj.type !== 'oekaki-project' || !Array.isArray(obj.layers)){ reject(new Error('不正なプロジェクトデータです')); return; }
+    const w = obj.width || 1024, h = obj.height || 1024;
+    const loadedLayers = new Array(obj.layers.length);
+    let remaining = obj.layers.length;
+    if (remaining === 0){ finish(); return; }
+    obj.layers.forEach((ld, idx) => {
+      const img = new Image();
+      img.onload = () => {
+        const layer = createLayer(ld.name || ('レイヤー'+(idx+1)), w, h);
+        layer.ctx.drawImage(img,0,0);
+        layer.visible = ld.visible !== false;
+        layer.opacity = typeof ld.opacity === 'number' ? ld.opacity : 1;
+        layer.blend = ld.blend || 'source-over';
+        loadedLayers[idx] = layer;
+        if (--remaining === 0) finish();
+      };
+      img.onerror = () => { loadedLayers[idx] = createLayer('(読み込み失敗)', w, h); if (--remaining === 0) finish(); };
+      img.src = ld.data;
+    });
+    function finish(){
+      state.width = w; state.height = h;
+      mainCanvas.width = w; mainCanvas.height = h;
+      state.layers = loadedLayers;
+      state.activeLayerIndex = Math.min(obj.activeLayerIndex || 0, state.layers.length-1);
+      state.history = []; state.future = [];
+      updateHistoryButtons();
+      setZoom(1);
+      renderLayerList(); render();
+      canvasSizeLabel.textContent = w + ' × ' + h;
+      updateSymmetryGuide();
+      resolve();
+    }
+  });
+}
+function exportProjectFile(){
+  downloadTextFile(serializeProject(), 'drawing-project-'+timestamp()+'.json', 'application/json');
+}
+async function loadProjectFromURL(url){
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const obj = await res.json();
+    if (state.history.length > 0 && !confirm('現在の作業内容は失われます。URLからデータを読み込みますか？')) return;
+    await loadProjectFromData(obj);
+  } catch(err){
+    alert('URLからの読み込みに失敗しました: ' + err.message + '\n\n※読み込み先のサーバーがCORSを許可している必要があります（例: raw.githubusercontent.com など）。');
+  }
+}
+const projectFileInput = document.getElementById('projectFileInput');
+projectFileInput.addEventListener('change', async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  try {
+    const obj = JSON.parse(await file.text());
+    if (state.history.length > 0 && !confirm('現在の作業内容は失われます。読み込みを続けますか？')){ projectFileInput.value=''; return; }
+    await loadProjectFromData(obj);
+  } catch(err){ alert('プロジェクトファイルの読み込みに失敗しました: ' + err.message); }
+  projectFileInput.value = '';
+});
+document.getElementById('menuExportProject').addEventListener('click', () => { exportProjectFile(); projectMenuPopover.hidden = true; });
+document.getElementById('menuImportProject').addEventListener('click', () => { projectFileInput.click(); projectMenuPopover.hidden = true; });
+document.getElementById('menuLoadURL').addEventListener('click', () => {
+  projectMenuPopover.hidden = true;
+  const url = window.prompt('読み込むJSONファイルのURLを入力してください\n（例: raw.githubusercontent.com のリンクなど）', 'https://');
+  if (url && url.trim() && url.trim() !== 'https://') loadProjectFromURL(url.trim());
+});
+
+function scheduleAutosave(){
+  autosaveDirty = true;
+  if (autosaveTimer) clearTimeout(autosaveTimer);
+  autosaveTimer = setTimeout(doAutosave, 4000);
+}
+function doAutosave(){
+  if (!autosaveDirty) return;
+  try {
+    localStorage.setItem(AUTOSAVE_KEY, serializeProject());
+    autosaveDirty = false;
+  } catch(e){ console.warn('自動保存に失敗しました（ストレージ容量の上限など）', e); }
+}
+function checkAutosaveRestore(){
+  let raw;
+  try { raw = localStorage.getItem(AUTOSAVE_KEY); } catch(e){ return; }
+  if (!raw) return;
+  if (confirm('自動保存されたデータが見つかりました。復元しますか？\n（キャンセルすると新規キャンバスのまま続行します）')){
+    try { loadProjectFromData(JSON.parse(raw)); } catch(e){ alert('自動保存データの復元に失敗しました。'); }
+  }
+}
+
+/* ======================================================================
+   Keyboard shortcuts
+   ====================================================================== */
+window.addEventListener('keydown', e => {
+  const tag = e.target.tagName;
+  if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA' || e.target.isContentEditable) return;
+  const mod = e.ctrlKey || e.metaKey;
+  if (mod && e.key.toLowerCase() === 'z' && !e.shiftKey){ e.preventDefault(); undo(); return; }
+  if (mod && (e.key.toLowerCase() === 'y' || (e.key.toLowerCase() === 'z' && e.shiftKey))){ e.preventDefault(); redo(); return; }
+  if (mod && e.key.toLowerCase() === 's'){ e.preventDefault(); exportImage(); return; }
+  if (e.code === 'Space' && !spaceDown){ spaceDown = true; prevToolBeforeSpace = state.tool; setUtilityTool('hand'); return; }
+  switch(e.key.toLowerCase()){
+    case 'b': selectBrushTool('brush'); break;
+    case 'n': selectBrushTool('pencil'); break;
+    case 'm': selectBrushTool('marker'); break;
+    case 'e': selectBrushTool('eraser'); break;
+    case 'g': setUtilityTool('bucket'); break;
+    case 'i': setUtilityTool('eyedropper'); break;
+    case '[': { const b=activeBrush(); b.size=Math.max(1,b.size-2); renderBrushEditor(); renderBrushList(); break; }
+    case ']': { const b=activeBrush(); b.size=Math.min(300,b.size+2); renderBrushEditor(); renderBrushList(); break; }
+  }
+});
+window.addEventListener('keyup', e => {
+  if (e.code === 'Space' && spaceDown){
+    spaceDown = false;
+    if (prevToolBeforeSpace === 'draw') selectBrushTool(state.activeBrushId);
+    else setUtilityTool(prevToolBeforeSpace);
+  }
+});
+
+/* ======================================================================
+   Init
+   ====================================================================== */
+populateBlendSelect(document.getElementById('brushBlend'));
+createNewCanvas(1024, 1024);
+restoreCustomBrushesFromStorage();
+selectBrushTool('brush');
+setColor('#1e1e2e');
+renderRecentColors();
+
+(function initLoad(){
+  const params = new URLSearchParams(location.search);
+  const loadParam = params.get('load');
+  if (loadParam) loadProjectFromURL(loadParam);
+  else checkAutosaveRestore();
+})();
+setInterval(() => { if (autosaveDirty) doAutosave(); }, 30000);
+window.addEventListener('beforeunload', () => { if (autosaveDirty) doAutosave(); });
+</script>
+</body>
+</html>
