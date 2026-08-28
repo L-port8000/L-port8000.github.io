@@ -51,11 +51,11 @@
     font-size:16px; font-weight:700; max-width:62vw; overflow:hidden; text-overflow:ellipsis;
     white-space:nowrap; padding:10px 8px; cursor:pointer;
   }
-  .topbar-title-btn span:last-child{ color:var(--text2); font-size:11px; }
+  .topbar-title-btn svg{ color:var(--text2); }
   .topbar-actions{ display:flex; gap:2px; }
   .topbar-actions button{
-    background:none; border:none; color:var(--text); width:40px; height:40px; font-size:18px; cursor:pointer;
-    border-radius:50%;
+    background:none; border:none; color:var(--text); width:40px; height:40px; cursor:pointer;
+    border-radius:50%; display:flex; align-items:center; justify-content:center;
   }
   .topbar-actions button:active{ background:var(--surface); }
 
@@ -70,15 +70,15 @@
   .info-bar{ padding:10px 16px 2px; display:flex; align-items:flex-start; gap:8px; }
   .info-title{ flex:1; font-size:15px; font-weight:600; line-height:1.4; }
   .info-sub{ font-size:12px; color:var(--text2); margin-top:2px; padding:0 16px; }
-  .icon-plain{ background:none; border:none; color:var(--text2); font-size:16px; width:30px; height:30px; cursor:pointer; }
+  .icon-plain{ background:none; border:none; color:var(--text2); width:30px; height:30px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
 
   .transport-row{ display:flex; align-items:center; justify-content:center; gap:26px; padding:12px 0 6px; }
   .transport-row button{
-    background:none; border:none; color:var(--text); font-size:22px; width:44px; height:44px;
+    background:none; border:none; color:var(--text); width:44px; height:44px;
     display:flex; align-items:center; justify-content:center; cursor:pointer;
   }
   .transport-row button#playPauseBtn{
-    background:#fff; color:#000; border-radius:50%; width:54px; height:54px; font-size:19px;
+    background:#fff; color:#000; border-radius:50%; width:54px; height:54px;
   }
   .transport-row button:disabled{ opacity:.3; }
 
@@ -87,7 +87,8 @@
   .queue-header h2 span{ color:var(--text2); font-weight:400; font-size:12px; }
   .queue-header-right{ display:flex; align-items:center; gap:2px; }
   .queue-header-right button{
-    background:none; border:none; color:var(--text2); font-size:17px; width:34px; height:34px; cursor:pointer;
+    background:none; border:none; color:var(--text2); width:34px; height:34px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
   }
   .queue-header-right button.active{ color:var(--red); }
 
@@ -106,9 +107,10 @@
   .queue-row .subtext{ font-size:11px; color:var(--text2); margin-top:3px; }
   .queue-row .row-actions{ display:flex; align-items:center; gap:0; flex:0 0 auto; }
   .queue-row .row-actions button{
-    background:none; border:none; color:var(--text2); width:30px; height:36px; font-size:16px; cursor:pointer;
+    background:none; border:none; color:var(--text2); width:30px; height:36px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
   }
-  .drag-handle{ cursor:grab; touch-action:none; font-size:18px !important; }
+  .drag-handle{ cursor:grab; touch-action:none; }
   .queue-row.dragging{
     position:relative; z-index:30; background:var(--surface); opacity:.92;
     box-shadow:0 6px 16px rgba(0,0,0,.5); border-radius:8px;
@@ -136,7 +138,7 @@
   }
   #sheetCloseBtn{
     position:absolute; top:10px; right:12px; background:none; border:none; color:var(--text2);
-    font-size:16px; width:32px; height:32px; cursor:pointer;
+    width:32px; height:32px; cursor:pointer; display:flex; align-items:center; justify-content:center;
   }
   .sheet-title{ font-size:16px; font-weight:700; margin:0 0 12px; padding-right:24px; }
   .sheet-label{ display:block; font-size:12px; color:var(--text2); margin:10px 0 0; }
@@ -166,7 +168,8 @@
   .lib-row.active .lib-row-main span:first-child{ color:var(--red); font-weight:700; }
   .lib-count{ font-size:11.5px; color:var(--text2); }
   .lib-row button.icon-btn{
-    background:none; border:none; color:var(--text2); width:34px; height:34px; font-size:15px; cursor:pointer;
+    background:none; border:none; color:var(--text2); width:34px; height:34px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
   }
   .lib-new-row{ margin-top:14px; }
 </style>
@@ -175,11 +178,16 @@
 <div class="app">
   <div class="topbar">
     <button class="topbar-title-btn" id="openLibraryBtn">
-      <span id="topTitle">プレイリスト</span><span>&#8964;</span>
+      <span id="topTitle">プレイリスト</span>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
     </button>
     <div class="topbar-actions">
-      <button id="openAddBtn" title="動画を追加">&#65291;</button>
-      <button id="openMoreBtn" title="その他">&#8942;</button>
+      <button id="openAddBtn" title="動画を追加">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+      </button>
+      <button id="openMoreBtn" title="その他">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="12" cy="19" r="2"></circle></svg>
+      </button>
     </div>
   </div>
 
@@ -192,21 +200,29 @@
 
   <div class="info-bar">
     <div class="info-title" id="nowPlayingTitle">プレイリストは空です</div>
-    <button class="icon-plain" id="editCurrentBtn" title="編集">&#9998;</button>
+    <button class="icon-plain" id="editCurrentBtn" title="編集">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+    </button>
   </div>
   <div class="info-sub" id="nowPlayingSub"></div>
 
   <div class="transport-row">
-    <button id="prevBtn" title="前へ">&#9198;</button>
-    <button id="playPauseBtn" title="再生/一時停止">&#9654;</button>
-    <button id="nextBtn" title="次へ">&#9197;</button>
+    <button id="prevBtn" title="前へ">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"></path></svg>
+    </button>
+    <button id="playPauseBtn" title="再生/一時停止"></button>
+    <button id="nextBtn" title="次へ">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"></path></svg>
+    </button>
   </div>
 
   <div class="queue-header">
     <h2>次の動画 <span id="queueCount"></span></h2>
     <div class="queue-header-right">
-      <button id="shuffleBtn" title="シャッフル">&#128256;</button>
-      <button id="repeatBtn" title="繰り返し">&#128257;</button>
+      <button id="shuffleBtn" title="シャッフル">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>
+      </button>
+      <button id="repeatBtn" title="繰り返し"></button>
     </div>
   </div>
 
@@ -229,7 +245,9 @@
 
 <div id="sheetOverlay"></div>
 <div id="sheet">
-  <button id="sheetCloseBtn">&#10005;</button>
+  <button id="sheetCloseBtn">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+  </button>
   <div id="sheetBody"></div>
 </div>
 
@@ -421,7 +439,9 @@
   }
   function updatePlayPauseIcon(){
     var btn = document.getElementById("playPauseBtn");
-    btn.innerHTML = isPlayingFlag ? "&#10074;&#10074;" : "&#9654;";
+    var playSvg = '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>';
+    var pauseSvg = '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg>';
+    btn.innerHTML = isPlayingFlag ? pauseSvg : playSvg;
   }
   window.addEventListener("message", function(e){
     if(typeof e.data !== "string") return;
@@ -603,9 +623,9 @@
     var url = buildEmbedUrl(getActiveItems()[idx]);
     var done = function(){
       if(!btnEl) return;
-      var orig = btnEl.textContent;
+      var orig = btnEl.innerHTML;
       btnEl.textContent = "コピーしました";
-      setTimeout(function(){ btnEl.textContent = orig; }, 1200);
+      setTimeout(function(){ btnEl.innerHTML = orig; }, 1200);
     };
     if(navigator.clipboard && navigator.clipboard.writeText){
       navigator.clipboard.writeText(url).then(done).catch(function(){ window.prompt("コピーしてください:", url); });
@@ -623,7 +643,7 @@
     var listEl = document.getElementById("queueList");
     document.getElementById("queueCount").textContent = items.length ? ("(" + items.length + ")") : "";
     if(items.length === 0){
-      listEl.innerHTML = '<li class="empty-queue">まだ動画がありません。右上の &#65291; から追加してください。</li>';
+      listEl.innerHTML = '<li class="empty-queue">まだ動画がありません。右上の <svg style="vertical-align:middle" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> から追加してください。</li>';
     } else {
       listEl.innerHTML = items.map(function(item, i){
         var active = (i === state.currentIndex) ? " active" : "";
@@ -635,8 +655,8 @@
             '<img class="thumb" src="' + thumb + '" alt="" onerror="this.style.visibility=\'hidden\'">' +
             '<div class="meta"><div class="title">' + title + '</div><div class="subtext">' + sub + '</div></div>' +
             '<div class="row-actions">' +
-              '<button data-action="edit" title="編集">&#8942;</button>' +
-              '<button class="drag-handle" title="並べ替え">&#9776;</button>' +
+              '<button data-action="edit" title="編集"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="12" cy="19" r="2"></circle></svg></button>' +
+              '<button class="drag-handle" title="並べ替え"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg></button>' +
             '</div>' +
           '</li>'
         );
@@ -668,7 +688,9 @@
   function updateModeButtons(){
     var rb = document.getElementById("repeatBtn");
     rb.classList.toggle("active", state.repeatMode !== "none");
-    rb.innerHTML = state.repeatMode === "one" ? "&#128258;" : "&#128257;";
+    var repeatAllSvg = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>';
+    var repeatOneSvg = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path><text x="12" y="16" font-size="11" text-anchor="middle" fill="currentColor" stroke="none" font-family="sans-serif">1</text></svg>';
+    rb.innerHTML = state.repeatMode === "one" ? repeatOneSvg : repeatAllSvg;
     document.getElementById("shuffleBtn").classList.toggle("active", state.shuffle);
   }
 
@@ -699,8 +721,8 @@
             '<span>' + escapeHtml(p.name) + '</span>' +
             '<span class="lib-count">' + p.items.length + ' 本</span>' +
           '</div>' +
-          '<button class="icon-btn" data-action="rename" title="名前を変更">&#9998;</button>' +
-          '<button class="icon-btn" data-action="delete" title="削除">&#128465;</button>' +
+          '<button class="icon-btn" data-action="rename" title="名前を変更"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>' +
+          '<button class="icon-btn" data-action="delete" title="削除"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg></button>' +
         '</div>'
       );
     }).join("");
