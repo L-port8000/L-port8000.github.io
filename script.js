@@ -50,7 +50,6 @@ const i18nData = {
         home_text: "Welcome. This is Ituki's personal website. \nThere's nothing particularly special here, but please take your time and have a look around！",
         news: "Recommended",
         about_text: "Hello!\nHi, I’m Ituki! I’m mainly active in the gadget community on X,\nbut I also dabble in a variety of other fields\n(e.g., the X's Chinese-speaking world, the X's IT community, etc.).\n\nCurrently studying:\n・Simplified Chinese\n・English\n・Chief Electrical Engineer (Grade 3)\n・IT Passport\n\nand more. \n\nHobbies\n・Windows app development\n・Tinkering with Linux\n・Anime and manga\n・Programming\n・Discuss with AI (?)\n\nI also enjoy searching for websites that interest me, figuring out ways to bypass restrictions on study platforms, and doing research. \nFeel free to reach out to me on Twitter or elsewhere! If you reply casually, I’ll reply casually; if you reply politely, I try to reply politely. \nI look forward to your continued support! \nI’m looking for link exchanges! Please let me know via DM or similar!",
-        slink_404: "404 Not Found!",
         soichiaishiteru: "Soichi's Homepage！！！<br>too cooool!!!",
         User0899: "User0899's Homepage.\nIt opens without any problems even on an iPhone 4s. The server crashes frequently.",
         kotosandaaaa: "ことだよ！！'s Homepage.\nIt is a very cute Sacabambaspis.",
@@ -61,7 +60,6 @@ const i18nData = {
         Name: "TheName's Homepage\n博麗紅葉's doppelganger, probably this person is also smart.",
         marunoringo: "マルノリンゴ's Homepage\nHe is writting too many blogs!",
         Liyun: "丽丽云's Homepage!\nIt’s a beautiful website with cherry blossoms fluttering about!",
-        ayane: "彩音さんのホームページ！\nあたまよさそう（こなみかん）",
         redirtect_slink: "To the List of Mutual Links",
         projects_text: "A list of my works.",
         project1_text: "",
@@ -93,7 +91,6 @@ const i18nData = {
         home_text: "欢迎。这是Ituki的个人网站。\n这里没什么特别之处，但请您慢慢逛，随意看看！",
         news: "推荐",
         about_text: "你好！\n大家好，我是Ituki！我主要活跃在X平台上的科技圈，\n但也涉猎其他各种领域\n（例如X平台的中文圈、X平台的IT社区等）。\n\n目前正在学习：\n・简体中文\n・英语\n・首席电气工程师（3级）\n・IT护照\n\n等等。\n\n兴趣爱好\n・Windows应用开发\n・折腾Linux\n・动漫与漫画\n・编程\n・与AI对话（？）\n\n我还喜欢搜寻感兴趣的网站、研究如何绕过学习平台的限制，以及进行各种研究。\n欢迎在Twitter或其他平台联系我！如果你随意回复，我会随意回复；如果你礼貌回复，我会尽量礼貌回复。\n期待大家继续支持！\n正在寻找链接交换！请通过私信等方式联系我！",
-        slink_404: "404 Not Found!",
         soichiaishiteru: "Soichi的网首！！！<br>他非常帅气！",
         User0899: "User0899的网首。\n据说用 iPhone 4s 也能正常打開。不過服務器經常炸服...",
         kotosandaaaa: "ことだよ！！的网首。\n是一隻非常可愛的薩卡班巴魚！",
@@ -104,7 +101,6 @@ const i18nData = {
         Name: "TheName的网首\n博麗紅葉的分身（雙胞胎?），估計這人也很聡明。",
         marunoringo: "マルノリンゴ的网首。\n是一位寫了好多博客的人。",
         Liyun: "丽丽云的网首\n充满美丽樱花的网站！",
-        ayane: "彩音さんのホームページ！\nあたまよさそう（こなみかん）",
         redirtect_slink: "前往友情链接列表",
         projects_text: "我的作品列表。",
         project1_text: "",
@@ -131,12 +127,13 @@ const i18nData = {
         other_title: "目前什么都没有..."
     },
     "zh-TW": {
-        nav_home: "首頁", nav_about: "關於", nav_projects: "項目", nav_blog: "部落格", nav_contact: "聯繫", nav_etc: "其他",
-        settings_title: "設置", mode_label: "深色模式", lang_label: "語言",
-        home_text: "欢迎。这是Ituki的个人网站。\n这里没什么特别之处，但请您慢慢逛，随意看看！",
+        // nav_etc/mode_label/home_text/about_text/slink_404/ayane/projects_text/project1_text/
+        // project2_text/web_tools/my_banner/title_blank/mirror_title/about_hujin/blog_0/blog_1/blog_2
+        // は zh-CN と全く同じ文言（未翻訳）だったため削除。resolveI18nがzh-CNの値を自動で使う。
+        // f202601211/f202601251 も ja と同一だったため削除（jaへフォールバック）。
+        nav_home: "首頁", nav_about: "關於", nav_projects: "項目", nav_blog: "部落格", nav_contact: "聯繫",
+        settings_title: "設置", lang_label: "語言",
         news: "推薦",
-        about_text: "你好！\n大家好，我是Ituki！我主要活跃在X平台上的科技圈，\n但也涉猎其他各种领域\n（例如X平台的中文圈、X平台的IT社区等）。\n\n目前正在学习：\n・简体中文\n・英语\n・首席电气工程师（3级）\n・IT护照\n\n等等。\n\n兴趣爱好\n・Windows应用开发\n・折腾Linux\n・动漫与漫画\n・编程\n・与AI对话（？）\n\n我还喜欢搜寻感兴趣的网站、研究如何绕过学习平台的限制，以及进行各种研究。\n欢迎在Twitter或其他平台联系我！如果你随意回复，我会随意回复；如果你礼貌回复，我会尽量礼貌回复。\n期待大家继续支持！\n正在寻找链接交换！请通过私信等方式联系我！",
-        slink_404: "404 Not Found!",
         soichiaishiteru: "Soichi的網頁！！！<br>他非常帥氣！",
         User0899: "User0899的網頁。\niPhone 4s 也能正常打開。不過伺服器經常炸裂...",
         kotosandaaaa: "ことだよ！！的網頁。\n是一隻非常可愛的萨卡班巴鱼！",
@@ -147,27 +144,15 @@ const i18nData = {
         Name: "TheName的網頁\n博麗紅葉的分身（雙胞胎?），估計這人也很聰明。",
         marunoringo: "マルノリンゴ的網頁。\n是一位寫了好多部落格的人。",
         Liyun: "丽丽云的網頁\n充滿美麗櫻花的網站！",
-        ayane: "彩音さんのホームページ！\nあたまよさそう（こなみかん）",
         redirtect_slink: "前往友情連結列表",
-        projects_text: "我的作品列表。",
-        project1_text: "",
-        project2_text: "",
         app_tools: "应用程序列表",
-        web_tools: "Web工具列表",
         contact_text: "在這裡聯繫我。",
         link_title: "友情連結",
         slink_explain: "本站友情連結列表。如需交換連結，請透過 X（原 Twitter）與我聯絡。",
-        my_banner: "我的 Banner",
         image_url: "圖片 URL",
-        title_blank: "招募中",
         archive_title: "過去網站存檔",
         archive_content: "這是我過去製作的網站列表，僅保留主頁（index.html）。",
         archive_button: "前往存檔頁面",
-        mirror_title: "镜像网站",
-        about_hujin: "我的设备",
-        blog_0: "自己紹介",
-        blog_1: "我的账号被盗了",
-        blog_2: "我找回了我的账号",
         f202601211: "アカウントが乗っ取られた時の話",
         f202601251: "アカウントが復元できた話",
         backtohome: "←返回首頁",
@@ -208,16 +193,25 @@ const formatText = (text) => {
     return text.replace(/\n/g, "<br>");
 };
 
+// 未翻訳（=他言語と同じ文言）のキーはi18nData側に書かず、ここで自動フォールバックする。
+// 優先順位: 指定言語 → (zh-TWのみ)zh-CN → ja
+// これにより将来キーを追加するとき、訳文がまだ無い言語は省略してOK（空欄にならずjaが表示される）
+const resolveI18n = (lang, key) => {
+    if (i18nData[lang]?.[key] !== undefined) return i18nData[lang][key];
+    if (lang === "zh-TW" && i18nData["zh-CN"]?.[key] !== undefined) return i18nData["zh-CN"][key];
+    return i18nData.ja[key];
+};
+
 const updateLanguage = (lang) => {
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
-        const value = i18nData[lang][key];
+        const value = resolveI18n(lang, key);
         if (value !== undefined) el.innerHTML = formatText(value);
     });
 
     document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
         const key = el.getAttribute('data-i18n-placeholder');
-        const value = i18nData[lang][key];
+        const value = resolveI18n(lang, key);
         if (value !== undefined) el.placeholder = value;
     });
 
@@ -281,14 +275,17 @@ const updateIndicator = () => {
 window.addEventListener('hashchange', handleHashChange);
 elements.navLinks?.addEventListener('scroll', updateIndicator);
 
-window.onload = () => {
+// 以前は window.onload（=画像を含む全リソースの読込完了を待つ）で実行しており、
+// 外部バナー画像十数枚が全部読み終わるまでテーマ/言語が反映されない状態だった。
+// DOMContentLoaded（HTMLの解析が終わった時点）に変更し、体感速度を改善。
+document.addEventListener('DOMContentLoaded', () => {
     const theme = localStorage.getItem('theme') || 'light';
     document.documentElement.setAttribute('data-theme', theme);
     if (elements.themeToggle) elements.themeToggle.checked = theme === 'dark';
     updateLanguage(localStorage.getItem('lang') || 'ja');
     handleHashChange();
     updateIndicator();
-};
+});
 
 // Blog
 document.addEventListener('DOMContentLoaded', () => {
@@ -338,7 +335,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-window.addEventListener("load", () => {
+// ローダーも同様にDOMContentLoadedで消す。画像の読込を待たなくなる分、体感の表示完了が早くなる
+document.addEventListener("DOMContentLoaded", () => {
     const loader = document.getElementById("loader");
     if (!loader) return;
 
