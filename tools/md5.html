@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MD5 ハッシュ作成ツール</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            max-width: 600px;
+            margin: 40px auto;
+            padding: 20px;
+            background-color: #f5f7f8;
+            color: #333;
+        }
+        h1 {
+            font-size: 24px;
+            text-align: center;
+            color: #2c3e50;
+        }
+        .container {
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 8px;
+        }
+        textarea {
+            width: 100%;
+            height: 100px;
+            padding: 10px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            resize: vertical;
+            font-size: 16px;
+        }
+        .output-group {
+            margin-top: 20px;
+        }
+        .result-box {
+            background: #eef2f3;
+            padding: 12px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 16px;
+            word-break: break-all;
+            border: 1px solid #ddd;
+            min-height: 24px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>MD5 ハッシュ作成</h1>
+    
+    <label for="inputText">変換する文字列:</label>
+    <textarea id="inputText" placeholder="ここに文字列を入力してください..."></textarea>
+    
+    <div class="output-group">
+        <label>MD5 ハッシュ値 (小文字):</label>
+        <div id="resultLower" class="result-box"></div>
+    </div>
+
+    <div class="output-group">
+        <label>MD5 ハッシュ値 (大文字):</label>
+        <div id="resultUpper" class="result-box"></div>
+    </div>
+</div>
+
+<script>
+// JavaScriptによるMD5実装ロジック
+function md5(string) {
+    function k(n) { return Math.sin(n) * 0x100000000 | 0; }
+    let b = [0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476],
+        a = (function(s) {
+            let j = ((s.length + 8) >> 6) + 1, x = new Array(j * 16);
+            for (let i = 0; i < j * 16; i++) x[i] = 0;
+            for (var i = 0; i < s.length; i++) x[i >> 2] |= s.charCodeAt(i) << ((i % 4) * 8);
+            x[i >> 2] |= 0x80 << ((i % 4) * 8);
+            x[j * 16 - 2] = s.length * 8;
+            return x;
+        })(unescape(encodeURIComponent(string))),
+        m = [
+            function(a,b,c,d,x,s,t) { return b + ((a + ((b & c) | (~b & d)) + x + t) << s | (a + ((b & c) | (~b & d)) + x + t) >>> (32 - s)); },
+            function(a,b,c,d,x,s,t) { return b + ((a + ((b & d) | (c & ~d)) + x + t) << s | (a + ((b & d) | (c & ~d)) + x + t) >>> (32 - s)); },
+            function(a,b,c,d,x,s,t) { return b + ((a + (b ^ c ^ d) + x + t) << s | (a + (b ^ c ^ d) + x + t) >>> (32 - s)); },
+            function(a,b,c,d,x,s,t) { return b + ((a + (c ^ (b | ~d)) + x + t) << s | (a + (c ^ (b | ~d)) + x + t) >>> (32 - s)); }
+        ],
+        s = [
+            [7, 12, 17, 22], [5, 9, 14, 20], [4, 11, 16, 23], [6, 10, 15, 21]
+        ];
+
+    for (let i = 0; i < a.length; i += 16) {
+        let o = b.slice(0);
+        for (let j = 0; j < 64; j++) {
+            let g = j >> 4, f = m[g], p = s[g], n = j % 4;
+            let idx = [
+                j, (5 * j + 1) % 16, (3 * j + 5) % 16, (7 * j) % 16
+            ][g];
+            b[n] = f(b[n], b[(n + 1) % 4], b[(n + 2) % 4], b[(n + 3) % 4], a[i + idx], p[j % 4], k(j + 1));
+        }
+        for (let j = 0; j < 4; j++) b[j] += o[j];
+    }
+
+    return b.map(n => {
+        let h = "";
+        for (let i = 0; i < 4; i++) h += ((n >> (i * 8)) & 0xFF).toString(16).padStart(2, '0');
+        return h;
+    }).join("");
+}
+
+// 画面の入力イベントを監視してリアルタイム変換
+const inputText = document.getElementById('inputText');
+const resultLower = document.getElementById('resultLower');
+const resultUpper = document.getElementById('resultUpper');
+
+inputText.addEventListener('input', () => {
+    const text = inputText.value;
+    if (text === '') {
+        resultLower.textContent = '';
+        resultUpper.textContent = '';
+        return;
+    }
+    const hash = md5(text);
+    resultLower.textContent = hash;
+    resultUpper.textContent = hash.toUpperCase();
+});
+</script>
+
+</body>
+</html>
