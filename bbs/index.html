@@ -1,0 +1,1285 @@
+<!DOCTYPE html>
+<html lang="ja" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex" />
+  <title>cf-bbs (anonymous) — 匿名掲示板</title>
+  <style>
+/* =========================================================================
+   cf-bbs (anonymous edition) — Catppuccin Mocha / Latte テーマ
+   ========================================================================= */
+
+/* === ダークモード（既定）: Catppuccin Mocha === */
+:root,
+.dark {
+  --base: #1e1e2e;
+  --mantle: #181825;
+  --crust: #11111b;
+  --surface0: #313244;
+  --surface1: #45475a;
+  --surface2: #585b70;
+  --overlay0: #6c7086;
+  --text: #cdd6f4;
+  --subtext1: #bac2de;
+  --subtext0: #a6adc8;
+  --blue: #89b4fa;
+  --lavender: #b4befe;
+  --sapphire: #74c7ec;
+  --teal: #94e2d5;
+  --green: #a6e3a1;
+  --yellow: #f9e2af;
+  --peach: #fab387;
+  --maroon: #eba0ac;
+  --red: #f38ba8;
+  --mauve: #cba6f7;
+
+  --background: var(--base);
+  --foreground: var(--text);
+  --card: var(--mantle);
+  --card-foreground: var(--text);
+  --border-soft: rgba(255, 255, 255, 0.06);
+  --border-soft-strong: rgba(255, 255, 255, 0.1);
+  --input-bg: var(--surface0);
+  --topbar-bg: rgba(24, 24, 37, 0.72);
+  --shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  color-scheme: dark;
+}
+
+/* === ライトモード: Catppuccin Latte === */
+.light {
+  --base: #eff1f5;
+  --mantle: #e6e9ef;
+  --crust: #dce0e8;
+  --surface0: #ccd0da;
+  --surface1: #bcc0cc;
+  --surface2: #9ca0b0;
+  --overlay0: #8c8fa1;
+  --text: #4c4f69;
+  --subtext1: #5c5f77;
+  --subtext0: #6c6f85;
+  --blue: #1e66f5;
+  --lavender: #7287fd;
+  --sapphire: #209fb5;
+  --teal: #179299;
+  --green: #40a02b;
+  --yellow: #df8e1d;
+  --peach: #fe640b;
+  --maroon: #e64553;
+  --red: #d20f39;
+  --mauve: #8839ef;
+
+  --background: var(--base);
+  --foreground: var(--text);
+  --card: var(--mantle);
+  --card-foreground: var(--text);
+  --border-soft: rgba(0, 0, 0, 0.08);
+  --border-soft-strong: rgba(0, 0, 0, 0.16);
+  --input-bg: var(--surface0);
+  --topbar-bg: rgba(230, 233, 239, 0.82);
+  --shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text",
+    "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic", "Noto Sans JP",
+    sans-serif;
+  line-height: 1.6;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  display: flex;
+  flex-direction: column;
+}
+a {
+  color: var(--blue);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+/* === アプリ幅 (max 760px) === */
+.app-shell {
+  max-width: 760px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 20px 16px 32px;
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+@media (max-width: 480px) {
+  .app-shell {
+    padding: 14px 12px 28px;
+  }
+}
+
+/* === トップバー === */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  margin: -20px -16px 20px;
+  background: var(--topbar-bg);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border-bottom: 1px solid var(--border-soft);
+}
+@media (max-width: 480px) {
+  .topbar {
+    padding: 12px;
+    margin: -14px -12px 16px;
+    gap: 8px;
+  }
+}
+.topbar h1 {
+  font-size: 17px;
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+.topbar h1 a {
+  color: inherit;
+  text-decoration: none;
+}
+.topbar h1 a:hover {
+  opacity: 0.85;
+}
+.topbar .nav-links {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  font-size: 14px;
+  color: var(--subtext0);
+  overflow-x: auto;
+  white-space: nowrap;
+  scrollbar-width: none;
+}
+.topbar .nav-links::-webkit-scrollbar {
+  display: none;
+}
+.topbar .nav-links a,
+.topbar .nav-links button {
+  flex-shrink: 0;
+}
+@media (max-width: 480px) {
+  .topbar h1 {
+    font-size: 15px;
+  }
+  .topbar .nav-links {
+    font-size: 13px;
+    gap: 10px;
+  }
+}
+
+/* === ボタン === */
+.btn {
+  appearance: none;
+  border: none;
+  border-radius: 980px;
+  padding: 9px 18px;
+  font-size: 14.5px;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--blue);
+  color: var(--crust);
+  transition: transform 0.12s ease, opacity 0.12s ease;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: inherit;
+}
+.btn:active {
+  transform: scale(0.97);
+}
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.btn.secondary {
+  background: var(--surface0);
+  color: var(--text);
+}
+.btn.danger {
+  background: var(--red);
+  color: var(--crust);
+}
+.btn.ghost {
+  background: transparent;
+  color: var(--blue);
+  padding: 9px 10px;
+}
+.btn.small {
+  padding: 6px 12px;
+  font-size: 13px;
+  min-height: 36px;
+}
+.btn.danger-ghost {
+  background: transparent;
+  color: var(--red);
+  padding: 9px 10px;
+}
+
+/* === カード === */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border-soft);
+  border-radius: 18px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+.card.danger-zone {
+  border-color: rgba(220, 80, 80, 0.45);
+}
+
+/* === スレッドアイテム === */
+.thread-item {
+  display: block;
+  background: var(--card);
+  border: 1px solid var(--border-soft);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  color: var(--text);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+.thread-item:hover {
+  background: var(--surface0);
+  text-decoration: none;
+}
+.thread-item .thread-title {
+  font-size: 15.5px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.thread-item .thread-meta {
+  font-size: 12.5px;
+  color: var(--subtext0);
+}
+
+/* === 投稿アイテム === */
+.post-item {
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  background: var(--card);
+  border: 1px solid var(--border-soft);
+}
+.post-item .post-meta {
+  font-size: 12px;
+  color: var(--subtext0);
+  margin-bottom: 6px;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.post-item .post-body {
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 14.5px;
+}
+.post-item.deleted-post {
+  opacity: 0.6;
+}
+.post-actions {
+  display: inline-flex;
+  gap: 6px;
+}
+
+/* === 入力 === */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+textarea,
+select {
+  width: 100%;
+  background: var(--input-bg);
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: var(--text);
+  padding: 11px 13px;
+  font-size: 16px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.12s ease;
+  min-height: 44px;
+}
+input:focus,
+textarea:focus {
+  border-color: var(--blue);
+}
+textarea {
+  resize: vertical;
+  min-height: 90px;
+}
+input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--blue);
+  cursor: pointer;
+}
+label {
+  display: block;
+  font-size: 13px;
+  color: var(--subtext1);
+  margin: 12px 0 6px;
+}
+label:first-child {
+  margin-top: 0;
+}
+.field-hint {
+  font-size: 12px;
+  color: var(--overlay0);
+  margin-top: 4px;
+}
+.form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.search-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.search-row input {
+  flex: 1;
+  min-width: 180px;
+  margin-bottom: 0;
+}
+
+/* === バナー === */
+.banner {
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 14px;
+  margin-bottom: 14px;
+}
+.banner.error {
+  background: rgba(243, 139, 168, 0.14);
+  color: var(--red);
+  border: 1px solid rgba(243, 139, 168, 0.3);
+}
+.banner.success {
+  background: rgba(166, 227, 161, 0.14);
+  color: var(--green);
+  border: 1px solid rgba(166, 227, 161, 0.3);
+}
+.banner.info {
+  background: rgba(137, 180, 250, 0.12);
+  color: var(--blue);
+  border: 1px solid rgba(137, 180, 250, 0.25);
+}
+
+.empty-state {
+  text-align: center;
+  color: var(--subtext0);
+  padding: 48px 16px;
+  font-size: 14px;
+}
+
+/* === 文字数カウンタ === */
+.char-counter {
+  font-size: 12px;
+  color: var(--overlay0);
+  text-align: right;
+  margin-top: 4px;
+}
+.char-counter.warn {
+  color: var(--yellow);
+}
+.char-counter.over {
+  color: var(--red);
+}
+
+/* === スピナー === */
+.spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(0, 0, 0, 0.25);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  vertical-align: middle;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* === スケルトン === */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--surface0) 25%,
+    var(--surface1) 37%,
+    var(--surface0) 63%
+  );
+  background-size: 400% 100%;
+  animation: skeleton-loading 1.4s ease infinite;
+  border-radius: 12px;
+  height: 56px;
+  margin-bottom: 10px;
+}
+@keyframes skeleton-loading {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0 50%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
+  .btn {
+    transition: none;
+  }
+}
+
+/* === 戻るボタン行 === */
+.back-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin: 2px 0 12px;
+}
+
+/* === タグ === */
+.tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 980px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.tag.admin {
+  background: rgba(203, 166, 247, 0.18);
+  color: var(--mauve);
+}
+.tag.st-hidden {
+  background: rgba(249, 226, 175, 0.18);
+  color: var(--yellow);
+}
+.tag.st-visible {
+  background: rgba(166, 227, 161, 0.18);
+  color: var(--green);
+}
+
+/* === honeypot（ボット対策・画面非表示） === */
+.hp-field {
+  position: absolute;
+  left: -9999px;
+  top: -9999px;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* === 区切り === */
+.sep {
+  border-top: 1px solid var(--border-soft);
+  margin: 20px 0;
+}
+
+/* === レスポンス用 === */
+.scroll-list {
+  max-height: 60vh;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+/* === 管理画面の容量バー === */
+.usage-bar {
+  background: var(--surface0);
+  border-radius: 999px;
+  height: 10px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+.usage-bar > div {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.3s ease;
+  background: var(--green);
+}
+
+/* === フッター（最下部に張り付く） === */
+.site-footer {
+  flex-shrink: 0;
+  max-width: 760px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 24px 16px 32px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--overlay0);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.site-footer a {
+  color: var(--overlay0);
+  text-decoration: none;
+}
+  </style>
+  <script>
+    // テーマ初期化（ちらつき防止）
+    (function () {
+      try {
+        var t = localStorage.getItem("bbs-theme");
+        document.documentElement.className = t === "light" ? "light" : "dark";
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body>
+  <main id="app" class="app-shell">
+    <div class="empty-state">読み込み中...</div>
+  </main>
+
+  <script>
+    // =========================================================================
+    // cf-bbs (anonymous) — 共通設定
+    // =========================================================================
+    window.BBS_CONFIG = {
+      API_BASE: "https://z-relay.l-ituki8000.workers.dev",
+      SITE_NAME: "cf-bbs",
+      SITE_SUB: "(anonymous)",
+    };
+  </script>
+
+  <script>
+    // =========================================================================
+    // cf-bbs (anonymous) — 共通ヘルパ
+    // XSS 対策: すべての DOM は textContent で組み立てる（innerHTML は使わない）
+    // =========================================================================
+    (function () {
+      "use strict";
+
+      const CFG = window.BBS_CONFIG || {};
+      const API_BASE = String(CFG.API_BASE || "").replace(/\/+$/, "");
+      const DEFAULT_AUTHOR = "名無しさん";
+
+      async function api(path, opts) {
+        opts = opts || {};
+        const res = await fetch(API_BASE + path, {
+          method: opts.method || "GET",
+          headers: opts.body !== undefined ? { "Content-Type": "application/json" } : undefined,
+          body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
+          credentials: "include",
+          cache: "no-store",
+        });
+        let data = {};
+        try {
+          data = await res.json();
+        } catch (e) {
+        }
+        if (!res.ok) {
+          let msg = (data && data.error && data.error.message) || "通信エラーが発生しました";
+          if (res.status === 0 || (data && data.error && data.error.code === "upstream_unreachable")) {
+            msg = "API (z-relay → パブリッシュ) に接続できません。時間をおいて再試行してください。";
+          }
+          const err = new Error(msg);
+          err.status = res.status;
+          err.code = data && data.error && data.error.code;
+          throw err;
+        }
+        return data;
+      }
+
+      function formatDate(ts) {
+        const d = new Date(ts);
+        return d.toLocaleString("ja-JP", {
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+      }
+
+      function formatBytes(bytes) {
+        if (!isFinite(bytes) || bytes < 0) return "-";
+        if (bytes < 1024) return bytes + " B";
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+        if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(2) + " MB";
+        return (bytes / (1024 * 1024 * 1024)).toFixed(2) + " GB";
+      }
+
+      let _segmenter = null;
+      function graphemeLen(s) {
+        if (!window.Intl || !Intl.Segmenter) return s.length;
+        if (!_segmenter) _segmenter = new Intl.Segmenter("ja", { granularity: "grapheme" });
+        let n = 0;
+        const it = _segmenter.segment(s)[Symbol.iterator]();
+        for (const _ of it) n++;
+        return n;
+      }
+
+      function el(selector, attrs) {
+        const m = selector.match(/^([a-z][a-z0-9]*)((?:[.#][\w-]+)*)$/i);
+        const tag = m ? m[1] : "div";
+        const parts = m && m[2] ? m[2].split(/(?=[.#])/) : [];
+        const node = document.createElement(tag);
+        for (const p of parts) {
+          if (p[0] === ".") node.classList.add(p.slice(1));
+          else if (p[0] === "#") node.id = p.slice(1);
+        }
+        if (attrs) {
+          for (const [k, v] of Object.entries(attrs)) {
+            if (k === "class") v.split(/\s+/).filter(Boolean).forEach((c) => node.classList.add(c));
+            else if (k === "text") node.textContent = v;
+            else if (k === "html") node.innerHTML = v;
+            else if (k === "style" && typeof v === "object") Object.assign(node.style, v);
+            else if (k.startsWith("on") && typeof v === "function") node.addEventListener(k.slice(2), v);
+            else if (v === true) node.setAttribute(k, "");
+            else if (v !== false && v != null) node.setAttribute(k, v);
+          }
+        }
+        for (let i = 2; i < arguments.length; i++) appendChild(node, arguments[i]);
+        return node;
+      }
+
+      function appendChild(parent) {
+        for (let i = 1; i < arguments.length; i++) appendChildOne(parent, arguments[i]);
+      }
+
+      function appendChildOne(parent, child) {
+        if (child == null || child === false) return;
+        if (Array.isArray(child)) {
+          child.forEach((c) => appendChildOne(parent, c));
+          return;
+        }
+        parent.appendChild(typeof child === "string" || typeof child === "number" ? document.createTextNode(String(child)) : child);
+      }
+
+      function spinner(label) {
+        return el("span", null, el("span.spinner"), " " + (label || "処理中..."));
+      }
+
+      function banner(type, message) {
+        return el("div.banner." + type, { text: message });
+      }
+
+      function clear(node) {
+        while (node.firstChild) node.removeChild(node.firstChild);
+      }
+
+      function applyStoredTheme() {
+        try {
+          const t = localStorage.getItem("bbs-theme");
+          document.documentElement.classList.remove("dark", "light");
+          document.documentElement.classList.add(t === "light" ? "light" : "dark");
+        } catch (e) {
+          document.documentElement.classList.add("dark");
+        }
+      }
+
+      function toggleTheme() {
+        const html = document.documentElement;
+        const toLight = !html.classList.contains("light");
+        html.classList.remove("dark", "light");
+        html.classList.add(toLight ? "light" : "dark");
+        try {
+          localStorage.setItem("bbs-theme", toLight ? "light" : "dark");
+        } catch (e) {}
+        if (window.__onThemeChange) window.__onThemeChange();
+      }
+
+      function topbar(extraLinks) {
+        const themeBtn = el("button.btn.ghost.small", {
+          type: "button",
+          title: "テーマ切替",
+          "aria-label": "テーマ切替",
+          onclick: function () {
+            toggleTheme();
+          },
+        });
+        function refreshThemeLabel() {
+          clear(themeBtn);
+          appendChild(themeBtn, document.documentElement.classList.contains("light") ? "☾ Dark" : "☀ Light");
+        }
+        refreshThemeLabel();
+        window.__onThemeChange = refreshThemeLabel;
+
+        const nav = el("div.nav-links");
+        appendChild(nav, extraLinks || []);
+        appendChild(nav, themeBtn);
+
+        return el("div.topbar", null,
+          el("h1", null,
+            el("a", {
+              href: "index.html",
+              onclick: function (e) {
+                if (location.pathname.endsWith("index.html") || location.pathname === "/") {
+                  e.preventDefault();
+                  if (window.__onHome) window.__onHome();
+                }
+              },
+            }, (CFG.SITE_NAME || "cf-bbs") + " ",
+            el("span", { style: { color: "var(--mauve)", fontWeight: "500", fontSize: "13px" }, text: CFG.SITE_SUB || "(anonymous)" }))
+          ),
+          nav
+        );
+      }
+
+      function footer(inner) {
+        return el("footer.site-footer", null, inner || [
+          el("div", { text: "cf-bbs (anonymous edition) — GitHub Pages + z-relay + パブリッシュAPI" }),
+        ]);
+      }
+
+      window.BBS = {
+        API_BASE,
+        DEFAULT_AUTHOR,
+        api,
+        el,
+        appendChild,
+        clear,
+        spinner,
+        banner,
+        formatDate,
+        formatBytes,
+        graphemeLen,
+        applyStoredTheme,
+        toggleTheme,
+        topbar,
+        footer,
+      };
+    })();
+  </script>
+
+  <script>
+    // =========================================================================
+    // cf-bbs (anonymous) — 板（index.html）
+    // =========================================================================
+    (function () {
+      "use strict";
+
+      const B = window.BBS;
+      const { el, clear, appendChild } = B;
+
+      const DEFAULT_LIMITS = { maxTitleLen: 100, maxBodyLen: 1000, maxUrls: 5, dailyPostLimit: 30, postIntervalSec: 15 };
+
+      const state = {
+        view: { name: "list" },
+        limits: Object.assign({}, DEFAULT_LIMITS),
+        isAdmin: false,
+        banner: null,
+      };
+
+      let bannerHost = null;
+      let contentHost = null;
+
+      function setBanner(node) {
+        state.banner = node;
+        if (bannerHost) {
+          clear(bannerHost);
+          if (node) appendChild(bannerHost, node);
+        }
+      }
+
+      function render() {
+        clear(contentHost);
+        setBanner(state.banner);
+        if (state.view.name === "list") ThreadListView();
+        else ThreadView(state.view.id);
+        window.__renderTopbar();
+      }
+
+      function navigate(view) {
+        state.view = view;
+        state.banner = null;
+        if (view.name === "thread") history.replaceState({}, "", "?id=" + view.id);
+        else if (location.search) history.replaceState({}, "", location.pathname);
+        window.scrollTo({ top: 0 });
+        render();
+      }
+
+      let listState = null;
+
+      function ThreadListView() {
+        listState = { threads: null, total: 0, query: "", loadingMore: false };
+        contentHost.appendChild(NewThreadForm());
+        contentHost.appendChild(SearchRow());
+        const listWrap = el("div#thread-list");
+        contentHost.appendChild(listWrap);
+        loadList("", true);
+      }
+
+      function SearchRow() {
+        const input = el("input", { type: "text", placeholder: "スレッド名で検索", maxLength: 100 });
+        input.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") doSearch();
+        });
+        const row = el("div.search-row", null,
+          input,
+          el("button.btn.small", { type: "button", onclick: doSearch, text: "検索" }),
+          el("button.btn.small.secondary", {
+            type: "button",
+            text: "クリア",
+            onclick: function () {
+              input.value = "";
+              listState.query = "";
+              reloadList("");
+            },
+          })
+        );
+        row._input = input;
+        return row;
+      }
+
+      function doSearch() {
+        const input = contentHost.querySelector(".search-row input");
+        const q = (input ? input.value : "").trim();
+        listState.query = q;
+        reloadList(q);
+      }
+
+      function reloadList(q) {
+        const listWrap = contentHost.querySelector("#thread-list");
+        if (listWrap) {
+          clear(listWrap);
+          Array.from({ length: 3 }).forEach(() => appendChild(listWrap, el("div.skeleton")));
+        }
+        loadList(q, true);
+      }
+
+      async function loadList(q, reset) {
+        const listWrap = contentHost.querySelector("#thread-list");
+        try {
+          const offset = reset ? 0 : listState.threads.length;
+          const url = "/api/threads?limit=30&offset=" + offset + (q ? "&q=" + encodeURIComponent(q) : "");
+          const data = await B.api(url);
+          if (!listWrap) return;
+          if (reset) listState.threads = data.threads;
+          else listState.threads = listState.threads.concat(data.threads);
+          listState.total = data.total;
+          clear(listWrap);
+
+          if (q) {
+            appendChild(listWrap, el("div.field-hint", { style: { marginBottom: "8px" }, text: "「" + q + "」の検索結果: " + data.total + "件" }));
+          }
+          if (listState.threads.length === 0) {
+            appendChild(listWrap, el("div.empty-state", {
+              text: q ? "該当するスレッドが見つかりません。" : "まだスレッドがありません。最初の投稿をしてみましょう。",
+            }));
+          } else {
+            for (const t of listState.threads) appendChild(listWrap, ThreadItem(t));
+            if (listState.threads.length < data.total) {
+              appendChild(listWrap, el("div.form-actions", { style: { justifyContent: "center" } },
+                el("button.btn.small.secondary", {
+                  type: "button",
+                  text: "もっと読み込む",
+                  onclick: function () {
+                    this.disabled = true;
+                    this.textContent = "読み込み中...";
+                    loadList(listState.query, false);
+                  },
+                })
+              ));
+            }
+          }
+        } catch (err) {
+          if (listWrap) {
+            clear(listWrap);
+            appendChild(listWrap, B.banner("error", err.message));
+          }
+        }
+      }
+
+      function ThreadItem(t) {
+        return el("a.thread-item", {
+          href: "?id=" + t.id,
+          onclick: function (e) {
+            e.preventDefault();
+            navigate({ name: "thread", id: t.id });
+          },
+        },
+          el("div.thread-title", { text: t.title }),
+          el("div.thread-meta", {
+            text: `${t.authorName || B.DEFAULT_AUTHOR} ・ ${B.formatDate(t.createdAt)} ・ レス ${t.postCount}件 ・ 最終更新 ${B.formatDate(t.lastActivityAt)}`,
+          })
+        );
+      }
+
+      function NewThreadForm() {
+        const limits = state.limits;
+        const title = el("input", { type: "text", placeholder: `スレッドタイトル（1〜${limits.maxTitleLen}文字）`, maxLength: limits.maxTitleLen });
+        const author = el("input", { type: "text", placeholder: "名前を付ける場合は入力", maxLength: 32 });
+        const body = el("textarea", { placeholder: `本文を入力（最大${limits.maxBodyLen}文字・URLは${limits.maxUrls}個まで）`, rows: 5 });
+        const hp = el("input.hp-field", { type: "text", tabIndex: -1, autoComplete: "off", "aria-hidden": "true" });
+        const counter = el("div.char-counter");
+        const btn = el("button.btn", { type: "button", text: "スレッドを作成" });
+
+        function refreshCounter() {
+          const n = B.graphemeLen(body.value);
+          const overWarn = limits.maxBodyLen - Math.min(200, Math.floor(limits.maxBodyLen / 5));
+          counter.className = "char-counter" + (n > limits.maxBodyLen ? " over" : n > overWarn ? " warn" : "");
+          counter.textContent = `${n} 文字 / ${limits.maxBodyLen} 文字上限`;
+        }
+        body.addEventListener("input", refreshCounter);
+        refreshCounter();
+
+        btn.addEventListener("click", async function () {
+          setBanner(null);
+          if (!title.value.trim()) return setBanner(B.banner("error", "タイトルを入力してください"));
+          if (!body.value.trim()) return setBanner(B.banner("error", "本文を入力してください"));
+          btn.disabled = true;
+          clear(btn);
+          appendChild(btn, B.spinner("作成中..."));
+          try {
+            const data = await B.api("/api/threads", {
+              method: "POST",
+              body: { title: title.value, body: body.value, authorName: author.value, website: hp.value },
+            });
+            navigate({ name: "thread", id: data.thread_id });
+          } catch (err) {
+            setBanner(B.banner("error", err.message));
+            btn.disabled = false;
+            clear(btn);
+            appendChild(btn, "スレッドを作成");
+          }
+        });
+
+        return el("div.card", null,
+          el("label", { text: "新しいスレッドを作成" }),
+          title,
+          el("label", { text: "名前（任意・未入力で「名無しさん」）" }),
+          author,
+          el("label", { text: "本文（最初の投稿）" }),
+          body,
+          counter,
+          hp,
+          el("div.form-actions", null, btn),
+          el("div.field-hint", {
+            text: `※ アカウント登録は不要です。誰でも書き込めます。連続投稿は IP ベースでレートリミット（投稿間隔 ${limits.postIntervalSec} 秒・1日 ${limits.dailyPostLimit} 件）されます。`,
+          })
+        );
+      }
+
+      function ThreadView(threadId) {
+        const wrap = el("div");
+        contentHost.appendChild(wrap);
+
+        appendChild(wrap, el("div.back-row", null,
+          el("a.btn.secondary.small", {
+            href: "#",
+            onclick: function (e) {
+              e.preventDefault();
+              navigate({ name: "list" });
+            },
+            text: "← スレッド一覧に戻る",
+          }),
+          el("button.btn.secondary.small", {
+            type: "button",
+            text: "一番下へ ↓",
+            onclick: function () {
+              window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "smooth" });
+            },
+          })
+        ));
+
+        const bodyWrap = el("div");
+        appendChild(wrap, bodyWrap);
+        Array.from({ length: 3 }).forEach(() => appendChild(bodyWrap, el("div.skeleton")));
+
+        loadThread(wrap, threadId);
+      }
+
+      async function loadThread(wrap, threadId) {
+        try {
+          const data = await B.api(`/api/threads/${threadId}/posts?limit=200`);
+          renderThread(wrap, threadId, data);
+        } catch (err) {
+          clear(wrap);
+          appendChild(wrap, B.banner("error", err.message));
+          appendChild(wrap, el("div.form-actions", { style: { justifyContent: "center" } },
+            el("button.btn.secondary.small", {
+              type: "button",
+              text: "一覧に戻る",
+              onclick: function () {
+                navigate({ name: "list" });
+              },
+            })
+          ));
+        }
+      }
+
+      function renderThread(wrap, threadId, data) {
+        const posts = data.posts.slice().reverse();
+        const isAdmin = state.isAdmin;
+
+        clear(wrap);
+
+        appendChild(wrap,
+          el("h2", { style: { margin: "8px 0 4px", fontSize: "22px" }, text: data.thread.title }),
+          el("div.thread-meta", {
+            style: { margin: "0 0 12px", color: "var(--subtext0)", fontSize: "13px" },
+            text: `スレ主: ${data.thread.authorName || B.DEFAULT_AUTHOR} ・ レス ${posts.length}件`,
+          })
+        );
+
+        const listEl = el("div");
+        appendChild(wrap, listEl);
+        if (posts.length === 0) {
+          appendChild(listEl, el("div.empty-state", { text: "投稿がありません" }));
+        } else {
+          posts.forEach(function (p, i) {
+            appendChild(listEl, PostItem(p, i + 1, threadId, listEl));
+          });
+        }
+
+        appendChild(wrap, ReplyForm(threadId, listEl));
+
+        if (isAdmin) {
+          appendChild(wrap, el("div.card.danger-zone", null,
+            el("label", { style: { color: "#d96060" }, text: "管理者操作" }),
+            el("div.form-actions", null,
+              el("button.btn.danger.small", {
+                type: "button",
+                text: "スレッドを削除",
+                onclick: async function () {
+                  if (!confirm("このスレッドを削除（ソフト削除）しますか？")) return;
+                  try {
+                    await B.api(`/api/admin/threads/${threadId}?action=delete`, { method: "POST", body: {} });
+                    setBanner(B.banner("success", "スレッドを削除しました"));
+                    await refreshAdmin();
+                    loadThread(wrap, threadId);
+                  } catch (err) {
+                    setBanner(B.banner("error", err.message));
+                  }
+                },
+              }),
+              el("button.btn.danger.small", {
+                type: "button",
+                text: "スレッドを完全削除",
+                onclick: async function () {
+                  if (!confirm("このスレッドをレス全件ごと完全に削除します。元に戻せません。よろしいですか？")) return;
+                  try {
+                    await B.api(`/api/admin/threads/${threadId}?action=purge`, { method: "POST", body: {} });
+                    navigate({ name: "list" });
+                  } catch (err) {
+                    setBanner(B.banner("error", err.message));
+                  }
+                },
+              })
+            )
+          ));
+        }
+      }
+
+      function PostItem(post, replyNo, threadId, listEl) {
+        const isDeleted = post.status === "deleted";
+        const item = el("div.post-item" + (isDeleted ? ".deleted-post" : ""),
+          el("div.post-meta", null,
+            el("span", { text: `${replyNo} ${post.authorName || B.DEFAULT_AUTHOR} ・ ${B.formatDate(post.createdAt)}` })
+          ),
+          el("div.post-body", { text: isDeleted ? "（削除された投稿）" : post.body })
+        );
+        if (state.isAdmin && !isDeleted) {
+          appendChild(item.firstChild,
+            el("span.post-actions", null,
+              el("button.btn.danger-ghost.small", {
+                type: "button",
+                text: "削除",
+                onclick: async function () {
+                  if (!confirm("この投稿を削除しますか？")) return;
+                  try {
+                    await B.api(`/api/admin/threads/${threadId}/posts/${post.id}?action=delete`, { method: "POST", body: {} });
+                    post.status = "deleted";
+                    const fresh = PostItem(post, replyNo, threadId, listEl);
+                    item.replaceWith(fresh);
+                  } catch (err) {
+                    setBanner(B.banner("error", err.message));
+                  }
+                },
+              })
+            )
+          );
+        }
+        return item;
+      }
+
+      function ReplyForm(threadId, listEl) {
+        const limits = state.limits;
+        const author = el("input", { type: "text", placeholder: "名前（任意・未入力で「名無しさん」）", maxLength: 32 });
+        const body = el("textarea", { placeholder: `返信を入力（最大${limits.maxBodyLen}文字）`, rows: 4, style: { marginTop: "8px" } });
+        const hp = el("input.hp-field", { type: "text", tabIndex: -1, autoComplete: "off", "aria-hidden": "true" });
+        const counter = el("div.char-counter");
+        const btn = el("button.btn", { type: "button", text: "返信する" });
+
+        function refreshCounter() {
+          const n = B.graphemeLen(body.value);
+          const overWarn = limits.maxBodyLen - Math.min(200, Math.floor(limits.maxBodyLen / 5));
+          counter.className = "char-counter" + (n > limits.maxBodyLen ? " over" : n > overWarn ? " warn" : "");
+          counter.textContent = `${n} 文字 / ${limits.maxBodyLen} 文字上限`;
+        }
+        body.addEventListener("input", refreshCounter);
+        refreshCounter();
+
+        btn.addEventListener("click", async function () {
+          setBanner(null);
+          if (!body.value.trim()) return setBanner(B.banner("error", "本文を入力してください"));
+          btn.disabled = true;
+          clear(btn);
+          appendChild(btn, B.spinner("投稿中..."));
+          try {
+            const data = await B.api(`/api/threads/${threadId}/posts`, {
+              method: "POST",
+              body: { body: body.value, authorName: author.value, website: hp.value },
+            });
+            appendChild(listEl, PostItem({
+              id: data.post_id,
+              threadId,
+              authorName: data.authorName,
+              body: data.body,
+              createdAt: data.createdAt,
+              status: "visible",
+            }, listEl.children.length + 1, threadId, listEl));
+            body.value = "";
+            refreshCounter();
+            setTimeout(function () {
+              window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "smooth" });
+            }, 50);
+          } catch (err) {
+            setBanner(B.banner("error", err.message));
+          } finally {
+            btn.disabled = false;
+            clear(btn);
+            appendChild(btn, "返信する");
+          }
+        });
+
+        return el("div.card", null,
+          el("label", { text: "返信" }),
+          author,
+          body,
+          counter,
+          hp,
+          el("div.form-actions", null, btn)
+        );
+      }
+
+      async function loadLimits() {
+        try {
+          const data = await B.api("/api/settings");
+          if (data.settings) state.limits = Object.assign({}, DEFAULT_LIMITS, data.settings);
+        } catch (e) {
+        }
+      }
+
+      async function refreshAdmin() {
+        try {
+          const data = await B.api("/api/admin/me");
+          state.isAdmin = !!data.admin;
+        } catch (e) {
+          state.isAdmin = false;
+        }
+      }
+
+      async function init() {
+        B.applyStoredTheme();
+
+        const app = document.getElementById("app");
+        bannerHost = el("div");
+        contentHost = el("div");
+
+        const topbarHost = el("div");
+        app.appendChild(topbarHost);
+        app.appendChild(bannerHost);
+        app.appendChild(contentHost);
+        app.appendChild(B.footer([
+          el("div", { text: "cf-bbs (anonymous edition) — GitHub Pages + z-relay + パブリッシュAPI" }),
+          el("div", { style: { fontSize: "11px", opacity: "0.7" } },
+            el("a", { href: "admin.html", text: "管理画面" })
+          ),
+        ]));
+
+        window.__renderTopbar = function () {
+          clear(topbarHost);
+          const links = [
+            el("a", {
+              href: "#",
+              onclick: function (e) {
+                e.preventDefault();
+                navigate({ name: "list" });
+              },
+              text: state.view.name === "list" ? "板（現在）" : "板",
+            }),
+          ];
+          if (state.isAdmin) {
+            links.push(el("span.tag.admin", { text: "管理者" }));
+            links.push(el("button.btn.small.secondary", {
+              type: "button",
+              text: "ログアウト",
+              onclick: async function () {
+                try {
+                  await B.api("/api/admin/logout", { method: "POST", body: {} });
+                } catch (e) {}
+                state.isAdmin = false;
+                window.__renderTopbar();
+                setBanner(B.banner("info", "管理者セッションを終了しました"));
+              },
+            }));
+          }
+          appendChild(topbarHost, B.topbar(links));
+        };
+
+        const params = new URLSearchParams(location.search);
+        const id = Number(params.get("id"));
+        if (isFinite(id) && id > 0) state.view = { name: "thread", id };
+
+        await Promise.all([loadLimits(), refreshAdmin()]);
+        window.__renderTopbar();
+        render();
+
+        setInterval(loadLimits, 15000);
+        window.addEventListener("focus", loadLimits);
+
+        window.addEventListener("popstate", function () {
+          const p = new URLSearchParams(location.search);
+          const pid = Number(p.get("id"));
+          state.view = isFinite(pid) && pid > 0 ? { name: "thread", id: pid } : { name: "list" };
+          state.banner = null;
+          render();
+        });
+      }
+
+      document.addEventListener("DOMContentLoaded", init);
+    })();
+  </script>
+</body>
+</html>
