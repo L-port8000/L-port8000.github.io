@@ -1045,6 +1045,23 @@ label:first-child {
         clear(wrap);
 
         appendChild(wrap,
+          el("div.back-row", null,
+            el("a.btn.secondary.small", {
+              href: "#",
+              onclick: function (e) {
+                e.preventDefault();
+                navigate({ name: "list" });
+              },
+              text: "← スレッド一覧に戻る",
+            }),
+            el("button.btn.secondary.small", {
+              type: "button",
+              text: "一番下へ ↓",
+              onclick: function () {
+                window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "smooth" });
+              },
+            })
+          ),
           el("h2", { style: { margin: "8px 0 4px", fontSize: "22px" }, text: data.thread.title }),
           el("div.thread-meta", {
             style: { margin: "0 0 12px", color: "var(--subtext0)", fontSize: "13px" },
@@ -1214,6 +1231,7 @@ label:first-child {
         B.applyStoredTheme();
 
         const app = document.getElementById("app");
+        clear(app);
         bannerHost = el("div");
         contentHost = el("div");
 
