@@ -967,25 +967,25 @@ html.layout-wide .site-footer {
           applySettings();
         });
 
-        const overlay = el("div.settings-overlay",
-          el("div.settings-card",
+        const overlay = el("div.settings-overlay", null,
+          el("div.settings-card", null,
             el("h2", { text: "設定" }),
-            el("div.settings-section",
+            el("div.settings-section", null,
               el("label", { text: "テーマ" }),
               el("div.settings-desc", { text: "ダーク / ライトを切り替えます（画面上の ☀/☾ ボタンと同じ設定）" }),
               themeSel
             ),
-            el("div.settings-section",
+            el("div.settings-section", null,
               el("label", { text: "文字サイズ" }),
               el("div.settings-desc", { text: "本文やボタンなどの基本サイズを変更します" }),
               sizeSel
             ),
-            el("div.settings-section",
+            el("div.settings-section", null,
               el("label", { text: "表示幅" }),
               el("div.settings-desc", { text: "板の表示領域の最大幅を変更します" }),
               layoutSel
             ),
-            el("div.settings-section",
+            el("div.settings-section", null,
               el("label", { text: "フッターリンク" }),
               el("div.settings-row", null,
                 linkChk,
