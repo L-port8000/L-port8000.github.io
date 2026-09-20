@@ -1,0 +1,1530 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1e1e2e">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<title>E2EE Chat</title>
+<style>
+:root {
+  /* Catppuccin Mocha */
+  --base: #1e1e2e;
+  --mantle: #181825;
+  --crust: #11111b;
+  --surface0: #313244;
+  --surface1: #45475a;
+  --surface2: #585b70;
+  --overlay0: #6c7086;
+  --overlay1: #7f849c;
+  --text: #cdd6f4;
+  --subtext1: #bac2de;
+  --subtext0: #a6adc8;
+  --blue: #89b4fa;
+  --sapphire: #74c7ec;
+  --teal: #94e2d5;
+  --green: #a6e3a1;
+  --yellow: #f9e2af;
+  --peach: #fab387;
+  --red: #f38ba8;
+  --mauve: #cba6f7;
+  --lavender: #b4befe;
+
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Hiragino Sans", "Segoe UI", sans-serif;
+  --radius-lg: 20px;
+  --radius-md: 14px;
+  --radius-sm: 10px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: var(--font);
+  background: var(--base);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior-y: contain;
+}
+
+.hidden { display: none !important; }
+
+.screen {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- 共通パーツ ---------- */
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 14px 0;
+  text-align: left;
+}
+.field span {
+  font-size: 13px;
+  color: var(--subtext0);
+  font-weight: 500;
+}
+.field input {
+  font-family: inherit;
+  font-size: 16px;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--surface1);
+  background: var(--surface0);
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+.field input:focus {
+  border-color: var(--blue);
+}
+
+.btn-primary, .btn-secondary, .btn-danger-ghost {
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  padding: 13px 20px;
+  border-radius: var(--radius-sm);
+  border: none;
+  cursor: pointer;
+  width: 100%;
+  transition: transform 0.08s ease, opacity 0.15s ease;
+}
+.btn-primary:active, .btn-secondary:active { transform: scale(0.98); }
+
+.btn-primary {
+  background: var(--blue);
+  color: var(--crust);
+}
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.btn-secondary {
+  background: var(--surface0);
+  color: var(--text);
+  border: 1px solid var(--surface1);
+}
+.btn-danger-ghost {
+  background: transparent;
+  color: var(--red);
+  border: 1px solid transparent;
+  font-size: 14px;
+  padding: 10px;
+  margin-top: auto;
+}
+.btn-danger-ghost:hover { background: rgba(243, 139, 168, 0.08); }
+
+.status-line {
+  min-height: 20px;
+  font-size: 13px;
+  color: var(--subtext0);
+  text-align: center;
+  padding: 0 20px;
+}
+.status-line.error { color: var(--red); }
+.status-line.success { color: var(--green); }
+
+.muted { color: var(--subtext0); font-size: 14px; line-height: 1.5; }
+
+/* ---------- 画面1: オンボーディング ---------- */
+
+#screen-onboarding {
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: radial-gradient(circle at 50% 0%, var(--mantle), var(--crust) 70%);
+}
+.onboarding-card {
+  width: 100%;
+  max-width: 380px;
+  text-align: center;
+}
+.lock-badge {
+  font-size: 40px;
+  width: 76px;
+  height: 76px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 18px;
+  background: var(--surface0);
+  border-radius: 22px;
+}
+.onboarding-card h1 {
+  font-size: 26px;
+  margin: 0 0 8px;
+  letter-spacing: -0.02em;
+}
+.onboarding-card .lead {
+  color: var(--subtext0);
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 0 0 8px;
+}
+
+/* ---------- 上部バー ---------- */
+
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: calc(env(safe-area-inset-top, 0px) + 10px) 8px 10px;
+  background: rgba(24, 24, 37, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--surface0);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.bar-title {
+  font-size: 17px;
+  font-weight: 600;
+  flex: 1;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0 8px;
+}
+.bar-action {
+  background: none;
+  border: none;
+  font-size: 18px;
+  padding: 8px 12px;
+  cursor: pointer;
+  color: var(--text);
+  border-radius: 10px;
+  line-height: 1;
+}
+.bar-action:hover { background: var(--surface0); }
+
+/* ---------- 画面2: ロビー ---------- */
+
+.lobby-body {
+  flex: 1;
+  padding: 16px;
+  max-width: 480px;
+  margin: 0 auto;
+  width: 100%;
+}
+.lobby-card {
+  background: var(--mantle);
+  border: 1px solid var(--surface0);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  margin-bottom: 14px;
+}
+.lobby-card h2 {
+  font-size: 16px;
+  margin: 0 0 4px;
+}
+.recent-rooms-list {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.recent-room-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  background: var(--surface0);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  border: none;
+  width: 100%;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+  text-align: left;
+}
+.recent-room-item:hover { background: var(--surface1); }
+.recent-room-item .room-key-icon { opacity: 0.6; font-size: 13px; }
+
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+  font-size: 14px;
+  color: var(--subtext1);
+}
+.toggle-row input[type="checkbox"] {
+  width: 40px;
+  height: 24px;
+  appearance: none;
+  background: var(--surface1);
+  border-radius: 999px;
+  position: relative;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s ease;
+}
+.toggle-row input[type="checkbox"]::before {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--text);
+  transition: transform 0.15s ease;
+}
+.toggle-row input[type="checkbox"]:checked {
+  background: var(--blue);
+}
+.toggle-row input[type="checkbox"]:checked::before {
+  transform: translateX(16px);
+  background: var(--crust);
+}
+
+/* ---------- 画面3: チャットルーム ---------- */
+
+.room-layout {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+.members-panel {
+  width: 240px;
+  flex-shrink: 0;
+  background: var(--mantle);
+  border-right: 1px solid var(--surface0);
+  display: flex;
+  flex-direction: column;
+  padding: 14px;
+}
+.members-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.members-panel-head h3 {
+  font-size: 13px;
+  text-transform: none;
+  color: var(--subtext0);
+  margin: 0;
+  font-weight: 600;
+}
+.chip-btn {
+  font-family: inherit;
+  font-size: 12px;
+  background: var(--surface0);
+  color: var(--sapphire);
+  border: none;
+  padding: 6px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.chip-btn:hover { background: var(--surface1); }
+
+.members-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.member-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+}
+.member-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--surface1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--lavender);
+  flex-shrink: 0;
+}
+.member-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.member-you { color: var(--subtext0); font-size: 12px; }
+
+.chat-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.key-status-banner {
+  background: var(--surface0);
+  color: var(--yellow);
+  font-size: 13px;
+  text-align: center;
+  padding: 8px 12px;
+}
+
+.message-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px 14px 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.msg-row {
+  display: flex;
+  flex-direction: column;
+  max-width: 78%;
+  margin-bottom: 8px;
+}
+.msg-row.mine { align-self: flex-end; align-items: flex-end; }
+.msg-row.theirs { align-self: flex-start; align-items: flex-start; }
+
+.msg-sender {
+  font-size: 11px;
+  color: var(--subtext0);
+  margin: 0 4px 3px;
+}
+.msg-bubble {
+  padding: 9px 13px;
+  border-radius: var(--radius-md);
+  font-size: 15px;
+  line-height: 1.4;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+.msg-row.mine .msg-bubble {
+  background: var(--blue);
+  color: var(--crust);
+  border-bottom-right-radius: 4px;
+}
+.msg-row.theirs .msg-bubble {
+  background: var(--surface0);
+  color: var(--text);
+  border-bottom-left-radius: 4px;
+}
+.msg-row.system {
+  align-self: center;
+  max-width: 90%;
+}
+.msg-row.system .msg-bubble {
+  background: transparent;
+  color: var(--overlay1);
+  font-size: 12px;
+  text-align: center;
+  padding: 4px;
+}
+.msg-row.system.warn .msg-bubble { color: var(--red); }
+.msg-meta {
+  font-size: 10px;
+  color: var(--overlay0);
+  margin: 2px 4px 0;
+}
+.msg-bubble.unverified {
+  outline: 1px solid var(--red);
+}
+
+.composer {
+  display: flex;
+  gap: 8px;
+  padding: 10px 12px calc(10px + var(--safe-bottom));
+  border-top: 1px solid var(--surface0);
+  background: var(--mantle);
+}
+.composer input {
+  flex: 1;
+  font-family: inherit;
+  font-size: 16px;
+  padding: 11px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--surface1);
+  background: var(--surface0);
+  color: var(--text);
+  outline: none;
+}
+.composer input:focus { border-color: var(--blue); }
+.composer input:disabled { opacity: 0.5; }
+.composer-send {
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 14px;
+  padding: 0 18px;
+  border-radius: 999px;
+  border: none;
+  background: var(--blue);
+  color: var(--crust);
+  cursor: pointer;
+}
+.composer-send:disabled { opacity: 0.4; cursor: default; }
+
+/* ---------- トースト ---------- */
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(24px + var(--safe-bottom));
+  transform: translateX(-50%);
+  background: var(--surface1);
+  color: var(--text);
+  padding: 10px 18px;
+  border-radius: 999px;
+  font-size: 13px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  z-index: 100;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.toast.hidden { opacity: 0; pointer-events: none; }
+
+/* ---------- レスポンシブ ---------- */
+
+@media (max-width: 720px) {
+  .members-panel {
+    position: fixed;
+    inset: 0;
+    top: 56px;
+    width: 100%;
+    z-index: 20;
+  }
+  .members-panel.hidden-mobile { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}
+
+/* キーボードフォーカスの可視化 */
+button:focus-visible, input:focus-visible {
+  outline: 2px solid var(--sapphire);
+  outline-offset: 2px;
+}
+</style>
+</head>
+<body>
+
+  <!-- ============ 画面1: 初回セットアップ ============ -->
+  <section id="screen-onboarding" class="screen">
+    <div class="onboarding-card">
+      <div class="lock-badge">🔒</div>
+      <h1>E2EE Chat</h1>
+      <p class="lead">メッセージは端末内で暗号化され、サーバは中身を読めません。</p>
+      <label class="field">
+        <span>表示名</span>
+        <input id="input-display-name" type="text" maxlength="64" placeholder="例: いつき" autocomplete="off">
+      </label>
+      <button id="btn-start" class="btn-primary">鍵を生成してはじめる</button>
+      <p id="onboarding-status" class="status-line"></p>
+    </div>
+  </section>
+
+  <!-- ============ 画面2: ルーム選択 ============ -->
+  <section id="screen-lobby" class="screen hidden">
+    <header class="bar">
+      <div class="bar-title">ルーム</div>
+      <button id="btn-whoami" class="bar-action" title="自分の情報">👤</button>
+    </header>
+
+    <div class="lobby-body">
+      <div class="lobby-card">
+        <h2>ルームを作成</h2>
+        <p class="muted">新しい暗号化ルームを作り、招待コードで人を招待します。</p>
+        <button id="btn-create-room" class="btn-primary">新しいルームを作成</button>
+      </div>
+
+      <div class="lobby-card">
+        <h2>招待コードで参加</h2>
+        <p class="muted">招待コードを持っている場合はこちら。</p>
+        <label class="field">
+          <span>招待コード</span>
+          <input id="input-invite-code" type="text" maxlength="16" placeholder="例: A3F7K9QZ" autocomplete="off" style="text-transform:uppercase">
+        </label>
+        <button id="btn-join-room" class="btn-secondary">参加する</button>
+      </div>
+
+      <div class="lobby-card" id="recent-rooms-card">
+        <h2>最近のルーム</h2>
+        <ul id="recent-rooms-list" class="recent-rooms-list"></ul>
+      </div>
+
+      <div class="lobby-card">
+        <h2>通知</h2>
+        <p class="muted">タブを閉じていてもメッセージ受信を通知します。</p>
+        <button id="btn-enable-push" class="btn-secondary">🔔 通知を有効にする</button>
+        <label class="toggle-row">
+          <span>🔒 ロック画面に内容を表示する</span>
+          <input type="checkbox" id="checkbox-lock-preview" checked>
+        </label>
+      </div>
+    </div>
+    <p id="lobby-status" class="status-line"></p>
+  </section>
+
+  <!-- ============ 画面3: チャットルーム ============ -->
+  <section id="screen-room" class="screen hidden">
+    <header class="bar">
+      <button id="btn-back-to-lobby" class="bar-action" title="戻る">←</button>
+      <div class="bar-title" id="room-title">ルーム</div>
+      <button id="btn-toggle-members" class="bar-action" title="メンバー">👥</button>
+    </header>
+
+    <div class="room-layout">
+      <aside id="members-panel" class="members-panel hidden-mobile">
+        <div class="members-panel-head">
+          <h3>メンバー</h3>
+          <button id="btn-copy-invite" class="chip-btn">招待コードをコピー</button>
+        </div>
+        <ul id="members-list" class="members-list"></ul>
+        <button id="btn-leave-room" class="btn-danger-ghost">このルームを退出</button>
+      </aside>
+
+      <div class="chat-column">
+        <div id="key-status-banner" class="key-status-banner hidden"></div>
+        <div id="message-list" class="message-list"></div>
+        <form id="composer" class="composer">
+          <input id="input-message" type="text" placeholder="メッセージを入力…" autocomplete="off" disabled>
+          <button type="submit" id="btn-send" class="composer-send" disabled>送信</button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script>
+"use strict";
+
+/**
+ * index.html（メインスレッド）と sw.js（Service Worker）の両方から使う共通処理。
+ * classic scriptとして両方から読み込まれるため import/export は使わない
+ * （メイン側は <script src="shared.js">、SW側は importScripts('shared.js')）。
+ */
+
+// ===== base64 <-> ArrayBuffer =====
+
+function bufToBase64(buf) {
+  const bytes = new Uint8Array(buf);
+  let bin = "";
+  for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+  return btoa(bin);
+}
+function base64ToBuf(b64) {
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return bytes.buffer;
+}
+function utf8Encode(str) { return new TextEncoder().encode(str); }
+function utf8Decode(buf) { return new TextDecoder().decode(buf); }
+
+// ===== IndexedDB =====
+// identity: 秘密鍵一式 + セッション情報（'me' / 'session'）
+// rooms:    ルームごとのメタ情報・ルーム鍵（keyPath: roomId）
+// settings: 通知プレビューON/OFF、未読数などの軽い設定値
+
+const DB_NAME = "e2ee-chat";
+const DB_VERSION = 2;
+
+function openDb() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains("identity")) db.createObjectStore("identity");
+      if (!db.objectStoreNames.contains("rooms")) db.createObjectStore("rooms", { keyPath: "roomId" });
+      if (!db.objectStoreNames.contains("settings")) db.createObjectStore("settings");
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function idbGet(storeName, key) {
+  const db = await openDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(storeName, "readonly");
+    const req = tx.objectStore(storeName).get(key);
+    req.onsuccess = () => resolve(req.result ?? null);
+    req.onerror = () => reject(req.error);
+  });
+}
+async function idbPut(storeName, value, key) {
+  const db = await openDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(storeName, "readwrite");
+    const req = key !== undefined ? tx.objectStore(storeName).put(value, key) : tx.objectStore(storeName).put(value);
+    req.onsuccess = () => resolve();
+    req.onerror = () => reject(req.error);
+  });
+}
+async function idbGetAll(storeName) {
+  const db = await openDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(storeName, "readonly");
+    const req = tx.objectStore(storeName).getAll();
+    req.onsuccess = () => resolve(req.result ?? []);
+    req.onerror = () => reject(req.error);
+  });
+}
+async function idbDelete(storeName, key) {
+  const db = await openDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(storeName, "readwrite");
+    const req = tx.objectStore(storeName).delete(key);
+    req.onsuccess = () => resolve();
+    req.onerror = () => reject(req.error);
+  });
+}
+
+// ===== AES-GCM（ルーム鍵での復号。プッシュ通知プレビュー生成にも使う） =====
+
+async function importRoomKeyRaw(base64Raw) {
+  return crypto.subtle.importKey("raw", base64ToBuf(base64Raw), { name: "AES-GCM" }, true, ["encrypt", "decrypt"]);
+}
+async function aesGcmDecryptJson(aesKey, ivBase64, ciphertextBase64) {
+  const plaintext = await crypto.subtle.decrypt(
+    { name: "AES-GCM", iv: base64ToBuf(ivBase64) },
+    aesKey,
+    base64ToBuf(ciphertextBase64)
+  );
+  return JSON.parse(utf8Decode(plaintext));
+}
+
+// ===== 設定値の既定値 =====
+
+const DEFAULT_SETTINGS = {
+  previewOnLockScreen: true, // 通知にメッセージ内容を表示するか
+  unreadCount: 0,
+};
+
+async function getSetting(key) {
+  const v = await idbGet("settings", key);
+  return v === null ? DEFAULT_SETTINGS[key] : v;
+}
+async function setSetting(key, value) {
+  await idbPut("settings", value, key);
+}
+
+  </script>
+  <script>
+"use strict";
+
+/**
+ * E2EE Chat フロントエンド
+ *
+ * 【暗号の全体像】
+ *  1. 初回起動時、ブラウザ内で ECDH鍵ペア(鍵交換用) と ECDSA鍵ペア(署名用) を生成する。
+ *     秘密鍵は IndexedDB に保存され、サーバには公開鍵しか送らない。
+ *  2. ルームには「ルーム鍵」という1本のAES-256-GCM鍵がある。これを持っている人だけが
+ *     メッセージを読み書きできる。ルーム作成者がこの鍵を生成する。
+ *  3. 新しい人がルームに参加すると、サーバは「この人が参加したよ」という通知（公開鍵つき）を
+ *     ブロードキャストする。それを見たオンライン中の既存メンバーが、ECDHで導出した鍵で
+ *     ルーム鍵を暗号化（ラップ）して、新しい人だけに送り返す。これでルーム鍵が伝播する。
+ *  4. チャット本文は「誰が・何を・いつ送ったか」をECDSAで署名した上でAES-GCM暗号化する。
+ *     ルーム鍵は全員が共有しているため、署名がないと理論上は他人になりすませてしまう。
+ *
+ * サーバ(chat-api)は暗号文をKVに置いて中継するだけで、平文もルーム鍵も一切見えない。
+ */
+
+// ===== 設定 =====
+// デプロイ後、実際のWorkers URLに書き換えてください。
+const API_BASE = "https://chat-api.user.workers.dev";
+const POLL_INTERVAL_MS = 2000;
+
+// ===== ちいさなユーティリティ =====
+// base64/UTF-8変換、IndexedDBの薄いラッパーは shared.js（index.htmlで先読み込み）を参照。
+
+function showToast(message) {
+  const el = document.getElementById("toast");
+  el.textContent = message;
+  el.classList.remove("hidden");
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => el.classList.add("hidden"), 2400);
+}
+
+function escapeHtml(s) {
+  return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+// ===== 暗号処理 =====
+
+const ECDH_PARAMS = { name: "ECDH", namedCurve: "P-256" };
+const ECDSA_PARAMS = { name: "ECDSA", namedCurve: "P-256" };
+const ECDSA_SIGN_PARAMS = { name: "ECDSA", hash: "SHA-256" };
+
+async function generateIdentityKeys() {
+  // extractable=true にしないと公開鍵をJWKとしてサーバへ送れないため、秘密鍵もJS上から
+  // exportKey可能な状態になる。これはブラウザ完結のE2EEにおける一般的なトレードオフ
+  // （XSSが起きた場合に鍵が盗まれ得る）で、READMEにも明記している既知の制約。
+  const ecdh = await crypto.subtle.generateKey(ECDH_PARAMS, true, ["deriveKey", "deriveBits"]);
+  const ecdsa = await crypto.subtle.generateKey(ECDSA_PARAMS, true, ["sign", "verify"]);
+  return { ecdh, ecdsa };
+}
+
+async function exportPublicJwk(key) {
+  return crypto.subtle.exportKey("jwk", key);
+}
+
+async function importEcdhPublicKey(jwk) {
+  return crypto.subtle.importKey("jwk", jwk, ECDH_PARAMS, true, []);
+}
+async function importEcdsaPublicKey(jwk) {
+  return crypto.subtle.importKey("jwk", jwk, ECDSA_PARAMS, true, ["verify"]);
+}
+
+/** 2者のECDH鍵から「鍵をラップするための」AES-256-GCM鍵を導出する。 */
+async function deriveWrapKey(myPrivateEcdhKey, theirPublicEcdhKey) {
+  return crypto.subtle.deriveKey(
+    { name: "ECDH", public: theirPublicEcdhKey },
+    myPrivateEcdhKey,
+    { name: "AES-GCM", length: 256 },
+    false,
+    ["encrypt", "decrypt"]
+  );
+}
+
+async function signJson(ecdsaPrivateKey, obj) {
+  const data = utf8Encode(JSON.stringify(obj));
+  const sig = await crypto.subtle.sign(ECDSA_SIGN_PARAMS, ecdsaPrivateKey, data);
+  return bufToBase64(sig);
+}
+async function verifyJson(ecdsaPublicKey, obj, sigBase64) {
+  const data = utf8Encode(JSON.stringify(obj));
+  try {
+    return await crypto.subtle.verify(ECDSA_SIGN_PARAMS, ecdsaPublicKey, base64ToBuf(sigBase64), data);
+  } catch {
+    return false;
+  }
+}
+
+async function aesGcmEncryptJson(aesKey, obj) {
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const plaintext = utf8Encode(JSON.stringify(obj));
+  const ciphertext = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, aesKey, plaintext);
+  return { iv: bufToBase64(iv), ciphertext: bufToBase64(ciphertext) };
+}
+// aesGcmDecryptJson, importRoomKeyRaw は shared.js で定義済み（SW側と共有するため）
+
+async function generateRoomKey() {
+  return crypto.subtle.generateKey({ name: "AES-GCM", length: 256 }, true, ["encrypt", "decrypt"]);
+}
+async function exportRoomKeyRaw(roomKey) {
+  const raw = await crypto.subtle.exportKey("raw", roomKey);
+  return bufToBase64(raw);
+}
+
+// ===== APIクライアント =====
+
+class ApiError extends Error {}
+
+async function apiFetch(path, { method = "GET", token, body } = {}) {
+  const headers = { "Content-Type": "application/json" };
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE}${path}`, {
+    method,
+    headers,
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new ApiError(data.error || `HTTP ${res.status}`);
+  return data;
+}
+
+const api = {
+  register: (displayName, ecdhPub, ecdsaPub) =>
+    apiFetch("/register", { method: "POST", body: { displayName, ecdhPub, ecdsaPub } }),
+  createRoom: (token) => apiFetch("/rooms", { method: "POST", token }),
+  joinRoom: (token, inviteCode) => apiFetch("/rooms/join", { method: "POST", token, body: { inviteCode } }),
+  send: (token, roomId, payload) => apiFetch(`/rooms/${roomId}/send`, { method: "POST", token, body: payload }),
+  poll: (token, roomId) => apiFetch(`/rooms/${roomId}/poll`, { method: "GET", token }),
+  leave: (token, roomId) => apiFetch(`/rooms/${roomId}/leave`, { method: "POST", token }),
+  vapidPublicKey: () => apiFetch("/push/vapid-public-key"),
+  subscribePush: (token, subscription) => apiFetch("/push/subscribe", { method: "POST", token, body: { subscription } }),
+};
+
+// ===== プッシュ通知・PWAバッジ =====
+
+function urlBase64ToUint8Array(base64UrlString) {
+  const padding = "=".repeat((4 - (base64UrlString.length % 4)) % 4);
+  const base64 = (base64UrlString + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const rawData = atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; i++) outputArray[i] = rawData.charCodeAt(i);
+  return outputArray;
+}
+
+async function registerServiceWorker() {
+  if (!("serviceWorker" in navigator)) return null;
+  try {
+    const reg = await navigator.serviceWorker.register("sw.js");
+    navigator.serviceWorker.addEventListener("message", (event) => {
+      if (event.data?.type === "open-room" && event.data.roomId) {
+        openRecentRoomById(event.data.roomId);
+      }
+    });
+    return reg;
+  } catch (e) {
+    console.error("Service Workerの登録に失敗しました", e);
+    return null;
+  }
+}
+
+async function openRecentRoomById(roomId) {
+  const record = await idbGet("rooms", roomId);
+  if (record) await enterRoom(record.roomId, record.inviteCode, record.title);
+}
+
+async function enablePushNotifications() {
+  if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
+    showToast("このブラウザは通知に対応していません");
+    return;
+  }
+  try {
+    const permission = await Notification.requestPermission();
+    if (permission !== "granted") {
+      showToast("通知が許可されませんでした");
+      return;
+    }
+    const { publicKey } = await api.vapidPublicKey();
+    const reg = await navigator.serviceWorker.ready;
+    const subscription = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(publicKey),
+    });
+    await api.subscribePush(state.token, subscription.toJSON());
+    showToast("通知を有効にしました");
+  } catch (e) {
+    showToast(`通知の設定に失敗しました: ${e.message}`);
+  }
+}
+
+async function updateBadgeMain() {
+  const count = await getSetting("unreadCount");
+  try {
+    if (count > 0 && "setAppBadge" in navigator) {
+      await navigator.setAppBadge(count);
+    } else if ("clearAppBadge" in navigator) {
+      await navigator.clearAppBadge();
+    }
+  } catch {
+    // Badging API未対応ブラウザでは無視する
+  }
+}
+async function resetUnreadBadge() {
+  await setSetting("unreadCount", 0);
+  await updateBadgeMain();
+}
+async function incrementUnreadBadge() {
+  const current = await getSetting("unreadCount");
+  await setSetting("unreadCount", current + 1);
+  await updateBadgeMain();
+}
+
+// ===== アプリケーション状態 =====
+
+const state = {
+  userId: null,
+  token: null,
+  displayName: null,
+  ecdhPrivateKey: null,
+  ecdsaPrivateKey: null,
+  ecdhPublicJwk: null,
+  ecdsaPublicJwk: null,
+
+  currentRoomId: null,
+  inviteCode: null,
+  roomKey: null, // CryptoKey | null（未受領の間はnull）
+  members: new Map(), // userId -> { displayName, ecdhPubJwk, ecdsaPubJwk, ecdsaPublicKey(CryptoKey) }
+  wrapSentTo: new Set(), // このセッションで既にkeywrapを送った相手（重複送信の抑制）
+  pendingEncrypted: [], // roomKey未受領時に届いたchatメッセージの一時保管
+  pollTimer: null,
+  pollInFlight: false,
+};
+
+// ===== 永続化ヘルパ =====
+
+function saveSessionMeta() {
+  const meta = { userId: state.userId, token: state.token, displayName: state.displayName };
+  localStorage.setItem("e2ee_chat_session", JSON.stringify(meta));
+  // Service WorkerはlocalStorageを読めないため、push再購読などに使う分だけIndexedDBにも複製する
+  idbPut("identity", { ...meta, apiBase: API_BASE }, "session").catch((e) => console.error(e));
+}
+function loadSessionMeta() {
+  try {
+    const raw = localStorage.getItem("e2ee_chat_session");
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+async function saveIdentityToIdb() {
+  await idbPut(
+    "identity",
+    {
+      ecdhPrivateKey: state.ecdhPrivateKey,
+      ecdsaPrivateKey: state.ecdsaPrivateKey,
+      ecdhPublicJwk: state.ecdhPublicJwk,
+      ecdsaPublicJwk: state.ecdsaPublicJwk,
+    },
+    "me"
+  );
+}
+async function loadIdentityFromIdb() {
+  return idbGet("identity", "me");
+}
+
+/**
+ * ルームのメタ情報（招待コード・タイトル・ルーム鍵）をIndexedDBに保存する。
+ * 同じルームに対する既存レコードがあればフィールド単位でマージし、
+ * 例えば「まだルーム鍵を受け取っていない」状態で他の項目だけ更新しても
+ * 既に保存済みのroomKeyRawを消してしまわないようにする。
+ */
+async function upsertRecentRoom(roomId, fields) {
+  const existing = (await idbGet("rooms", roomId)) || { roomId, joinedAt: Date.now() };
+  const merged = { ...existing, ...fields, roomId };
+  await idbPut("rooms", merged);
+  return merged;
+}
+async function loadRecentRooms() {
+  const rooms = await idbGetAll("rooms");
+  return rooms.sort((a, b) => b.joinedAt - a.joinedAt);
+}
+
+// ===== 画面切り替え =====
+
+function showScreen(id) {
+  document.querySelectorAll(".screen").forEach((el) => el.classList.add("hidden"));
+  document.getElementById(id).classList.remove("hidden");
+}
+
+// ===== 画面1: オンボーディング =====
+
+async function initOnboarding() {
+  const btn = document.getElementById("btn-start");
+  const nameInput = document.getElementById("input-display-name");
+  const statusEl = document.getElementById("onboarding-status");
+
+  btn.addEventListener("click", async () => {
+    const displayName = nameInput.value.trim();
+    if (!displayName) {
+      statusEl.textContent = "表示名を入力してください";
+      statusEl.className = "status-line error";
+      return;
+    }
+    btn.disabled = true;
+    statusEl.className = "status-line";
+    statusEl.textContent = "鍵を生成しています…";
+    try {
+      const { ecdh, ecdsa } = await generateIdentityKeys();
+      const ecdhPublicJwk = await exportPublicJwk(ecdh.publicKey);
+      const ecdsaPublicJwk = await exportPublicJwk(ecdsa.publicKey);
+
+      statusEl.textContent = "サーバに登録しています…";
+      const { userId, token } = await api.register(displayName, ecdhPublicJwk, ecdsaPublicJwk);
+
+      state.userId = userId;
+      state.token = token;
+      state.displayName = displayName;
+      state.ecdhPrivateKey = ecdh.privateKey;
+      state.ecdsaPrivateKey = ecdsa.privateKey;
+      state.ecdhPublicJwk = ecdhPublicJwk;
+      state.ecdsaPublicJwk = ecdsaPublicJwk;
+
+      saveSessionMeta();
+      await saveIdentityToIdb();
+
+      await enterLobby();
+    } catch (e) {
+      statusEl.textContent = `失敗しました: ${e.message}`;
+      statusEl.className = "status-line error";
+      btn.disabled = false;
+    }
+  });
+}
+
+// ===== 画面2: ロビー =====
+
+async function enterLobby() {
+  showScreen("screen-lobby");
+  await renderRecentRooms();
+}
+
+async function renderRecentRooms() {
+  const listEl = document.getElementById("recent-rooms-list");
+  const cardEl = document.getElementById("recent-rooms-card");
+  const rooms = await loadRecentRooms();
+  if (rooms.length === 0) {
+    cardEl.classList.add("hidden");
+    return;
+  }
+  cardEl.classList.remove("hidden");
+  listEl.innerHTML = "";
+  for (const room of rooms) {
+    const li = document.createElement("li");
+    const btnEl = document.createElement("button");
+    btnEl.className = "recent-room-item";
+    btnEl.innerHTML = `<span>${escapeHtml(room.title || room.roomId.slice(0, 8))}</span><span class="room-key-icon">🔑</span>`;
+    btnEl.addEventListener("click", () => enterRoom(room.roomId, room.inviteCode, room.title));
+    li.appendChild(btnEl);
+    listEl.appendChild(li);
+  }
+}
+
+function initLobby() {
+  const statusEl = document.getElementById("lobby-status");
+
+  document.getElementById("btn-whoami").addEventListener("click", () => {
+    showToast(`${state.displayName} としてログイン中`);
+  });
+
+  document.getElementById("btn-create-room").addEventListener("click", async () => {
+    statusEl.className = "status-line";
+    statusEl.textContent = "ルームを作成しています…";
+    try {
+      const { roomId, inviteCode } = await api.createRoom(state.token);
+      // 自分が作成者なので、ルーム鍵は自分でその場で生成して持つ（keywrap不要）
+      const roomKey = await generateRoomKey();
+      state.currentRoomId = roomId;
+      state.inviteCode = inviteCode;
+      state.roomKey = roomKey;
+      state.members = new Map();
+      // 自分自身の情報もメンバー一覧に入れておく（表示用。自分のメッセージ検証には使わない）
+      const myEcdsaPub = await importEcdsaPublicKey(state.ecdsaPublicJwk);
+      state.members.set(state.userId, {
+        displayName: state.displayName,
+        ecdhPubJwk: state.ecdhPublicJwk,
+        ecdsaPubJwk: state.ecdsaPublicJwk,
+        ecdsaPublicKey: myEcdsaPub,
+      });
+
+      const title = `${state.displayName}のルーム`;
+      await upsertRecentRoom(roomId, { inviteCode, title, roomKeyRaw: await exportRoomKeyRaw(roomKey) });
+      statusEl.textContent = "";
+      enterRoomScreen(title);
+    } catch (e) {
+      statusEl.textContent = `失敗しました: ${e.message}`;
+      statusEl.className = "status-line error";
+    }
+  });
+
+  document.getElementById("btn-join-room").addEventListener("click", async () => {
+    const code = document.getElementById("input-invite-code").value.trim().toUpperCase();
+    if (!code) {
+      statusEl.textContent = "招待コードを入力してください";
+      statusEl.className = "status-line error";
+      return;
+    }
+    statusEl.className = "status-line";
+    statusEl.textContent = "参加しています…";
+    try {
+      await joinRoomByCode(code);
+      statusEl.textContent = "";
+    } catch (e) {
+      statusEl.textContent = `失敗しました: ${e.message}`;
+      statusEl.className = "status-line error";
+    }
+  });
+}
+
+/**
+ * 招待コードでルームに接続する。新規参加・既存ルームへの再接続の両方をこの1つの
+ * 関数で扱う。ローカル(IndexedDB)に既にこのルームの鍵を保存済みなら（＝自分が
+ * 作成者だった、または過去にkeywrapを受け取ったことがある）それを再利用し、
+ * 無ければ null のまま新規keywrapを待つ。
+ */
+async function joinRoomByCode(inviteCode, titleHint) {
+  const { roomId, members } = await api.joinRoom(state.token, inviteCode);
+  state.currentRoomId = roomId;
+  state.inviteCode = inviteCode;
+  state.members = new Map();
+  state.wrapSentTo = new Set();
+  state.pendingEncrypted = [];
+
+  for (const m of members) {
+    const ecdsaPublicKey = await importEcdsaPublicKey(m.ecdsaPub);
+    state.members.set(m.userId, {
+      displayName: m.displayName,
+      ecdhPubJwk: m.ecdhPub,
+      ecdsaPubJwk: m.ecdsaPub,
+      ecdsaPublicKey,
+    });
+  }
+
+  const existingRecord = await idbGet("rooms", roomId);
+  state.roomKey = existingRecord && existingRecord.roomKeyRaw ? await importRoomKeyRaw(existingRecord.roomKeyRaw) : null;
+
+  const title = titleHint || (existingRecord && existingRecord.title) || "参加したルーム";
+  await upsertRecentRoom(roomId, { inviteCode, title });
+  enterRoomScreen(title);
+}
+
+async function enterRoom(roomId, inviteCode, title) {
+  // 「最近のルーム」から再入室する場合。サーバ側の最新メンバー一覧を取り直すため
+  // 実質的には再joinを行う（サーバはmembersに既にいれば重複追加しない）。
+  const statusEl = document.getElementById("lobby-status");
+  statusEl.textContent = "ルームに接続しています…";
+  try {
+    await joinRoomByCode(inviteCode, title);
+  } catch (e) {
+    statusEl.textContent = `接続に失敗しました: ${e.message}`;
+    statusEl.className = "status-line error";
+  }
+}
+
+// ===== 画面3: チャットルーム =====
+
+function enterRoomScreen(title) {
+  document.getElementById("room-title").textContent = title;
+  document.getElementById("message-list").innerHTML = "";
+  showScreen("screen-room");
+  renderMembers();
+  updateKeyStatusBanner();
+  updateComposerEnabled();
+  startPolling();
+  resetUnreadBadge();
+}
+
+function updateKeyStatusBanner() {
+  const banner = document.getElementById("key-status-banner");
+  if (state.roomKey) {
+    banner.classList.add("hidden");
+  } else {
+    banner.classList.remove("hidden");
+    banner.textContent = "🔑 ルーム鍵を待っています…（既存メンバーがオンラインになると自動的に受け取れます）";
+  }
+}
+
+function updateComposerEnabled() {
+  const input = document.getElementById("input-message");
+  const btn = document.getElementById("btn-send");
+  const enabled = !!state.roomKey;
+  input.disabled = !enabled;
+  btn.disabled = !enabled;
+}
+
+function renderMembers() {
+  const listEl = document.getElementById("members-list");
+  listEl.innerHTML = "";
+  for (const [userId, m] of state.members.entries()) {
+    const li = document.createElement("li");
+    li.className = "member-item";
+    const initial = (m.displayName || "?").trim().charAt(0).toUpperCase();
+    li.innerHTML = `
+      <span class="member-avatar">${escapeHtml(initial)}</span>
+      <span class="member-name">${escapeHtml(m.displayName)}${userId === state.userId ? ' <span class="member-you">(あなた)</span>' : ""}</span>
+    `;
+    listEl.appendChild(li);
+  }
+}
+
+function appendSystemMessage(text, warn = false) {
+  const listEl = document.getElementById("message-list");
+  const row = document.createElement("div");
+  row.className = `msg-row system${warn ? " warn" : ""}`;
+  row.innerHTML = `<div class="msg-bubble">${escapeHtml(text)}</div>`;
+  listEl.appendChild(row);
+  listEl.scrollTop = listEl.scrollHeight;
+}
+
+function appendChatMessage({ fromUserId, displayName, text, ts, verified }) {
+  const listEl = document.getElementById("message-list");
+  const mine = fromUserId === state.userId;
+  const row = document.createElement("div");
+  row.className = `msg-row ${mine ? "mine" : "theirs"}`;
+  const time = new Date(ts).toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" });
+  row.innerHTML = `
+    ${mine ? "" : `<div class="msg-sender">${escapeHtml(displayName)}</div>`}
+    <div class="msg-bubble${verified ? "" : " unverified"}">${escapeHtml(text)}</div>
+    <div class="msg-meta">${verified ? time : `${time} ・ ⚠️ 署名検証失敗`}</div>
+  `;
+  listEl.appendChild(row);
+  listEl.scrollTop = listEl.scrollHeight;
+}
+
+async function trySendPendingKeywraps(newMemberId) {
+  // 自分がルーム鍵を持っていて、まだ新メンバーに送っていなければ送る
+  if (!state.roomKey) return;
+  if (newMemberId === state.userId) return;
+  if (state.wrapSentTo.has(newMemberId)) return;
+  const member = state.members.get(newMemberId);
+  if (!member || !member.ecdhPubJwk) return;
+
+  state.wrapSentTo.add(newMemberId);
+  try {
+    const theirEcdhPub = await importEcdhPublicKey(member.ecdhPubJwk);
+    const wrapKey = await deriveWrapKey(state.ecdhPrivateKey, theirEcdhPub);
+    const roomKeyRaw = await exportRoomKeyRaw(state.roomKey);
+    const payload = { roomKeyRaw, ts: Date.now() };
+    const sig = await signJson(state.ecdsaPrivateKey, payload);
+    const { iv, ciphertext } = await aesGcmEncryptJson(wrapKey, { ...payload, sig, from: state.userId });
+    await api.send(state.token, state.currentRoomId, { type: "keywrap", to: newMemberId, iv, ciphertext });
+  } catch (e) {
+    console.error("keywrap送信に失敗", e);
+    state.wrapSentTo.delete(newMemberId); // 次のポーリングで再試行できるようにする
+  }
+}
+
+async function decryptAndAppendChat(msg) {
+  try {
+    const payload = await aesGcmDecryptJson(state.roomKey, msg.iv, msg.ciphertext);
+    const { from, text, ts, sig } = payload;
+    const member = state.members.get(from);
+    let verified = false;
+    if (member && member.ecdsaPublicKey) {
+      verified = await verifyJson(member.ecdsaPublicKey, { from, text, ts }, sig);
+    }
+    appendChatMessage({
+      fromUserId: from,
+      displayName: member ? member.displayName : from.slice(0, 8),
+      text,
+      ts,
+      verified,
+    });
+    if (from !== state.userId && document.hidden) {
+      await incrementUnreadBadge();
+    }
+  } catch (e) {
+    console.error("復号に失敗したメッセージをスキップしました", e);
+  }
+}
+
+async function flushPendingEncrypted() {
+  if (!state.roomKey || state.pendingEncrypted.length === 0) return;
+  const pending = state.pendingEncrypted;
+  state.pendingEncrypted = [];
+  for (const msg of pending) {
+    await decryptAndAppendChat(msg);
+  }
+}
+
+async function processIncomingMessage(msg) {
+  if (msg.type === "member-joined") {
+    const meta = msg.meta || {};
+    if (!state.members.has(meta.userId)) {
+      const ecdsaPublicKey = await importEcdsaPublicKey(meta.ecdsaPub);
+      state.members.set(meta.userId, {
+        displayName: meta.displayName,
+        ecdhPubJwk: meta.ecdhPub,
+        ecdsaPubJwk: meta.ecdsaPub,
+        ecdsaPublicKey,
+      });
+      renderMembers();
+      if (meta.userId !== state.userId) {
+        appendSystemMessage(`${meta.displayName} が参加しました`);
+      }
+    }
+    await trySendPendingKeywraps(meta.userId);
+    return;
+  }
+
+  if (msg.type === "member-left") {
+    const meta = msg.meta || {};
+    const member = state.members.get(meta.userId);
+    if (member) {
+      appendSystemMessage(`${member.displayName} が退出しました`);
+      state.members.delete(meta.userId);
+      renderMembers();
+    }
+    return;
+  }
+
+  if (msg.type === "keywrap" && msg.to === state.userId) {
+    const sender = state.members.get(msg.from);
+    if (!sender || !sender.ecdhPubJwk) return; // 送信者情報がまだ無ければ次のポーリングで再試行
+    try {
+      const senderEcdhPub = await importEcdhPublicKey(sender.ecdhPubJwk);
+      const wrapKey = await deriveWrapKey(state.ecdhPrivateKey, senderEcdhPub);
+      const payload = await aesGcmDecryptJson(wrapKey, msg.iv, msg.ciphertext);
+      const { roomKeyRaw, ts, sig, from } = payload;
+      const okSig = sender.ecdsaPublicKey ? await verifyJson(sender.ecdsaPublicKey, { roomKeyRaw, ts }, sig) : false;
+      if (!okSig) {
+        appendSystemMessage("鍵の署名検証に失敗したため無視しました", true);
+        return;
+      }
+      state.roomKey = await importRoomKeyRaw(roomKeyRaw);
+      await upsertRecentRoom(state.currentRoomId, { roomKeyRaw });
+      updateKeyStatusBanner();
+      updateComposerEnabled();
+      appendSystemMessage("🔓 ルーム鍵を受信しました");
+      await flushPendingEncrypted();
+    } catch (e) {
+      console.error("keywrapの復号に失敗", e);
+    }
+    return;
+  }
+
+  if (msg.type === "chat") {
+    if (!state.roomKey) {
+      state.pendingEncrypted.push(msg);
+      return;
+    }
+    await decryptAndAppendChat(msg);
+  }
+}
+
+async function pollOnce() {
+  if (state.pollInFlight || !state.currentRoomId) return;
+  state.pollInFlight = true;
+  try {
+    const { messages } = await api.poll(state.token, state.currentRoomId);
+    for (const msg of messages) {
+      await processIncomingMessage(msg);
+    }
+  } catch (e) {
+    console.error("ポーリングに失敗しました", e);
+  } finally {
+    state.pollInFlight = false;
+  }
+}
+
+function startPolling() {
+  stopPolling();
+  pollOnce();
+  state.pollTimer = setInterval(pollOnce, POLL_INTERVAL_MS);
+}
+function stopPolling() {
+  if (state.pollTimer) {
+    clearInterval(state.pollTimer);
+    state.pollTimer = null;
+  }
+}
+
+async function sendCurrentMessage() {
+  const input = document.getElementById("input-message");
+  const text = input.value.trim();
+  if (!text || !state.roomKey) return;
+  input.value = "";
+
+  const ts = Date.now();
+  const payload = { from: state.userId, text, ts };
+  try {
+    const sig = await signJson(state.ecdsaPrivateKey, payload);
+    const { iv, ciphertext } = await aesGcmEncryptJson(state.roomKey, { ...payload, sig });
+    await api.send(state.token, state.currentRoomId, { type: "chat", to: null, iv, ciphertext });
+    appendChatMessage({ fromUserId: state.userId, displayName: state.displayName, text, ts, verified: true });
+  } catch (e) {
+    showToast(`送信に失敗しました: ${e.message}`);
+    input.value = text; // 送信失敗時は入力内容を復元
+  }
+}
+
+function initRoomScreen() {
+  document.getElementById("composer").addEventListener("submit", (e) => {
+    e.preventDefault();
+    sendCurrentMessage();
+  });
+
+  document.getElementById("btn-back-to-lobby").addEventListener("click", async () => {
+    stopPolling();
+    state.currentRoomId = null;
+    state.roomKey = null;
+    await enterLobby();
+  });
+
+  document.getElementById("btn-toggle-members").addEventListener("click", () => {
+    document.getElementById("members-panel").classList.toggle("hidden-mobile");
+  });
+
+  document.getElementById("btn-copy-invite").addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(state.inviteCode);
+      showToast("招待コードをコピーしました");
+    } catch {
+      showToast(`招待コード: ${state.inviteCode}`);
+    }
+  });
+
+  document.getElementById("btn-leave-room").addEventListener("click", async () => {
+    if (!confirm("このルームを退出しますか？")) return;
+    try {
+      await api.leave(state.token, state.currentRoomId);
+    } catch (e) {
+      console.error(e);
+    }
+    stopPolling();
+    state.currentRoomId = null;
+    state.roomKey = null;
+    await enterLobby();
+  });
+}
+
+function initNotificationSettings() {
+  document.getElementById("btn-enable-push").addEventListener("click", enablePushNotifications);
+
+  const checkbox = document.getElementById("checkbox-lock-preview");
+  getSetting("previewOnLockScreen").then((enabled) => {
+    checkbox.checked = enabled;
+  });
+  checkbox.addEventListener("change", () => {
+    setSetting("previewOnLockScreen", checkbox.checked);
+  });
+}
+
+// タブがバックグラウンドから復帰したタイミングでバッジをクリアする
+// （ルーム画面を開いている＝メッセージを見ている、とみなす）
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden && state.currentRoomId) {
+    resetUnreadBadge();
+  }
+});
+
+// ===== 起動処理 =====
+
+async function boot() {
+  initOnboarding();
+  initLobby();
+  initRoomScreen();
+  initNotificationSettings();
+  registerServiceWorker();
+
+  const session = loadSessionMeta();
+  const identity = await loadIdentityFromIdb();
+
+  if (session && identity) {
+    state.userId = session.userId;
+    state.token = session.token;
+    state.displayName = session.displayName;
+    state.ecdhPrivateKey = identity.ecdhPrivateKey;
+    state.ecdsaPrivateKey = identity.ecdsaPrivateKey;
+    state.ecdhPublicJwk = identity.ecdhPublicJwk;
+    state.ecdsaPublicJwk = identity.ecdsaPublicJwk;
+    await enterLobby();
+
+    const params = new URLSearchParams(location.search);
+    const roomIdFromNotification = params.get("room");
+    if (roomIdFromNotification) await openRecentRoomById(roomIdFromNotification);
+  } else {
+    showScreen("screen-onboarding");
+  }
+}
+
+boot();
+
+  </script>
+</body>
+</html>
