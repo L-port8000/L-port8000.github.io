@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>XMRig マイニング ダッシュボード</title>
+
+    <style>
+        body {
+            font-family: sans-serif;
+            background: #1e1e1e;
+            color: #f0f0f0;
+            padding: 20px;
+        }
+
+        .card {
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        .hashrate {
+            font-size: 2.5em;
+            color: #4caf50;
+            font-weight: bold;
+        }
+
+        .label {
+            color: #aaa;
+            font-size: 0.9em;
+        }
+
+        .status {
+            font-size: 1.2em;
+            color: #ff9800;
+        }
+
+        input {
+            width: 70%;
+            padding: 10px;
+            margin-top: 8px;
+            background: #1e1e1e;
+            color: #f0f0f0;
+            border: 1px solid #555;
+            border-radius: 4px;
+        }
+
+        button {
+            padding: 10px 16px;
+            margin-left: 5px;
+            background: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            opacity: 0.85;
+        }
+    </style>
+</head>
+
+<body>
+<p>Linux ./xmrig -o pool.hashvault.pro:443 -u YOUR_ADDRESS -p x --http-enabled --http-host=192.168.xxx.xxx --http-port=18080
+</p>
+          
+    <h1>🖥️ マイニング状況</h1>
+
+    <!-- API設定 -->
+    <div class="card">
+        <div class="label">XMRig API URL</div>
+
+        <input
+            type="text"
+            id="apiUrl"
+            value="http://192.168.100.104:18080/2/summary"
+        >
+
+        <button onclick="connectAPI()">接続</button>
+    </div>
+
+    <div class="card">
+        <div class="label">ステータス</div>
+        <div class="status" id="status">未接続</div>
+    </div>
+
+    <div class="card">
+        <div class="label">現在のハッシュレート</div>
+        <div class="hashrate" id="hashrate">0</div>
+    </div>
+
+    <div class="card">
+        <div class="label">接続先プール</div>
+        <div id="pool">未接続</div>
+    </div>
+
+
+    <script>
+
+        let API_URL =
+            document.getElementById("apiUrl").value;
+
+
+        async function updateDashboard() {
+
+            try {
+
+                const response = await fetch(API_URL);
+
+                if (!response.ok) {
+                    throw new Error("APIにアクセスできません");
+                }
+
+                const data = await response.json();
+
+
+
+                if (
+                    data.connection &&
+                    data.connection.uptime > 0
+                ) {
+
+                    document.getElementById("status")
+                        .innerText = "✅ マイニング実行中";
+
+                } else {
+
+                    document.getElementById("status")
+                        .innerText = "❌ 停止中";
+                }
+
+
+
+                if (
+                    data.hashrate &&
+                    data.hashrate.total
+                ) {
+
+                    const hashrate =
+                        data.hashrate.total[0];
+
+                    if (hashrate > 1000) {
+
+                        document.getElementById("hashrate")
+                            .innerText =
+                            (hashrate / 1000).toFixed(2)
+                            + " kH/s";
+
+                    } else {
+
+                        document.getElementById("hashrate")
+                            .innerText =
+                            Math.round(hashrate)
+                            + " H/s";
+                    }
+                }
+
+
+
+                if (data.connection) {
+
+                    document.getElementById("pool")
+                        .innerText =
+                        data.connection.pool +
+                        " (Ping: " +
+                        data.connection.ping +
+                        "ms)";
+                }
+
+            }
+
+            catch (error) {
+
+                document.getElementById("status")
+                    .innerText =
+                    "❌ XMRigに接続できません";
+
+                document.getElementById("hashrate")
+                    .innerText = "0";
+
+                document.getElementById("pool")
+                    .innerText = "未接続";
+            }
+        }
+
+
+        function connectAPI() {
+
+            const input =
+                document.getElementById("apiUrl");
+
+            API_URL = input.value.trim();
+
+            updateDashboard();
+        }
+
+
+
+        setInterval(updateDashboard, 3000);
+
+
+        updateDashboard();
+
+    </script>
+
+</body>
+</html>
