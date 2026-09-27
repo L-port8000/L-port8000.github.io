@@ -8,15 +8,15 @@
   <meta name="theme-color" content="#1e1e2e" />
   <title>cf-bbs (anonymous) — 匿名掲示板</title>
 
-  <link rel="icon" href="https://site.l-ituki8000.workers.dev/bbs/favicon.svg" />
-  <link rel="apple-touch-icon" href="https://site.l-ituki8000.workers.dev/bbs/favicon.svg" />
+  <link rel="icon" href="https://site.l-ituki8000.workers.dev/tools/n/bbs-favicon.svg" />
+  <link rel="apple-touch-icon" href="https://site.l-ituki8000.workers.dev/tools/n/bbs-favicon.svg" />
 
   <!-- Open Graph -->
   <meta property="og:title" content="cf-bbs (anonymous) — 匿名掲示板" />
   <meta property="og:description" content="アカウント不要の匿名掲示板 regia:8000" />
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://site.l-ituki8000.workers.dev/cf-bbs/index.html" />
-  <meta property="og:image" content="https://site.l-ituki8000.workers.dev/bbs/ogp.svg" />
+  <meta property="og:url" content="https://site.l-ituki8000.workers.dev/tools/n/bbs.html" />
+  <meta property="og:image" content="https://site.l-ituki8000.workers.dev/tools/n/bbs-ogp.svg" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta property="og:site_name" content="cf-bbs (anonymous)" />
@@ -26,7 +26,7 @@
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="cf-bbs (anonymous) — 匿名掲示板" />
   <meta name="twitter:description" content="アカウント不要の匿名掲示板" />
-  <meta name="twitter:image" content="https://site.l-ituki8000.workers.dev/bbs/ogp.svg" />
+  <meta name="twitter:image" content="https://site.l-ituki8000.workers.dev/tools/n/bbs-ogp.svg" />
 
   <!-- iPhone / PWA -->
   <meta name="application-name" content="cf-bbs" />
@@ -36,11 +36,7 @@
   <meta name="apple-mobile-web-app-title" content="cf-bbs" />
   <meta name="msapplication-TileColor" content="#1e1e2e" />
   <style>
-/* =========================================================================
-   cf-bbs (anonymous edition) — Catppuccin Mocha / Latte テーマ
-   ========================================================================= */
 
-/* === ダークモード（既定）: Catppuccin Mocha === */
 :root,
 .dark {
   --base: #1e1e2e;
@@ -76,7 +72,6 @@
   color-scheme: dark;
 }
 
-/* === ライトモード: Catppuccin Latte === */
 .light {
   --base: #eff1f5;
   --mantle: #e6e9ef;
@@ -139,7 +134,6 @@ a:hover {
   text-decoration: underline;
 }
 
-/* === アプリ幅 (max 760px) === */
 .app-shell {
   max-width: 760px;
   width: 100%;
@@ -155,7 +149,6 @@ a:hover {
   }
 }
 
-/* === トップバー === */
 .topbar {
   position: sticky;
   top: 0;
@@ -218,7 +211,6 @@ a:hover {
   }
 }
 
-/* === ボタン === */
 .btn {
   appearance: none;
   border: none;
@@ -267,8 +259,6 @@ a:hover {
   color: var(--red);
   padding: 9px 10px;
 }
-
-/* === カード === */
 .card {
   background: var(--card);
   border: 1px solid var(--border-soft);
@@ -279,8 +269,6 @@ a:hover {
 .card.danger-zone {
   border-color: rgba(220, 80, 80, 0.45);
 }
-
-/* === スレッドアイテム === */
 .thread-item {
   display: block;
   background: var(--card);
@@ -306,8 +294,6 @@ a:hover {
   font-size: 12.5px;
   color: var(--subtext0);
 }
-
-/* === 投稿アイテム === */
 .post-item {
   border-radius: 12px;
   padding: 12px 14px;
@@ -336,8 +322,6 @@ a:hover {
   display: inline-flex;
   gap: 6px;
 }
-
-/* === 入力 === */
 input[type="text"],
 input[type="email"],
 input[type="password"],
@@ -402,8 +386,6 @@ label:first-child {
   min-width: 180px;
   margin-bottom: 0;
 }
-
-/* === バナー === */
 .banner {
   border-radius: 12px;
   padding: 12px 14px;
@@ -432,8 +414,6 @@ label:first-child {
   padding: 48px 16px;
   font-size: 14px;
 }
-
-/* === 文字数カウンタ === */
 .char-counter {
   font-size: 12px;
   color: var(--overlay0);
@@ -463,8 +443,6 @@ label:first-child {
     transform: rotate(360deg);
   }
 }
-
-/* === スケルトン === */
 .skeleton {
   background: linear-gradient(
     90deg,
@@ -495,7 +473,6 @@ label:first-child {
   }
 }
 
-/* === 戻るボタン行 === */
 .back-row {
   display: flex;
   gap: 8px;
@@ -504,7 +481,6 @@ label:first-child {
   margin: 2px 0 12px;
 }
 
-/* === タグ === */
 .tag {
   display: inline-block;
   padding: 2px 8px;
@@ -525,7 +501,6 @@ label:first-child {
   color: var(--green);
 }
 
-/* === honeypot（ボット対策・画面非表示） === */
 .hp-field {
   position: absolute;
   left: -9999px;
@@ -536,7 +511,6 @@ label:first-child {
   pointer-events: none;
 }
 
-/* === 区切り === */
 .sep {
   border-top: 1px solid var(--border-soft);
   margin: 20px 0;
@@ -563,8 +537,6 @@ label:first-child {
   transition: width 0.3s ease;
   background: var(--green);
 }
-
-/* === フッター（最下部に張り付く） === */
 .site-footer {
   flex-shrink: 0;
   max-width: 760px;
@@ -584,7 +556,6 @@ label:first-child {
   text-decoration: none;
 }
 
-/* === 設定モーダル === */
 .settings-overlay {
   position: fixed;
   inset: 0;
@@ -637,8 +608,6 @@ label:first-child {
 .settings-row label {
   margin: 0;
 }
-
-/* === 文字サイズ / 表示幅 設定 === */
 html.fs-sm body {
   font-size: 14px;
 }
@@ -711,7 +680,6 @@ html.layout-wide .site-footer {
 }
   </style>
   <script>
-    // テーマ初期化（ちらつき防止）
     (function () {
       try {
         var t = localStorage.getItem("bbs-theme");
@@ -735,9 +703,6 @@ html.layout-wide .site-footer {
   </main>
 
   <script>
-    // =========================================================================
-    // cf-bbs (anonymous) — 共通設定
-    // =========================================================================
     window.BBS_CONFIG = {
       API_BASE: "https://z-relay.l-ituki8000.workers.dev",
       SITE_NAME: "cf-bbs",
@@ -746,10 +711,6 @@ html.layout-wide .site-footer {
   </script>
 
   <script>
-    // =========================================================================
-    // cf-bbs (anonymous) — 共通ヘルパ
-    // XSS 対策: すべての DOM は textContent で組み立てる（innerHTML は使わない）
-    // =========================================================================
     (function () {
       "use strict";
 
@@ -888,10 +849,6 @@ html.layout-wide .site-footer {
         if (window.__onSettingsApplied) window.__onSettingsApplied();
         if (__settingsOpen) __settingsOpen.refresh();
       }
-
-      // ------------------------------------------------------------------
-      // 表示設定（テーマ / 文字サイズ / 表示幅 / フッターリンク）
-      // ------------------------------------------------------------------
       let __settings = null;
       let __settingsOpen = null;
 
@@ -1128,9 +1085,6 @@ html.layout-wide .site-footer {
   </script>
 
   <script>
-    // =========================================================================
-    // cf-bbs (anonymous) — 板（index.html）
-    // =========================================================================
     (function () {
       "use strict";
 
