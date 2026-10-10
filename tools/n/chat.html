@@ -10,6 +10,7 @@
 <title>E2EE Chat</title>
 <style>
 
+
 :root {
   /* Catppuccin Mocha */
   --base: #1e1e2e;
@@ -807,6 +808,8 @@ body {
   .bar-subtitle { font-size: 12px; }
   .bar-action { width: 44px; height: 44px; }
   .bar-action .icon { width: 23px; height: 23px; }
+  .bar-avatar { width: 48px; height: 48px; }
+  .bar-spacer { width: 48px; }
 
   .my-address-row { margin: 12px 16px; padding: 14px 16px; border-color: var(--hairline-strong); }
   .chat-list-item { padding: 16px 20px; gap: 18px; }
@@ -837,6 +840,47 @@ body {
   .member-avatar { border-color: var(--accent-border); }
   .sheet { max-width: 520px; }
 }
+
+
+/* ---------- アカウントアイコン ---------- */
+
+.bar-avatar {
+  width: 44px; height: 44px; border-radius: 50%; padding: 0; flex-shrink: 0; cursor: pointer;
+  border: 1px solid var(--accent-border); background: var(--mantle); overflow: hidden;
+  transition: border-color 0.25s var(--ease), box-shadow 0.25s var(--ease);
+}
+.bar-avatar:hover { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.my-avatar { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 50%; background: var(--mantle); }
+.my-avatar.big { width: 64px; height: 64px; border: 1px solid var(--accent-border); flex-shrink: 0; }
+.profile-head { display: flex; align-items: center; gap: 16px; margin: 4px 0 14px; }
+.profile-meta { min-width: 0; }
+.profile-name { font-family: var(--font-display); font-size: 18px; letter-spacing: 0.06em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
+.btn-row > button { flex: 1 1 140px; margin: 0; }
+
+/* ---------- チャット管理・メッセージ操作 ---------- */
+
+.panel-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+.panel-actions .chip-btn { display: flex; align-items: center; justify-content: flex-start; gap: 10px; width: 100%; text-align: left; }
+.panel-actions .btn-danger-ghost { margin: 6px 0 0; }
+.chat-more {
+  display: none; position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+  width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--hairline-strong);
+  background: var(--surface0); cursor: pointer; align-items: center; justify-content: center; padding: 0;
+}
+.chat-more:hover { border-color: var(--accent); }
+@media (hover: hover) {
+  .chat-list li:hover .chat-more, .chat-list li:focus-within .chat-more { display: inline-flex; }
+}
+.msg-act {
+  font-family: inherit; font-size: inherit; letter-spacing: 0.04em; background: none; border: none; padding: 0 0 0 8px;
+  color: var(--accent-dim); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: rgba(242,205,107,0.35);
+}
+.msg-act:hover { color: var(--accent); }
+.msg-act.danger { color: var(--red); text-decoration-color: rgba(243,139,168,0.4); }
+.msg-row { cursor: default; }
+.msg-row:not(.system) .msg-bubble { cursor: pointer; }
+.msg-bubble { user-select: text; }
 
 /* ---------- レスポンシブ ---------- */
 
@@ -952,24 +996,14 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
   <!-- ============ 画面2: チャット一覧（SimpleX風ホーム） ============ -->
   <section id="screen-lobby" class="screen hidden">
     <header class="bar">
-      <span class="bar-spacer" style="width:88px"></span>
+      <button id="btn-show-my-address" class="bar-avatar" title="アカウント"><img class="my-avatar" alt="" referrerpolicy="no-referrer" decoding="async"></button>
+      <span class="bar-spacer"></span>
       <div class="bar-title">チャット</div>
       <button id="btn-refresh-lobby" class="bar-action" title="更新"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.5-4.2L4 8.5"/><polyline points="4 4 4 8.5 8.5 8.5"/><path d="M4 13a8 8 0 0 0 14.5 4.2L20 15.5"/><polyline points="20 20 20 15.5 15.5 15.5"/></svg></button>
       <button id="btn-open-add-sheet" class="bar-action" title="追加">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       </button>
     </header>
-
-    <div class="my-address-row" id="btn-show-my-address">
-      <span class="member-avatar">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="12" r="2"/><line x1="13" y1="10" x2="18" y2="10"/><line x1="13" y1="14" x2="18" y2="14"/></svg>
-      </span>
-      <div class="my-address-text">
-        <div class="my-address-label">アカウント・あなたのアドレス</div>
-        <code id="my-address-chip">-</code>
-      </div>
-      <span class="chevron">›</span>
-    </div>
 
     <ul id="chat-list" class="chat-list"></ul>
     <p id="chat-list-empty" class="empty-state hidden">
@@ -1000,11 +1034,29 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
       <h3 class="sheet-title">アカウント</h3>
 
       <div class="sheet-pad">
+        <div class="profile-head">
+          <img class="my-avatar big" alt="" referrerpolicy="no-referrer" decoding="async">
+          <div class="profile-meta"><div class="profile-name" id="my-display-name"></div><div class="muted" style="margin:2px 0 0;">アイコンはこの端末の画面にだけ表示されます</div></div>
+        </div>
         <p class="muted">あなたのアドレス。これを相手に伝えると連絡できるようになります。</p>
         <div class="address-box" style="margin:10px 0;">
           <code id="my-address-full"></code>
         </div>
         <button id="btn-copy-address-sheet" class="btn-secondary">コピー</button>
+      </div>
+
+      <div class="sheet-section">
+        <h2 class="sheet-section-title">アイコン画像</h2>
+        <p class="muted">画像のURL（https://…）を入れると、アイコンに使えます。リンク切れになった場合は自動で初期アイコンに戻ります。</p>
+        <label class="field">
+          <span>画像URL</span>
+          <input id="input-avatar-url" type="url" inputmode="url" placeholder="https://example.com/icon.png" autocomplete="off" spellcheck="false">
+        </label>
+        <div class="btn-row">
+          <button id="btn-avatar-apply" class="btn-primary">設定する</button>
+          <button id="btn-avatar-reset" class="btn-secondary">初期アイコンに戻す</button>
+        </div>
+        <p id="avatar-status" class="status-line"></p>
       </div>
 
       <div class="sheet-section">
@@ -1124,7 +1176,11 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
         <ul id="members-list" class="members-list"></ul>
 
         <button id="btn-add-group-member" class="chip-btn hidden" style="margin-top:8px;">＋ メンバーをアドレスで追加</button>
-        <button id="btn-leave-room" class="btn-danger-ghost">このチャットを退出</button>
+        <div class="panel-actions">
+          <button id="btn-rename-room" class="chip-btn btn-with-icon"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l1-4 11-11 3 3-11 11-4 1Z"/><line x1="14" y1="7" x2="17" y2="10"/></svg><span>名前を変更</span></button>
+          <button id="btn-clear-room" class="chip-btn btn-with-icon"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M7 7l1 12h8l1-12"/><path d="M10 11l4 4M14 11l-4 4"/></svg><span>履歴をこの端末から消去</span></button>
+          <button id="btn-leave-room" class="btn-danger-ghost">チャットを削除（退出）</button>
+        </div>
       </aside>
 
       <div class="chat-column">
@@ -1159,10 +1215,42 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
     </div>
   </div>
 
-  <!-- ============ シート: メッセージ操作（自分のメッセージのみ） ============ -->
+  <!-- ============ シート: チャットの管理（名前変更・履歴消去・削除） ============ -->
+  <div id="sheet-chat-actions" class="sheet-backdrop hidden">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <h3 class="sheet-title" id="chat-actions-title">チャット</h3>
+      <button id="btn-chat-rename" class="sheet-item"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l1-4 11-11 3 3-11 11-4 1Z"/><line x1="14" y1="7" x2="17" y2="10"/></svg><span>名前を変更</span></button>
+      <button id="btn-chat-clear" class="sheet-item"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M7 7l1 12h8l1-12"/><path d="M10 11l4 4M14 11l-4 4"/></svg><span>履歴をこの端末から消去</span></button>
+      <button id="btn-chat-delete" class="sheet-item danger"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 20 7"/><path d="M6 7l1 13a2 2 0 0 0 2 1.7h6a2 2 0 0 0 2-1.7l1-13"/><path d="M9 7V4h6v3"/></svg><span>チャットを削除（退出）</span></button>
+      <button class="sheet-item sheet-cancel" data-close-sheet="sheet-chat-actions">キャンセル</button>
+    </div>
+  </div>
+
+  <div id="sheet-rename" class="sheet-backdrop hidden">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <h3 class="sheet-title">チャット名を変更</h3>
+      <div class="sheet-pad">
+        <p class="muted">この端末だけに表示される名前です（相手には変わりません）。空にすると元の名前に戻ります。</p>
+        <label class="field">
+          <span>表示名</span>
+          <input id="input-rename-chat" type="text" maxlength="40" autocomplete="off">
+        </label>
+        <button id="btn-do-rename" class="btn-primary">保存</button>
+      </div>
+      <button class="sheet-item sheet-cancel" data-close-sheet="sheet-rename">キャンセル</button>
+    </div>
+  </div>
+
+  <!-- ============ シート: メッセージ操作 ============ -->
   <div id="sheet-message-actions" class="sheet-backdrop hidden">
     <div class="sheet">
       <div class="sheet-handle"></div>
+      <button id="btn-message-copy" class="sheet-item">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>
+        <span>コピー</span>
+      </button>
       <button id="btn-message-edit" class="sheet-item">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l1-4 11-11 3 3-11 11-4 1Z"/><line x1="14" y1="6" x2="18" y2="10"/></svg>
         <span>編集</span>
@@ -1170,6 +1258,10 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
       <button id="btn-message-delete" class="sheet-item danger">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 20 7"/><path d="M6 7l1 13a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-13"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/><path d="M9 7V4h6v3"/></svg>
         <span>削除</span>
+      </button>
+      <button id="btn-message-local-delete" class="sheet-item">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M7 7l1 12h8l1-12"/><path d="M10 11l4 4M14 11l-4 4"/></svg>
+        <span>この端末からだけ削除</span>
       </button>
       <button id="btn-message-actions-cancel" class="sheet-item sheet-cancel">キャンセル</button>
     </div>
@@ -1307,6 +1399,15 @@ async function idbGetAll(storeName) {
     req.onerror = () => reject(req.error);
   });
 }
+async function idbDeleteMessagesForRoom(roomId) {
+  const db = await openDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction("messages", "readwrite");
+    tx.objectStore("messages").delete(IDBKeyRange.bound(`${roomId}::`, `${roomId}::\uffff`));
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
 async function idbDelete(storeName, key) {
   const db = await openDb();
   return new Promise((resolve, reject) => {
@@ -1336,35 +1437,12 @@ async function aesGcmDecryptJson(aesKey, ivBase64, ciphertextBase64) {
 
 "use strict";
 
-/**
- * E2EE Chat フロントエンド（Session風アドレスモデル / SimpleX風チャット一覧UI）
- *
- * 【全体構成】
- *  - 登録時に公開鍵から導出される恒久的な「アドレス」(例: 05a1b2...) を持つ。
- *  - 1対1チャットは相手のアドレスから公開鍵を引き、ECDHで両者が独立に同じ鍵を
- *    導出する（鍵を待つ時間がない）。
- *  - グループチャットは対称なルーム鍵を作成者が生成し、招待するたびにオンライン中の
- *    既存メンバーがその人の公開鍵宛にラップして送る（keywrap）。
- *  - サーバはすべて暗号文のまま中継するだけで本文は読めない。
- *
- * 【メッセージの編集・削除】
- *  各メッセージにクライアント生成のUUID(id)を持たせ、"text"(新規)/"edit"(編集)/
- *  "delete"(削除) の3種類のkindを持つ同じ暗号化ペイロードとして送る。受信側は、
- *  edit/deleteのfromが元メッセージの送信者と一致し、かつ署名が有効な場合のみ適用する
- *  （他人のメッセージを編集・削除できないようにするため）。
- *
- * 【自動削除】
- *  メッセージはこの端末のIndexedDBに保存され、7日を過ぎたものは自動的に削除される
- *  （disappearing messages）。サーバ側の未読メッセージ配送キューも7日でTTL削除される。
- */
 
 // ===== 設定 =====
 const API_BASE = "https://chat-api.l-ituki8000.workers.dev";
 const POLL_INTERVAL_MS = 2000;
 const MY_ROOMS_REFRESH_MS = 5000;
 
-// ===== SVGアイコン =====
-// index.html側の静的アイコンと同じデザインを、JSで動的生成する要素向けに用意する。
 
 const ICONS = {
   person: '<circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.5 3-6 7-6s7 2.5 7 6"/>',
@@ -1380,8 +1458,6 @@ function icon(name, cls = "icon icon-inline") {
   return `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${ICONS[name]}</svg>`;
 }
 
-// ===== ちいさなユーティリティ =====
-// base64/UTF-8変換・IndexedDBラッパー・AES-GCMヘルパは上の共通処理ブロックを参照。
 
 function showToast(message) {
   const el = document.getElementById("toast");
@@ -1409,7 +1485,6 @@ function truncateAddress(address) {
   return address.length > 20 ? `${address.slice(0, 10)}…${address.slice(-8)}` : address;
 }
 
-// ===== 暗号処理 =====
 
 const ECDH_PARAMS = { name: "ECDH", namedCurve: "P-256" };
 const ECDSA_PARAMS = { name: "ECDSA", namedCurve: "P-256" };
@@ -1587,6 +1662,8 @@ const state = {
   rooms: new Map(),
   pollTimer: null,
   pollInFlight: new Set(),
+  avatarUrl: null, // 自分のアイコン画像URL（null = 初期アイコン）
+  restoredRoomKeys: {}, // パスフレーズ復元で戻したグループ鍵 { roomId: base64 }
   editing: null, // { roomId, messageId } | null
   actionTarget: null, // { roomId, messageId } | null（メッセージ操作シート用）
 };
@@ -1622,6 +1699,7 @@ function serializeRoomForIdb(room) {
     roomId: room.roomId,
     kind: room.kind,
     name: room.name,
+    alias: room.alias ?? "",
     peer: room.peer ?? null,
     members: room.kind === "group" ? [...room.members.entries()].map(([userId, m]) => ({ userId, displayName: m.displayName, ecdhPubJwk: m.ecdhPubJwk, ecdsaPubJwk: m.ecdsaPubJwk, address: m.address })) : null,
     roomKeyRaw: room.roomKeyRawCache ?? null,
@@ -1631,7 +1709,26 @@ function serializeRoomForIdb(room) {
     unread: room.unread ?? 0,
   };
 }
-async function persistRoom(room) { await idbPut("rooms", serializeRoomForIdb(room)); }
+const backedUpKeyRooms = new Set();
+async function persistRoom(room) {
+  await idbPut("rooms", serializeRoomForIdb(room));
+  // グループ鍵を初めて持ったらパスフレーズ用バックアップに含めて更新する（新端末で復元したときに読めるように）
+  if (room.kind === "group" && room.roomKeyRawCache && !backedUpKeyRooms.has(room.roomId)) {
+    backedUpKeyRooms.add(room.roomId);
+    scheduleBackupSync();
+  }
+}
+
+let backupTimer = null;
+function scheduleBackupSync() {
+  if (!state.passphrase || !state.token) return;
+  clearTimeout(backupTimer);
+  backupTimer = setTimeout(() => {
+    uploadAccountBackup().catch((e) => console.error("バックアップの更新に失敗しました", e));
+  }, 1500);
+}
+
+function roomLabel(room) { return (room.alias || room.name || "").trim(); }
 
 async function persistMessage(roomId, message) {
   const { status, ...rest } = message; // 送信状態は端末に保存しない
@@ -1643,6 +1740,7 @@ async function hydrateRoomFromRecord(record) {
     roomId: record.roomId,
     kind: record.kind,
     name: record.name,
+    alias: record.alias ?? "",
     peer: record.peer ?? null,
     members: new Map(),
     roomKey: null,
@@ -1834,6 +1932,15 @@ function initOnboarding() {
   document.getElementById("btn-address-intro-continue").addEventListener("click", () => enterLobby());
 }
 
+/** グループのルーム鍵（1:1は相手の公開鍵から毎回導出できるので不要）。復元直後でまだ受け取っていない鍵も失わない。 */
+function collectRoomKeysForBackup() {
+  const keys = { ...state.restoredRoomKeys };
+  for (const room of state.rooms.values()) {
+    if (room.kind === "group" && room.roomKeyRawCache) keys[room.roomId] = room.roomKeyRawCache;
+  }
+  return keys;
+}
+
 /** 現在のstateの内容をパスフレーズ由来の鍵で暗号化し、サーバにアップロードする。 */
 async function uploadAccountBackup() {
   const { lookupId, encryptionKey } = await deriveBackupSecrets(state.passphrase);
@@ -1848,6 +1955,8 @@ async function uploadAccountBackup() {
     ecdsaPrivateJwk,
     ecdhPublicJwk: state.ecdhPublicJwk,
     ecdsaPublicJwk: state.ecdsaPublicJwk,
+    avatarUrl: state.avatarUrl ?? null,
+    roomKeys: collectRoomKeysForBackup(),
   };
   const { iv, ciphertext } = await aesGcmEncryptJson(encryptionKey, payload);
   await api.saveBackup(state.token, lookupId, iv, ciphertext);
@@ -1882,6 +1991,10 @@ function initRestore() {
       state.ecdhPrivateKey = await crypto.subtle.importKey("jwk", payload.ecdhPrivateJwk, ECDH_PARAMS, true, ["deriveKey", "deriveBits"]);
       state.ecdsaPrivateKey = await crypto.subtle.importKey("jwk", payload.ecdsaPrivateJwk, ECDSA_PARAMS, true, ["sign"]);
       state.passphrase = words;
+      state.restoredRoomKeys = payload.roomKeys && typeof payload.roomKeys === "object" ? payload.roomKeys : {};
+      state.avatarUrl = typeof payload.avatarUrl === "string" ? payload.avatarUrl : null;
+      saveAvatarLocal();
+      await idbPut("identity", state.restoredRoomKeys, "roomKeys");
 
       saveSessionMeta();
       await saveIdentityToIdb();
@@ -1925,7 +2038,7 @@ async function wipeLocalDataAndReload() {
   stopGlobalPolling();
   localStorage.removeItem("e2ee_chat_session");
 
-  try { localStorage.removeItem(NOTIFY_BODY_KEY); } catch {}
+  try { localStorage.removeItem(NOTIFY_BODY_KEY); localStorage.removeItem(AVATAR_KEY); } catch {}
 
   await new Promise((resolve) => {
     const req = indexedDB.deleteDatabase(DB_NAME);
@@ -1961,7 +2074,7 @@ async function deleteAccount() {
 
 async function enterLobby() {
   showScreen("screen-lobby");
-  document.getElementById("my-address-chip").textContent = truncateAddress(state.address);
+  renderMyAvatar();
 
   if (state.rooms.size === 0) {
     const records = await idbGetAll("rooms");
@@ -1986,7 +2099,7 @@ function renderChatList() {
     const li = document.createElement("li");
     const btn = document.createElement("button");
     btn.className = "chat-list-item" + (room.roomId === state.openRoomId ? " active" : "");
-    const initial = (room.name || "?").trim().charAt(0).toUpperCase();
+    const initial = (roomLabel(room) || "?").charAt(0).toUpperCase();
     const kindIcon = icon(room.kind === "group" ? "people" : "person", "icon icon-inline");
     const preview = room.lastPreview || "タップして開く";
     const unreadBadge = room.unread > 0 ? `<span class="unread-badge">${room.unread > 9 ? "9+" : room.unread}</span>` : "";
@@ -1994,15 +2107,31 @@ function renderChatList() {
       <span class="member-avatar">${escapeHtml(initial)}</span>
       <span class="chat-list-item-body">
         <span class="chat-list-item-top">
-          <span class="chat-list-item-name"><span class="chat-list-item-kind">${kindIcon}</span>${escapeHtml(room.name || "")}</span>
+          <span class="chat-list-item-name"><span class="chat-list-item-kind">${kindIcon}</span>${escapeHtml(roomLabel(room))}</span>
           <span class="chat-list-item-time">${formatRelativeTime(room.lastActivity)}</span>
         </span>
         <span class="chat-list-item-preview">${escapeHtml(preview)}</span>
       </span>
       ${unreadBadge}
     `;
-    btn.addEventListener("click", () => openRoom(room.roomId));
+    let pressTimer = null, longPressed = false;
+    btn.addEventListener("touchstart", () => {
+      longPressed = false;
+      pressTimer = setTimeout(() => { longPressed = true; navigator.vibrate?.(10); openChatActions(room.roomId); }, 550);
+    }, { passive: true });
+    ["touchend", "touchmove", "touchcancel"].forEach((ev) => btn.addEventListener(ev, () => clearTimeout(pressTimer), { passive: true }));
+    btn.addEventListener("click", (e) => {
+      if (longPressed) { longPressed = false; e.preventDefault(); return; }
+      openRoom(room.roomId);
+    });
+    li.addEventListener("contextmenu", (e) => { e.preventDefault(); openChatActions(room.roomId); });
     li.appendChild(btn);
+    const more = document.createElement("button");
+    more.className = "chat-more";
+    more.title = "チャットの管理";
+    more.innerHTML = '<svg class="icon" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>';
+    more.addEventListener("click", (e) => { e.stopPropagation(); openChatActions(room.roomId); });
+    li.appendChild(more);
     listEl.appendChild(li);
   }
 }
@@ -2059,6 +2188,15 @@ async function refreshMyRooms() {
       }
     } else {
       room.name = serverRoom.name || room.name;
+      const restoredKey = state.restoredRoomKeys[room.roomId];
+      if (!room.roomKey && restoredKey) {
+        try {
+          room.roomKey = await importRoomKeyRaw(restoredKey);
+          room.roomKeyRawCache = restoredKey;
+          await flushPendingEncrypted(room);
+          if (state.openRoomId === room.roomId) { updateKeyStatusBanner(room); updateComposerEnabled(room); }
+        } catch (e) { console.error("復元したルーム鍵の読み込みに失敗", e); }
+      }
     }
 
     if (isNew) showToast(room.kind === "direct" ? `${room.name} が連絡先に追加されました` : `${room.name} に追加されました`);
@@ -2090,6 +2228,11 @@ function initAddSheet() {
 
   document.getElementById("btn-show-my-address").addEventListener("click", () => {
     document.getElementById("my-address-full").textContent = state.address;
+    renderMyAvatar();
+    document.getElementById("input-avatar-url").value = state.avatarUrl || "";
+    const avatarStatus = document.getElementById("avatar-status");
+    avatarStatus.textContent = "";
+    avatarStatus.className = "status-line";
     document.getElementById("passphrase-reveal-box").classList.add("hidden");
     document.getElementById("my-passphrase-full").textContent = "";
     openSheet("sheet-my-address");
@@ -2218,7 +2361,7 @@ function updateRoomHeaderAndMembers(roomId) {
   const room = state.rooms.get(roomId);
   if (!room || state.openRoomId !== roomId) return;
 
-  document.getElementById("room-title").textContent = room.name || "チャット";
+  document.getElementById("room-title").textContent = roomLabel(room) || "チャット";
   const subtitleEl = document.getElementById("room-subtitle");
   const directPeerInfoEl = document.getElementById("direct-peer-info");
   const addGroupMemberBtn = document.getElementById("btn-add-group-member");
@@ -2289,12 +2432,15 @@ function buildMessageRow(m) {
   if (m.deleted) {
     row.className = `msg-row ${mine ? "mine" : "theirs"}`;
     row.innerHTML = `${mine ? "" : `<div class="msg-sender">${escapeHtml(m.displayName)}</div>`}<div class="msg-bubble deleted">メッセージは削除されました</div>`;
+    row.addEventListener("click", () => openMessageActionsSheet(m.id));
     return row;
   }
 
   row.className = `msg-row ${mine ? "mine" : "theirs"}${m.status === "sending" ? " pending" : ""}${m.status === "failed" ? " failed" : ""}`;
   const time = new Date(m.ts).toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" });
   const editedTag = m.edited ? '<span class="msg-edited-tag">(編集済み)</span>' : "";
+  const canAct = mine && (!m.status || m.status === "sent");
+  const actions = canAct ? '<button class="msg-act" data-act="edit">編集</button><button class="msg-act danger" data-act="delete">削除</button>' : "";
   let status = "";
   if (m.status === "sending") status = `<span class="msg-status sending">${icon("spinner", "icon spin")}送信中…</span>`;
   else if (m.status === "sent") status = `<span class="msg-status sent">${icon("check", "icon")}送信済み</span>`;
@@ -2302,10 +2448,17 @@ function buildMessageRow(m) {
   row.innerHTML = `
     ${mine ? "" : `<div class="msg-sender">${escapeHtml(m.displayName)}</div>`}
     <div class="msg-bubble${m.verified ? "" : " unverified"}">${escapeHtml(m.text)}</div>
-    <div class="msg-meta">${m.verified ? "" : icon("warning", "icon icon-inline icon-warn")}${time}${m.verified ? "" : " ・ 署名検証失敗"}${editedTag}${status ? " ・ " + status : ""}</div>
+    <div class="msg-meta">${m.verified ? "" : icon("warning", "icon icon-inline icon-warn")}${time}${m.verified ? "" : " ・ 署名検証失敗"}${editedTag}${status ? " ・ " + status : ""}${actions}</div>
   `;
-  if (mine && (!m.status || m.status === "sent")) {
-    row.addEventListener("click", () => openMessageActionsSheet(m.id));
+  if (!m.status || m.status === "sent") {
+    row.addEventListener("click", () => {
+      if (window.getSelection()?.toString()) return; // 文字選択（コピー）中は開かない
+      openMessageActionsSheet(m.id);
+    });
+  }
+  if (canAct) {
+    row.querySelector('[data-act="edit"]').addEventListener("click", (e) => { e.stopPropagation(); startEditMessage(m.id); });
+    row.querySelector('[data-act="delete"]').addEventListener("click", (e) => { e.stopPropagation(); confirmDeleteMessage(m.id); });
   }
   if (m.status === "failed") {
     row.querySelector('[data-act="retry"]').addEventListener("click", (e) => { e.stopPropagation(); retryMessage(m.id); });
@@ -2340,36 +2493,76 @@ function appendMessageToRoom(room, message) {
 // ===== メッセージの編集・削除 =====
 
 function openMessageActionsSheet(messageId) {
-  state.actionTarget = { roomId: state.openRoomId, messageId };
+  const room = state.rooms.get(state.openRoomId);
+  const m = room && findMessage(room, messageId);
+  if (!m) return;
+  state.actionTarget = { roomId: room.roomId, messageId };
+  const mine = m.fromUserId === state.userId;
+  const live = !m.deleted;
+  const show = (id, on) => document.getElementById(id).classList.toggle("hidden", !on);
+  show("btn-message-copy", live);
+  show("btn-message-edit", mine && live && !!room.roomKey);
+  show("btn-message-delete", mine && live && !!room.roomKey);
   openSheet("sheet-message-actions");
+}
+
+function startEditMessage(messageId) {
+  const room = state.rooms.get(state.openRoomId);
+  const message = room && findMessage(room, messageId);
+  if (!room || !message || message.deleted || message.fromUserId !== state.userId) return;
+  state.editing = { roomId: room.roomId, messageId };
+  const input = document.getElementById("input-message");
+  input.value = message.text;
+  input.focus();
+  document.getElementById("edit-indicator").classList.remove("hidden");
+}
+
+async function confirmDeleteMessage(messageId) {
+  const room = state.rooms.get(state.openRoomId);
+  if (!room) return;
+  if (!(await confirmDialog({ title: "メッセージを削除", message: "全員の画面から削除されます。", confirmLabel: "削除する", danger: true }))) return;
+  await sendDeleteMessage(room, messageId);
+}
+
+/** この端末の履歴からだけ消す（相手には影響しない）。 */
+async function deleteMessageLocally(roomId, messageId) {
+  const room = state.rooms.get(roomId);
+  if (!room) return;
+  room.messages = room.messages.filter((m) => m.id !== messageId);
+  try { await idbDelete("messages", messageKey(roomId, messageId)); } catch (e) { console.error(e); }
+  document.getElementById("message-list").querySelector(`[data-message-id="${CSS.escape(messageId)}"]`)?.remove();
+  if (room.lastMessageId === messageId) {
+    const last = [...room.messages].reverse().find((m) => !m.system && !m.deleted);
+    room.lastMessageId = last?.id ?? null;
+    room.lastPreview = last ? (last.fromUserId === state.userId ? `あなた: ${last.text}` : last.text) : "";
+  }
+  await persistRoom(room);
+  renderChatList();
 }
 
 function initMessageActionsSheet() {
   document.getElementById("btn-message-actions-cancel").addEventListener("click", () => closeSheet("sheet-message-actions"));
 
-  document.getElementById("btn-message-edit").addEventListener("click", () => {
+  document.getElementById("btn-message-copy").addEventListener("click", () => {
     closeSheet("sheet-message-actions");
     const { roomId, messageId } = state.actionTarget || {};
     const room = state.rooms.get(roomId);
     const message = room && findMessage(room, messageId);
-    if (!room || !message || message.deleted) return;
-
-    state.editing = { roomId, messageId };
-    const input = document.getElementById("input-message");
-    input.value = message.text;
-    input.focus();
-    document.getElementById("edit-indicator").classList.remove("hidden");
+    if (message && !message.deleted) copyText(message.text);
   });
-
+  document.getElementById("btn-message-edit").addEventListener("click", () => {
+    closeSheet("sheet-message-actions");
+    startEditMessage(state.actionTarget?.messageId);
+  });
   document.getElementById("btn-cancel-edit").addEventListener("click", cancelEdit);
-
-  document.getElementById("btn-message-delete").addEventListener("click", async () => {
+  document.getElementById("btn-message-delete").addEventListener("click", () => {
+    closeSheet("sheet-message-actions");
+    confirmDeleteMessage(state.actionTarget?.messageId);
+  });
+  document.getElementById("btn-message-local-delete").addEventListener("click", () => {
     closeSheet("sheet-message-actions");
     const { roomId, messageId } = state.actionTarget || {};
-    const room = state.rooms.get(roomId);
-    if (!room) return;
-    if (!(await confirmDialog({ title: "メッセージを削除", message: "全員の画面から削除されます。", confirmLabel: "削除する", danger: true }))) return;
-    await sendDeleteMessage(room, messageId);
+    deleteMessageLocally(roomId, messageId);
   });
 }
 
@@ -2785,25 +2978,206 @@ function initRoomScreen() {
     document.getElementById("members-panel").classList.add("hidden-mobile");
   });
 
-  document.getElementById("btn-leave-room").addEventListener("click", async () => {
-    const room = state.rooms.get(state.openRoomId);
-    if (!room) return;
-    if (!(await confirmDialog({ title: "チャットを退出", message: "このチャットから退出します。", confirmLabel: "退出する", danger: true }))) return;
-    try {
-      await api.leave(state.token, room.roomId);
-    } catch (e) {
-      console.error(e);
-    }
-    state.rooms.delete(room.roomId);
-    try {
-      await idbDelete("rooms", room.roomId);
-    } catch (e) {
-      console.error(e);
-    }
+  document.getElementById("btn-leave-room").addEventListener("click", () => deleteChat(state.openRoomId));
+  document.getElementById("btn-rename-room").addEventListener("click", () => openRenameSheet(state.openRoomId));
+  document.getElementById("btn-clear-room").addEventListener("click", () => clearChatHistory(state.openRoomId));
+  initChatActionsSheet();
+}
+
+// ===== チャットの管理（名前変更・履歴消去・削除） =====
+
+let chatActionRoomId = null;
+
+function openChatActions(roomId) {
+  const room = state.rooms.get(roomId);
+  if (!room) return;
+  chatActionRoomId = roomId;
+  document.getElementById("chat-actions-title").textContent = roomLabel(room) || "チャット";
+  openSheet("sheet-chat-actions");
+}
+
+function openRenameSheet(roomId) {
+  const room = state.rooms.get(roomId);
+  if (!room) return;
+  chatActionRoomId = roomId;
+  const input = document.getElementById("input-rename-chat");
+  input.value = room.alias || room.name || "";
+  openSheet("sheet-rename");
+  setTimeout(() => input.focus(), 50);
+}
+
+async function saveRename() {
+  const room = state.rooms.get(chatActionRoomId);
+  if (!room) return;
+  const value = document.getElementById("input-rename-chat").value.trim();
+  room.alias = value && value !== room.name ? value : "";
+  await persistRoom(room);
+  closeSheet("sheet-rename");
+  renderChatList();
+  if (state.openRoomId === room.roomId) updateRoomHeaderAndMembers(room.roomId);
+  showToast(room.alias ? "名前を変更しました" : "元の名前に戻しました");
+}
+
+async function clearChatHistory(roomId) {
+  const room = state.rooms.get(roomId);
+  if (!room) return;
+  if (!(await confirmDialog({ title: "履歴を消去", message: "この端末に保存されているこのチャットのメッセージをすべて消去します。相手の端末や、チャット自体は変わりません。", confirmLabel: "消去する", danger: true }))) return;
+  try { await idbDeleteMessagesForRoom(roomId); } catch (e) { console.error(e); }
+  room.messages = [];
+  room.lastPreview = "";
+  room.lastMessageId = null;
+  await persistRoom(room);
+  if (state.openRoomId === roomId) document.getElementById("message-list").innerHTML = "";
+  renderChatList();
+  showToast("履歴を消去しました");
+}
+
+async function deleteChat(roomId) {
+  const room = state.rooms.get(roomId);
+  if (!room) return;
+  if (!(await confirmDialog({ title: "チャットを削除", message: `「${roomLabel(room)}」から退出し、この端末の履歴も削除します。`, confirmLabel: "削除する", danger: true }))) return;
+  try { await api.leave(state.token, room.roomId); } catch (e) { console.error(e); }
+  state.rooms.delete(room.roomId);
+  delete state.restoredRoomKeys[room.roomId];
+  try {
+    await idbDelete("rooms", room.roomId);
+    await idbDeleteMessagesForRoom(room.roomId);
+    await idbPut("identity", state.restoredRoomKeys, "roomKeys");
+  } catch (e) { console.error(e); }
+  scheduleBackupSync();
+  if (state.openRoomId === room.roomId) {
     state.openRoomId = null;
+    cancelEdit();
     showScreen("screen-lobby");
-    renderChatList();
+  }
+  renderChatList();
+  showToast("チャットを削除しました");
+}
+
+function initChatActionsSheet() {
+  const close = () => closeSheet("sheet-chat-actions");
+  document.getElementById("btn-chat-rename").addEventListener("click", () => { close(); openRenameSheet(chatActionRoomId); });
+  document.getElementById("btn-chat-clear").addEventListener("click", () => { close(); clearChatHistory(chatActionRoomId); });
+  document.getElementById("btn-chat-delete").addEventListener("click", () => { close(); deleteChat(chatActionRoomId); });
+  document.getElementById("btn-do-rename").addEventListener("click", saveRename);
+  document.getElementById("input-rename-chat").addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); saveRename(); } });
+}
+
+// ===== アカウントのアイコン（画像URL） =====
+
+const AVATAR_KEY = "e2ee_chat_avatar";
+
+function saveAvatarLocal() {
+  try {
+    if (state.avatarUrl) localStorage.setItem(AVATAR_KEY, state.avatarUrl);
+    else localStorage.removeItem(AVATAR_KEY);
+  } catch {}
+}
+function loadAvatarLocal() {
+  try { return localStorage.getItem(AVATAR_KEY) || null; } catch { return null; }
+}
+
+/** 初期アイコン（頭文字のモノグラム。アドレスから色味を少し変える）。画像データはその場で生成するSVG。 */
+function defaultAvatarDataUri() {
+  const name = (state.displayName || "?").trim();
+  const initial = [...name][0]?.toUpperCase() || "?";
+  let h = 0;
+  for (const c of state.address || name) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  const hue = 38 + (h % 22); // 黄〜琥珀の範囲
+  const fg = `hsl(${hue}, 78%, 68%)`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96"><defs><radialGradient id="g" cx="50%" cy="28%" r="80%"><stop offset="0" stop-color="#3a3a52"/><stop offset="1" stop-color="#181825"/></radialGradient></defs><rect width="96" height="96" fill="url(#g)"/><circle cx="48" cy="48" r="44" fill="none" stroke="${fg}" stroke-opacity="0.45" stroke-width="2"/><text x="48" y="63" text-anchor="middle" font-family="Georgia,'Times New Roman',serif" font-size="44" fill="${fg}">${escapeHtml(initial)}</text></svg>`;
+  return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+}
+
+function renderMyAvatar() {
+  const nameEl = document.getElementById("my-display-name");
+  if (nameEl) nameEl.textContent = state.displayName || "";
+  document.querySelectorAll("img.my-avatar").forEach((img) => {
+    img.onerror = null;
+    img.src = state.avatarUrl || defaultAvatarDataUri();
+    img.onerror = () => {
+      // 設定済みの画像が読み込めなくなったら、初期アイコンに戻す
+      if (state.avatarUrl) resetAvatar("アイコン画像を読み込めなかったため、初期アイコンに戻しました");
+    };
   });
+}
+
+function resetAvatar(message) {
+  state.avatarUrl = null;
+  saveAvatarLocal();
+  renderMyAvatar();
+  scheduleBackupSync();
+  const input = document.getElementById("input-avatar-url");
+  if (input) input.value = "";
+  if (message) showToast(message);
+}
+
+function normalizeAvatarUrl(raw) {
+  try {
+    const u = new URL(String(raw).trim());
+    if (u.protocol !== "https:" && u.protocol !== "http:") return null;
+    if (u.href.length > 2000) return null;
+    return u.href;
+  } catch { return null; }
+}
+
+function probeImage(url, timeoutMs = 10000) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.referrerPolicy = "no-referrer";
+    const timer = setTimeout(() => { img.src = ""; resolve(false); }, timeoutMs);
+    img.onload = () => { clearTimeout(timer); resolve(img.naturalWidth > 0); };
+    img.onerror = () => { clearTimeout(timer); resolve(false); };
+    img.src = url;
+  });
+}
+
+async function applyAvatarFromInput() {
+  const statusEl = document.getElementById("avatar-status");
+  const btn = document.getElementById("btn-avatar-apply");
+  const url = normalizeAvatarUrl(document.getElementById("input-avatar-url").value);
+  if (!url) {
+    statusEl.textContent = "http:// または https:// で始まる画像のURLを入力してください";
+    statusEl.className = "status-line error";
+    return;
+  }
+  btn.disabled = true;
+  statusEl.className = "status-line";
+  statusEl.textContent = "画像を確認しています…";
+  const ok = await probeImage(url);
+  btn.disabled = false;
+  if (!ok) {
+    statusEl.textContent = "画像を読み込めませんでした。URLと公開設定を確認してください";
+    statusEl.className = "status-line error";
+    return;
+  }
+  state.avatarUrl = url;
+  saveAvatarLocal();
+  renderMyAvatar();
+  scheduleBackupSync();
+  statusEl.textContent = "アイコンを設定しました";
+}
+
+/** 起動時・定期的にリンクが生きているか確認し、切れていたら初期アイコンに戻す（オフライン時は何もしない）。 */
+async function verifyAvatarLink() {
+  const url = state.avatarUrl;
+  if (!url || navigator.onLine === false) return;
+  const ok = await probeImage(url);
+  if (!ok && state.avatarUrl === url && navigator.onLine !== false) {
+    resetAvatar("アイコン画像のリンクが無効になったため、初期アイコンに戻しました");
+  }
+}
+
+function initAvatarSettings() {
+  document.getElementById("btn-avatar-apply").addEventListener("click", applyAvatarFromInput);
+  document.getElementById("btn-avatar-reset").addEventListener("click", () => {
+    resetAvatar();
+    const statusEl = document.getElementById("avatar-status");
+    statusEl.className = "status-line";
+    statusEl.textContent = "初期アイコンに戻しました";
+  });
+  document.getElementById("input-avatar-url").addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); applyAvatarFromInput(); } });
+  setInterval(verifyAvatarLink, 15 * 60 * 1000);
 }
 
 // ===== 通知（ページ内）・PWAバッジ・マニフェスト =====
@@ -2869,7 +3243,7 @@ function showBrowserNotification(room, senderName, text) {
   if (!("Notification" in window) || Notification.permission !== "granted") return;
   try {
     const showBody = notifyBodyEnabled();
-    const title = showBody ? (room.kind === "group" ? `${room.name} ・ ${senderName}` : senderName) : "E2EE Chat";
+    const title = showBody ? (room.kind === "group" ? `${roomLabel(room)} ・ ${senderName}` : senderName) : "E2EE Chat";
     const n = new Notification(title, {
       body: showBody ? text : "新しいメッセージがあります",
       tag: `room-${room.roomId}`, renotify: true,
@@ -2927,6 +3301,8 @@ async function boot() {
   initInviteMemberSheet();
   initMessageActionsSheet();
   initNotificationSettings();
+  initAvatarSettings();
+  state.avatarUrl = loadAvatarLocal();
 
   const session = loadSessionMeta();
   const identity = await loadIdentityFromIdb();
@@ -2941,7 +3317,9 @@ async function boot() {
     state.ecdhPublicJwk = identity.ecdhPublicJwk;
     state.ecdsaPublicJwk = identity.ecdsaPublicJwk;
     state.passphrase = identity.passphrase ?? null;
+    state.restoredRoomKeys = (await idbGet("identity", "roomKeys")) || {};
     await enterLobby();
+    verifyAvatarLink();
 
   } else {
     showScreen("screen-welcome");
