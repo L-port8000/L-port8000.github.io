@@ -12,6 +12,9 @@
  */
 
 const DB_NAME = "e2ee-chat";
+// アイコン画像（無ければブラウザ既定のアイコンになるだけで、通知自体は出る）
+const ICON_URL = new URL("icons/icon-192.png", self.registration.scope).href;
+const BADGE_URL = new URL("icons/badge-96.png", self.registration.scope).href;
 
 function openDb() {
   return new Promise((resolve, reject) => {
@@ -67,8 +70,22 @@ async function handlePush(event) {
   let data = {};
   try { data = event.data ? event.data.json() : {}; } catch {}
 
-  // アプリの画面が表示中なら、アプリ側が通知・表示を行うのでここでは出さない
   const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+  // 開いているページには「今すぐ同期して」と知らせる（pushが届いた＝新着がある。定期的な問い合わせを待たずに表示できる）
+  for (const c of windows) { try { c.postMessage({ type: "sync-now" }); } catch {} }
+
+  // テスト通知（設定画面の「テスト通知を送る」）は常に表示する
+  if (data.kind === "test") {
+    await self.registration.showNotification("E2EE Chat", {
+      body: "テスト通知です。この通知が見えていれば、アプリを閉じていても新着が届きます。",
+      tag: "test",
+      icon: ICON_URL,
+      badge: BADGE_URL,
+    });
+    return;
+  }
+
+  // アプリの画面が表示中なら、ページ側が表示するのでここでは出さない
   if (windows.some((c) => c.visibilityState === "visible")) return;
 
   let db = null;
@@ -117,6 +134,8 @@ async function handlePush(event) {
     tag,
     renotify: !silentUpdate,
     silent: silentUpdate,
+    icon: ICON_URL,
+    badge: BADGE_URL,
     data: { roomId: data.roomId || null },
   });
 
