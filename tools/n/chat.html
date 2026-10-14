@@ -1553,7 +1553,7 @@ async function aesGcmDecryptJson(aesKey, ivBase64, ciphertextBase64) {
  */
 
 // ===== 設定 =====
-const API_BASE = "https://chat-api.user.workers.dev";
+const API_BASE = "https://chat-api.l-ituki8000.workers.dev";
 // アイコン画像は自作プロキシ経由で取得する（相手に自分のIP等を直接見せない）。URLの前にこの文字列を付けて取得する。
 const AVATAR_PROXY_PREFIX = "https://p.l-ituki8000.workers.dev/go/";
 // 同期（新着の取得）は /sync 1本で全ルーム分を取り、間隔は「使っている間だけ短く、放置すれば自動で長く」する。
