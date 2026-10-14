@@ -2,13 +2,23 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="E2EE Chat">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest" id="manifest-link">
 <meta name="theme-color" content="#1e1e2e">
 
 <link rel="icon" href="data:image/png;base64,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">
 <link rel="apple-touch-icon" href="data:image/png;base64,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">
 <title>E2EE Chat</title>
 <style>
+/* ============================================================
+   E2EE Chat — 質素で高級感のあるデザイン
+   Catppuccin Mocha をベースに、彩度の高い既定色（青ボタン等）を避け、
+   控えめな真鍮色のアクセント・細い罫線・セリフ体の見出しで「量産Webアプリ」感を消す。
+   ============================================================ */
 
 :root {
   /* Catppuccin Mocha */
@@ -42,6 +52,8 @@
   --radius-md: 12px;
   --radius-sm: 9px;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --vvh: 100dvh; /* 実際に見えている高さ（JSがvisualViewportから更新。キーボード表示中も入力欄が隠れない） */
+  --vvt: 0px;
   --ease: cubic-bezier(0.25, 0.8, 0.4, 1);
 }
 
@@ -64,10 +76,22 @@ body {
 .screen {
   height: 100vh;
   height: 100dvh;
+  height: var(--vvh, 100dvh);
   display: flex;
   flex-direction: column;
   overflow: hidden;
   background: var(--base);
+}
+
+/* キーボード表示中は下端のセーフエリア分の余白が不要（入力欄の下に隙間ができるのを防ぐ） */
+body.kbd-open { --safe-bottom: 0px; }
+
+/* スマホ幅: ページ自体はスクロールさせず、見えている領域（visualViewport）に画面を固定する */
+@media (max-width: 959.98px) {
+  html, body { position: fixed; inset: 0; width: 100%; overflow: hidden; }
+  .screen { position: fixed; left: 0; right: 0; top: var(--vvt, 0px); }
+  .sheet-backdrop { inset: auto; left: 0; right: 0; top: var(--vvt, 0px); height: var(--vvh, 100dvh); }
+  .sheet { max-height: calc(var(--vvh, 100dvh) - 16px); }
 }
 
 /* ブラウザ既定の太いスクロールバーを避ける */
@@ -915,13 +939,26 @@ body {
 .composer-send { align-self: flex-end; min-height: 44px; }
 .notify-help { font-size: 12px; line-height: 1.7; color: var(--subtext0); margin: 8px 0 0; }
 .notify-help.warn { color: var(--red); }
+.msg-row.streak { margin-top: -6px; }
+.diag { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--hairline); }
+.diag-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
+.diag-head span { font-size: 12px; color: var(--subtext0); }
+.diag-list { list-style: none; margin: 0 0 10px; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.diag-list li { display: flex; gap: 8px; align-items: flex-start; font-size: 12.5px; line-height: 1.55; color: var(--subtext1); }
+.diag-list li .icon { flex-shrink: 0; margin-top: 2px; width: 14px; height: 14px; }
+.diag-list li.ok .icon { color: var(--green); }
+.diag-list li.ng .icon { color: var(--red); }
+.diag-list li.na .icon { color: var(--overlay0); }
+.diag-list li small { display: block; color: var(--overlay1); font-size: 11.5px; }
 
 /* ---------- レスポンシブ ---------- */
 
 @media (max-width: 720px) {
   .members-panel {
     position: fixed;
-    inset: 0;
+    inset: auto;
+    left: 0; right: 0; top: var(--vvt, 0px);
+    height: var(--vvh, 100dvh);
     width: 100%;
     z-index: 20;
     padding-top: calc(18px + env(safe-area-inset-top, 0px));
@@ -1107,6 +1144,14 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
           <span id="notify-button-label">通知を有効にする</span>
         </button>
         <p id="notify-help" class="notify-help"></p>
+        <div class="diag">
+          <div class="diag-head">
+            <span>通知の診断</span>
+            <button id="btn-push-test" class="chip-btn" type="button">テスト通知を送る</button>
+          </div>
+          <ul id="push-diag-list" class="diag-list"></ul>
+          <p id="push-test-result" class="notify-help"></p>
+        </div>
         <label class="toggle-row">
           <span class="btn-with-icon" style="justify-content:flex-start;">
             <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
@@ -1485,14 +1530,43 @@ async function aesGcmDecryptJson(aesKey, ivBase64, ciphertextBase64) {
 
 "use strict";
 
-
+/**
+ * E2EE Chat フロントエンド（Session風アドレスモデル / SimpleX風チャット一覧UI）
+ *
+ * 【全体構成】
+ *  - 登録時に公開鍵から導出される恒久的な「アドレス」(例: 05a1b2...) を持つ。
+ *  - 1対1チャットは相手のアドレスから公開鍵を引き、ECDHで両者が独立に同じ鍵を
+ *    導出する（鍵を待つ時間がない）。
+ *  - グループチャットは対称なルーム鍵を作成者が生成し、招待するたびにオンライン中の
+ *    既存メンバーがその人の公開鍵宛にラップして送る（keywrap）。
+ *  - サーバはすべて暗号文のまま中継するだけで本文は読めない。
+ *
+ * 【メッセージの編集・削除】
+ *  各メッセージにクライアント生成のUUID(id)を持たせ、"text"(新規)/"edit"(編集)/
+ *  "delete"(削除) の3種類のkindを持つ同じ暗号化ペイロードとして送る。受信側は、
+ *  edit/deleteのfromが元メッセージの送信者と一致し、かつ署名が有効な場合のみ適用する
+ *  （他人のメッセージを編集・削除できないようにするため）。
+ *
+ * 【自動削除】
+ *  メッセージはこの端末のIndexedDBに保存され、7日を過ぎたものは自動的に削除される
+ *  （disappearing messages）。サーバ側の未読メッセージ配送キューも7日でTTL削除される。
+ */
 
 // ===== 設定 =====
-const API_BASE = "https://chat-api.l-ituki8000.workers.dev";
+const API_BASE = "https://chat-api.user.workers.dev";
 // アイコン画像は自作プロキシ経由で取得する（相手に自分のIP等を直接見せない）。URLの前にこの文字列を付けて取得する。
 const AVATAR_PROXY_PREFIX = "https://p.l-ituki8000.workers.dev/go/";
-const POLL_INTERVAL_MS = 2000;
-const MY_ROOMS_REFRESH_MS = 5000;
+// 同期（新着の取得）は /sync 1本で全ルーム分を取り、間隔は「使っている間だけ短く、放置すれば自動で長く」する。
+const SYNC_FAST_MS = 2500;        // 直近30秒以内に操作・受信があった（表示中）
+const SYNC_MID_MS = 6000;         // 〜3分
+const SYNC_SLOW_MS = 15000;       // 〜15分
+const SYNC_IDLE_MS = 30000;       // それ以上放置
+const SYNC_PUSH_VISIBLE_MS = 20000; // プッシュ有効（相手が送れば通知で即同期されるので保険だけ）
+const SYNC_HIDDEN_MS = 60000;     // 画面が隠れている（別タブ・最小化）
+const SYNC_HIDDEN_PUSH_MS = 120000;
+const ROOMS_REFRESH_MS = 5 * 60 * 1000; // ルーム一覧の定期再取得（変更があれば /sync の rev で即わかる）
+const PUSH_RECHECK_MS = 12 * 60 * 60 * 1000;
+const AVATAR_RECHECK_MS = 60 * 60 * 1000;
 
 // ===== SVGアイコン =====
 // index.html側の静的アイコンと同じデザインを、JSで動的生成する要素向けに用意する。
@@ -1522,13 +1596,53 @@ function showToast(message) {
   showToast._t = setTimeout(() => el.classList.add("hidden"), 2400);
 }
 function proxiedAvatarSrc(url) { return AVATAR_PROXY_PREFIX + url; }
-/** 丸アバターのHTML。画像があれば重ねて表示し、読み込めなければ頭文字のまま（onerrorで画像だけ消す）。 */
+
+// アバター画像: 同じURLは1回だけ取得して使い回す（一覧やメンバー欄が再描画されても取り直さない）。
+// プロキシがCORSを許可していればblob化して保持し、許可していなければ通常の<img>読み込みにフォールバックする。
+const avatarBlobCache = new Map();   // url -> objectURL
+const avatarFetching = new Set();
+const avatarFailed = new Map();      // url -> 失敗時刻（一定時間は画像を出さず頭文字のまま。時間が経てば再試行）
+const AVATAR_RETRY_MS = 60 * 1000;
+function avatarRecentlyFailed(url) {
+  const t = avatarFailed.get(url);
+  return !!t && Date.now() - t < AVATAR_RETRY_MS;
+}
+function avatarSrcFor(url) { return avatarBlobCache.get(url) || proxiedAvatarSrc(url); }
+async function warmAvatar(url) {
+  if (!url || avatarBlobCache.has(url) || avatarFetching.has(url) || avatarRecentlyFailed(url)) return;
+  avatarFetching.add(url);
+  try {
+    const res = await fetch(proxiedAvatarSrc(url), { referrerPolicy: "no-referrer", credentials: "omit", cache: "force-cache" });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const blob = await res.blob();
+    if (!/^image\//.test(blob.type) || blob.size > 4 * 1024 * 1024) throw new Error("not an image");
+    const obj = URL.createObjectURL(blob);
+    avatarBlobCache.set(url, obj);
+    // すでに表示中の<img>があれば差し替える（取得済みデータなので通信は発生しない）
+    document.querySelectorAll("img[data-avatar-url]").forEach((img) => { if (img.dataset.avatarUrl === url && img.src !== obj) img.src = obj; });
+  } catch {
+    // CORS等でfetchできない場合は、通常の<img>読み込みに任せる
+  } finally {
+    avatarFetching.delete(url);
+  }
+}
+/** 画像の読み込み失敗: 画像だけ消して頭文字を見せ、しばらくしてから再試行できるよう記録する。 */
+window.__avatarFail = function (img) {
+  const url = img.dataset.avatarUrl;
+  if (url) { avatarFailed.set(url, Date.now()); avatarBlobCache.delete(url); }
+  img.remove();
+};
+/** 丸アバターのHTML。画像があれば重ねて表示し、読み込めなければ頭文字のまま。 */
 function avatarInner(initial, avatarUrl) {
-  const img = avatarUrl
-    ? `<img src="${escapeHtml(proxiedAvatarSrc(avatarUrl))}" alt="" referrerpolicy="no-referrer" loading="lazy" decoding="async" onerror="this.remove()">`
-    : "";
+  let img = "";
+  if (avatarUrl && !avatarRecentlyFailed(avatarUrl)) {
+    warmAvatar(avatarUrl);
+    img = `<img src="${escapeHtml(avatarSrcFor(avatarUrl))}" data-avatar-url="${escapeHtml(avatarUrl)}" alt="" referrerpolicy="no-referrer" decoding="async" onerror="window.__avatarFail(this)">`;
+  }
   return `${escapeHtml(initial)}${img}`;
 }
+/** アバター表示の状態を表す文字列（これが変わらない限り、アバター部分のDOMは作り直さない）。 */
+function avatarSig(initial, avatarUrl) { return `${initial}|${avatarUrl || ""}|${avatarUrl && avatarRecentlyFailed(avatarUrl) ? "x" : ""}`; }
 function escapeHtml(s) {
   return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
@@ -1679,7 +1793,9 @@ async function deriveBackupSecrets(words) {
 
 // ===== APIクライアント =====
 
-class ApiError extends Error {}
+class ApiError extends Error {
+  constructor(message, status = 0) { super(message); this.status = status; }
+}
 
 async function apiFetch(path, { method = "GET", token, body } = {}) {
   const headers = { "Content-Type": "application/json" };
@@ -1691,7 +1807,7 @@ async function apiFetch(path, { method = "GET", token, body } = {}) {
     throw new ApiError(`サーバに接続できませんでした（API_BASE=${API_BASE} が正しいか、CORS設定が合っているか確認してください）`);
   }
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new ApiError(data.error || `HTTP ${res.status}`);
+  if (!res.ok) throw new ApiError(data.error || `HTTP ${res.status}`, res.status);
   return data;
 }
 
@@ -1702,7 +1818,9 @@ const api = {
   inviteToGroup: (token, roomId, address) => apiFetch(`/groups/${roomId}/invite`, { method: "POST", token, body: { address } }),
   myRooms: (token) => apiFetch("/me/rooms", { method: "GET", token }),
   send: (token, roomId, payload) => apiFetch(`/rooms/${roomId}/send`, { method: "POST", token, body: payload }),
-  poll: (token, roomId) => apiFetch(`/rooms/${roomId}/poll`, { method: "GET", token }),
+  sync: (token) => apiFetch("/sync", { method: "GET", token }),
+  pushStatus: (token) => apiFetch("/push/status", { method: "GET", token }),
+  pushTest: (token) => apiFetch("/push/test", { method: "POST", token, body: {} }),
   leave: (token, roomId) => apiFetch(`/rooms/${roomId}/leave`, { method: "POST", token }),
   saveBackup: (token, lookupId, iv, ciphertext) => apiFetch("/backup", { method: "POST", token, body: { lookupId, iv, ciphertext } }),
   getBackup: (lookupId) => apiFetch(`/backup/${lookupId}`, { method: "GET" }),
@@ -1728,8 +1846,9 @@ const state = {
 
   openRoomId: null,
   rooms: new Map(),
-  pollTimer: null,
-  pollInFlight: new Set(),
+  sync: { timer: null, inFlight: false, running: false, fail: 0, lastActivity: Date.now(), rev: null, roomsAt: 0, deferred: [], authLost: false },
+  pushActive: false, // 端末でプッシュ購読済み（サーバも対応）。true の間はページ側の通知を出さない（二重通知の防止）
+  stick: true, // メッセージ一覧が最下部に追従しているか
   avatarUrl: null, // 自分のアイコン画像URL（null = 初期アイコン）
   restoredRoomKeys: {}, // パスフレーズ復元で戻したグループ鍵 { roomId: base64 }
   editing: null, // { roomId, messageId } | null
@@ -2103,11 +2222,11 @@ async function logout() {
 
 /** ローカルの認証情報・鍵・チャット履歴を全消去してページを再読み込みする（ログアウト／アカウント削除共通処理）。 */
 async function wipeLocalDataAndReload() {
-  stopGlobalPolling();
+  stopSync();
   await teardownPush();
   localStorage.removeItem("e2ee_chat_session");
 
-  try { localStorage.removeItem(NOTIFY_BODY_KEY); localStorage.removeItem(AVATAR_KEY); } catch {}
+  try { localStorage.removeItem(NOTIFY_BODY_KEY); localStorage.removeItem(AVATAR_KEY); localStorage.removeItem(AVATAR_SHARED_KEY); localStorage.removeItem(PUSH_REG_KEY); } catch {}
 
   await new Promise((resolve) => {
     const req = indexedDB.deleteDatabase(DB_NAME);
@@ -2153,56 +2272,90 @@ async function enterLobby() {
   }
   renderChatList();
   await refreshMyRooms();
-  startGlobalPolling();
+  updateBadgeMain();
+  startSync();
 }
 
+const chatListNodes = new Map(); // roomId -> { li, sig, avSig }
+
+function buildChatListNode(room) {
+  const li = document.createElement("li");
+  const btn = document.createElement("button");
+  btn.className = "chat-list-item";
+  const kindIcon = icon(room.kind === "group" ? "people" : "person", "icon icon-inline");
+  btn.innerHTML = `
+    <span class="member-avatar"></span>
+    <span class="chat-list-item-body">
+      <span class="chat-list-item-top">
+        <span class="chat-list-item-name"><span class="chat-list-item-kind">${kindIcon}</span><span class="cli-name"></span></span>
+        <span class="chat-list-item-time"></span>
+      </span>
+      <span class="chat-list-item-preview"></span>
+    </span>
+    <span class="unread-badge hidden"></span>
+  `;
+  let pressTimer = null, longPressed = false;
+  btn.addEventListener("touchstart", () => {
+    longPressed = false;
+    pressTimer = setTimeout(() => { longPressed = true; navigator.vibrate?.(10); openChatActions(room.roomId); }, 550);
+  }, { passive: true });
+  ["touchend", "touchmove", "touchcancel"].forEach((ev) => btn.addEventListener(ev, () => clearTimeout(pressTimer), { passive: true }));
+  btn.addEventListener("click", (e) => {
+    if (longPressed) { longPressed = false; e.preventDefault(); return; }
+    openRoom(room.roomId);
+  });
+  li.addEventListener("contextmenu", (e) => { e.preventDefault(); openChatActions(room.roomId); });
+  li.appendChild(btn);
+  const more = document.createElement("button");
+  more.className = "chat-more";
+  more.title = "チャットの管理";
+  more.innerHTML = '<svg class="icon" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>';
+  more.addEventListener("click", (e) => { e.stopPropagation(); openChatActions(room.roomId); });
+  li.appendChild(more);
+  return li;
+}
+
+/** チャット一覧を差分更新する。行（と中の画像）は作り直さず、変わった部分だけ書き換える。 */
 function renderChatList() {
   const listEl = document.getElementById("chat-list");
   const emptyEl = document.getElementById("chat-list-empty");
   const rooms = [...state.rooms.values()].sort((a, b) => (b.lastActivity ?? 0) - (a.lastActivity ?? 0));
-
   emptyEl.classList.toggle("hidden", rooms.length > 0);
-  listEl.innerHTML = "";
 
-  for (const room of rooms) {
-    const li = document.createElement("li");
-    const btn = document.createElement("button");
-    btn.className = "chat-list-item" + (room.roomId === state.openRoomId ? " active" : "");
-    const initial = (roomLabel(room) || "?").charAt(0).toUpperCase();
-    const kindIcon = icon(room.kind === "group" ? "people" : "person", "icon icon-inline");
-    const preview = room.lastPreview || "タップして開く";
-    const unreadBadge = room.unread > 0 ? `<span class="unread-badge">${room.unread > 9 ? "9+" : room.unread}</span>` : "";
-    btn.innerHTML = `
-      <span class="member-avatar">${avatarInner(initial, room.kind === "direct" ? room.peer?.avatarUrl : null)}</span>
-      <span class="chat-list-item-body">
-        <span class="chat-list-item-top">
-          <span class="chat-list-item-name"><span class="chat-list-item-kind">${kindIcon}</span>${escapeHtml(roomLabel(room))}</span>
-          <span class="chat-list-item-time">${formatRelativeTime(room.lastActivity)}</span>
-        </span>
-        <span class="chat-list-item-preview">${escapeHtml(preview)}</span>
-      </span>
-      ${unreadBadge}
-    `;
-    let pressTimer = null, longPressed = false;
-    btn.addEventListener("touchstart", () => {
-      longPressed = false;
-      pressTimer = setTimeout(() => { longPressed = true; navigator.vibrate?.(10); openChatActions(room.roomId); }, 550);
-    }, { passive: true });
-    ["touchend", "touchmove", "touchcancel"].forEach((ev) => btn.addEventListener(ev, () => clearTimeout(pressTimer), { passive: true }));
-    btn.addEventListener("click", (e) => {
-      if (longPressed) { longPressed = false; e.preventDefault(); return; }
-      openRoom(room.roomId);
-    });
-    li.addEventListener("contextmenu", (e) => { e.preventDefault(); openChatActions(room.roomId); });
-    li.appendChild(btn);
-    const more = document.createElement("button");
-    more.className = "chat-more";
-    more.title = "チャットの管理";
-    more.innerHTML = '<svg class="icon" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>';
-    more.addEventListener("click", (e) => { e.stopPropagation(); openChatActions(room.roomId); });
-    li.appendChild(more);
-    listEl.appendChild(li);
+  const alive = new Set(rooms.map((r) => r.roomId));
+  for (const [id, node] of chatListNodes) {
+    if (!alive.has(id)) { node.li.remove(); chatListNodes.delete(id); }
   }
+
+  rooms.forEach((room, i) => {
+    let node = chatListNodes.get(room.roomId);
+    if (!node) { node = { li: buildChatListNode(room), sig: "", avSig: "" }; chatListNodes.set(room.roomId, node); }
+    const label = roomLabel(room);
+    const initial = (label || "?").charAt(0).toUpperCase();
+    const avatarUrl = room.kind === "direct" ? room.peer?.avatarUrl : null;
+    const preview = room.lastPreview || "タップして開く";
+    const time = formatRelativeTime(room.lastActivity);
+    const unread = room.unread > 0 ? (room.unread > 9 ? "9+" : String(room.unread)) : "";
+    const active = room.roomId === state.openRoomId;
+    const sig = [label, preview, time, unread, active].join("\u0001");
+    if (sig !== node.sig) {
+      node.sig = sig;
+      const li = node.li;
+      li.querySelector(".chat-list-item").classList.toggle("active", active);
+      li.querySelector(".cli-name").textContent = label;
+      li.querySelector(".chat-list-item-time").textContent = time;
+      li.querySelector(".chat-list-item-preview").textContent = preview;
+      const badge = li.querySelector(".unread-badge");
+      badge.textContent = unread;
+      badge.classList.toggle("hidden", !unread);
+    }
+    const avSig = avatarSig(initial, avatarUrl);
+    if (avSig !== node.avSig) {
+      node.avSig = avSig;
+      node.li.querySelector(".member-avatar").innerHTML = avatarInner(initial, avatarUrl);
+    }
+    if (listEl.children[i] !== node.li) listEl.insertBefore(node.li, listEl.children[i] || null);
+  });
 }
 
 async function refreshMyRooms() {
@@ -2211,12 +2364,16 @@ async function refreshMyRooms() {
     data = await api.myRooms(state.token);
   } catch (e) {
     console.error("チャット一覧の取得に失敗しました", e);
+    if (e instanceof ApiError && e.status === 401) onAuthLost();
     return false;
   }
+  state.sync.rev = data.rev ?? null;
+  state.sync.roomsAt = Date.now();
 
   for (const serverRoom of data.rooms) {
     let room = state.rooms.get(serverRoom.roomId);
     const isNew = !room;
+    let dirty = isNew;
     if (!room) {
       room = {
         roomId: serverRoom.roomId,
@@ -2241,9 +2398,12 @@ async function refreshMyRooms() {
       if (m.userId === state.userId) continue;
       const existing = room.members.get(m.userId);
       if (!existing || existing.ecdhPubJwk?.x !== m.ecdhPub?.x) {
+        dirty = true;
         room.members.set(m.userId, { displayName: m.displayName, ecdhPubJwk: m.ecdhPub, ecdsaPubJwk: m.ecdsaPub, address: m.address, avatarUrl: m.avatarUrl ?? null, ecdsaPublicKey: await importEcdsaPublicKey(m.ecdsaPub) });
       } else {
+        if (existing.avatarUrl !== (m.avatarUrl ?? null) || existing.displayName !== m.displayName) dirty = true;
         existing.avatarUrl = m.avatarUrl ?? null; // アイコンの変更を反映
+        existing.displayName = m.displayName;
       }
     }
 
@@ -2253,15 +2413,18 @@ async function refreshMyRooms() {
         room.peer = { userId: peerId, displayName: peerInfo.displayName, ecdhPubJwk: peerInfo.ecdhPubJwk, ecdsaPubJwk: peerInfo.ecdsaPubJwk, address: peerInfo.address, avatarUrl: peerInfo.avatarUrl ?? null };
         room.name = peerInfo.displayName;
         if (!room.roomKey) {
+          dirty = true;
           room.roomKey = await deriveDirectRoomKey(state.ecdhPrivateKey, peerInfo.ecdhPubJwk);
           room.roomKeyRawCache = await exportRoomKeyRaw(room.roomKey);
         }
       }
     } else {
+      if ((serverRoom.name || room.name) !== room.name) dirty = true;
       room.name = serverRoom.name || room.name;
       const restoredKey = state.restoredRoomKeys[room.roomId];
       if (!room.roomKey && restoredKey) {
         try {
+          dirty = true;
           room.roomKey = await importRoomKeyRaw(restoredKey);
           room.roomKeyRawCache = restoredKey;
           await flushPendingEncrypted(room);
@@ -2271,7 +2434,7 @@ async function refreshMyRooms() {
     }
 
     if (isNew) showToast(room.kind === "direct" ? `${room.name} が連絡先に追加されました` : `${room.name} に追加されました`);
-    await persistRoom(room);
+    if (dirty) await persistRoom(room); // 変化が無ければIndexedDBにも書かない
   }
 
   renderChatList();
@@ -2307,6 +2470,7 @@ function initAddSheet() {
     document.getElementById("passphrase-reveal-box").classList.add("hidden");
     document.getElementById("my-passphrase-full").textContent = "";
     openSheet("sheet-my-address");
+    runPushDiagnostics();
   });
   document.getElementById("btn-copy-address-sheet").addEventListener("click", () => copyText(state.address));
   document.getElementById("btn-close-my-address").addEventListener("click", () => closeSheet("sheet-my-address"));
@@ -2417,6 +2581,7 @@ function openRoom(roomId) {
 
   document.getElementById("message-list").innerHTML = "";
   for (const m of room.messages) renderMessageRow(m);
+  state.stick = true;
 
   showScreen("screen-room");
   document.getElementById("members-panel").classList.add("hidden-mobile");
@@ -2426,6 +2591,8 @@ function openRoom(roomId) {
   scrollMessagesToBottom();
   renderChatList();
   resetUnreadBadge();
+  closeRoomNotifications(roomId);
+  noteActivity();
 }
 
 function updateRoomHeaderAndMembers(roomId) {
@@ -2454,6 +2621,13 @@ function updateRoomHeaderAndMembers(roomId) {
 
 function renderMembers(room) {
   const listEl = document.getElementById("members-list");
+  // 内容が変わっていなければ作り直さない（画像の再読み込みを防ぐ）
+  const sig = room.kind === "group"
+    ? JSON.stringify([state.displayName, state.avatarUrl, [...room.members.values()].map((m) => [m.displayName, m.avatarUrl || "", m.avatarUrl && avatarRecentlyFailed(m.avatarUrl) ? 1 : 0])])
+    : "";
+  if (listEl.dataset.sig === sig && listEl.dataset.room === room.roomId) return;
+  listEl.dataset.sig = sig;
+  listEl.dataset.room = room.roomId;
   listEl.innerHTML = "";
 
   const renderRow = (displayName, isYou, avatarUrl) => {
@@ -2488,6 +2662,7 @@ function updateComposerEnabled(room) {
 function scrollMessagesToBottom() {
   const listEl = document.getElementById("message-list");
   listEl.scrollTop = listEl.scrollHeight;
+  state.stick = true;
 }
 
 function senderAvatarHtml(m) {
@@ -2497,9 +2672,11 @@ function senderAvatarHtml(m) {
   return `<span class="mini-avatar">${avatarInner(initial, member?.avatarUrl)}</span>`;
 }
 
-function buildMessageRow(m) {
+function buildMessageRow(m, hideSender = false) {
   const row = document.createElement("div");
   if (m.id) row.dataset.messageId = m.id;
+  if (m.fromUserId && !m.system) row.dataset.from = m.fromUserId;
+  if (hideSender) row.dataset.streak = "1";
   const mine = m.fromUserId === state.userId;
 
   if (m.system) {
@@ -2514,7 +2691,7 @@ function buildMessageRow(m) {
     return row;
   }
 
-  row.className = `msg-row ${mine ? "mine" : "theirs"}${m.status === "sending" ? " pending" : ""}${m.status === "failed" ? " failed" : ""}`;
+  row.className = `msg-row ${mine ? "mine" : "theirs"}${hideSender ? " streak" : ""}${m.status === "sending" ? " pending" : ""}${m.status === "failed" ? " failed" : ""}`;
   const time = new Date(m.ts).toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" });
   const editedTag = m.edited ? '<span class="msg-edited-tag">(編集済み)</span>' : "";
   const canAct = mine && (!m.status || m.status === "sent");
@@ -2524,7 +2701,7 @@ function buildMessageRow(m) {
   else if (m.status === "sent") status = `<span class="msg-status sent">${icon("check", "icon")}送信済み</span>`;
   else if (m.status === "failed") status = `<span class="msg-status failed">${icon("warning", "icon")}送信失敗</span><button class="msg-retry" data-act="retry">再送信</button><button class="msg-retry discard" data-act="discard">取り消し</button>`;
   row.innerHTML = `
-    ${mine ? "" : `<div class="msg-sender">${senderAvatarHtml(m)}${escapeHtml(m.displayName)}</div>`}
+    ${mine || hideSender ? "" : `<div class="msg-sender">${senderAvatarHtml(m)}${escapeHtml(m.displayName)}</div>`}
     <div class="msg-bubble${m.verified ? "" : " unverified"}">${escapeHtml(m.text)}</div>
     <div class="msg-meta">${m.verified ? "" : icon("warning", "icon icon-inline icon-warn")}${time}${m.verified ? "" : " ・ 署名検証失敗"}${editedTag}${status ? " ・ " + status : ""}${actions}</div>
   `;
@@ -2546,7 +2723,11 @@ function buildMessageRow(m) {
 }
 
 function renderMessageRow(m) {
-  document.getElementById("message-list").appendChild(buildMessageRow(m));
+  const listEl = document.getElementById("message-list");
+  // 同じ相手が続けて送った2通目以降は、名前とアイコンを省く（見やすく、画像の取得・描画も減る）
+  const prev = listEl.lastElementChild;
+  const hide = !!(m.fromUserId && !m.system && prev && prev.dataset.from === m.fromUserId);
+  listEl.appendChild(buildMessageRow(m, hide));
 }
 
 /** 指定idの行をその場で再描画する（編集・削除・送信状態の反映用）。 */
@@ -2554,7 +2735,7 @@ function updateMessageRowInPlace(m) {
   const listEl = document.getElementById("message-list");
   const existing = listEl.querySelector(`[data-message-id="${CSS.escape(m.id)}"]`);
   if (!existing) return;
-  existing.replaceWith(buildMessageRow(m));
+  existing.replaceWith(buildMessageRow(m, existing.dataset.streak === "1"));
 }
 
 function findMessage(room, messageId) { return room.messages.find((m) => m.id === messageId); }
@@ -2563,7 +2744,8 @@ function appendMessageToRoom(room, message) {
   room.messages.push(message);
   if (state.openRoomId === room.roomId) {
     renderMessageRow(message);
-    scrollMessagesToBottom();
+    // 過去ログを読んでいる最中は、新着が来ても勝手に最下部へ飛ばさない
+    if (state.stick || message.fromUserId === state.userId) scrollMessagesToBottom();
   }
   if (message.id) persistMessage(room.roomId, message);
 }
@@ -2786,7 +2968,7 @@ async function decryptAndAppendChat(room, msg) {
     if (from !== state.userId && (state.openRoomId !== room.roomId || document.hidden)) {
       room.unread += 1;
       await incrementUnreadBadge();
-      if (from !== state.userId) showBrowserNotification(room, displayName, text);
+      showBrowserNotification(room, displayName, text);
     }
     await persistRoom(room);
     renderChatList();
@@ -2868,25 +3050,109 @@ async function processIncomingMessage(room, msg) {
   }
 }
 
-// ===== ポーリング =====
+// ===== 同期（新着の取得） =====
+// 全ルーム分を GET /sync の1回で取得する。ルームごとのpollは行わない。
+// 間隔は状況で変える: 操作・受信があった直後は短く、放置すれば長く、画面が隠れていればさらに長く、
+// プッシュ通知が有効なら新着は通知で即座に知らされるので保険の間隔だけにする。
 
-async function pollRoom(roomId) {
-  if (state.pollInFlight.has(roomId)) return true;
-  const room = state.rooms.get(roomId);
-  if (!room) return true;
-  state.pollInFlight.add(roomId);
-  let ok = true;
+function noteActivity() { state.sync.lastActivity = Date.now(); }
+
+function syncDelay() {
+  const s = state.sync;
+  if (s.fail > 0) return Math.min(60000, 3000 * 2 ** Math.min(s.fail, 5)); // 失敗が続く間は指数バックオフ
+  if (document.hidden) return state.pushActive ? SYNC_HIDDEN_PUSH_MS : SYNC_HIDDEN_MS;
+  if (state.pushActive) return SYNC_PUSH_VISIBLE_MS;
+  const idle = Date.now() - s.lastActivity;
+  if (idle < 30 * 1000) return SYNC_FAST_MS;
+  if (idle < 3 * 60 * 1000) return SYNC_MID_MS;
+  if (idle < 15 * 60 * 1000) return SYNC_SLOW_MS;
+  return SYNC_IDLE_MS;
+}
+
+function onAuthLost() {
+  if (state.sync.authLost) return;
+  state.sync.authLost = true;
+  stopSync();
+  showToast("セッションが無効になりました。設定からログアウトし、パスフレーズで復元してください");
+}
+
+/** 1回分の同期。{ ok, more } を返す。同時に2本は走らせない。 */
+async function runSync() {
+  const s = state.sync;
+  if (s.inFlight || !state.token || s.authLost) return { ok: true, more: false };
+  s.inFlight = true;
+  let ok = true, more = false;
   try {
-    const { messages } = await api.poll(state.token, roomId);
-    for (const msg of messages) await processIncomingMessage(room, msg);
+    const data = await api.sync(state.token);
+    s.fail = 0;
+    const incoming = data.messages || [];
+
+    // 所属ルームの構成が変わった／知らないルーム宛のメッセージが来た／定期更新の時期 → ルーム一覧を再取得する
+    const unknownRoom = incoming.some((m) => !state.rooms.has(m.roomId));
+    const stale = !document.hidden && Date.now() - s.roomsAt > ROOMS_REFRESH_MS;
+    if ((s.rev !== null && data.rev !== s.rev) || unknownRoom || stale) {
+      await refreshMyRooms();
+    }
+
+    const work = [...s.deferred, ...incoming];
+    s.deferred = [];
+    let gotNew = false;
+    for (const msg of work) {
+      const room = state.rooms.get(msg.roomId);
+      if (!room) { s.deferred.push(msg); continue; } // サーバ側では配達済みなので、ルームが分かるまで手元で保持する
+      gotNew = true;
+      await processIncomingMessage(room, msg);
+    }
+    if (s.deferred.length > 500) s.deferred = s.deferred.slice(-500);
+    if (gotNew) noteActivity();
+    more = !!data.more;
   } catch (e) {
     ok = false;
-    console.error(`ルーム ${roomId} のポーリングに失敗しました`, e);
+    s.fail += 1;
+    console.error("同期に失敗しました", e);
+    if (e instanceof ApiError && e.status === 401) onAuthLost();
   } finally {
-    state.pollInFlight.delete(roomId);
+    s.inFlight = false;
   }
-  if (roomId === state.openRoomId) setConnection(ok);
-  return ok;
+  setConnection(ok);
+  return { ok, more };
+}
+
+function scheduleSync(delay) {
+  const s = state.sync;
+  clearTimeout(s.timer);
+  if (!s.running) return;
+  s.timer = setTimeout(async () => {
+    let r;
+    let guard = 0;
+    do { r = await runSync(); } while (r.more && r.ok && ++guard < 10);
+    scheduleSync();
+  }, delay ?? syncDelay());
+}
+
+/** 今すぐ同期して、その後の周期を引き継ぐ（画面に戻った・オンラインに戻った・プッシュが届いた・送信した等）。 */
+function syncNow() {
+  if (!state.sync.running) return;
+  scheduleSync(0);
+}
+
+/** 送信直後などに、返信を拾うため次の同期を早める。 */
+function bumpSync() {
+  noteActivity();
+  if (state.sync.running && !state.pushActive) scheduleSync(Math.min(syncDelay(), SYNC_FAST_MS));
+}
+
+function startSync() {
+  stopSync();
+  state.sync.running = true;
+  state.sync.authLost = false;
+  noteActivity();
+  scheduleSync(0);
+}
+function stopSync() {
+  state.sync.running = false;
+  clearTimeout(state.sync.timer);
+  state.sync.timer = null;
 }
 
 // ===== 接続状態・手動更新 =====
@@ -2904,7 +3170,7 @@ function setConnection(ok) {
     document.querySelectorAll("#btn-refresh-room, #btn-refresh-lobby").forEach((b) => { b.title = `更新（最終更新 ${t}）`; });
   }
 }
-window.addEventListener("online", () => { if (state.token) manualRefresh(); });
+window.addEventListener("online", () => { if (state.token) syncNow(); });
 window.addEventListener("offline", () => setConnection(false));
 
 async function manualRefresh(btn) {
@@ -2916,38 +3182,17 @@ async function manualRefresh(btn) {
   let ok = true;
   try {
     ok = (await refreshMyRooms()) !== false;
-    const results = await Promise.all([...state.rooms.keys()].map((id) => pollRoom(id)));
-    ok = ok && results.every(Boolean);
+    state.sync.fail = 0;
+    const r = await runSync();
+    ok = ok && r.ok;
+    noteActivity();
+    scheduleSync();
   } catch { ok = false; }
   await new Promise((r) => setTimeout(r, Math.max(0, 700 - (Date.now() - started))));
   buttons.forEach((b) => b.classList.remove("refreshing"));
   manualRefresh.running = false;
   renderChatList();
   showToast(ok ? "更新しました" : "更新できませんでした。接続を確認してください");
-}
-
-async function pollAllRooms() {
-  const roomIds = [...state.rooms.keys()];
-  await Promise.all(roomIds.map((id) => pollRoom(id)));
-}
-
-let myRoomsTickCounter = 0;
-function startGlobalPolling() {
-  stopGlobalPolling();
-  pollAllRooms();
-  state.pollTimer = setInterval(async () => {
-    await pollAllRooms();
-    myRoomsTickCounter += 1;
-    if (myRoomsTickCounter % Math.max(1, Math.round(MY_ROOMS_REFRESH_MS / POLL_INTERVAL_MS)) === 0) {
-      await refreshMyRooms();
-    }
-  }, POLL_INTERVAL_MS);
-}
-function stopGlobalPolling() {
-  if (state.pollTimer) {
-    clearInterval(state.pollTimer);
-    state.pollTimer = null;
-  }
 }
 
 // ===== 送信 =====
@@ -2988,6 +3233,7 @@ async function sendCurrentMessage() {
   const msg = { fromUserId: state.userId, displayName: state.displayName, text, ts: Date.now(), verified: true, id: crypto.randomUUID(), status: "sending" };
   room.messages.push(msg);
   if (state.openRoomId === room.roomId) { renderMessageRow(msg); scrollMessagesToBottom(); }
+  bumpSync();
   await deliverMessage(room, msg);
 }
 
@@ -3204,6 +3450,9 @@ function initThemeSwatches() {
 // ===== アカウントのアイコン（画像URL） =====
 
 const AVATAR_KEY = "e2ee_chat_avatar";
+const AVATAR_SHARED_KEY = "e2ee_chat_avatar_shared"; // 最後にサーバへ共有したURL（変わらない限り起動のたびに送り直さない）
+function markAvatarShared(url) { try { localStorage.setItem(AVATAR_SHARED_KEY, url || ""); } catch {} }
+function avatarSharedUrl() { try { return localStorage.getItem(AVATAR_SHARED_KEY) || ""; } catch { return ""; } }
 
 function saveAvatarLocal() {
   try {
@@ -3244,7 +3493,7 @@ function resetAvatar(message) {
   saveAvatarLocal();
   renderMyAvatar();
   scheduleBackupSync();
-  if (state.token) api.setProfile(state.token, null).catch((e) => console.error(e));
+  if (state.token) api.setProfile(state.token, null).then(() => markAvatarShared("")).catch((e) => console.error(e));
   const input = document.getElementById("input-avatar-url");
   if (input) input.value = "";
   if (message) showToast(message);
@@ -3295,6 +3544,7 @@ async function applyAvatarFromInput() {
   scheduleBackupSync();
   try {
     await api.setProfile(state.token, url);
+    markAvatarShared(url);
     statusEl.textContent = "アイコンを設定しました（連絡先にも表示されます）";
   } catch (e) {
     statusEl.textContent = `アイコンを設定しました（相手への共有に失敗: ${e.message}）`;
@@ -3304,8 +3554,9 @@ async function applyAvatarFromInput() {
 /** 起動時・定期的にリンクが生きているか確認し、切れていたら初期アイコンに戻す（オフライン時は何もしない）。 */
 async function verifyAvatarLink() {
   const url = state.avatarUrl;
-  if (!url || navigator.onLine === false) return;
-  if (!verifyAvatarLink.shared) { verifyAvatarLink.shared = true; api.setProfile(state.token, url).catch(() => {}); } // 既存ユーザーの設定済みアイコンをサーバにも反映
+  if (!url || navigator.onLine === false || document.hidden) return;
+  // 既存ユーザーの設定済みアイコンをサーバにも反映（URLが変わったときだけ）
+  if (avatarSharedUrl() !== url) api.setProfile(state.token, url).then(() => markAvatarShared(url)).catch(() => {});
   const ok = await probeImage(proxiedAvatarSrc(url));
   if (!ok && state.avatarUrl === url && navigator.onLine !== false) {
     resetAvatar("アイコン画像のリンクが無効になったため、初期アイコンに戻しました");
@@ -3321,7 +3572,7 @@ function initAvatarSettings() {
     statusEl.textContent = "初期アイコンに戻しました";
   });
   document.getElementById("input-avatar-url").addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); applyAvatarFromInput(); } });
-  setInterval(verifyAvatarLink, 15 * 60 * 1000);
+  setInterval(verifyAvatarLink, AVATAR_RECHECK_MS);
 }
 
 // ===== 通知（ページ内）・PWAバッジ・マニフェスト =====
@@ -3334,8 +3585,18 @@ function notifyBodyEnabled() {
   try { return localStorage.getItem(NOTIFY_BODY_KEY) !== "0"; } catch { return true; }
 }
 
-/** マニフェストを実行時に生成する（単一HTMLのまま「ホーム画面に追加」できるようにする）。 */
-function installManifest() {
+/** manifest.webmanifest（同じフォルダ）があればそれを使う。無ければ実行時に生成して「ホーム画面に追加」できるようにする。 */
+async function installManifest() {
+  const link = document.getElementById("manifest-link");
+  try {
+    const res = await fetch(new URL("manifest.webmanifest", location.href).href, { method: "HEAD", cache: "no-store" });
+    if (res.ok) {
+      // アイコン画像もファイルがあればそれを使う（iPhoneのホーム画面アイコン用）
+      const touch = document.querySelector('link[rel="apple-touch-icon"]');
+      if (touch) touch.href = "icons/apple-touch-icon.png";
+      return;
+    }
+  } catch {}
   try {
     const base = new URL(".", location.href).href;
     const manifest = {
@@ -3344,13 +3605,12 @@ function installManifest() {
       background_color: "#11111b", theme_color: "#1e1e2e", icons: APP_ICONS,
     };
     const url = URL.createObjectURL(new Blob([JSON.stringify(manifest)], { type: "application/manifest+json" }));
-    const link = document.createElement("link");
-    link.rel = "manifest"; link.href = url;
-    document.head.appendChild(link);
+    if (link) link.href = url;
   } catch (e) { console.error(e); }
 }
 
 let swReg = null;
+const PUSH_REG_KEY = "e2ee_chat_push_reg"; // 最後にサーバへ登録した購読 { endpoint, uid, ts }
 
 function urlBase64ToUint8Array(b64url) {
   const padding = "=".repeat((4 - (b64url.length % 4)) % 4);
@@ -3368,6 +3628,7 @@ async function registerServiceWorker() {
     swReg = await navigator.serviceWorker.register(url, { scope: new URL("./", url).href });
     navigator.serviceWorker.addEventListener("message", (ev) => {
       if (ev.data?.type === "open-room" && ev.data.roomId && state.rooms.has(ev.data.roomId)) openRoom(ev.data.roomId);
+      if (ev.data?.type === "sync-now") syncNow(); // プッシュが届いた = 新着あり。すぐ取りに行く
     });
     return swReg;
   } catch (e) {
@@ -3399,10 +3660,13 @@ async function subscribePush() {
     }
   }
   await api.subscribePush(state.token, sub.toJSON());
+  try { localStorage.setItem(PUSH_REG_KEY, JSON.stringify({ endpoint: sub.endpoint, uid: state.userId, ts: Date.now() })); } catch {}
+  state.pushActive = true;
   return sub;
 }
 
 async function teardownPush() {
+  state.pushActive = false;
   try {
     if (swReg) {
       const sub = await swReg.pushManager.getSubscription();
@@ -3462,16 +3726,97 @@ async function enableNotifications() {
     showToast(`プッシュ通知の登録に失敗しました: ${msg}`);
   }
   refreshNotifyButton();
+  runPushDiagnostics();
 }
 
-/** 起動時：許可済みなら購読をサーバに登録し直す（購読の有効期限切れ・サーバ側の削除に備える）。 */
+/** 起動時：許可済みなら購読をサーバに登録し直す（購読の有効期限切れ・サーバ側の削除に備える）。
+ *  端末の購読が前回登録したものと同じで12時間以内なら、サーバへは何も送らない。 */
 async function ensurePushSubscription() {
   if (!pushSupported() || Notification.permission !== "granted" || !state.token) return;
-  try { await subscribePush(); } catch (e) { console.warn("プッシュ購読の更新に失敗", e); }
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    const sub = await reg.pushManager.getSubscription();
+    let last = null;
+    try { last = JSON.parse(localStorage.getItem(PUSH_REG_KEY) || "null"); } catch {}
+    if (sub && last && last.endpoint === sub.endpoint && last.uid === state.userId && Date.now() - last.ts < PUSH_RECHECK_MS) {
+      state.pushActive = true;
+    } else {
+      await subscribePush();
+    }
+  } catch (e) { console.warn("プッシュ購読の更新に失敗", e); }
   refreshNotifyButton();
 }
 
+/** 開いたルームの通知は、開いた時点で消す。 */
+async function closeRoomNotifications(roomId) {
+  try {
+    if (!swReg) return;
+    const list = await swReg.getNotifications({ tag: `room-${roomId}` });
+    list.forEach((n) => n.close());
+  } catch {}
+}
+
+// ===== 通知の診断 =====
+
+function diagItem(status, text, hint = "") {
+  const ic = status === "ok" ? "check" : status === "ng" ? "warning" : "wifiOff";
+  return `<li class="${status}">${icon(ic, "icon")}<span>${escapeHtml(text)}${hint ? `<small>${escapeHtml(hint)}</small>` : ""}</span></li>`;
+}
+
+async function runPushDiagnostics() {
+  const listEl = document.getElementById("push-diag-list");
+  if (!listEl) return;
+  const items = [];
+  const perm = "Notification" in window ? Notification.permission : "unsupported";
+  items.push(perm === "granted" ? diagItem("ok", "通知の許可: 許可済み")
+    : perm === "denied" ? diagItem("ng", "通知の許可: ブロック中", "ブラウザのサイト設定で通知を許可してください")
+    : perm === "unsupported" ? diagItem("ng", "通知の許可: このブラウザは通知に非対応", isIosBrowserTab() ? "iPhoneは「ホーム画面に追加」したアプリから開いてください" : "")
+    : diagItem("na", "通知の許可: まだ許可していません", "上の「通知を有効にする」を押してください"));
+  items.push(swReg ? diagItem("ok", "sw.js: 読み込み済み") : diagItem("ng", "sw.js: 読み込まれていません", "index.html と同じフォルダに sw.js を置き、https で開いてください"));
+  let sub = null;
+  if (swReg && "PushManager" in window) { try { sub = await (await navigator.serviceWorker.ready).pushManager.getSubscription(); } catch {} }
+  items.push(sub ? diagItem("ok", "この端末のプッシュ購読: あり") : diagItem("ng", "この端末のプッシュ購読: なし", "「通知を有効にする」を押して購読を作成してください"));
+  listEl.innerHTML = items.join("");
+  try {
+    const st = await api.pushStatus(state.token);
+    items.push(st.configured ? diagItem("ok", "サーバのVAPID鍵: 設定済み") : diagItem("ng", "サーバのVAPID鍵: 未設定", "backend/README の「プッシュ通知」の手順で VAPID_PUBLIC_KEY と VAPID_PRIVATE_KEY_JWK を設定してください"));
+    items.push(st.subscriptions > 0 ? diagItem("ok", `サーバに登録された購読: ${st.subscriptions}件`) : diagItem("ng", "サーバに登録された購読: 0件", "「通知を有効にする」を押すと登録されます"));
+  } catch (e) {
+    items.push(diagItem("ng", "サーバの通知設定を取得できませんでした", e.message));
+  }
+  listEl.innerHTML = items.join("");
+}
+
+async function sendTestPush() {
+  const out = document.getElementById("push-test-result");
+  const btn = document.getElementById("btn-push-test");
+  out.className = "notify-help";
+  out.textContent = "送信しています…";
+  btn.disabled = true;
+  try {
+    const r = await api.pushTest(state.token);
+    if (r.sent === 0) { out.textContent = "サーバにこの端末の購読が登録されていません。「通知を有効にする」を押してください。"; out.classList.add("warn"); return; }
+    const bad = r.results.filter((x) => x.result !== "ok");
+    if (bad.length === 0) { out.textContent = "送信しました。アプリを閉じた状態で通知が出るか確認してください（出ない場合は端末側の通知設定を確認）。"; return; }
+    out.classList.add("warn");
+    out.textContent = bad.map((x) => {
+      const hint = x.status === 400 || x.status === 401 || x.status === 403 ? "VAPID鍵の設定が合っていません（公開鍵と秘密鍵が同じペアか、再購読が必要）"
+        : x.status === 404 || x.status === 410 ? "購読が期限切れです。「通知を有効にする」でやり直してください"
+        : x.status === 413 ? "ペイロードが大きすぎます" : x.detail || "送信に失敗しました";
+      return `${x.host}: HTTP ${x.status || "通信エラー"} — ${hint}`;
+    }).join("\n");
+    out.style.whiteSpace = "pre-line";
+  } catch (e) {
+    out.classList.add("warn");
+    out.textContent = e.message;
+  } finally {
+    btn.disabled = false;
+    runPushDiagnostics();
+  }
+}
+
 async function showBrowserNotification(room, senderName, text) {
+  if (state.pushActive) return; // プッシュ通知が有効なら、Service Worker側が通知を出す（二重通知を防ぐ）
   if (!document.hidden) return;
   if (!("Notification" in window) || Notification.permission !== "granted") return;
   const showBody = notifyBodyEnabled();
@@ -3493,12 +3838,14 @@ async function updateBadgeMain() {
     // Badging API未対応ブラウザでは無視する
   }
   setSetting("unreadCount", totalUnread);
+  document.title = totalUnread > 0 ? `(${totalUnread > 99 ? "99+" : totalUnread}) E2EE Chat` : "E2EE Chat";
 }
 async function resetUnreadBadge() { await updateBadgeMain(); }
 async function incrementUnreadBadge() { await updateBadgeMain(); }
 
 function initNotificationSettings() {
   document.getElementById("btn-enable-notify").addEventListener("click", enableNotifications);
+  document.getElementById("btn-push-test").addEventListener("click", sendTestPush);
   const checkbox = document.getElementById("checkbox-notify-body");
   checkbox.checked = notifyBodyEnabled();
   setSetting("previewOnLockScreen", checkbox.checked); // sw.jsが参照する
@@ -3510,20 +3857,64 @@ function initNotificationSettings() {
 }
 
 document.addEventListener("visibilitychange", () => {
-  if (!document.hidden && state.openRoomId) {
+  if (document.hidden) return;
+  if (state.openRoomId) {
     const room = state.rooms.get(state.openRoomId);
     if (room) {
       room.unread = 0;
       persistRoom(room);
-      resetUnreadBadge();
+      closeRoomNotifications(room.roomId);
     }
   }
+  updateBadgeMain();
+  noteActivity();
+  syncNow(); // 画面に戻ったら、周期を待たずにすぐ最新にする
 });
+let lastFocusSync = 0;
+window.addEventListener("focus", () => {
+  if (Date.now() - lastFocusSync < 5000) return; // visibilitychangeと重複して呼ばない
+  lastFocusSync = Date.now();
+  noteActivity();
+  if (state.sync.running && !state.sync.inFlight) syncNow();
+});
+["pointerdown", "keydown"].forEach((ev) => document.addEventListener(ev, noteActivity, { passive: true, capture: true }));
+
+// ===== 表示領域（キーボード）への追従 =====
+// スマホでは、キーボードが出ると見える領域（visualViewport）が縮む。画面の高さをその値に合わせることで、
+// 入力欄がキーボードの下に隠れたり、画面外に落ちたりしないようにする。
+function initViewportSync() {
+  const vv = window.visualViewport;
+  const root = document.documentElement;
+  let baseH = 0, lastW = 0;
+  const apply = () => {
+    const h = Math.round(vv ? vv.height : window.innerHeight);
+    const w = Math.round(vv ? vv.width : window.innerWidth);
+    const top = Math.round(vv ? vv.offsetTop : 0);
+    if (Math.abs(w - lastW) > 40) baseH = 0; // 回転・幅の変化で基準をリセット
+    lastW = w;
+    baseH = Math.max(baseH, h);
+    root.style.setProperty("--vvh", h + "px");
+    root.style.setProperty("--vvt", top + "px");
+    const kbd = window.matchMedia("(max-width: 959.98px)").matches && baseH - h > 120;
+    document.body.classList.toggle("kbd-open", kbd);
+    if (!kbd && window.scrollY) window.scrollTo(0, 0);
+    if (state.stick && state.openRoomId) scrollMessagesToBottom();
+  };
+  apply();
+  if (vv) { vv.addEventListener("resize", apply); vv.addEventListener("scroll", apply); }
+  window.addEventListener("resize", apply);
+  window.addEventListener("orientationchange", () => setTimeout(apply, 250));
+  const list = document.getElementById("message-list");
+  list.addEventListener("scroll", () => { state.stick = list.scrollHeight - list.scrollTop - list.clientHeight < 80; }, { passive: true });
+  // 入力欄にフォーカスしたとき、キーボードが出きるのを待ってから最下部へ
+  document.getElementById("input-message").addEventListener("focus", () => setTimeout(() => { apply(); if (state.openRoomId) scrollMessagesToBottom(); }, 300));
+}
 
 // ===== 起動処理 =====
 
 async function boot() {
-  setInterval(() => { if (state.token) renderChatList(); }, 30000);
+  setInterval(() => { if (state.token && !document.hidden) renderChatList(); }, 30000); // 「n分前」の更新（差分更新なので軽い）
+  initViewportSync();
   installManifest();
   registerServiceWorker().then(() => { refreshNotifyButton(); ensurePushSubscription(); });
   setSetting("pageUrl", location.href.split("#")[0].split("?")[0]);
