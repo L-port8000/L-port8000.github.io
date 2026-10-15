@@ -1,7 +1,8 @@
+<!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
@@ -18,6 +19,7 @@
             --accent: #0060df;
             --tor-color: #7d4698;
             --tab-card-bg: #ffffff;
+            --app-height: 100vh;
             --safe-area-bottom: env(safe-area-inset-bottom, 0px);
             --safe-area-top: env(safe-area-inset-top, 0px);
         }
@@ -38,7 +40,7 @@
             color: var(--text-color);
             display: flex;
             flex-direction: column;
-            height: 100vh;
+            height: var(--app-height, 100vh);
             overflow: hidden;
         }
 
@@ -47,9 +49,22 @@
         #progress-bar { width: 0%; height: 100%; background: var(--accent); transition: width 0.3s ease; }
 
         /* ---- メインコンテナ ---- */
-        #main-container { flex: 1; position: relative; overflow: hidden; }
+        #main-container { flex: 1; min-height: 0; position: relative; overflow: hidden; }
         .page-element { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; display: none; background: white; }
         .page-element.active { display: block; }
+
+        /* ---- iframe ラッパー / ズーム ---- */
+        .frame-wrap { overflow: hidden; -webkit-overflow-scrolling: touch; }
+        .frame-el {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%;
+            border: none; background: #fff;
+            transform-origin: 0 0;
+            will-change: transform;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
+        .frame-spacer { pointer-events: none; }
 
         /* ---- ブックマークバー ---- */
         #bookmark-bar {
@@ -94,7 +109,7 @@
         }
         #url {
             flex: 1; border: none; background: transparent;
-            color: var(--text-color); font-size: 15px; outline: none; width: 100%;
+            color: var(--text-color); font-size: 16px; outline: none; width: 100%;
         }
         .icon-btn {
             background: transparent; border: none; color: var(--text-color);
@@ -167,6 +182,36 @@
         .menu-item:active { background: rgba(128,128,128,0.1); }
         .star-active { color: #f1c40f; }
 
+        /* ---- ズームパネル ---- */
+        #zoom-panel {
+            position: fixed;
+            bottom: calc(70px + var(--safe-area-bottom));
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--toolbar-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+            display: none;
+            align-items: center;
+            gap: 2px;
+            padding: 6px 8px;
+            z-index: 210;
+            white-space: nowrap;
+        }
+        #zoom-panel.show { display: flex; }
+        .zoom-btn {
+            background: transparent; border: none; color: var(--text-color);
+            font-size: 18px; padding: 6px 12px; border-radius: 16px; cursor: pointer;
+        }
+        .zoom-btn:active { background: rgba(128,128,128,0.18); }
+        .zoom-value {
+            background: transparent; border: none; color: var(--text-color);
+            font-size: 15px; font-weight: 700; min-width: 64px; padding: 6px 2px; cursor: pointer;
+        }
+        #zoom-fit-btn.off { opacity: 0.3; }
+        .toolbar-top #zoom-panel { bottom: auto; top: calc(70px + var(--safe-area-top)); }
+
         /* ---- タブスイッチャー ---- */
         #tab-switcher {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -230,7 +275,7 @@
         .nt-search-row input {
             flex: 1; padding: 11px 20px; border-radius: 24px;
             border: 1px solid var(--border-color); background: var(--toolbar-bg);
-            color: var(--text-color); font-size: 14px; outline: none;
+            color: var(--text-color); font-size: 16px; outline: none;
         }
         .nt-search-row input:focus { border-color: var(--accent); }
         .nt-search-row button {
@@ -260,11 +305,17 @@
         .proxy-item { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border-color); }
         .proxy-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
         .status-connected { color: #28a745; font-weight: bold; font-size: 12px; margin-right: 8px; }
-        select, input[type="text"] { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-color); font-size: 14px; margin-bottom: 8px; }
+        select, input[type="text"] { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-color); font-size: 16px; margin-bottom: 8px; }
+        input[type="range"] { accent-color: var(--accent); }
         button.btn { padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border-color); background: rgba(128,128,128,0.1); color: inherit; font-size: 14px; cursor: pointer; }
         button.btn-primary { background: var(--accent); color: white; border: none; width: 100%; padding: 12px; font-weight: bold; border-radius: 8px; margin-top: 10px; cursor: pointer; }
         button.btn-danger { border-color: #c00; color: #c00; }
         .preset-group { display: flex; flex-wrap: wrap; gap: 8px; }
+        .range-row { display: flex; align-items: center; gap: 10px; }
+        .range-row input[type="range"] { flex: 1; margin: 0; }
+        .range-bound { font-size: 12px; opacity: 0.6; }
+        .range-value { text-align: center; font-size: 22px; font-weight: 600; margin: 8px 0 10px; }
+        .hint { font-size: 12px; opacity: 0.55; margin: 8px 0 0; line-height: 1.5; }
 
         /* ---- モーダル ---- */
         .modal-overlay {
@@ -365,6 +416,9 @@
     <div class="menu-item" onclick="toggleBookmark(); toggleMenu();">
         <span id="menu-star" style="width:24px;text-align:center;font-size:20px;">★</span> ブックマーク
     </div>
+    <div class="menu-item" onclick="toggleZoomPanel(); toggleMenu();">
+        <span style="width:24px;text-align:center;">🔍</span> ズーム
+    </div>
     <div class="menu-item" onclick="toggleFullscreen(); toggleMenu();">
         <span style="width:24px;text-align:center;">⛶</span> フルスクリーン
     </div>
@@ -377,6 +431,15 @@
     <div class="menu-item" onclick="toggleDarkMode(); toggleMenu();">
         <span style="width:24px;text-align:center;">🌓</span> ダークモード
     </div>
+</div>
+
+<!-- ズームパネル -->
+<div id="zoom-panel">
+    <button class="zoom-btn" onclick="zoomStep(-10)">−</button>
+    <button class="zoom-value" onclick="setZoom(100)"><span id="zoom-value">100%</span></button>
+    <button class="zoom-btn" onclick="zoomStep(10)">＋</button>
+    <button class="zoom-btn" id="zoom-fit-btn" onclick="toggleZoomFit()" title="横幅に合わせる（自動フィット）">⇔</button>
+    <button class="zoom-btn" onclick="toggleZoomPanel()" title="閉じる">✕</button>
 </div>
 
 <!-- ブックマークバー -->
@@ -545,7 +608,7 @@ async function takeViewportScreenshot() {
 async function takeFullScreenshot() {
     closeScreenshotModal();
     const tab = tabs.find(t => t.id === activeTabId);
-    if (!tab || !tab.element || tab.element.tagName !== 'IFRAME') {
+    if (!tab || !tab.frame) {
         alert('iframeサイトが開かれていません。現在表示中の画面でキャプチャします。');
         takeViewportScreenshot();
         return;
@@ -553,7 +616,7 @@ async function takeFullScreenshot() {
 
     // Method 1: Canvas drawImage (works for same-origin iframes)
     try {
-        const iframe = tab.element;
+        const iframe = tab.frame;
         const doc = iframe.contentDocument || iframe.contentWindow.document;
         const body = doc.body;
         const html = doc.documentElement;
@@ -692,7 +755,12 @@ const DEFAULT_SETTINGS = () => ({
     blockPopups: true,
     adBlock: true,
     toolbarPos: 'bottom',
-    history: []
+    history: [],
+    /* ---- ズーム / 表示 ---- */
+    zoom: 100,        // 拡大率 1〜500 (%)
+    zoomFit: true,    // サイトの横幅を画面に合わせる
+    pinchZoom: true,  // 二本指ズームを使う
+    appHeight: 100    // アプリ全体の高さ (%) PWA調整用
 });
 
 let settings = DEFAULT_SETTINGS();
@@ -702,7 +770,14 @@ function loadSettings() {
     settings = saved ? { ...DEFAULT_SETTINGS(), ...JSON.parse(saved) } : DEFAULT_SETTINGS();
 }
 
+let saveTimer = null;
+function saveSoon() {
+    if (saveTimer) clearTimeout(saveTimer);
+    saveTimer = setTimeout(saveState, 350);
+}
+
 function saveState() {
+    if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
     localStorage.setItem(pk('settings'), JSON.stringify(settings));
     localStorage.setItem(pk('sessions'), JSON.stringify(
         tabs.map(t => ({ id: t.id, url: t.url, title: t.title, history: t.history, historyIndex: t.historyIndex }))
@@ -782,9 +857,195 @@ function getEffectiveUrl(url) {
     return !settings.activeProxyId ? target : PROXIES[settings.activeProxyId].url + target;
 }
 
+/* ======================================================
+   ズーム（1% 〜 500%） / 画面の高さ
+====================================================== */
+function getActiveTab() { return tabs.find(t => t.id === activeTabId); }
+
+function clampZoom(v) {
+    v = Number(v);
+    if (!isFinite(v) || v <= 0) v = 100;
+    return Math.max(1, Math.min(500, Math.round(v)));
+}
+
+let zoomRaf = null;
+function scheduleZoom() {
+    if (zoomRaf) return;
+    zoomRaf = requestAnimationFrame(() => { zoomRaf = null; applyZoom(); });
+}
+
+/**
+ * iframe の表示倍率を適用する。
+ *  zoomFit = true : iframe のレイアウト幅を「画面幅 / 倍率」にするので、
+ *                   拡大しても横幅はちょうど画面に収まり、中のサイトも再レイアウトされる。
+ *  zoomFit = false: 画面幅を固定したまま拡大し、はみ出した分をスクロールできる（拡大鏡モード）。
+ */
+function applyZoom(tab) {
+    // 表示中のタブだけでなく全タブを同じ倍率に揃えるため、常に見えている
+    // メインコンテナのサイズを基準にする（非表示タブでも正しく計算できる）。
+    const mc = document.getElementById('main-container');
+    if (!mc) return;
+    const rect = mc.getBoundingClientRect();
+    const vw = Math.round(rect.width);
+    const vh = Math.round(rect.height);
+    if (vw < 1 || vh < 1) return;
+
+    const targets = tab ? [tab] : tabs.slice();
+    targets.forEach(t => applyZoomTo(t, vw, vh));
+}
+
+function applyZoomTo(tab, vw, vh) {
+    if (!tab || !tab.frame || !tab.element) return;
+    const wrap = tab.element;
+    const frame = tab.frame;
+    const z = clampZoom(settings.zoom) / 100;
+
+    frame.style.transformOrigin = '0 0';
+    frame.style.transform = 'scale(' + z + ')';
+    frame.style.position = 'absolute';
+    frame.style.left = '0';
+    frame.style.top = '0';
+
+    if (settings.zoomFit) {
+        if (wrap._spacer) wrap._spacer.style.display = 'none';
+        frame.style.width  = (vw / z) + 'px';
+        frame.style.height = (vh / z) + 'px';
+        wrap.style.overflow = 'hidden';
+    } else {
+        frame.style.width  = vw + 'px';
+        frame.style.height = vh + 'px';
+        let sp = wrap._spacer;
+        if (!sp) {
+            sp = document.createElement('div');
+            sp.className = 'frame-spacer';
+            wrap.appendChild(sp);
+            wrap._spacer = sp;
+        }
+        sp.style.display = 'block';
+        sp.style.width  = Math.round(vw * z) + 'px';
+        sp.style.height = Math.round(vh * z) + 'px';
+        wrap.style.overflow = 'auto';
+    }
+}
+
+function setZoom(v) {
+    settings.zoom = clampZoom(v);
+    scheduleZoom();
+    updateZoomUI();
+    saveSoon();
+}
+
+function zoomStep(delta) { setZoom(clampZoom(settings.zoom) + delta); }
+
+function toggleZoomFit() {
+    settings.zoomFit = !settings.zoomFit;
+    applyZoom();
+    updateZoomUI();
+    saveState();
+}
+
+function toggleZoomPanel() {
+    const p = document.getElementById('zoom-panel');
+    p.classList.toggle('show');
+    updateZoomUI();
+}
+
+function updateZoomUI() {
+    const z = clampZoom(settings.zoom);
+    const zv = document.getElementById('zoom-value');
+    if (zv) zv.textContent = z + '%';
+    const rng = document.getElementById('set-zoom');
+    if (rng && String(rng.value) !== String(z)) rng.value = z;
+    const lbl = document.getElementById('set-zoom-label');
+    if (lbl) lbl.textContent = z + '%';
+    const fit = document.getElementById('zoom-fit-btn');
+    if (fit) fit.classList.toggle('off', !settings.zoomFit);
+}
+
+function applyAppHeight() {
+    const h = Math.max(50, Math.min(100, Math.round(Number(settings.appHeight) || 100)));
+    settings.appHeight = h;
+    document.documentElement.style.setProperty('--app-height', h + 'vh');
+}
+
+function setAppHeight(v) {
+    settings.appHeight = Math.max(50, Math.min(100, Math.round(Number(v) || 100)));
+    applyAppHeight();
+    const lbl = document.getElementById('set-height-label');
+    if (lbl) lbl.textContent = settings.appHeight + '%';
+    const rng = document.getElementById('set-height');
+    if (rng && String(rng.value) !== String(settings.appHeight)) rng.value = settings.appHeight;
+    saveSoon();
+}
+
+/* ---- 二本指ピンチズーム ---- */
+let pinchState = null;
+let safariPinch = null;
+
+function touchDistance(t1, t2) {
+    const dx = t1.clientX - t2.clientX;
+    const dy = t1.clientY - t2.clientY;
+    return Math.hypot(dx, dy) || 1;
+}
+
+function canCustomZoom() {
+    const tab = getActiveTab();
+    return !!(settings.pinchZoom && tab && tab.frame);
+}
+
+function onPinchStart(e) {
+    if (e.touches && e.touches.length === 2 && canCustomZoom()) {
+        pinchState = { startDist: touchDistance(e.touches[0], e.touches[1]), startZoom: clampZoom(settings.zoom) };
+    } else {
+        pinchState = null;
+    }
+}
+
+function onPinchMove(e) {
+    if (!pinchState || !e.touches || e.touches.length !== 2) return;
+    const d = touchDistance(e.touches[0], e.touches[1]);
+    setZoom(pinchState.startZoom * (d / pinchState.startDist));
+    if (e.cancelable) e.preventDefault();
+}
+
+function onPinchEnd() {
+    if (pinchState) saveState();
+    pinchState = null;
+}
+
+function initZoomGestures() {
+    document.addEventListener('touchstart', onPinchStart, { passive: true });
+    document.addEventListener('touchmove', onPinchMove, { passive: false });
+    document.addEventListener('touchend', onPinchEnd, { passive: true });
+    document.addEventListener('touchcancel', onPinchEnd, { passive: true });
+
+    // Safari (iOS) の gesture イベント
+    document.addEventListener('gesturestart', e => {
+        if (!canCustomZoom()) return;
+        safariPinch = { startZoom: clampZoom(settings.zoom), startScale: e.scale || 1 };
+        e.preventDefault();
+    });
+    document.addEventListener('gesturechange', e => {
+        if (!safariPinch) return;
+        setZoom(safariPinch.startZoom * ((e.scale || 1) / safariPinch.startScale));
+        e.preventDefault();
+    });
+    document.addEventListener('gestureend', () => { if (safariPinch) saveState(); safariPinch = null; });
+
+    // PC / 確認用: Ctrl + ホイール
+    window.addEventListener('wheel', e => {
+        if (!e.ctrlKey || !canCustomZoom()) return;
+        e.preventDefault();
+        setZoom(clampZoom(settings.zoom) * (e.deltaY < 0 ? 1.1 : 0.9));
+    }, { passive: false });
+
+    window.addEventListener('resize', () => { applyZoom(); });
+    window.addEventListener('orientationchange', () => { setTimeout(() => applyZoom(), 250); });
+}
+
 function createTabObject(url, id = Date.now(), title = "読み込み中...", history = null, hIndex = 0) {
     if (url === "newtab://") title = "新しいタブ";
-    const tab = { id, url, title, history: history || [url], historyIndex: hIndex, element: null };
+    const tab = { id, url, title, history: history || [url], historyIndex: hIndex, element: null, frame: null, spacer: null };
     updateTabElement(tab);
     tabs.push(tab);
     return tab;
@@ -792,6 +1053,8 @@ function createTabObject(url, id = Date.now(), title = "読み込み中...", his
 
 function updateTabElement(tab) {
     if (tab.element) tab.element.remove();
+    tab.frame = null;
+    tab.spacer = null;
     const viewArea = document.getElementById('view');
     let el;
 
@@ -817,20 +1080,28 @@ function updateTabElement(tab) {
         renderCookiesInto(el);
     } else {
         const finalUrl = getEffectiveUrl(tab.url);
+        const wrap = document.createElement('div');
+        wrap.className = "page-element frame-wrap";
+        let frame;
         if (settings.viewMode === "iframe") {
-            el = document.createElement('iframe');
-            el.src = finalUrl;
-            el.setAttribute("sandbox", getSandbox());
+            frame = document.createElement('iframe');
+            frame.setAttribute("sandbox", getSandbox());
         } else {
-            el = document.createElement(settings.viewMode === "object" ? "object" : "embed");
-            el.src = finalUrl; el.data = finalUrl; el.type = "text/html";
+            frame = document.createElement(settings.viewMode === "object" ? "object" : "embed");
+            frame.type = "text/html";
+            frame.data = finalUrl;
         }
-        el.className = "page-element";
+        frame.className = "frame-el";
+        frame.src = finalUrl;
+        wrap.appendChild(frame);
+        el = wrap;
+        tab.frame = frame;
         setProgress(30);
-        el.onload = () => {
+        frame.onload = () => {
             setProgress(100);
-            try { tab.title = el.contentDocument.title || new URL(tab.url).hostname; }
+            try { tab.title = frame.contentDocument.title || new URL(tab.url).hostname; }
             catch(e) { tab.title = tab.url.replace(/https?:\/\//, '').split('/')[0]; }
+            applyZoom(tab);
             updateStarUI(); saveState();
             if (document.getElementById('tab-switcher').classList.contains('active')) renderTabGrid();
         };
@@ -839,6 +1110,7 @@ function updateTabElement(tab) {
     if (tab.id === activeTabId) el.classList.add('active');
     viewArea.appendChild(el);
     tab.element = el;
+    if (tab.frame) applyZoom(tab);
 }
 
 function switchTab(id) {
@@ -850,7 +1122,10 @@ function switchTab(id) {
         t.element.classList.toggle('active', active);
         if (active) {
             document.getElementById('url').value = t.url;
-            requestAnimationFrame(() => { if (t.element) t.element.scrollTop = t.element._st || 0; });
+            requestAnimationFrame(() => {
+                if (t.element) t.element.scrollTop = t.element._st || 0;
+                applyZoom(t);
+            });
         }
     });
     updateNavButtons(); updateStarUI(); saveState();
@@ -1215,6 +1490,57 @@ function renderSettingsInto(container) {
             <button class="btn" onclick="settings.bookmarks.splice(${i},1);saveState();renderSettingsInto(document.querySelector('.settings-page'));renderBookmarkBar();">削除</button>
           </div>`).join('');
 
+    const zoom = clampZoom(settings.zoom);
+    const appH = Math.max(50, Math.min(100, Math.round(Number(settings.appHeight) || 100)));
+
+    const zoomCard = `
+        <div class="card">
+            <h3>🔍 ズーム（拡大率 1〜500%）</h3>
+            <div class="range-row">
+                <span class="range-bound">1%</span>
+                <input type="range" id="set-zoom" min="1" max="500" step="1" value="${zoom}" oninput="setZoom(this.value)">
+                <span class="range-bound">500%</span>
+            </div>
+            <div class="range-value" id="set-zoom-label">${zoom}%</div>
+            <div class="preset-group">
+                <button class="btn" onclick="zoomStep(-50)">−50</button>
+                <button class="btn" onclick="zoomStep(-10)">−10</button>
+                <button class="btn" onclick="zoomStep(-1)">−1</button>
+                <button class="btn" onclick="setZoom(100)">100%</button>
+                <button class="btn" onclick="zoomStep(1)">＋1</button>
+                <button class="btn" onclick="zoomStep(10)">＋10</button>
+                <button class="btn" onclick="zoomStep(50)">＋50</button>
+            </div>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;margin-top:14px;">
+                <input type="checkbox" ${settings.zoomFit ? 'checked' : ''} onchange="settings.zoomFit=this.checked;saveState();applyZoom();updateZoomUI();">
+                サイトの横幅を画面に合わせる（自動フィット）
+            </label>
+            <p class="hint">ON：拡大しても横幅が画面に収まるように中のサイトを再レイアウトします。OFF：画面幅は固定のまま拡大し、はみ出した部分はスクロールできます。</p>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;margin-top:14px;">
+                <input type="checkbox" ${settings.pinchZoom ? 'checked' : ''} onchange="settings.pinchZoom=this.checked;saveState();">
+                二本指ズーム（ピンチ）を使う
+            </label>
+            <p class="hint">画面を2本指でつまむと拡大率を変更できます。ツールバーの ⋮ →「ズーム」でも操作できます。</p>
+        </div>`;
+
+    const heightCard = `
+        <div class="card">
+            <h3>📐 画面の高さ（PWA調整）</h3>
+            <div class="range-row">
+                <span class="range-bound">50%</span>
+                <input type="range" id="set-height" min="50" max="100" step="1" value="${appH}" oninput="setAppHeight(this.value)">
+                <span class="range-bound">100%</span>
+            </div>
+            <div class="range-value" id="set-height-label">${appH}%</div>
+            <div class="preset-group">
+                <button class="btn" onclick="setAppHeight(85)">85%</button>
+                <button class="btn" onclick="setAppHeight(90)">90%</button>
+                <button class="btn" onclick="setAppHeight(95)">95%</button>
+                <button class="btn" onclick="setAppHeight(100)">100%</button>
+            </div>
+            <p class="hint">ホーム画面に追加したPWAで下のツールバーが画面外に隠れるときは、この値を小さくすると全体が収まります。</p>
+        </div>`;
+
     container.innerHTML = `
         <h2 style="margin-top:0;">⚙️ 設定</h2>
         <div class="card">
@@ -1223,6 +1549,8 @@ function renderSettingsInto(container) {
             <button class="btn" onclick="openProfileModal()" style="margin-top:4px;">＋ 新規プロファイル</button>
         </div>
         <div class="card"><h3>★ ブックマーク管理</h3>${bmsHtml}</div>
+        ${zoomCard}
+        ${heightCard}
         <div class="card">
             <h3>🏠 ホーム設定</h3>
             <input type="text" id="set-home" value="${esc(settings.homeUrl)}">
@@ -1278,6 +1606,8 @@ function renderSettingsInto(container) {
         b.onclick = () => { document.getElementById('set-home').value = p.url; settings.homeUrl = p.url; saveState(); };
         container.querySelector('#plist').appendChild(b);
     });
+
+    updateZoomUI();
 }
 
 window.setToolbarPosition = (pos) => {
@@ -1287,6 +1617,7 @@ window.setToolbarPosition = (pos) => {
     document.body.classList.add('toolbar-' + pos);
     const sp = document.querySelector('.settings-page');
     if (sp) renderSettingsInto(sp);
+    applyZoom();
 };
 
 window.toggleTor = () => {
@@ -1356,6 +1687,7 @@ document.addEventListener('click', e => {
 function initProfile() {
     loadSettings();
     document.body.classList.toggle('dark-mode', !!settings.darkMode);
+    applyAppHeight();
 
     const savedTabs = localStorage.getItem(pk('sessions'));
     if (savedTabs && JSON.parse(savedTabs).length > 0) {
@@ -1367,8 +1699,11 @@ function initProfile() {
     }
     setToolbarPosition(settings.toolbarPos || 'bottom');
     renderBookmarkBar();
+    updateZoomUI();
+    applyZoom();
 }
 
+initZoomGestures();
 initProfile();
 </script>
 </body>
