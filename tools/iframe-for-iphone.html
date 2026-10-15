@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="mobile-web-app-capable" content="yes">
@@ -21,6 +21,7 @@
       --safe-bottom: env(safe-area-inset-bottom, 0px);
       --address-height: 54px;
       --toolbar-height: 54px;
+      --app-height: calc(100dvh + 0px);
     }
 
     * { box-sizing: border-box; }
@@ -28,6 +29,9 @@
     body { -webkit-font-smoothing: antialiased; overscroll-behavior: none; }
     button, input, select { font: inherit; }
     button { -webkit-tap-highlight-color: transparent; }
+
+    /* ＋の高さ調整でアプリが画面より高くなったときだけ縦スクロールを許可する */
+    html.allow-scroll, html.allow-scroll body, html.allow-scroll #app { overflow-y: auto; overflow-x: hidden; }
 
     .browser {
       --bg: #f2f2f7;
@@ -49,7 +53,7 @@
       flex-direction: column;
       width: 100%;
       height: 100%;
-      height: 100dvh;
+      height: var(--app-height, 100dvh);
       overflow: hidden;
       color: var(--text);
       background: var(--bg);
@@ -217,8 +221,9 @@
     }
 
     .page { position: absolute; inset: 0; overflow: hidden; }
-    .web-view { width: 100%; height: 100%; overflow: hidden; background: #fff; }
-    .web-view iframe { display: block; border: 0; background: #fff; will-change: transform; }
+    .web-view { width: 100%; height: 100%; overflow: hidden; background: #fff; -webkit-overflow-scrolling: touch; }
+    .web-view iframe { display: block; position: absolute; top: 0; left: 0; border: 0; background: #fff; transform-origin: 0 0; will-change: transform; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+    .frame-spacer { pointer-events: none; }
 
     .bottom-toolbar {
       z-index: 70;
@@ -355,6 +360,22 @@
     .danger strong { color: var(--danger); }
     .footnote { padding: 0 13px; color: var(--muted); font-size: 12px; line-height: 1.5; }
 
+    /* ---- スライダー付き設定行（高さ・ズーム） ---- */
+    .range-row { padding: 11px 13px 13px; border-bottom: 1px solid var(--line); }
+    .range-row:last-child { border-bottom: 0; }
+    .range-head { display: flex; align-items: center; gap: 11px; }
+    .range-head .row-copy strong { font-size: 15px; }
+    .range-value { flex: 0 0 auto; color: var(--accent); font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; }
+    input[type="range"] { display: block; width: 100%; height: 30px; margin: 6px 0 0; padding: 0; background: transparent; -webkit-appearance: none; appearance: none; }
+    input[type="range"]:disabled { opacity: .4; }
+    input[type="range"]::-webkit-slider-runnable-track { height: 4px; border-radius: 999px; background: var(--field); }
+    input[type="range"]::-webkit-slider-thumb { width: 26px; height: 26px; margin-top: -11px; border: 0; border-radius: 50%; background: #fff; box-shadow: 0 1px 5px rgba(0,0,0,.32); -webkit-appearance: none; }
+    input[type="range"]::-moz-range-track { height: 4px; border-radius: 999px; background: var(--field); }
+    input[type="range"]::-moz-range-thumb { width: 24px; height: 24px; border: 0; border-radius: 50%; background: #fff; box-shadow: 0 1px 5px rgba(0,0,0,.32); }
+    .chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+    .chip { flex: 1 1 calc(25% - 5px); min-width: 0; height: 34px; border: 1px solid var(--line); border-radius: 9px; color: var(--accent); background: var(--raised); font-size: 13px; font-weight: 600; cursor: pointer; }
+    .chip:active { background: var(--field); }
+
     .history-header { display: grid; grid-template-columns: 1fr auto 1fr; height: 50px; align-items: center; margin-bottom: 16px; border-bottom: 1px solid var(--line); }
     .history-header h1 { margin: 0; font-size: 17px; }
     .history-header button { width: max-content; padding: 5px 0; border: 0; color: var(--accent); background: transparent; cursor: pointer; }
@@ -407,6 +428,15 @@
     .sheet-row { display: flex; min-height: 60px; align-items: center; gap: 10px; padding: 7px 10px; border-bottom: 1px solid var(--line); }
     .sheet-row:last-child { border-bottom: 0; }
     .sheet-row-main { display: flex; flex: 1; min-width: 0; align-items: center; gap: 10px; padding: 0; border: 0; color: var(--text); background: transparent; text-align: left; cursor: pointer; }
+    .sheet-row select { max-width: 150px; padding: 7px 5px; border: 0; outline: 0; color: var(--accent); background: transparent; font-size: 14px; text-align: right; }
+    .sheet-note { margin: 12px 2px 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+    .sheet-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; padding: 14px 0 4px; }
+    .primary-button, .secondary-button { height: 46px; border: 0; border-radius: 12px; font-size: 15px; font-weight: 650; cursor: pointer; }
+    .primary-button { color: #fff; background: var(--accent); }
+    .primary-button:active { filter: brightness(.94); }
+    .secondary-button { color: var(--accent); background: var(--field); }
+    .secondary-button:active { filter: brightness(.94); }
+    .json-area { width: 100%; height: 190px; margin-top: 12px; padding: 11px; border: 1px solid var(--line); border-radius: 12px; outline: 0; color: var(--text); background: var(--field); font-size: 16px; line-height: 1.45; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; resize: vertical; }
     .share-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 21px 0 7px; }
     .share-actions button { display: flex; flex-direction: column; align-items: center; gap: 7px; padding: 0; border: 0; color: var(--text); background: transparent; font-size: 11px; cursor: pointer; }
     .share-actions span { display: inline-flex; width: 55px; height: 55px; align-items: center; justify-content: center; border: 1px solid var(--line); border-radius: 14px; color: var(--accent); background: var(--raised); }
@@ -478,7 +508,15 @@
         proxyId: "direct",
         allowDownloads: false,
         blockPopups: true,
-        homeUrl: START_URL
+        homeUrl: START_URL,
+        /* ---- 拡大・表示 ---- */
+        zoomFit: true,        // サイトの横幅を画面に合わせる（再レイアウト）
+        pinchZoom: true,      // 二本指ピンチズーム
+        /* ---- PWA 位置調整（±0 基準の px オフセット） ---- */
+        heightOffset: 0,      // アプリ全体の高さ
+        contentOffsetY: 0,    // iframe(コンテンツ)の上下位置
+        /* ---- データ ---- */
+        importMode: "merge"   // merge | replace
       };
 
       const DEFAULT_BOOKMARKS = [
@@ -487,6 +525,14 @@
         { id: "wikipedia", title: "Wikipedia", url: "https://ja.wikipedia.org/" },
         { id: "bing", title: "Bing", url: "https://www.bing.com/" }
       ];
+
+      /* ---- ズーム / オフセットの範囲 ---- */
+      const ZOOM_MIN = 0.01;   // 1%
+      const ZOOM_MAX = 5;      // 500%
+      const OFFSET_MIN = -400;
+      const OFFSET_MAX = 400;
+      const FRAME_MAX_W = 3200; // 極端な縮小時に iframe が巨大化しすぎるのを防ぐ
+      const FRAME_MAX_H = 4000;
 
       const ICONS = {
         back: '<path d="m15 18-6-6 6-6"/><path d="M9 12h9"/>',
@@ -512,7 +558,8 @@
         download: '<path d="M12 3v12m-4-4 4 4 4-4M5 20h14"/>',
         external: '<path d="M14 4h6v6M13 11l7-7M19 13v7H4V5h7"/>',
         check: '<path d="m5 12 4 4L19 6"/>',
-        chevron: '<path d="m9 18 6-6-6-6"/>'
+        chevron: '<path d="m9 18 6-6-6-6"/>',
+        resize: '<path d="M4 9V4h5M20 15v5h-5M20 9V4h-5M4 15v5h5"/>'
       };
 
       function icon(name, size = 22, filled = false) {
@@ -523,6 +570,25 @@
       function esc(value) { return String(value ?? '').replace(/[&<>"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[char]); }
       function attr(value) { return esc(value).replace(/'/g, '&#39;'); }
       function encoded(value) { return encodeURIComponent(value); }
+
+      /* ---------- ズーム / オフセット ユーティリティ ---------- */
+      function clampZoom(value) {
+        let v = Number(value);
+        if (!isFinite(v) || v <= 0) v = 1;
+        return Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, Math.round(v * 100) / 100));
+      }
+      function clampOffset(value) {
+        let v = Number(value);
+        if (!isFinite(v)) v = 0;
+        return Math.max(OFFSET_MIN, Math.min(OFFSET_MAX, Math.round(v)));
+      }
+      function fmtOffset(value) {
+        const v = clampOffset(value);
+        if (v > 0) return '＋' + v + 'px';
+        if (v < 0) return '−' + Math.abs(v) + 'px';
+        return '±0px';
+      }
+      function zoomPercent(zoom) { return Math.round(clampZoom(zoom) * 100); }
 
       function pageTitle(url) {
         if (url === START_URL) return 'スタートページ';
@@ -562,11 +628,14 @@
         let saved = {};
         try { saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch (_) {}
         const tabs = Array.isArray(saved.tabs) && saved.tabs.length
-          ? saved.tabs.map(tab => ({ ...tab, zoom: tab.zoom || 1, reloadKey: 0 }))
+          ? saved.tabs.map(tab => ({ ...tab, zoom: clampZoom(tab.zoom || 1), reloadKey: 0 }))
           : [createTab()];
         const activeId = tabs.some(tab => tab.id === saved.activeId) ? saved.activeId : tabs[0].id;
+        const settings = { ...DEFAULT_SETTINGS, ...(saved.settings || {}) };
+        settings.heightOffset = clampOffset(settings.heightOffset);
+        settings.contentOffsetY = clampOffset(settings.contentOffsetY);
         return {
-          settings: { ...DEFAULT_SETTINGS, ...(saved.settings || {}) },
+          settings,
           bookmarks: Array.isArray(saved.bookmarks) ? saved.bookmarks : DEFAULT_BOOKMARKS,
           historyItems: Array.isArray(saved.historyItems) ? saved.historyItems : [],
           tabs,
@@ -575,13 +644,19 @@
           overlay: null,
           addressDraft: '',
           addressFocused: false,
-          loading: false
+          loading: false,
+          exportSections: { tabs: true, history: true, bookmarks: true, settings: true },
+          jsonText: '',
+          jsonTitle: 'JSON'
         };
       }
 
       const state = loadState();
       let progressTimer = 0;
       let toastTimer = 0;
+      let persistTimer = 0;
+      let pinchState = null;
+      let safariPinch = null;
       const app = document.getElementById('app');
 
       function activeTab() { return state.tabs.find(tab => tab.id === state.activeId) || state.tabs[0]; }
@@ -597,6 +672,102 @@
             activeId: state.activeId
           }));
         } catch (_) {}
+      }
+
+      function persistSoon() {
+        clearTimeout(persistTimer);
+        persistTimer = setTimeout(persist, 400);
+      }
+
+      /* ======================================================
+         iframe のレイアウト（拡大率 + 上下位置 + 横幅フィット）
+      ====================================================== */
+      function stageSize() {
+        const stage = document.getElementById('stage');
+        if (!stage) return { vw: 0, vh: 0 };
+        return { vw: Math.round(stage.clientWidth), vh: Math.round(stage.clientHeight) };
+      }
+
+      function layoutFrame(tab) {
+        if (!tab || INTERNAL_URLS.includes(tab.url)) return;
+        const container = document.querySelector('#stage [data-tab-id="' + tab.id + '"]');
+        if (!container) return;
+        const frame = container.querySelector('iframe');
+        if (!frame) return;
+
+        const { vw, vh } = stageSize();
+        if (vw < 1 || vh < 1) return;
+
+        const z = clampZoom(tab.zoom);
+        const offY = clampOffset(state.settings.contentOffsetY);
+        let availH = vh - offY;
+        if (availH < 40) availH = 40;
+
+        frame.style.transform = 'scale(' + z + ')';
+        frame.style.transformOrigin = '0 0';
+        frame.style.left = '0';
+        frame.style.top = offY + 'px';
+
+        if (state.settings.zoomFit) {
+          // レイアウト幅を「画面幅 ÷ 倍率」にして、拡大しても横幅が画面に収まるようにする
+          let layoutW = vw / z;
+          let layoutH = availH / z;
+          if (layoutW > FRAME_MAX_W) layoutW = FRAME_MAX_W;   // 1%付近での暴走防止
+          if (layoutH > FRAME_MAX_H) layoutH = FRAME_MAX_H;
+          frame.style.width = layoutW + 'px';
+          frame.style.height = layoutH + 'px';
+          container.style.overflow = 'hidden';
+          if (container._spacer) { container._spacer.remove(); container._spacer = null; }
+        } else {
+          // 画面幅は固定のまま拡大し、はみ出した分はスクロールできるようにする
+          frame.style.width = vw + 'px';
+          frame.style.height = availH + 'px';
+          let spacer = container._spacer;
+          if (!spacer) {
+            spacer = document.createElement('div');
+            spacer.className = 'frame-spacer';
+            container.appendChild(spacer);
+            container._spacer = spacer;
+          }
+          spacer.style.marginTop = Math.max(0, offY) + 'px';
+          spacer.style.width = Math.round(vw * z) + 'px';
+          spacer.style.height = Math.round(availH * z) + 'px';
+          container.style.overflow = 'auto';
+        }
+      }
+
+      function layoutAll() {
+        state.tabs.forEach(tab => layoutFrame(tab));
+      }
+
+      /* ======================================================
+         画面の高さ / コンテンツ位置（±0 基準の px）
+      ====================================================== */
+      function applyAppHeight() {
+        const off = clampOffset(state.settings.heightOffset);
+        state.settings.heightOffset = off;
+        document.documentElement.style.setProperty('--app-height', 'calc(100dvh + ' + off + 'px)');
+        document.documentElement.classList.toggle('allow-scroll', off > 0);
+      }
+
+      function setAppHeight(value) {
+        state.settings.heightOffset = clampOffset(value);
+        applyAppHeight();
+        const label = document.getElementById('heightRangeValue');
+        if (label) label.textContent = fmtOffset(state.settings.heightOffset);
+        const range = document.getElementById('heightRange');
+        if (range && String(range.value) !== String(state.settings.heightOffset)) range.value = state.settings.heightOffset;
+        persistSoon();
+      }
+
+      function setContentOffsetY(value) {
+        state.settings.contentOffsetY = clampOffset(value);
+        layoutAll();
+        const label = document.getElementById('contentRangeValue');
+        if (label) label.textContent = fmtOffset(state.settings.contentOffsetY);
+        const range = document.getElementById('contentRange');
+        if (range && String(range.value) !== String(state.settings.contentOffsetY)) range.value = state.settings.contentOffsetY;
+        persistSoon();
       }
 
       function startLoading() {
@@ -647,6 +818,7 @@
             <div id="overlayRoot"></div>
           </div>`;
         applyTheme();
+        applyAppHeight();
         renderChrome();
         renderStage();
       }
@@ -725,10 +897,10 @@
         state.tabs.forEach(tab => {
           let container = stage.querySelector(`[data-tab-id="${tab.id}"]`);
 
-          const needsRebuild = !container || 
-            container.dataset.url !== tab.url || 
+          // 倍率(zoom)は iframe を作り直さずレイアウトだけ更新する
+          const needsRebuild = !container ||
+            container.dataset.url !== tab.url ||
             parseInt(container.dataset.reloadKey || '0') !== tab.reloadKey ||
-            parseFloat(container.dataset.zoom || '1') !== tab.zoom ||
             container.dataset.proxyId !== state.settings.proxyId ||
             container.dataset.allowDownloads !== String(state.settings.allowDownloads) ||
             container.dataset.blockPopups !== String(state.settings.blockPopups);
@@ -742,7 +914,6 @@
             container.dataset.tabId = tab.id;
             container.dataset.url = tab.url;
             container.dataset.reloadKey = tab.reloadKey;
-            container.dataset.zoom = tab.zoom;
             container.dataset.proxyId = state.settings.proxyId;
             container.dataset.allowDownloads = String(state.settings.allowDownloads);
             container.dataset.blockPopups = String(state.settings.blockPopups);
@@ -769,7 +940,6 @@
                 state.settings.allowDownloads ? 'allow-downloads' : '',
                 state.settings.blockPopups ? '' : 'allow-popups allow-popups-to-escape-sandbox'
               ].filter(Boolean).join(' ');
-              const zoom = tab.zoom || 1;
               container.className = 'page web-view';
 
               const iframe = document.createElement('iframe');
@@ -778,10 +948,6 @@
               iframe.src = url;
               iframe.sandbox = sandbox;
               iframe.referrerPolicy = 'strict-origin-when-cross-origin';
-              iframe.style.width = (100 / zoom) + '%';
-              iframe.style.height = (100 / zoom) + '%';
-              iframe.style.transform = 'scale(' + zoom + ')';
-              iframe.style.transformOrigin = '0 0';
 
               if (tab.id === state.activeId) {
                 startLoading();
@@ -791,6 +957,7 @@
               container.appendChild(iframe);
             }
             stage.appendChild(container);
+            layoutFrame(tab);
           }
 
           // Toggle visibility of each tab container
@@ -799,6 +966,17 @@
         });
 
         persist();
+      }
+
+      /* 内部ページ（設定・履歴・スタート）だけを再描画する */
+      function refreshInternal(tab) {
+        tab = tab || activeTab();
+        if (!tab || tab.id !== state.activeId || !INTERNAL_URLS.includes(tab.url)) return;
+        const container = document.querySelector('#stage [data-tab-id="' + tab.id + '"]');
+        if (!container) return;
+        if (tab.url === START_URL) container.innerHTML = startPageMarkup();
+        else if (tab.url === SETTINGS_URL) container.innerHTML = settingsMarkup();
+        else if (tab.url === HISTORY_URL) container.innerHTML = historyMarkup();
       }
 
       function startPageMarkup() {
@@ -832,22 +1010,74 @@
         return `<div class="settings-row ${danger ? 'danger' : ''}"><span class="row-icon">${icon(iconName, 18)}</span><span class="row-copy"><strong>${title}</strong><small>${detail}</small></span>${control}</div>`;
       }
 
+      function switchButton(action, on, label) {
+        return '<button type="button" class="switch ' + (on ? 'on' : '') + '" data-action="' + action + '" aria-label="' + attr(label) + '"><span></span></button>';
+      }
+
+      function rangeRow(id, iconName, title, detail, min, max, step, value, display, disabled, chips) {
+        return `
+          <div class="range-row">
+            <div class="range-head">
+              <span class="row-icon">${icon(iconName, 18)}</span>
+              <span class="row-copy"><strong>${title}</strong><small>${detail}</small></span>
+              <span class="range-value" id="${id}Value">${display}</span>
+            </div>
+            <input type="range" id="${id}" min="${min}" max="${max}" step="${step}" value="${value}" ${disabled ? 'disabled' : ''} aria-label="${attr(title)}">
+            ${chips ? '<div class="chip-row">' + chips + '</div>' : ''}
+          </div>`;
+      }
+
+      function chip(label, action, payload) {
+        return '<button type="button" class="chip" data-action="' + action + '" data-step="' + attr(payload) + '">' + label + '</button>';
+      }
+
       function settingsMarkup() {
         const proxyOptions = PROXIES.map(proxy => '<option value="' + proxy.id + '" ' + (proxy.id === state.settings.proxyId ? 'selected' : '') + '>' + esc(proxy.name) + '</option>').join('');
+        const zoom = sliderZoom();
+        const pct = zoomPercent(zoom);
+        const heightOff = clampOffset(state.settings.heightOffset);
+        const contentOff = clampOffset(state.settings.contentOffsetY);
+
+        const zoomChips =
+          chip('−50', 'zoom-step', -50) + chip('−10', 'zoom-step', -10) + chip('−1', 'zoom-step', -1) +
+          '<button type="button" class="chip" data-action="zoom-set" data-step="100">100%</button>' +
+          chip('＋1', 'zoom-step', 1) + chip('＋10', 'zoom-step', 10) + chip('＋50', 'zoom-step', 50);
+
+        const heightChips =
+          chip('−50', 'height-step', -50) + chip('−10', 'height-step', -10) + chip('−1', 'height-step', -1) +
+          '<button type="button" class="chip" data-action="height-set" data-step="0">±0</button>' +
+          chip('＋1', 'height-step', 1) + chip('＋10', 'height-step', 10) + chip('＋50', 'height-step', 50);
+
+        const contentChips =
+          chip('−50', 'content-step', -50) + chip('−10', 'content-step', -10) + chip('−1', 'content-step', -1) +
+          '<button type="button" class="chip" data-action="content-set" data-step="0">±0</button>' +
+          chip('＋1', 'content-step', 1) + chip('＋10', 'content-step', 10) + chip('＋50', 'content-step', 50);
+
         return `
           <div class="internal-page">
             <div class="page-title"><span>I Browser</span><h1>設定</h1></div>
             <section class="settings-section"><h2>表示</h2><div class="settings-group">
-              ${settingRow('sun', '外観', state.settings.darkMode ? 'ダーク' : 'ライト', '<button type="button" class="switch ' + (state.settings.darkMode ? 'on' : '') + '" data-action="toggle-dark" aria-label="ダークモード"><span></span></button>')}
+              ${settingRow('sun', '外観', state.settings.darkMode ? 'ダーク' : 'ライト', switchButton('toggle-dark', state.settings.darkMode, 'ダークモード'))}
               ${settingRow('book', 'アドレスバーの位置', '移動するのは入力欄のみです', '<select id="addressPosition"><option value="bottom" ' + (state.settings.addressPosition === 'bottom' ? 'selected' : '') + '>下</option><option value="top" ' + (state.settings.addressPosition === 'top' ? 'selected' : '') + '>上</option></select>')}
             </div></section>
+            <section class="settings-section"><h2>拡大 / 表示</h2><div class="settings-group">
+              ${rangeRow('zoomRange', 'search', 'ズーム', 'すべてのサイトタブに適用（1〜500%）', 1, 500, 1, pct, pct + '%', false, zoomChips)}
+              ${settingRow('resize', '横幅を画面に合わせる', '拡大しても幅が画面に収まるよう再レイアウト', switchButton('toggle-zoomfit', state.settings.zoomFit, '横幅を画面に合わせる'))}
+              ${settingRow('plus', '二本指ズーム', 'ピンチで倍率を変更できます', switchButton('toggle-pinch', state.settings.pinchZoom, '二本指ズーム'))}
+            </div></section>
+            <section class="settings-section"><h2>画面の高さ・位置</h2><div class="settings-group">
+              ${rangeRow('heightRange', 'external', '画面の高さ', '±0 = 画面ぴったり', OFFSET_MIN, OFFSET_MAX, 1, heightOff, fmtOffset(heightOff), false, heightChips)}
+              ${rangeRow('contentRange', 'chevron', 'コンテンツの上下位置', 'ステータスバーで上部が欠けるときに＋', OFFSET_MIN, OFFSET_MAX, 1, contentOff, fmtOffset(contentOff), false, contentChips)}
+            </div></section>
+            <p class="footnote">±0 が基準です。<strong>＋</strong>で下へ（はみ出した分はスクロールできます）、<strong>−</strong>で上へ移動します。高さはPWAでツールバーが隠れる/余白ができるとき、コンテンツ位置は上部が欠けるときに調整してください。</p>
             <section class="settings-section"><h2>接続</h2><div class="settings-group">
               ${settingRow('globe', 'プロキシ', 'iframeの接続先', '<select id="proxySelect">' + proxyOptions + '</select>')}
-              ${settingRow('download', 'ダウンロードを許可', 'iframeの権限設定', '<button type="button" class="switch ' + (state.settings.allowDownloads ? 'on' : '') + '" data-action="toggle-downloads" aria-label="ダウンロードを許可"><span></span></button>')}
-              ${settingRow('external', 'ポップアップをブロック', '新しいウィンドウを制限', '<button type="button" class="switch ' + (state.settings.blockPopups ? 'on' : '') + '" data-action="toggle-popups" aria-label="ポップアップをブロック"><span></span></button>')}
+              ${settingRow('download', 'ダウンロードを許可', 'iframeの権限設定', switchButton('toggle-downloads', state.settings.allowDownloads, 'ダウンロードを許可'))}
+              ${settingRow('external', 'ポップアップをブロック', '新しいウィンドウを制限', switchButton('toggle-popups', state.settings.blockPopups, 'ポップアップをブロック'))}
             </div></section>
             <section class="settings-section"><h2>ブラウズデータ</h2><div class="settings-group">
               <button type="button" class="settings-row" data-action="open-history"><span class="row-icon">${icon('history', 18)}</span><span class="row-copy"><strong>履歴</strong><small>${state.historyItems.length}件の訪問履歴</small></span>${icon('chevron', 17)}</button>
+              <button type="button" class="settings-row" data-action="data-sheet"><span class="row-icon">${icon('copy', 18)}</span><span class="row-copy"><strong>インポート / エクスポート</strong><small>タブ・履歴・ブックマーク・設定</small></span>${icon('chevron', 17)}</button>
               <button type="button" class="settings-row danger" data-action="clear-history"><span class="row-icon">${icon('trash', 18)}</span><span class="row-copy"><strong>履歴を消去</strong><small>ブックマークは残ります</small></span></button>
             </div></section>
             <p class="footnote">一部のWebサイトはX-Frame-OptionsまたはContent-Security-Policyによりiframe内で表示できません。これはサイト側の制限です。</p>
@@ -913,20 +1143,56 @@
       }
 
       function setZoom(value) {
+        // 現在のタブだけを拡大（ページメニュー / ピンチ）
         const tab = activeTab();
         if (INTERNAL_URLS.includes(tab.url)) return;
-        tab.zoom = Math.min(2, Math.max(.5, Math.round(value * 10) / 10));
-        const container = document.querySelector(`#stage [data-tab-id="${tab.id}"]`);
-        if (container) {
-          container.dataset.zoom = tab.zoom;
-          const frame = container.querySelector('iframe');
-          if (frame) {
-            frame.style.width = (100 / tab.zoom) + '%';
-            frame.style.height = (100 / tab.zoom) + '%';
-            frame.style.transform = 'scale(' + tab.zoom + ')';
-          }
-        }
+        tab.zoom = clampZoom(value);
+        layoutFrame(tab);
+        syncZoomControls(tab.zoom);
         renderOverlay();
+        persistSoon();
+      }
+
+      function webTabs() {
+        return state.tabs.filter(tab => !INTERNAL_URLS.includes(tab.url));
+      }
+
+      function sliderZoom() {
+        const active = activeTab();
+        if (active && !INTERNAL_URLS.includes(active.url)) return clampZoom(active.zoom);
+        const list = webTabs();
+        return list.length ? clampZoom(list[list.length - 1].zoom) : 1;
+      }
+
+      function setZoomAll(value) {
+        // 設定画面のスライダーはすべてのサイトタブに適用する
+        const zoom = clampZoom(value);
+        let changed = false;
+        state.tabs.forEach(tab => {
+          if (INTERNAL_URLS.includes(tab.url)) return;
+          tab.zoom = zoom;
+          layoutFrame(tab);
+          changed = true;
+        });
+        if (!changed) { toast('サイトのタブがありません'); }
+        syncZoomControls(zoom);
+        persistSoon();
+      }
+
+      function syncZoomControls(zoom) {
+        const pct = zoomPercent(zoom);
+        const label = document.getElementById('zoomRangeValue');
+        if (label) label.textContent = pct + '%';
+        const range = document.getElementById('zoomRange');
+        if (range && String(range.value) !== String(pct)) range.value = pct;
+      }
+
+      function setAddressPosition(value) {
+        state.settings.addressPosition = value;
+        applyTheme();
+        renderChrome();
+        // レイアウトの高さが変わるので iframe を再計算する
+        requestAnimationFrame(layoutAll);
         persist();
       }
 
@@ -977,6 +1243,8 @@
         renderChrome();
         renderOverlay();
         renderStage();
+        refreshInternal(activeTab());
+        requestAnimationFrame(() => layoutFrame(activeTab()));
       }
 
       function renderOverlay() {
@@ -988,6 +1256,8 @@
         if (state.overlay === 'bookmarks') root.innerHTML = bookmarksMarkup();
         if (state.overlay === 'share') root.innerHTML = shareMarkup();
         if (state.overlay === 'tabs') root.innerHTML = tabsMarkup();
+        if (state.overlay === 'data') root.innerHTML = dataSheetMarkup();
+        if (state.overlay === 'json') root.innerHTML = jsonSheetMarkup();
       }
 
       function pageMenuMarkup() {
@@ -999,11 +1269,11 @@
           <div class="overlay ${locationClass}" data-action="close-overlay">
             <div class="popover" data-panel>
               <div class="zoom-control">
-                <button type="button" data-action="zoom-out" ${internal || tab.zoom <= .5 ? 'disabled' : ''} aria-label="縮小"><b style="font-size:14px">A</b> ${icon('minus', 11)}</button>
-                <button type="button" class="zoom-value" data-action="zoom-reset" ${internal ? 'disabled' : ''}>${Math.round(tab.zoom * 100)}%</button>
-                <button type="button" data-action="zoom-in" ${internal || tab.zoom >= 2 ? 'disabled' : ''} aria-label="拡大"><b style="font-size:20px">A</b> ${icon('plus', 11)}</button>
+                <button type="button" data-action="zoom-out" ${internal || tab.zoom <= ZOOM_MIN ? 'disabled' : ''} aria-label="縮小"><b style="font-size:14px">A</b> ${icon('minus', 11)}</button>
+                <button type="button" class="zoom-value" data-action="zoom-reset" ${internal ? 'disabled' : ''}>${zoomPercent(tab.zoom)}%</button>
+                <button type="button" data-action="zoom-in" ${internal || tab.zoom >= ZOOM_MAX ? 'disabled' : ''} aria-label="拡大"><b style="font-size:20px">A</b> ${icon('plus', 11)}</button>
               </div>
-              <p class="zoom-hint">iframeページを50%から200%まで拡大できます</p>
+              <p class="zoom-hint">iframeページを1%から500%まで拡大できます</p>
               <div class="separator"></div>
               <button type="button" class="menu-button" data-action="reload" ${internal ? 'disabled' : ''}>${icon('reload',18)}再読み込み</button>
               <button type="button" class="menu-button" data-action="toggle-bookmark" ${internal ? 'disabled' : ''}>${icon('star',18,bookmarked)}${bookmarked ? 'ブックマークを削除' : 'ブックマークに追加'}</button>
@@ -1053,6 +1323,320 @@
             <div class="tab-grid">${cards}</div>
             <footer class="tabs-foot"><button type="button" data-action="private">${icon('eyeoff',21)}<span>${state.privateMode ? 'プライベート' : '通常'}</span></button><button type="button" data-action="new-tab">${icon('plus',28)}<span>新しいタブ</span></button><button type="button" data-action="close-overlay">${icon('check',22)}<span>完了</span></button></footer>
           </div>`;
+      }
+
+      /* ======================================================
+         インポート / エクスポート
+      ====================================================== */
+      function dataSheetMarkup() {
+        const s = state.exportSections;
+        const row = (key, label) => `
+          <div class="sheet-row">
+            <span class="row-copy"><strong>${label}</strong></span>
+            <button type="button" class="switch ${s[key] ? 'on' : ''}" data-action="toggle-export" data-key="${key}" aria-label="${attr(label)}"><span></span></button>
+          </div>`;
+        return `
+          <div class="overlay" data-action="close-overlay"><div class="sheet" data-panel>
+            <span class="sheet-handle"></span>
+            <div class="sheet-head"><h2>インポート / エクスポート</h2><button type="button" data-action="close-overlay">完了</button></div>
+            <p class="sheet-note">書き出す項目を選んでください（チェックした項目だけ保存します）。</p>
+            <div class="sheet-list">
+              ${row('tabs', '開いているタブ')}
+              ${row('history', '履歴')}
+              ${row('bookmarks', 'ブックマーク')}
+              ${row('settings', '設定（表示・接続・位置など）')}
+            </div>
+            <div class="sheet-actions">
+              <button type="button" class="primary-button" data-action="export-file">エクスポート</button>
+              <button type="button" class="secondary-button" data-action="export-show">JSONを表示</button>
+            </div>
+            <div class="separator"></div>
+            <div class="sheet-list">
+              <div class="sheet-row">
+                <span class="row-copy"><strong>インポート時の動作</strong><small>既存データの扱い</small></span>
+                <select id="importMode">
+                  <option value="merge" ${state.settings.importMode === 'merge' ? 'selected' : ''}>追加（マージ）</option>
+                  <option value="replace" ${state.settings.importMode === 'replace' ? 'selected' : ''}>置き換え</option>
+                </select>
+              </div>
+            </div>
+            <div class="sheet-actions">
+              <button type="button" class="primary-button" data-action="import-pick">ファイルからインポート</button>
+              <button type="button" class="secondary-button" data-action="import-paste">JSONを貼り付け</button>
+            </div>
+            <p class="sheet-note">「ファイルからインポート」が使えない環境では「JSONを貼り付け」にコピー内容を貼り付けてください。</p>
+          </div></div>`;
+      }
+
+      function jsonSheetMarkup() {
+        return `
+          <div class="overlay" data-action="close-overlay"><div class="sheet" data-panel>
+            <span class="sheet-handle"></span>
+            <div class="sheet-head"><h2>${esc(state.jsonTitle || 'JSON')}</h2><button type="button" data-action="close-overlay">完了</button></div>
+            <textarea id="jsonArea" class="json-area" spellcheck="false" placeholder="ここにJSONを貼り付けてください">${esc(state.jsonText || '')}</textarea>
+            <div class="sheet-actions">
+              <button type="button" class="secondary-button" data-action="json-copy">コピー</button>
+              <button type="button" class="primary-button" data-action="json-import">インポート</button>
+            </div>
+          </div></div>`;
+      }
+
+      function exportObject(sections, kind) {
+        const data = {};
+        if (sections.tabs) {
+          data.tabs = state.tabs.map(tab => ({
+            url: tab.url, title: tab.title, history: tab.history,
+            historyIndex: tab.historyIndex, zoom: tab.zoom, active: tab.id === state.activeId
+          }));
+        }
+        if (sections.history) data.history = state.historyItems;
+        if (sections.bookmarks) data.bookmarks = state.bookmarks;
+        if (sections.settings) data.settings = { ...state.settings };
+        return {
+          app: 'IBrowser',
+          kind: kind || 'partial',
+          version: 1,
+          exportedAt: new Date().toISOString(),
+          data
+        };
+      }
+
+      function stamp() {
+        const d = new Date();
+        const p = n => String(n).padStart(2, '0');
+        return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}`;
+      }
+
+      function downloadText(text, filename) {
+        try {
+          const blob = new Blob([text], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename;
+          a.style.display = 'none';
+          document.body.appendChild(a);
+          a.click();
+          setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 3000);
+        } catch (_) {
+          state.jsonTitle = 'エクスポートJSON（コピー用）';
+          state.jsonText = text;
+          state.overlay = 'json';
+          renderOverlay();
+          toast('ダウンロードできないためJSONを表示しました');
+        }
+      }
+
+      function anySection() {
+        const s = state.exportSections;
+        if (!s.tabs && !s.history && !s.bookmarks && !s.settings) {
+          toast('エクスポートする項目を選んでください');
+          return false;
+        }
+        return true;
+      }
+
+      function exportSelected() {
+        if (!anySection()) return;
+        downloadText(JSON.stringify(exportObject(state.exportSections), null, 2), 'ibrowser-data-' + stamp() + '.json');
+      }
+
+      function showSelectedJSON() {
+        if (!anySection()) return;
+        state.jsonTitle = 'エクスポートJSON（コピー用）';
+        state.jsonText = JSON.stringify(exportObject(state.exportSections), null, 2);
+        state.overlay = 'json';
+        renderOverlay();
+      }
+
+      function uniqueBy(list, keyFn) {
+        const seen = new Set();
+        const out = [];
+        list.forEach(item => {
+          const key = keyFn(item);
+          if (!seen.has(key)) { seen.add(key); out.push(item); }
+        });
+        return out;
+      }
+
+      function applyImport(data, mode) {
+        const replace = mode === 'replace';
+        const done = [];
+
+        if (data.settings && typeof data.settings === 'object') {
+          state.settings = { ...state.settings, ...data.settings };
+          state.settings.heightOffset = clampOffset(state.settings.heightOffset);
+          state.settings.contentOffsetY = clampOffset(state.settings.contentOffsetY);
+          done.push('設定');
+        }
+
+        if (Array.isArray(data.bookmarks)) {
+          const list = data.bookmarks.filter(b => b && b.url).map(b => ({
+            id: b.id || uid(), title: b.title || displayUrl(b.url) || b.url, url: b.url
+          }));
+          state.bookmarks = replace ? list : uniqueBy([...state.bookmarks, ...list], b => b.url);
+          done.push('ブックマーク ' + list.length + '件');
+        }
+
+        if (Array.isArray(data.history)) {
+          const list = data.history.filter(h => h && h.url).map(h => ({
+            id: h.id || uid(), title: h.title || displayUrl(h.url) || h.url, url: h.url, visitedAt: h.visitedAt || Date.now()
+          }));
+          let merged = replace ? list : uniqueBy([...state.historyItems, ...list], h => h.url + '@' + h.visitedAt);
+          merged.sort((a, b) => (b.visitedAt || 0) - (a.visitedAt || 0));
+          state.historyItems = merged.slice(0, 200);
+          done.push('履歴 ' + list.length + '件');
+        }
+
+        if (Array.isArray(data.tabs)) {
+          const list = data.tabs.filter(t => t && t.url);
+          if (replace) { state.tabs = []; state.activeId = null; }
+          let targetId = null;
+          list.forEach(item => {
+            const url = normalizeAddress(item.url);
+            if (!replace && state.tabs.some(t => t.url === url)) return;
+            const tab = {
+              id: uid(),
+              url,
+              title: item.title || pageTitle(url),
+              history: Array.isArray(item.history) && item.history.length ? item.history : [url],
+              historyIndex: item.historyIndex || 0,
+              zoom: clampZoom(item.zoom || 1),
+              reloadKey: 0
+            };
+            state.tabs.push(tab);
+            if (item.active && !targetId) targetId = tab.id;
+          });
+          if (!state.tabs.length) state.tabs = [createTab()];
+          if (targetId) state.activeId = targetId;
+          else if (!state.tabs.some(t => t.id === state.activeId)) state.activeId = state.tabs[state.tabs.length - 1].id;
+          done.push('タブ ' + list.length + '件');
+        }
+
+        applyTheme();
+        applyAppHeight();
+        renderChrome();
+        renderOverlay();
+        renderStage();
+        layoutAll();
+        persist();
+        refreshInternal(activeTab());
+        return done;
+      }
+
+      function importFromText(text) {
+        let obj;
+        try { obj = JSON.parse(text); }
+        catch (_) { toast('JSONの形式が不正です'); return false; }
+        if (!obj || typeof obj !== 'object' || Array.isArray(obj)) { toast('対応していないJSONです'); return false; }
+
+        const data = obj.data || obj;
+        const mode = state.settings.importMode === 'replace' ? 'replace' : 'merge';
+        const modeLabel = mode === 'replace' ? '置き換え' : '追加（マージ）';
+        const parts = [];
+        if (data.settings) parts.push('設定');
+        if (Array.isArray(data.bookmarks)) parts.push('ブックマーク ' + data.bookmarks.length + '件');
+        if (Array.isArray(data.history)) parts.push('履歴 ' + data.history.length + '件');
+        if (Array.isArray(data.tabs)) parts.push('タブ ' + data.tabs.length + '件');
+        if (!parts.length) { toast('インポートできるデータがありません'); return false; }
+
+        if (!confirm('次のデータを「' + modeLabel + '」でインポートします。\n\n・' + parts.join('\n・'))) return false;
+
+        const done = applyImport(data, mode);
+        toast('インポートしました（' + done.join(' / ') + '）');
+        return true;
+      }
+
+      function pickImportFile() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json,application/json';
+        input.style.display = 'none';
+        input.addEventListener('change', () => {
+          const file = input.files && input.files[0];
+          input.remove();
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = () => importFromText(String(reader.result || ''));
+          reader.onerror = () => toast('ファイルを読み込めませんでした');
+          reader.readAsText(file);
+        });
+        document.body.appendChild(input);
+        input.click();
+      }
+
+      function copyJsonSheet() {
+        const area = document.getElementById('jsonArea');
+        if (!area || !area.value) { toast('コピーする内容がありません'); return; }
+        area.focus();
+        area.select();
+        let copied = false;
+        try { copied = document.execCommand('copy'); } catch (_) { copied = false; }
+        if (copied) { toast('コピーしました'); return; }
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(area.value)
+            .then(() => toast('コピーしました'))
+            .catch(() => toast('コピーできませんでした。手動で選択してください'));
+        } else {
+          toast('コピーできませんでした。手動で選択してください');
+        }
+      }
+
+      function importJsonSheet() {
+        const area = document.getElementById('jsonArea');
+        const text = area ? area.value.trim() : '';
+        if (!text) { toast('JSONが空です'); return; }
+        if (importFromText(text)) { state.overlay = null; renderOverlay(); }
+      }
+
+      /* ---- 二本指ピンチズーム ---- */
+      function touchDistance(t1, t2) {
+        return Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY) || 1;
+      }
+
+      function canCustomZoom() {
+        return !!(state.settings.pinchZoom && !INTERNAL_URLS.includes(activeTab().url));
+      }
+
+      function initGestures() {
+        document.addEventListener('touchstart', event => {
+          if (event.touches && event.touches.length === 2 && canCustomZoom()) {
+            pinchState = { distance: touchDistance(event.touches[0], event.touches[1]), zoom: activeTab().zoom };
+          } else {
+            pinchState = null;
+          }
+        }, { passive: true });
+
+        document.addEventListener('touchmove', event => {
+          if (!pinchState || !event.touches || event.touches.length !== 2) return;
+          const distance = touchDistance(event.touches[0], event.touches[1]);
+          setZoom(pinchState.zoom * (distance / pinchState.distance));
+          if (event.cancelable) event.preventDefault();
+        }, { passive: false });
+
+        document.addEventListener('touchend', () => { if (pinchState) persist(); pinchState = null; }, { passive: true });
+        document.addEventListener('touchcancel', () => { if (pinchState) persist(); pinchState = null; }, { passive: true });
+
+        document.addEventListener('gesturestart', event => {
+          if (!canCustomZoom()) return;
+          safariPinch = { zoom: activeTab().zoom, scale: event.scale || 1 };
+          event.preventDefault();
+        });
+        document.addEventListener('gesturechange', event => {
+          if (!safariPinch) return;
+          setZoom(safariPinch.zoom * ((event.scale || 1) / safariPinch.scale));
+          event.preventDefault();
+        });
+        document.addEventListener('gestureend', () => { if (safariPinch) persist(); safariPinch = null; });
+
+        window.addEventListener('wheel', event => {
+          if (!event.ctrlKey || !canCustomZoom()) return;
+          event.preventDefault();
+          setZoom(activeTab().zoom * (event.deltaY < 0 ? 1.12 : 1 / 1.12));
+        }, { passive: false });
+
+        window.addEventListener('resize', () => { layoutAll(); });
+        window.addEventListener('orientationchange', () => { setTimeout(layoutAll, 250); });
       }
 
       function renderSuggestions(value) {
@@ -1131,22 +1715,27 @@
       });
 
       document.addEventListener('input', event => {
-        if (event.target.id !== 'addressInput') return;
-        state.addressDraft = event.target.value;
-        renderSuggestions(event.target.value);
+        if (event.target.id === 'addressInput') {
+          state.addressDraft = event.target.value;
+          renderSuggestions(event.target.value);
+        }
+        if (event.target.id === 'zoomRange') setZoomAll(Number(event.target.value) / 100);
+        if (event.target.id === 'heightRange') setAppHeight(Number(event.target.value));
+        if (event.target.id === 'contentRange') setContentOffsetY(Number(event.target.value));
       });
 
       document.addEventListener('change', event => {
         if (event.target.id === 'addressPosition') {
-          state.settings.addressPosition = event.target.value;
-          applyTheme();
-          renderChrome();
-          persist();
+          setAddressPosition(event.target.value);
         }
         if (event.target.id === 'proxySelect') {
           state.settings.proxyId = event.target.value;
           persist();
           toast('接続方法を変更しました');
+        }
+        if (event.target.id === 'importMode') {
+          state.settings.importMode = event.target.value;
+          persist();
         }
       });
 
@@ -1167,9 +1756,29 @@
         if (action === 'close-overlay') { state.overlay = null; renderChrome(); renderOverlay(); }
         if (action === 'navigate') navigate(decodeURIComponent(button.dataset.url || ''));
         if (action === 'focus-address') { const input = document.getElementById('addressInput'); input && input.focus(); }
-        if (action === 'zoom-out') setZoom(activeTab().zoom - .1);
-        if (action === 'zoom-in') setZoom(activeTab().zoom + .1);
+        if (action === 'zoom-out') setZoom(activeTab().zoom / 1.2);
+        if (action === 'zoom-in') setZoom(activeTab().zoom * 1.2);
         if (action === 'zoom-reset') setZoom(1);
+        if (action === 'zoom-step') setZoomAll(sliderZoom() + Number(button.dataset.step) / 100);
+        if (action === 'zoom-set') setZoomAll(Number(button.dataset.step) / 100);
+        if (action === 'height-step') setAppHeight(clampOffset(state.settings.heightOffset) + Number(button.dataset.step));
+        if (action === 'height-set') setAppHeight(Number(button.dataset.step));
+        if (action === 'content-step') setContentOffsetY(clampOffset(state.settings.contentOffsetY) + Number(button.dataset.step));
+        if (action === 'content-set') setContentOffsetY(Number(button.dataset.step));
+        if (action === 'toggle-zoomfit') { state.settings.zoomFit = !state.settings.zoomFit; layoutAll(); refreshInternal(activeTab()); persist(); }
+        if (action === 'toggle-pinch') { state.settings.pinchZoom = !state.settings.pinchZoom; refreshInternal(activeTab()); persist(); }
+        if (action === 'data-sheet') { state.overlay = 'data'; renderOverlay(); }
+        if (action === 'toggle-export') {
+          const key = button.dataset.key;
+          if (key) state.exportSections[key] = !state.exportSections[key];
+          renderOverlay();
+        }
+        if (action === 'export-file') exportSelected();
+        if (action === 'export-show') showSelectedJSON();
+        if (action === 'import-pick') pickImportFile();
+        if (action === 'import-paste') { state.jsonTitle = 'JSONを貼り付けてインポート'; state.jsonText = ''; state.overlay = 'json'; renderOverlay(); }
+        if (action === 'json-copy') copyJsonSheet();
+        if (action === 'json-import') importJsonSheet();
         if (action === 'toggle-bookmark') toggleBookmark();
         if (action === 'start') navigate(START_URL);
         if (action === 'settings') navigate(SETTINGS_URL);
@@ -1178,13 +1787,13 @@
           state.settings.darkMode = !state.settings.darkMode;
           state.overlay = null;
           applyTheme(); renderChrome(); renderOverlay();
-          if (activeTab().url === SETTINGS_URL) renderStage();
+          refreshInternal(activeTab());
           persist();
         }
-        if (action === 'toggle-downloads') { state.settings.allowDownloads = !state.settings.allowDownloads; renderStage(); persist(); }
-        if (action === 'toggle-popups') { state.settings.blockPopups = !state.settings.blockPopups; renderStage(); persist(); }
-        if (action === 'clear-history') { state.historyItems = []; renderStage(); persist(); toast('履歴を消去しました'); }
-        if (action === 'delete-history') { state.historyItems = state.historyItems.filter(item => item.id !== button.dataset.id); renderStage(); persist(); }
+        if (action === 'toggle-downloads') { state.settings.allowDownloads = !state.settings.allowDownloads; renderStage(); refreshInternal(activeTab()); persist(); }
+        if (action === 'toggle-popups') { state.settings.blockPopups = !state.settings.blockPopups; renderStage(); refreshInternal(activeTab()); persist(); }
+        if (action === 'clear-history') { state.historyItems = []; renderStage(); refreshInternal(activeTab()); persist(); toast('履歴を消去しました'); }
+        if (action === 'delete-history') { state.historyItems = state.historyItems.filter(item => item.id !== button.dataset.id); renderStage(); refreshInternal(activeTab()); persist(); }
         if (action === 'delete-bookmark') { state.bookmarks = state.bookmarks.filter(item => item.id !== button.dataset.id); renderOverlay(); persist(); }
         if (action === 'copy-url') copyCurrentUrl();
         if (action === 'duplicate-tab') addTab(activeTab().url);
@@ -1195,10 +1804,11 @@
           state.privateMode = !state.privateMode;
           applyTheme();
           renderOverlay();
-          if (activeTab().url === START_URL) renderStage();
+          if (activeTab().url === START_URL) refreshInternal(activeTab());
         }
       });
 
+      initGestures();
       shell();
     })();
   </script>
