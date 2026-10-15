@@ -23,7 +23,7 @@
             --safe-area-bottom: env(safe-area-inset-bottom, 0px);
             --safe-area-top: env(safe-area-inset-top, 0px);
         }
-        body.dark-mode {
+        body.dark-mode, html.dark-mode {
             --bg-color: #1c1b22;
             --toolbar-bg: #2b2a33;
             --text-color: #fbfbfe;
@@ -33,6 +33,7 @@
             --tab-card-bg: #42414d;
         }
         * { box-sizing: border-box; }
+        html { background: var(--bg-color); }
         body {
             margin: 0;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -776,14 +777,26 @@ const DEFAULT_SETTINGS = () => ({
     zoom: 100,        // 拡大率 1〜500 (%)
     zoomFit: true,    // サイトの横幅を画面に合わせる
     pinchZoom: true,  // 二本指ズームを使う
-    appHeight: 100    // アプリ全体の高さ (%) PWA調整用
+    heightOffset: 0,  // アプリ全体の高さの増減 (px, ±0 = 画面ぴったり) PWA調整用
+    contentOffsetY: 0 // iframe(コンテンツ)の上下位置 (px) PWA・ノッチ対策
 });
 
 let settings = DEFAULT_SETTINGS();
 
 function loadSettings() {
     const saved = localStorage.getItem(pk('settings'));
-    settings = saved ? { ...DEFAULT_SETTINGS(), ...JSON.parse(saved) } : DEFAULT_SETTINGS();
+    let raw = null;
+    try { raw = saved ? JSON.parse(saved) : null; } catch(e) { raw = null; }
+    settings = { ...DEFAULT_SETTINGS(), ...(raw || {}) };
+    // 旧バージョンの「アプリの高さ(%)」から px オフセットへ移行
+    if (raw && raw.heightOffset === undefined && raw.appHeight !== undefined) {
+        const legacy = Number(raw.appHeight);
+        settings.heightOffset = (isFinite(legacy) && legacy !== 100)
+            ? Math.round((legacy - 100) / 100 * (window.innerHeight || 800))
+            : 0;
+    }
+    settings.heightOffset = clampOffset(settings.heightOffset);
+    delete settings.appHeight;
 }
 
 let saveTimer = null;
@@ -915,21 +928,24 @@ function applyZoomTo(tab, vw, vh) {
     const wrap = tab.element;
     const frame = tab.frame;
     const z = clampZoom(settings.zoom) / 100;
+    const offY = clampOffset(settings.contentOffsetY);
+    let availH = vh - offY;
+    if (availH < 40) availH = 40;
 
     frame.style.transformOrigin = '0 0';
     frame.style.transform = 'scale(' + z + ')';
     frame.style.position = 'absolute';
     frame.style.left = '0';
-    frame.style.top = '0';
+    frame.style.top = offY + 'px';
 
     if (settings.zoomFit) {
         if (wrap._spacer) wrap._spacer.style.display = 'none';
         frame.style.width  = (vw / z) + 'px';
-        frame.style.height = (vh / z) + 'px';
+        frame.style.height = (availH / z) + 'px';
         wrap.style.overflow = 'hidden';
     } else {
         frame.style.width  = vw + 'px';
-        frame.style.height = vh + 'px';
+        frame.style.height = availH + 'px';
         let sp = wrap._spacer;
         if (!sp) {
             sp = document.createElement('div');
@@ -938,8 +954,9 @@ function applyZoomTo(tab, vw, vh) {
             wrap._spacer = sp;
         }
         sp.style.display = 'block';
+        sp.style.marginTop = Math.max(0, offY) + 'px';
         sp.style.width  = Math.round(vw * z) + 'px';
-        sp.style.height = Math.round(vh * z) + 'px';
+        sp.style.height = Math.round(availH * z) + 'px';
         wrap.style.overflow = 'auto';
     }
 }
@@ -978,21 +995,55 @@ function updateZoomUI() {
     if (fit) fit.classList.toggle('off', !settings.zoomFit);
 }
 
+/* ---- 画面の高さ（±0 基準の px オフセット） ---- */
+const OFFSET_MIN = -400;
+const OFFSET_MAX = 400;
+
+function clampOffset(v) {
+    v = Number(v);
+    if (!isFinite(v)) v = 0;
+    return Math.max(OFFSET_MIN, Math.min(OFFSET_MAX, Math.round(v)));
+}
+
+function fmtOffset(v) {
+    v = clampOffset(v);
+    if (v > 0) return '＋' + v + 'px';
+    if (v < 0) return '−' + Math.abs(v) + 'px';
+    return '±0px';
+}
+
 function applyAppHeight() {
-    const h = Math.max(50, Math.min(100, Math.round(Number(settings.appHeight) || 100)));
-    settings.appHeight = h;
-    document.documentElement.style.setProperty('--app-height', h + 'vh');
+    const off = clampOffset(settings.heightOffset);
+    settings.heightOffset = off;
+    document.documentElement.style.setProperty('--app-height', 'calc(100vh + ' + off + 'px)');
 }
 
 function setAppHeight(v) {
-    settings.appHeight = Math.max(50, Math.min(100, Math.round(Number(v) || 100)));
+    settings.heightOffset = clampOffset(v);
     applyAppHeight();
     const lbl = document.getElementById('set-height-label');
-    if (lbl) lbl.textContent = settings.appHeight + '%';
+    if (lbl) lbl.textContent = fmtOffset(settings.heightOffset);
     const rng = document.getElementById('set-height');
-    if (rng && String(rng.value) !== String(settings.appHeight)) rng.value = settings.appHeight;
+    if (rng && String(rng.value) !== String(settings.heightOffset)) rng.value = settings.heightOffset;
     saveSoon();
 }
+
+function heightStep(delta) { setAppHeight(clampOffset(settings.heightOffset) + delta); }
+
+/* ---- iframe(コンテンツ)の上下位置 ---- */
+function setContentOffsetY(v) {
+    settings.contentOffsetY = clampOffset(v);
+    applyZoom();
+    const lbl = document.getElementById('set-content-y-label');
+    if (lbl) lbl.textContent = fmtOffset(settings.contentOffsetY);
+    const rng = document.getElementById('set-content-y');
+    if (rng && String(rng.value) !== String(settings.contentOffsetY)) rng.value = settings.contentOffsetY;
+    saveSoon();
+}
+
+function contentYStep(delta) { setContentOffsetY(clampOffset(settings.contentOffsetY) + delta); }
+
+function resetContentOffsetY() { setContentOffsetY(0); }
 
 /* ---- 二本指ピンチズーム ---- */
 let pinchState = null;
@@ -1507,7 +1558,8 @@ function renderSettingsInto(container) {
           </div>`).join('');
 
     const zoom = clampZoom(settings.zoom);
-    const appH = Math.max(50, Math.min(100, Math.round(Number(settings.appHeight) || 100)));
+    const off  = clampOffset(settings.heightOffset);
+    const offY = clampOffset(settings.contentOffsetY);
 
     const zoomCard = `
         <div class="card">
@@ -1541,20 +1593,44 @@ function renderSettingsInto(container) {
 
     const heightCard = `
         <div class="card">
-            <h3>📐 画面の高さ（PWA調整）</h3>
+            <h3>📐 画面の高さ（±0 基準）</h3>
             <div class="range-row">
-                <span class="range-bound">50%</span>
-                <input type="range" id="set-height" min="50" max="100" step="1" value="${appH}" oninput="setAppHeight(this.value)">
-                <span class="range-bound">100%</span>
+                <span class="range-bound">−400px</span>
+                <input type="range" id="set-height" min="-400" max="400" step="1" value="${off}" oninput="setAppHeight(this.value)">
+                <span class="range-bound">＋400px</span>
             </div>
-            <div class="range-value" id="set-height-label">${appH}%</div>
+            <div class="range-value" id="set-height-label">${fmtOffset(off)}</div>
             <div class="preset-group">
-                <button class="btn" onclick="setAppHeight(85)">85%</button>
-                <button class="btn" onclick="setAppHeight(90)">90%</button>
-                <button class="btn" onclick="setAppHeight(95)">95%</button>
-                <button class="btn" onclick="setAppHeight(100)">100%</button>
+                <button class="btn" onclick="heightStep(-50)">−50</button>
+                <button class="btn" onclick="heightStep(-10)">−10</button>
+                <button class="btn" onclick="heightStep(-1)">−1</button>
+                <button class="btn" onclick="setAppHeight(0)">±0</button>
+                <button class="btn" onclick="heightStep(1)">＋1</button>
+                <button class="btn" onclick="heightStep(10)">＋10</button>
+                <button class="btn" onclick="heightStep(50)">＋50</button>
             </div>
-            <p class="hint">ホーム画面に追加したPWAで下のツールバーが画面外に隠れるときは、この値を小さくすると全体が収まります。</p>
+            <p class="hint">±0 で画面ぴったり。<b>＋</b>で全体が下に伸びて（はみ出した分はスクロールできます）、<b>−</b>で下に余白ができて全体が上に縮みます。PWAでツールバーが隠れる／余白ができるときに調整してください。</p>
+        </div>`;
+
+    const offsetCard = `
+        <div class="card">
+            <h3>📏 コンテンツ（iframe）の上下位置</h3>
+            <div class="range-row">
+                <span class="range-bound">−400px</span>
+                <input type="range" id="set-content-y" min="-400" max="400" step="1" value="${offY}" oninput="setContentOffsetY(this.value)">
+                <span class="range-bound">＋400px</span>
+            </div>
+            <div class="range-value" id="set-content-y-label">${fmtOffset(offY)}</div>
+            <div class="preset-group">
+                <button class="btn" onclick="contentYStep(-50)">−50</button>
+                <button class="btn" onclick="contentYStep(-10)">−10</button>
+                <button class="btn" onclick="contentYStep(-1)">−1</button>
+                <button class="btn" onclick="setContentOffsetY(0)">±0</button>
+                <button class="btn" onclick="contentYStep(1)">＋1</button>
+                <button class="btn" onclick="contentYStep(10)">＋10</button>
+                <button class="btn" onclick="contentYStep(50)">＋50</button>
+            </div>
+            <p class="hint"><b>＋</b>でiframeを下へ移動します（ステータスバーやノッチで上部が欠けるときに調整）。下端に合わせて高さも自動調整するので、内容が隠れずにスクロールできます。<b>−</b>で上へ移動します。</p>
         </div>`;
 
     const ioCard = `
@@ -1605,6 +1681,7 @@ function renderSettingsInto(container) {
         <div class="card"><h3>★ ブックマーク管理</h3>${bmsHtml}</div>
         ${zoomCard}
         ${heightCard}
+        ${offsetCard}
         ${ioCard}
         <div class="card">
             <h3>🏠 ホーム設定</h3>
@@ -1890,7 +1967,7 @@ function applyPartialImport(d, mode) {
     }
 
     saveState();
-    document.body.classList.toggle('dark-mode', !!settings.darkMode);
+    setDarkMode(settings.darkMode);
     document.body.classList.remove('toolbar-top', 'toolbar-bottom');
     document.body.classList.add('toolbar-' + (settings.toolbarPos || 'bottom'));
     applyAppHeight();
@@ -1987,11 +2064,17 @@ function toggleMenu() {
 }
 
 function toggleDarkMode() {
-    settings.darkMode = !settings.darkMode;
-    document.body.classList.toggle('dark-mode');
+    setDarkMode(!settings.darkMode);
     saveState();
     const sp = document.querySelector('.settings-page');
     if (sp) renderSettingsInto(sp);
+}
+
+/* body と html の両方にダークモードを反映する（画面外の背景色のため） */
+function setDarkMode(on) {
+    settings.darkMode = !!on;
+    document.body.classList.toggle('dark-mode', !!on);
+    document.documentElement.classList.toggle('dark-mode', !!on);
 }
 
 /* ======================================================
@@ -2029,7 +2112,7 @@ document.addEventListener('click', e => {
 ====================================================== */
 function initProfile() {
     loadSettings();
-    document.body.classList.toggle('dark-mode', !!settings.darkMode);
+    setDarkMode(settings.darkMode);
     applyAppHeight();
 
     const savedTabs = localStorage.getItem(pk('sessions'));
