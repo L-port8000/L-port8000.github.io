@@ -387,6 +387,21 @@
     </div>
 </div>
 
+<!-- JSON 表示・貼り付けモーダル -->
+<div id="json-modal" class="modal-overlay">
+    <div class="modal-box" style="max-width:560px;">
+        <h3 id="json-modal-title">JSON</h3>
+        <textarea id="json-modal-text" spellcheck="false" style="width:100%;height:210px;font-family:monospace;font-size:16px;line-height:1.4;border-radius:8px;border:1px solid var(--border-color);background:var(--bg-color);color:var(--text-color);padding:8px;resize:vertical;"></textarea>
+        <div class="modal-btns" style="justify-content:space-between;flex-wrap:wrap;gap:6px;">
+            <button class="btn" onclick="copyJSONModal()">📋 コピー</button>
+            <div style="display:flex;gap:6px;">
+                <button class="btn" onclick="importFromModal()">📥 インポート</button>
+                <button class="btn modal-ok" onclick="closeJSONModal()">閉じる</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- タブスイッチャー -->
 <div id="tab-switcher">
     <div id="tab-switcher-header">
@@ -741,7 +756,8 @@ let profiles = loadProfiles();
 let activeProfileId = getActiveProfileId();
 if (!profiles.find(p => p.id === activeProfileId)) { activeProfileId = profiles[0].id; setActiveProfileId(activeProfileId); }
 
-function pk(key) { return `mobile-p${activeProfileId}-${key}`; }
+function pkFor(id, key) { return `mobile-p${id}-${key}`; }
+function pk(key) { return pkFor(activeProfileId, key); }
 
 const DEFAULT_SETTINGS = () => ({
     homeUrl: "newtab://",
@@ -1541,6 +1557,44 @@ function renderSettingsInto(container) {
             <p class="hint">ホーム画面に追加したPWAで下のツールバーが画面外に隠れるときは、この値を小さくすると全体が収まります。</p>
         </div>`;
 
+    const ioCard = `
+        <div class="card">
+            <h3>📦 インポート / エクスポート</h3>
+            <p class="hint" style="margin-top:0;">エクスポートする項目を選んでください（チェックした項目だけ書き出します）。</p>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;margin-bottom:8px;">
+                <input type="checkbox" id="ex-tabs" checked> 開いているタブ
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;margin-bottom:8px;">
+                <input type="checkbox" id="ex-history" checked> 履歴
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;margin-bottom:8px;">
+                <input type="checkbox" id="ex-bookmarks" checked> ブックマーク
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;margin-bottom:8px;">
+                <input type="checkbox" id="ex-settings" checked> 設定（ホーム・ズーム・プロキシなど）
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;">
+                <input type="checkbox" id="ex-profiles"> プロファイル（他のプロファイルのデータも含む）
+            </label>
+            <div class="preset-group" style="margin-top:14px;">
+                <button class="btn" onclick="exportSelected()">📤 選択項目をエクスポート</button>
+                <button class="btn" onclick="showSelectedJSON()">📋 JSONを表示</button>
+                <button class="btn" onclick="exportBackup()">💾 全部バックアップ</button>
+            </div>
+            <hr style="border:none;border-top:1px solid var(--border-color);margin:16px 0;">
+            <label style="font-size:14px;font-weight:bold;">インポート時の動作</label>
+            <select id="import-mode" style="margin-top:8px;">
+                <option value="merge">追加（既存データにマージ）</option>
+                <option value="replace">置き換え（既存データを削除）</option>
+            </select>
+            <div class="preset-group" style="margin-top:8px;">
+                <button class="btn" onclick="document.getElementById('import-file').click()">📥 ファイルからインポート</button>
+                <button class="btn" onclick="openJSONModal('JSONを貼り付けてインポート','')">📥 JSONを貼り付け</button>
+            </div>
+            <input type="file" id="import-file" accept=".json,application/json" style="display:none" onchange="handleImportFile(this)">
+            <p class="hint">「ファイルからインポート」で開けない場合は「JSONを貼り付け」にコピー内容を貼り付けてください。プロファイルを含むファイルは、確認後に全データを復元して再読み込みします。</p>
+        </div>`;
+
     container.innerHTML = `
         <h2 style="margin-top:0;">⚙️ 設定</h2>
         <div class="card">
@@ -1551,6 +1605,7 @@ function renderSettingsInto(container) {
         <div class="card"><h3>★ ブックマーク管理</h3>${bmsHtml}</div>
         ${zoomCard}
         ${heightCard}
+        ${ioCard}
         <div class="card">
             <h3>🏠 ホーム設定</h3>
             <input type="text" id="set-home" value="${esc(settings.homeUrl)}">
@@ -1634,6 +1689,294 @@ window.toggleProxy = (id) => {
     const sp = document.querySelector('.settings-page');
     if (sp) renderSettingsInto(sp);
 };
+
+/* ======================================================
+   インポート / エクスポート
+====================================================== */
+function stamp() {
+    const d = new Date();
+    const p = n => String(n).padStart(2, '0');
+    return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}`;
+}
+
+function readJSON(key, fallback) {
+    try {
+        const v = JSON.parse(localStorage.getItem(key));
+        return (v === null || v === undefined) ? fallback : v;
+    } catch(e) { return fallback; }
+}
+
+function serializeTabs() {
+    return tabs.map(t => ({
+        id: t.id, url: t.url, title: t.title,
+        history: t.history, historyIndex: t.historyIndex,
+        active: t.id === activeTabId
+    }));
+}
+
+/* すべてのプロファイルの保存データを集める（現在のプロファイルはメモリ上の最新値を使う） */
+function collectProfileData() {
+    const out = {};
+    profiles.forEach(p => {
+        if (p.id === activeProfileId) {
+            out[p.id] = {
+                settings: JSON.parse(JSON.stringify(settings)),
+                tabs: serializeTabs(),
+                lastActive: activeTabId
+            };
+        } else {
+            out[p.id] = {
+                settings: readJSON(pkFor(p.id, 'settings'), {}),
+                tabs: readJSON(pkFor(p.id, 'sessions'), []),
+                lastActive: readJSON(pkFor(p.id, 'last-active'), null)
+            };
+        }
+    });
+    return out;
+}
+
+function collectExportSections() {
+    const el = id => document.getElementById(id);
+    return {
+        tabs:      !!(el('ex-tabs')      && el('ex-tabs').checked),
+        history:   !!(el('ex-history')   && el('ex-history').checked),
+        bookmarks: !!(el('ex-bookmarks') && el('ex-bookmarks').checked),
+        settings:  !!(el('ex-settings')  && el('ex-settings').checked),
+        profiles:  !!(el('ex-profiles')  && el('ex-profiles').checked)
+    };
+}
+
+function buildExport(sections, kind) {
+    sections = sections || collectExportSections();
+    const any = sections.tabs || sections.history || sections.bookmarks || sections.settings || sections.profiles;
+    if (!any) return null;
+    const obj = {
+        app: "IBrowser",
+        kind: kind || "partial",
+        version: 1,
+        exportedAt: new Date().toISOString(),
+        profile: (profiles.find(p => p.id === activeProfileId) || {}).name || "",
+        data: {}
+    };
+    if (sections.tabs)      obj.data.tabs = serializeTabs();
+    if (sections.history)   obj.data.history = settings.history || [];
+    if (sections.bookmarks) obj.data.bookmarks = settings.bookmarks || [];
+    if (sections.settings) {
+        const { history, bookmarks, ...rest } = settings;  // 履歴/ブックマークは専用項目で書き出す
+        obj.data.settings = rest;
+    }
+    if (sections.profiles) {
+        obj.activeProfileId = activeProfileId;
+        obj.data.profiles = profiles.map(p => ({ id: p.id, name: p.name }));
+        obj.data.profilesData = collectProfileData();
+    }
+    return obj;
+}
+
+function allSections() {
+    return { tabs: true, history: true, bookmarks: true, settings: true, profiles: true };
+}
+
+function downloadText(text, filename) {
+    try {
+        const blob = new Blob([text], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 3000);
+    } catch(e) {
+        alert('ダウンロードに失敗しました。「JSONを表示」からコピーして保存してください。\n' + e.message);
+        openJSONModal('エクスポートJSON（コピー用）', text);
+    }
+}
+
+function exportSelected() {
+    const obj = buildExport();
+    if (!obj) { alert('エクスポートする項目を1つ以上選択してください'); return; }
+    downloadText(JSON.stringify(obj, null, 2), 'ibrowser-data-' + stamp() + '.json');
+}
+
+function showSelectedJSON() {
+    const obj = buildExport();
+    if (!obj) { alert('エクスポートする項目を1つ以上選択してください'); return; }
+    openJSONModal('エクスポートJSON（コピー用）', JSON.stringify(obj, null, 2));
+}
+
+function exportBackup() {
+    const obj = buildExport(allSections(), 'backup');
+    downloadText(JSON.stringify(obj, null, 2), 'ibrowser-backup-' + stamp() + '.json');
+}
+
+/* ---- 復元 ---- */
+function applyProfiles(d, mode, activeId) {
+    const replace = mode === 'replace';
+    const imported = (d.profiles || []).map(p => ({ id: p.id, name: String(p.name || 'プロファイル') })).filter(p => p.id != null);
+    if (replace) profiles = imported.slice();
+    else imported.forEach(p => { if (!profiles.some(x => String(x.id) === String(p.id))) profiles.push(p); });
+    if (!profiles.length) profiles = [{ id: 1, name: 'デフォルト' }];
+    if (!profiles.some(p => String(p.id) === String(activeProfileId))) {
+        activeProfileId = profiles[0].id;
+        setActiveProfileId(activeProfileId);
+    }
+    saveProfiles();
+
+    const pdata = d.profilesData || {};
+    imported.forEach(p => {
+        const pd = pdata[p.id] || pdata[String(p.id)];
+        if (!pd) return;
+        if (pd.settings) localStorage.setItem(pkFor(p.id, 'settings'), JSON.stringify(pd.settings));
+        if (pd.tabs) localStorage.setItem(pkFor(p.id, 'sessions'), JSON.stringify(pd.tabs));
+        if (pd.lastActive != null) localStorage.setItem(pkFor(p.id, 'last-active'), JSON.stringify(pd.lastActive));
+    });
+    if (activeId != null && profiles.some(p => String(p.id) === String(activeId))) setActiveProfileId(activeId);
+}
+
+function mergeList(current, incoming, keyFn) {
+    const seen = new Set((current || []).map(keyFn));
+    const out = (current || []).slice();
+    (incoming || []).forEach(item => {
+        const k = keyFn(item);
+        if (!seen.has(k)) { seen.add(k); out.push(item); }
+    });
+    return out;
+}
+
+function applyPartialImport(d, mode) {
+    const replace = (mode === 'replace');
+    const done = [];
+
+    if (d.settings && typeof d.settings === 'object') {
+        const { history, bookmarks, ...rest } = d.settings;
+        settings = { ...settings, ...rest };
+        done.push('設定');
+    }
+
+    if (Array.isArray(d.bookmarks)) {
+        const bms = d.bookmarks.filter(b => b && b.url);
+        settings.bookmarks = replace ? bms.slice() : mergeList(settings.bookmarks, bms, b => b.url);
+        done.push('ブックマーク ' + bms.length + '件');
+    }
+
+    if (Array.isArray(d.history)) {
+        const hs = d.history.filter(h => h && h.url);
+        let list = replace ? hs.slice() : mergeList(settings.history, hs, h => h.url + '@' + h.time);
+        list.sort((a, b) => (b.time || 0) - (a.time || 0));
+        settings.history = list.slice(0, 500);
+        done.push('履歴 ' + hs.length + '件');
+    }
+
+    if (Array.isArray(d.tabs)) {
+        const list = d.tabs.filter(t => t && t.url);
+        if (replace) {
+            tabs.slice().forEach(t => { if (t.element) t.element.remove(); });
+            tabs = []; activeTabId = null;
+        }
+        const base = Date.now();
+        let targetId = null;
+        list.forEach((t, i) => {
+            if (!replace && tabs.some(x => x.url === t.url)) return;
+            const id = base + i;
+            const created = createTabObject(t.url, id, t.title || t.url, t.history, t.historyIndex || 0);
+            if (t.active && targetId === null) targetId = created.id;
+        });
+        if (!tabs.some(t => t.id === activeTabId)) {
+            switchTab(targetId != null ? targetId : tabs[tabs.length - 1].id);
+        }
+        done.push('タブ ' + list.length + '件');
+    }
+
+    saveState();
+    document.body.classList.toggle('dark-mode', !!settings.darkMode);
+    document.body.classList.remove('toolbar-top', 'toolbar-bottom');
+    document.body.classList.add('toolbar-' + (settings.toolbarPos || 'bottom'));
+    applyAppHeight();
+    renderBookmarkBar();
+    applyZoom();
+    updateZoomUI();
+    const sp = document.querySelector('.settings-page');
+    if (sp) renderSettingsInto(sp);
+    if (document.getElementById('tab-switcher').classList.contains('active')) renderTabGrid();
+    return done;
+}
+
+function importFromText(text) {
+    let obj;
+    try { obj = JSON.parse(text); }
+    catch(e) { alert('JSONの形式が不正です'); return false; }
+    if (!obj || typeof obj !== 'object' || Array.isArray(obj)) { alert('対応していないJSONです'); return false; }
+
+    const d = obj.data || obj;
+    const modeEl = document.getElementById('import-mode');
+    const mode = (modeEl && modeEl.value === 'replace') ? 'replace' : 'merge';
+    const modeLabel = mode === 'replace' ? '置き換え' : '追加（マージ）';
+
+    // プロファイルを含む（全バックアップ）→ 全体を復元して再読み込み
+    if (Array.isArray(d.profiles) && d.profiles.length) {
+        const names = d.profiles.map(p => p.name).join(' / ');
+        if (!confirm(`プロファイルを含むバックアップを復元します。\n\nプロファイル: ${names}\n件数: ${d.profiles.length}\n動作: ${modeLabel}\n\n現在のデータが上書きされます。よろしいですか？`)) return false;
+        applyProfiles(d, mode, obj.activeProfileId);
+        alert('復元しました。再読み込みします。');
+        location.reload();
+        return true;
+    }
+
+    // 通常の部分インポート
+    const parts = [];
+    if (d.settings) parts.push('設定');
+    if (Array.isArray(d.bookmarks)) parts.push('ブックマーク ' + d.bookmarks.length + '件');
+    if (Array.isArray(d.history)) parts.push('履歴 ' + d.history.length + '件');
+    if (Array.isArray(d.tabs)) parts.push('タブ ' + d.tabs.length + '件');
+    if (!parts.length) { alert('インポートできるデータが見つかりませんでした'); return false; }
+
+    if (!confirm(`次のデータを「${modeLabel}」でインポートします。\n\n・${parts.join('\n・')}`)) return false;
+
+    const done = applyPartialImport(d, mode);
+    alert('インポートしました。\n\n・' + done.join('\n・'));
+    return true;
+}
+
+function handleImportFile(input) {
+    const file = input.files && input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => { importFromText(String(reader.result || '')); input.value = ''; };
+    reader.onerror = () => { alert('ファイルを読み込めませんでした'); input.value = ''; };
+    reader.readAsText(file);
+}
+
+/* ---- JSON モーダル ---- */
+function openJSONModal(title, text) {
+    document.getElementById('json-modal-title').textContent = title;
+    document.getElementById('json-modal-text').value = text;
+    document.getElementById('json-modal').classList.add('open');
+}
+function closeJSONModal() { document.getElementById('json-modal').classList.remove('open'); }
+
+function copyJSONModal() {
+    const ta = document.getElementById('json-modal-text');
+    if (!ta.value) { alert('コピーする内容がありません'); return; }
+    ta.focus(); ta.select();
+    let ok = false;
+    try { ok = document.execCommand('copy'); } catch(e) { ok = false; }
+    if (ok) { alert('コピーしました'); return; }
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(ta.value)
+            .then(() => alert('コピーしました'))
+            .catch(() => alert('コピーできませんでした。手動で選択してコピーしてください。'));
+    } else {
+        alert('コピーできませんでした。手動で選択してコピーしてください。');
+    }
+}
+
+function importFromModal() {
+    const text = document.getElementById('json-modal-text').value.trim();
+    if (!text) { alert('JSONが空です'); return; }
+    if (importFromText(text)) closeJSONModal();
+}
 
 /* ======================================================
    メニュー
