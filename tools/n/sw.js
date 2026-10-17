@@ -1,15 +1,5 @@
 "use strict";
 
-/**
- * E2EE Chat — Service Worker（プッシュ通知専用・単体で完結。importScriptsなし）
- *
- * index.html と同じフォルダに置くと、アプリを閉じていてもプッシュ通知が届くようになる。
- * 置かなくてもチャット本体は動く（その場合、通知はアプリを開いている間だけ）。
- *
- * サーバから届くpushペイロード: { kind, roomId, from, fromDisplayName, iv, ciphertext, ts }
- *   - ciphertext はルーム鍵(AES-GCM)で暗号化されたまま。サーバは中身を知らない。
- *   - 「通知に内容を表示する」がONで、この端末にルーム鍵があるときだけ、ここで復号して本文を出す。
- */
 
 const DB_NAME = "e2ee-chat";
 // アイコン画像（無ければブラウザ既定のアイコンになるだけで、通知自体は出る）
@@ -52,6 +42,11 @@ function base64ToBuf(b64) {
   const bytes = new Uint8Array(bin.length);
   for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
   return bytes.buffer;
+}
+function urlBase64ToUint8Array(b64url) {
+  const padding = "=".repeat((4 - (b64url.length % 4)) % 4);
+  const raw = atob((b64url + padding).replace(/-/g, "+").replace(/_/g, "/"));
+  return Uint8Array.from(raw, (c) => c.charCodeAt(0));
 }
 async function decryptJson(rawKeyB64, ivB64, ciphertextB64) {
   const key = await crypto.subtle.importKey("raw", base64ToBuf(rawKeyB64), { name: "AES-GCM" }, false, ["decrypt"]);
@@ -174,8 +169,19 @@ self.addEventListener("pushsubscriptionchange", (event) => {
       const db = await openDb();
       const session = await idbGet(db, "identity", "session");
       if (!session?.token || !session?.apiBase) return;
-      const options = event.oldSubscription?.options;
-      const sub = await self.registration.pushManager.subscribe(options || { userVisibleOnly: true });
+      // サーバの「今の」VAPID公開鍵があればそれで張り直す（サーバ側で鍵が作り直されていても食い違わない）。
+      // 取得できなければ、以前の購読と同じ鍵を使う。
+      let applicationServerKey = event.oldSubscription?.options?.applicationServerKey;
+      try {
+        const res = await fetch(`${session.apiBase}/push/vapid-public-key`);
+        if (res.ok) {
+          const { publicKey } = await res.json();
+          if (publicKey) applicationServerKey = urlBase64ToUint8Array(publicKey);
+        }
+      } catch {}
+      const options = { userVisibleOnly: true };
+      if (applicationServerKey) options.applicationServerKey = applicationServerKey;
+      const sub = await self.registration.pushManager.subscribe(options);
       await fetch(`${session.apiBase}/push/subscribe`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.token}` },
