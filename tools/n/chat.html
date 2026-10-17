@@ -667,6 +667,37 @@ body.kbd-open { --safe-bottom: 0px; }
 .edit-indicator button { background: none; border: none; color: var(--overlay1); font-size: 12px; cursor: pointer; padding: 4px 8px; font-family: inherit; }
 .edit-indicator button:hover { color: var(--text); }
 
+/* ---------- 返信（引用） ---------- */
+
+.reply-indicator { align-items: center; }
+.reply-indicator .reply-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.reply-indicator .reply-label { font-size: 11px; letter-spacing: 0.08em; color: var(--accent); }
+.reply-indicator .reply-text { font-size: 12px; color: var(--subtext0); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.msg-reply-quote {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin: 0 0 6px;
+  padding: 5px 10px;
+  border-left: 2px solid var(--accent-border);
+  background: rgba(255, 255, 255, 0.045);
+  border-radius: 7px;
+  font-size: 12px;
+  line-height: 1.45;
+  cursor: pointer;
+  max-width: 100%;
+}
+.msg-reply-quote:hover { background: rgba(255, 255, 255, 0.08); }
+.msg-reply-quote .msg-reply-name { color: var(--accent-dim); font-weight: 600; letter-spacing: 0.02em; }
+.msg-reply-quote .msg-reply-text { color: var(--subtext0); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.msg-row.msg-flash .msg-bubble { box-shadow: 0 0 0 2px var(--accent-border); }
+
+/* ---------- 既読（自分が送ったメッセージだけ） ---------- */
+
+.msg-read { margin-left: 6px; }
+.msg-read.all { color: var(--accent-dim); }
+
 /* ---------- 入力欄（送信ボタンとまったく同じ高さ・同じ下端に揃える） ----------
    1行のときの高さは --composer-h ひとつで決める。入力欄も送信ボタンも同じ値を使い、
    さらに「1行に収まっている間は入力欄の height をインライン指定しない（＝CSSの値のまま）」ので、
@@ -1223,6 +1254,18 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
       </div>
 
       <div class="sheet-section">
+        <h2 class="sheet-section-title">既読</h2>
+        <p class="muted">自分が送ったメッセージに、相手が読んだかどうかを表示します（この端末だけの設定です。相手の画面の表示は変わりません）。</p>
+        <label class="toggle-row">
+          <span class="btn-with-icon" style="justify-content:flex-start;">
+            <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 12.5 7.5 17 15.5 7"/><polyline points="12 15 21 7"/></svg>
+            <span>既読を表示する</span>
+          </span>
+          <input type="checkbox" id="checkbox-show-read" checked>
+        </label>
+      </div>
+
+      <div class="sheet-section">
         <h2 class="sheet-section-title">パスフレーズ</h2>
         <p class="muted">別の端末やブラウザからこのアカウントに戻るための16単語です。</p>
         <button id="btn-reveal-passphrase" class="btn-secondary btn-with-icon">
@@ -1346,6 +1389,13 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
           <span>メッセージを編集中</span>
           <button id="btn-cancel-edit" type="button">キャンセル</button>
         </div>
+        <div id="reply-indicator" class="edit-indicator reply-indicator hidden">
+          <div class="reply-body">
+            <span class="reply-label">返信</span>
+            <span id="reply-indicator-text" class="reply-text"></span>
+          </div>
+          <button id="btn-cancel-reply" type="button">キャンセル</button>
+        </div>
         <form id="composer" class="composer">
           <textarea id="input-message" rows="1" placeholder="メッセージを入力…" autocomplete="off" enterkeyhint="enter" disabled></textarea>
           <button type="submit" id="btn-send" class="composer-send" disabled>送信</button>
@@ -1423,6 +1473,10 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
     <div class="sheet">
       <div class="sheet-handle"></div>
       <div id="message-reaction-bar" class="reaction-bar hidden"></div>
+      <button id="btn-message-reply" class="sheet-item">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 7 4 12 9 17"/><path d="M4 12h9a6 6 0 0 1 6 6v1"/></svg>
+        <span>返信</span>
+      </button>
       <button id="btn-message-copy" class="sheet-item">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>
         <span>コピー</span>
@@ -1945,7 +1999,15 @@ const api = {
   unsubscribePush: (token, endpoint) => apiFetch("/push/unsubscribe", { method: "POST", token, body: { endpoint } }),
   setProfile: (token, avatarUrl) => apiFetch("/me/profile", { method: "POST", token, body: { avatarUrl } }),
   setRoomAvatar: (token, roomId, avatarUrl) => apiFetch(`/groups/${roomId}/avatar`, { method: "POST", token, body: { avatarUrl } }),
+  readStatus: (token, roomId, ids) => apiFetch(`/rooms/${roomId}/reads`, { method: "POST", token, body: { ids } }),
 };
+
+// ===== 既読表示の設定（この端末だけ） =====
+
+const READ_SETTING_KEY = "e2ee_chat_show_read";
+function showReadEnabled() {
+  try { return localStorage.getItem(READ_SETTING_KEY) !== "0"; } catch { return true; }
+}
 
 // ===== アプリケーション状態 =====
 
@@ -1969,6 +2031,9 @@ const state = {
   restoredRoomKeys: {}, // パスフレーズ復元で戻したグループ鍵 { roomId: base64 }
   editing: null, // { roomId, messageId } | null
   actionTarget: null, // { roomId, messageId } | null（メッセージ操作シート用）
+  reply: null, // { roomId, messageId, from, name, excerpt } | null（返信先）
+  showRead: showReadEnabled(), // 自分が送ったメッセージの既読を表示するか
+  readAt: 0, // 既読状況を最後に問い合わせた時刻（連打を避ける）
 };
 
 // ===== 永続化ヘルパ =====
@@ -2074,7 +2139,7 @@ async function hydrateRoomFromRecord(record) {
 
   await pruneOldMessages(record.roomId);
   const storedMessages = await idbGetMessagesForRoom(record.roomId);
-  room.messages = storedMessages.sort((a, b) => a.ts - b.ts).map((m) => ({ id: m.id, fromUserId: m.fromUserId, displayName: m.displayName, text: m.text, ts: m.ts, verified: m.verified, deleted: m.deleted, edited: m.edited, system: m.system, warn: m.warn, reactions: m.reactions ?? {} }));
+  room.messages = storedMessages.sort((a, b) => a.ts - b.ts).map((m) => ({ id: m.id, fromUserId: m.fromUserId, displayName: m.displayName, text: m.text, ts: m.ts, verified: m.verified, deleted: m.deleted, edited: m.edited, system: m.system, warn: m.warn, reactions: m.reactions ?? {}, replyTo: sanitizeReplyTo(m.replyTo) || undefined, readBy: Array.isArray(m.readBy) ? m.readBy : undefined, readAll: m.readAll || undefined, readUnknown: m.readUnknown || undefined }));
 
   return room;
 }
@@ -2347,7 +2412,7 @@ async function wipeLocalDataAndReload() {
   await teardownPush();
   localStorage.removeItem("e2ee_chat_session");
 
-  try { localStorage.removeItem(NOTIFY_BODY_KEY); localStorage.removeItem(AVATAR_KEY); localStorage.removeItem(AVATAR_SHARED_KEY); localStorage.removeItem(PUSH_REG_KEY); } catch {}
+  try { localStorage.removeItem(NOTIFY_BODY_KEY); localStorage.removeItem(AVATAR_KEY); localStorage.removeItem(AVATAR_SHARED_KEY); localStorage.removeItem(PUSH_REG_KEY); localStorage.removeItem(READ_SETTING_KEY); } catch {}
 
   await new Promise((resolve) => {
     const req = indexedDB.deleteDatabase(DB_NAME);
@@ -2723,7 +2788,9 @@ function openRoom(roomId) {
   renderChatList();
   resetUnreadBadge();
   closeRoomNotifications(roomId);
+  renderReplyIndicator();
   noteActivity();
+  refreshReadStatuses(room);
 }
 
 function updateRoomHeaderAndMembers(roomId) {
@@ -2854,6 +2921,7 @@ function buildMessageRow(m, hideSender = false) {
   const time = formatMessageTime(m.ts);
   const reactionsHtml = reactionChipsHtml(m);
   const editedTag = m.edited ? '<span class="msg-edited-tag">(編集済み)</span>' : "";
+  const readTag = readStatusHtml(m);
   const canAct = mine && (!m.status || m.status === "sent");
   const actions = canAct ? '<button class="msg-act" data-act="edit">編集</button><button class="msg-act danger" data-act="delete">削除</button>' : "";
   let status = "";
@@ -2862,13 +2930,15 @@ function buildMessageRow(m, hideSender = false) {
   else if (m.status === "failed") status = `<span class="msg-status failed">${icon("warning", "icon")}送信失敗</span><button class="msg-retry" data-act="retry">再送信</button><button class="msg-retry discard" data-act="discard">取り消し</button>`;
   row.innerHTML = `
     ${mine || hideSender ? "" : `<div class="msg-sender">${senderAvatarHtml(m)}${escapeHtml(m.displayName)}</div>`}
-    <div class="msg-bubble${m.verified ? "" : " unverified"}">${escapeHtml(m.text)}</div>
-    <div class="msg-meta">${m.verified ? "" : icon("warning", "icon icon-inline icon-warn")}${time}${m.verified ? "" : " ・ 署名検証失敗"}${editedTag}${status ? " ・ " + status : ""}${actions}</div>
+    <div class="msg-bubble${m.verified ? "" : " unverified"}">${replyQuoteHtml(m.replyTo)}${escapeHtml(m.text)}</div>
+    <div class="msg-meta">${m.verified ? "" : icon("warning", "icon icon-inline icon-warn")}${time}${m.verified ? "" : " ・ 署名検証失敗"}${editedTag}${status ? " ・ " + status : ""}${readTag}${actions}</div>
     ${reactionsHtml}
   `;
   row.querySelectorAll(".reaction-chip").forEach((chip) => {
     chip.addEventListener("click", (e) => { e.stopPropagation(); toggleReaction(m.id, chip.dataset.emoji); });
   });
+  const quote = row.querySelector(".msg-reply-quote");
+  if (quote) quote.addEventListener("click", (e) => { e.stopPropagation(); jumpToMessage(quote.dataset.replyTo); });
   if (!m.status || m.status === "sent") {
     row.addEventListener("click", () => {
       if (window.getSelection()?.toString()) return; // 文字選択（コピー）中は開かない
@@ -3023,6 +3093,7 @@ function openMessageActionsSheet(messageId) {
   const mine = m.fromUserId === state.userId;
   const live = !m.deleted;
   const show = (id, on) => document.getElementById(id).classList.toggle("hidden", !on);
+  show("btn-message-reply", live && !m.system && !!room.roomKey);
   show("btn-message-copy", live);
   show("btn-message-edit", mine && live && !!room.roomKey);
   show("btn-message-delete", mine && live && !!room.roomKey);
@@ -3084,10 +3155,167 @@ function openEmojiPicker(m) {
   openSheet("sheet-emoji-picker");
 }
 
+// ===== 返信（特定のメッセージへの引用返信） =====
+// 返信先の本文は「送信時点の抜粋」として一緒に暗号化して配るので、元のメッセージが消えていても引用は残る。
+
+/** 受け取った（または古い）返信情報を安全な形に整える。 */
+function sanitizeReplyTo(r) {
+  if (!r || typeof r !== "object") return null;
+  const id = typeof r.id === "string" ? r.id.slice(0, 64) : "";
+  if (!id) return null;
+  return {
+    id,
+    from: typeof r.from === "string" ? r.from.slice(0, 64) : "",
+    name: typeof r.name === "string" ? r.name.slice(0, 80) : "",
+    excerpt: typeof r.excerpt === "string" ? r.excerpt.slice(0, 160) : "",
+  };
+}
+
+function replyQuoteHtml(replyTo) {
+  const r = sanitizeReplyTo(replyTo);
+  if (!r) return "";
+  const name = r.from === state.userId ? "あなた" : r.name || "メッセージ";
+  return `<div class="msg-reply-quote" data-reply-to="${escapeHtml(r.id)}" title="元のメッセージへ"><span class="msg-reply-name">${escapeHtml(name)}</span><span class="msg-reply-text">${escapeHtml(r.excerpt)}</span></div>`;
+}
+
+/** 引用をタップしたとき、元のメッセージまでスクロールして一時的に強調する。 */
+function jumpToMessage(messageId) {
+  if (!messageId) return;
+  const listEl = document.getElementById("message-list");
+  const target = listEl && listEl.querySelector(`[data-message-id="${CSS.escape(messageId)}"]`);
+  if (!target) { showToast("元のメッセージはこの端末に残っていません"); return; }
+  target.scrollIntoView({ block: "center", behavior: "smooth" });
+  target.classList.add("msg-flash");
+  setTimeout(() => target.classList.remove("msg-flash"), 1400);
+}
+
+/** 操作シートの「返信」から呼ばれる。編集中なら解除する（同時には使わない）。 */
+function startReplyTo(messageId) {
+  const room = state.rooms.get(state.openRoomId);
+  const m = room && findMessage(room, messageId);
+  if (!room || !m || m.deleted || m.system || !room.roomKey) return;
+  if (state.editing) cancelEdit();
+  const excerpt = String(m.text || "").replace(/\s+/g, " ").trim().slice(0, 160);
+  state.reply = {
+    roomId: room.roomId,
+    messageId: m.id,
+    from: m.fromUserId,
+    name: m.fromUserId === state.userId ? state.displayName : (room.members.get(m.fromUserId)?.displayName || m.displayName || ""),
+    excerpt,
+  };
+  renderReplyIndicator();
+  const input = document.getElementById("input-message");
+  if (!input.disabled) input.focus();
+}
+
+function cancelReply() {
+  state.reply = null;
+  renderReplyIndicator();
+}
+
+function renderReplyIndicator() {
+  const el = document.getElementById("reply-indicator");
+  if (!el) return;
+  const r = state.reply;
+  const on = !!(r && r.roomId === state.openRoomId);
+  el.classList.toggle("hidden", !on);
+  if (on) {
+    const name = r.from === state.userId ? "あなた" : r.name || "";
+    document.getElementById("reply-indicator-text").textContent = name ? `${name}: ${r.excerpt}` : r.excerpt;
+  }
+}
+
+// ===== 既読（自分が送ったメッセージを相手が読んだか） =====
+// サーバは「全員が受け取った」メッセージを自動削除するので、既読状況は /rooms/:id/reads で
+// 「まだ残っている自分のメッセージ + 受け取った人の一覧」を聞き、
+// 応答から消えていれば「全員が読んだ」と判断する（自分が送った分しか聞けない）。
+
+const READ_POLL_MS = 5000; // 同じメッセージを再確認する間隔
+const READ_CALL_MS = 3000; // 問い合わせ自体の最短間隔
+const READ_TTL_AGE_MS = 6.5 * 24 * 60 * 60 * 1000; // これを過ぎると自動削除か期限切れか区別できない
+
+function readStatusOf(m) {
+  if (!state.showRead || !m || m.system || m.deleted) return null;
+  if (m.fromUserId !== state.userId) return null;
+  if (m.status) return null; // 送信中・送信失敗の間は表示しない
+  if (m.readUnknown) return null; // 古すぎて自動削除か期限切れか判断できないものは表示しない
+  const room = state.rooms.get(state.openRoomId);
+  if (!room || !room.members) return null;
+  const others = [...room.members.keys()].filter((u) => u !== state.userId);
+  if (others.length === 0) return null;
+  if (m.readAll) return { all: true, text: room.kind === "direct" ? "既読" : "全員既読" };
+  if (!Array.isArray(m.readBy)) return null; // まだ問い合わせていない（古い履歴など）
+  const readers = m.readBy.filter((u) => others.includes(u));
+  if (room.kind === "direct") return readers.length > 0 ? { all: true, text: "既読" } : { all: false, text: "未読" };
+  if (readers.length === 0) return { all: false, text: "未読" };
+  const all = readers.length >= others.length;
+  return { all, text: all ? "全員既読" : `既読 ${readers.length}/${others.length}` };
+}
+
+function readStatusHtml(m) {
+  const info = readStatusOf(m);
+  return info ? `<span class="msg-read${info.all ? " all" : ""}">${info.text}</span>` : "";
+}
+
+/** 開いているルームの「自分のメッセージ」の既読状況を取り直して、表示を更新する。 */
+async function refreshReadStatuses(room) {
+  if (!state.showRead || !room || !state.token) return;
+  const now = Date.now();
+  if (now - (state.readAt || 0) < READ_CALL_MS) return;
+  const targets = room.messages
+    .filter((m) => m.id && m.fromUserId === state.userId && !m.system && !m.deleted && !m.readAll && !m.readUnknown && (!m.status || m.status === "sent"))
+    .filter((m) => now - (m.readCheckedAt || 0) > READ_POLL_MS)
+    .slice(-60);
+  if (targets.length === 0) return;
+  state.readAt = now;
+  let reads;
+  try {
+    const data = await api.readStatus(state.token, room.roomId, targets.map((m) => m.id));
+    reads = (data && data.reads) || {};
+  } catch {
+    return; // 失敗しても次の周期で取り直す
+  }
+  for (const m of targets) {
+    m.readCheckedAt = now;
+    if (Object.prototype.hasOwnProperty.call(reads, m.id)) {
+      const next = Array.isArray(reads[m.id]) ? reads[m.id].filter((u) => typeof u === "string").slice(0, 64) : [];
+      const same = Array.isArray(m.readBy) && m.readBy.length === next.length && m.readBy.every((u, i) => u === next[i]);
+      if (same) continue;
+      m.readBy = next;
+      if (state.openRoomId === room.roomId) updateMessageRowInPlace(m);
+      persistMessage(room.roomId, m);
+    } else if (now - m.ts < READ_TTL_AGE_MS) {
+      m.readAll = true; // サーバから消えている＝全員が受け取った
+      if (state.openRoomId === room.roomId) updateMessageRowInPlace(m);
+      persistMessage(room.roomId, m);
+    } else {
+      m.readUnknown = true; // 古すぎて自動削除か期限切れか判断できないので何も表示しない
+      if (state.openRoomId === room.roomId) updateMessageRowInPlace(m);
+      persistMessage(room.roomId, m);
+    }
+  }
+}
+
+function initReadSettings() {
+  const checkbox = document.getElementById("checkbox-show-read");
+  if (!checkbox) return;
+  checkbox.checked = state.showRead;
+  checkbox.addEventListener("change", () => {
+    state.showRead = checkbox.checked;
+    try { localStorage.setItem(READ_SETTING_KEY, checkbox.checked ? "1" : "0"); } catch {}
+    const room = state.rooms.get(state.openRoomId);
+    if (room) {
+      for (const m of room.messages) updateMessageRowInPlace(m);
+      refreshReadStatuses(room);
+    }
+  });
+}
+
 function startEditMessage(messageId) {
   const room = state.rooms.get(state.openRoomId);
   const message = room && findMessage(room, messageId);
   if (!room || !message || message.deleted || message.fromUserId !== state.userId) return;
+  if (state.reply) cancelReply();
   state.editing = { roomId: room.roomId, messageId };
   const input = document.getElementById("input-message");
   input.value = message.text;
@@ -3122,6 +3350,10 @@ async function deleteMessageLocally(roomId, messageId) {
 function initMessageActionsSheet() {
   document.getElementById("btn-message-actions-cancel").addEventListener("click", () => closeSheet("sheet-message-actions"));
 
+  document.getElementById("btn-message-reply").addEventListener("click", () => {
+    closeSheet("sheet-message-actions");
+    startReplyTo(state.actionTarget?.messageId);
+  });
   document.getElementById("btn-message-copy").addEventListener("click", () => {
     closeSheet("sheet-message-actions");
     const { roomId, messageId } = state.actionTarget || {};
@@ -3134,6 +3366,7 @@ function initMessageActionsSheet() {
     startEditMessage(state.actionTarget?.messageId);
   });
   document.getElementById("btn-cancel-edit").addEventListener("click", cancelEdit);
+  document.getElementById("btn-cancel-reply").addEventListener("click", cancelReply);
   document.getElementById("btn-message-delete").addEventListener("click", () => {
     closeSheet("sheet-message-actions");
     confirmDeleteMessage(state.actionTarget?.messageId);
@@ -3255,12 +3488,12 @@ async function sendKeywrapTo(room, memberId) {
 async function decryptAndAppendChat(room, msg) {
   try {
     const payload = await aesGcmDecryptJson(room.roomKey, msg.iv, msg.ciphertext);
-    const { id, kind, from, text, ts, sig } = payload;
+    const { id, kind, from, text, ts, sig, replyTo } = payload;
     // リアクションは署名対象のフィールドが違うので、本文とは別の経路で処理する
     if (kind === "reaction") { await applyReactionPayload(room, payload); return; }
     const member = room.members.get(from);
     const isSelf = from === state.userId;
-    const verified = isSelf || (member?.ecdsaPublicKey ? await verifyJson(member.ecdsaPublicKey, { id, kind, from, text, ts }, sig) : false);
+    const verified = isSelf || (member?.ecdsaPublicKey ? await verifyJson(member.ecdsaPublicKey, { id, kind, from, text, ts, replyTo }, sig) : false);
     const displayName = member ? member.displayName : from === state.userId ? state.displayName : from.slice(0, 8);
 
     if (!verified) {
@@ -3281,7 +3514,7 @@ async function decryptAndAppendChat(room, msg) {
 
     // kind === "text"（新規メッセージ）。再送などで同じidが二重に届いても1回だけ表示する
     if (findMessage(room, id)) return;
-    appendMessageToRoom(room, { fromUserId: from, displayName, text, ts, verified: true, id });
+    appendMessageToRoom(room, { fromUserId: from, displayName, text, ts, verified: true, id, readBy: [], replyTo: sanitizeReplyTo(replyTo) || undefined });
     room.lastActivity = ts;
     room.lastMessageId = id;
     room.lastPreview = from === state.userId ? `あなた: ${text}` : text;
@@ -3439,6 +3672,11 @@ async function runSync() {
     if (s.deferred.length > 500) s.deferred = s.deferred.slice(-500);
     if (gotNew) noteActivity();
     more = !!data.more;
+    // 開いているルームの「自分のメッセージ」の既読状況もついでに更新する（失敗しても同期は続く）
+    if (state.openRoomId) {
+      const room = state.rooms.get(state.openRoomId);
+      if (room) refreshReadStatuses(room);
+    }
   } catch (e) {
     ok = false;
     s.fail += 1;
@@ -3560,10 +3798,14 @@ async function sendCurrentMessage() {
   }
 
   // ---- 新規送信：先に「送信中」で表示し、結果に応じて 送信済み / 失敗(再送可) にする ----
+  const reply = state.reply && state.reply.roomId === room.roomId
+    ? sanitizeReplyTo({ id: state.reply.messageId, from: state.reply.from, name: state.reply.name, excerpt: state.reply.excerpt })
+    : null;
+  cancelReply();
   input.value = "";
   autosizeComposer();
   input.focus();
-  const msg = { fromUserId: state.userId, displayName: state.displayName, text, ts: Date.now(), verified: true, id: crypto.randomUUID(), status: "sending" };
+  const msg = { fromUserId: state.userId, displayName: state.displayName, text, ts: Date.now(), verified: true, id: crypto.randomUUID(), status: "sending", readBy: [], replyTo: reply || undefined };
   room.messages.push(msg);
   if (state.openRoomId === room.roomId) { renderMessageRow(msg); scrollMessagesToBottom(); }
   bumpSync();
@@ -3574,7 +3816,7 @@ async function deliverMessage(room, msg) {
   msg.status = "sending";
   updateMessageRowInPlace(msg);
   try {
-    const payload = { id: msg.id, kind: "text", from: state.userId, text: msg.text, ts: msg.ts };
+    const payload = { id: msg.id, kind: "text", from: state.userId, text: msg.text, ts: msg.ts, replyTo: sanitizeReplyTo(msg.replyTo) || undefined };
     const sig = await signJson(state.ecdsaPrivateKey, payload);
     const { iv, ciphertext } = await aesGcmEncryptJson(room.roomKey, { ...payload, sig });
     await api.send(state.token, room.roomId, { type: "chat", to: null, iv, ciphertext });
@@ -4424,6 +4666,7 @@ async function boot() {
   initInviteMemberSheet();
   initMessageActionsSheet();
   initNotificationSettings();
+  initReadSettings();
   initAvatarSettings();
   initGroupPhotoSheet();
   initThemeSwatches();
