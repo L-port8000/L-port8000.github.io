@@ -1122,21 +1122,60 @@ input[type="range"]::-moz-range-thumb {
   background: var(--bg-deep);
   padding: 0.5rem;
   overflow: hidden;
+  position: relative;
+  cursor: pointer;
 }
 .viewer-image-wrap img {
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
   border-radius: var(--radius-sm);
+  pointer-events: none; /* 背景タップで閉じるを有効にするため画像はタッチを透過させない */
+}
+.viewer-rotate-busy {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: rgba(13, 13, 15, 0.7);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  font-size: 13px;
+  color: var(--text);
+  z-index: 5;
+}
+.viewer-rotate-busy .spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--surface-2);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
 }
 
 .viewer-footer {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1rem max(env(safe-area-inset-bottom), 0.75rem);
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  padding: 0.625rem 0.75rem max(env(safe-area-inset-bottom), 0.625rem);
   border-top: 1px solid var(--border);
   background: var(--surface);
+  justify-content: center;
+}
+.viewer-footer .btn-sm {
+  padding: 0.375rem 0.5rem;
+  font-size: 11px;
+  gap: 0.25rem;
+}
+.viewer-footer .btn-sm svg {
+  width: 15px;
+  height: 15px;
+}
+.viewer-footer .ml-auto {
+  margin-left: auto;
 }
 
 
@@ -1371,6 +1410,12 @@ input[type="range"]::-moz-range-thumb {
 
   <div id="viewer" class="viewer" hidden aria-hidden="true" role="dialog" aria-modal="true">
     <div class="viewer-header">
+      <button id="viewer-back" class="icon-btn" aria-label="戻る">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m12 19-7-7 7-7" />
+          <path d="M19 12H5" />
+        </svg>
+      </button>
       <div class="viewer-title-wrap">
         <button id="viewer-edit" class="viewer-title-btn">
           <span id="viewer-title">Scan</span>
@@ -1391,8 +1436,11 @@ input[type="range"]::-moz-range-thumb {
         </svg>
       </button>
     </div>
-    <div class="viewer-image-wrap">
+    <div class="viewer-image-wrap" id="viewer-image-wrap">
       <img id="viewer-image" src="" alt="scan" />
+      <div id="viewer-rotate-busy" class="viewer-rotate-busy" hidden>
+        <span class="spinner"></span> 回転中…
+      </div>
     </div>
     <div class="viewer-footer">
       <button id="viewer-rename" class="btn btn-ghost btn-sm">
@@ -1401,6 +1449,20 @@ input[type="range"]::-moz-range-thumb {
           <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
         </svg>
         名前変更
+      </button>
+      <button id="viewer-rotate-left" class="btn btn-ghost btn-sm" aria-label="左に90°回転">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+          <path d="M3 3v5h5" />
+        </svg>
+        左回転
+      </button>
+      <button id="viewer-rotate-right" class="btn btn-ghost btn-sm" aria-label="右に90°回転">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12a9 9 0 1 1-9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+          <path d="M21 3v5h-5" />
+        </svg>
+        右回転
       </button>
       <button id="viewer-export" class="btn btn-ghost btn-sm text-primary">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -2709,6 +2771,28 @@ input[type="range"]::-moz-range-thumb {
 
   /* ============================================================ viewer === */
 
+  // Viewer を開いているときに history.back() (Android 戻るボタン含む) で閉じるための仕掛け
+  let viewerHistoryPushed = false;
+  function pushViewerHistory() {
+    if (viewerHistoryPushed) return;
+    try {
+      history.pushState({ paperscanViewer: true }, "");
+      viewerHistoryPushed = true;
+    } catch (e) {
+      // history API が使えない環境でも続行
+    }
+  }
+  function popViewerHistory() {
+    if (!viewerHistoryPushed) return;
+    // 既に自分で push した分を消すため、active な履歴が viewer 由来なら戻る
+    try {
+      if (history.state && history.state.paperscanViewer) {
+        history.back();
+      }
+    } catch (e) {}
+    viewerHistoryPushed = false;
+  }
+
   async function openViewer(id) {
     const scan = state.scans.find((s) => s.id === id);
     if (!scan) return;
@@ -2719,19 +2803,22 @@ input[type="range"]::-moz-range-thumb {
     $("#viewer-title").textContent = scan.title;
     const date = new Date(scan.createdAt);
     const modeLabel = MODE_LABELS[scan.enhanceMode]?.title ?? scan.enhanceMode;
-    $("#viewer-meta").textContent = `${modeLabel} · ${date.toLocaleString("ja-JP")}`;
+    $("#viewer-meta").textContent = `${modeLabel} · ${date.toLocaleString("ja-JP")} · ${scan.width}×${scan.height}`;
     $("#viewer-title-input").value = scan.title;
     $("#viewer-edit-form").hidden = true;
     $("#viewer").hidden = false;
     $("#viewer").setAttribute("aria-hidden", "false");
+    pushViewerHistory();
   }
 
   function closeViewer() {
+    if (!state.viewerId && $("#viewer").hidden) return;
     $("#viewer").hidden = true;
     $("#viewer").setAttribute("aria-hidden", "true");
     if (state.viewerUrl) URL.revokeObjectURL(state.viewerUrl);
     state.viewerUrl = null;
     state.viewerId = null;
+    popViewerHistory();
   }
 
   async function exportFromViewer() {
@@ -2776,6 +2863,99 @@ input[type="range"]::-moz-range-thumb {
     toast("タイトルを更新しました", "success");
   }
 
+  /**
+   * 画像 Blob を90度単位で回転させて新しい Blob を生成。
+   * direction: "left" (反時計回り) or "right" (時計回り)
+   * 戻り値: { imageBlob, thumbBlob, width, height }
+   */
+  async function rotateScanBlob(imageBlob, direction) {
+    const img = await new Promise((resolve, reject) => {
+      const im = new Image();
+      im.onload = () => resolve(im);
+      im.onerror = () => reject(new Error("画像読込エラー"));
+      im.src = URL.createObjectURL(imageBlob);
+    });
+    const srcW = img.naturalWidth;
+    const srcH = img.naturalHeight;
+    // 90度回転すると幅と高さが入れ替わる
+    const dstW = srcH;
+    const dstH = srcW;
+    const canvas = document.createElement("canvas");
+    canvas.width = dstW;
+    canvas.height = dstH;
+    const ctx = canvas.getContext("2d");
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+    if (direction === "left") {
+      // 反時計回り: translate to top-right corner, then rotate -90deg
+      ctx.translate(0, dstH);
+      ctx.rotate(-Math.PI / 2);
+    } else {
+      // 時計回り: translate to top-right corner, then rotate +90deg
+      ctx.translate(dstW, 0);
+      ctx.rotate(Math.PI / 2);
+    }
+    ctx.drawImage(img, 0, 0);
+    // 元の ObjectURL を解放
+    URL.revokeObjectURL(img.src);
+    const newImageBlob = await canvasToBlob(canvas, "image/png");
+    const thumbCanvas = makeThumbnail(canvas, 384);
+    const newThumbBlob = await canvasToBlob(thumbCanvas, "image/jpeg", 0.85);
+    return {
+      imageBlob: newImageBlob,
+      thumbBlob: newThumbBlob,
+      width: dstW,
+      height: dstH,
+    };
+  }
+
+  async function rotateFromViewer(direction) {
+    if (!state.viewerId) return;
+    const scan = state.scans.find((s) => s.id === state.viewerId);
+    if (!scan) return;
+    const busyEl = $("#viewer-rotate-busy");
+    const leftBtn = $("#viewer-rotate-left");
+    const rightBtn = $("#viewer-rotate-right");
+    if (busyEl) busyEl.hidden = false;
+    if (leftBtn) leftBtn.disabled = true;
+    if (rightBtn) rightBtn.disabled = true;
+    // UI の反応を良くするために少し待つ
+    await new Promise((r) => setTimeout(r, 30));
+    try {
+      const rotated = await rotateScanBlob(scan.imageBlob, direction);
+      // IndexedDB を更新
+      const record = await dbGet(state.viewerId);
+      if (!record) throw new Error("レコードが見つかりません");
+      record.imageBlob = rotated.imageBlob;
+      record.thumbBlob = rotated.thumbBlob;
+      record.width = rotated.width;
+      record.height = rotated.height;
+      await dbPut(record);
+      // メモリ上の state.scans も更新
+      scan.imageBlob = rotated.imageBlob;
+      scan.thumbBlob = rotated.thumbBlob;
+      scan.width = rotated.width;
+      scan.height = rotated.height;
+      // 表示を更新
+      if (state.viewerUrl) URL.revokeObjectURL(state.viewerUrl);
+      state.viewerUrl = URL.createObjectURL(scan.imageBlob);
+      $("#viewer-image").src = state.viewerUrl;
+      const date = new Date(scan.createdAt);
+      const modeLabel = MODE_LABELS[scan.enhanceMode]?.title ?? scan.enhanceMode;
+      $("#viewer-meta").textContent = `${modeLabel} · ${date.toLocaleString("ja-JP")} · ${scan.width}×${scan.height}`;
+      // ギャラリーのサムネイルも更新
+      refreshGallery();
+      toast(direction === "left" ? "左に90°回転しました" : "右に90°回転しました", "success");
+    } catch (err) {
+      console.error(err);
+      toast("回転に失敗しました", "error");
+    } finally {
+      if (busyEl) busyEl.hidden = true;
+      if (leftBtn) leftBtn.disabled = false;
+      if (rightBtn) rightBtn.disabled = false;
+    }
+  }
+
   /* ============================================================ init ===== */
 
   function init() {
@@ -2789,6 +2969,7 @@ input[type="range"]::-moz-range-thumb {
     $("#file-input").addEventListener("change", onFilePicked);
     // Viewer buttons
     $("#viewer-close").addEventListener("click", closeViewer);
+    $("#viewer-back").addEventListener("click", closeViewer);
     $("#viewer-edit").addEventListener("click", startViewerEdit);
     $("#viewer-rename").addEventListener("click", startViewerEdit);
     $("#viewer-save-title").addEventListener("click", saveViewerTitle);
@@ -2798,6 +2979,27 @@ input[type="range"]::-moz-range-thumb {
     });
     $("#viewer-export").addEventListener("click", exportFromViewer);
     $("#viewer-delete").addEventListener("click", deleteFromViewer);
+    $("#viewer-rotate-left").addEventListener("click", () => rotateFromViewer("left"));
+    $("#viewer-rotate-right").addEventListener("click", () => rotateFromViewer("right"));
+    // 背景タップで Viewer を閉じる（画像自体をタップした場合は閉じない）
+    $("#viewer-image-wrap").addEventListener("click", (e) => {
+      // 画像自身ではなく背景領域がタップされた場合のみ閉じる
+      if (e.target === $("#viewer-image-wrap")) {
+        closeViewer();
+      }
+    });
+    // Android のハードウェア戻るボタン / ブラウザ戻るで Viewer を閉じる
+    window.addEventListener("popstate", () => {
+      if (!$("#viewer").hidden) {
+        // 履歴を戻った結果 Viewer が開いていたら閉じる（pushViewerHistory のフラグもリセット）
+        viewerHistoryPushed = false;
+        $("#viewer").hidden = true;
+        $("#viewer").setAttribute("aria-hidden", "true");
+        if (state.viewerUrl) URL.revokeObjectURL(state.viewerUrl);
+        state.viewerUrl = null;
+        state.viewerId = null;
+      }
+    });
     // Escape closes viewer
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape") {
