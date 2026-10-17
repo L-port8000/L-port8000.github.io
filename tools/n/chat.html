@@ -72,6 +72,9 @@ body {
   height: 100vh;
   height: 100dvh;
   height: var(--vvh, 100dvh);
+  /* dvh 対応ブラウザでは「今見えている高さ」を上限にする。--vvh が端末によって大きく出ても
+     画面（＝入力欄）が表示領域の下へはみ出さないための保険。 */
+  max-height: min(var(--vvh, 100dvh), 100dvh);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -86,7 +89,10 @@ body.kbd-open { --safe-bottom: 0px; }
   html, body { position: fixed; inset: 0; width: 100%; height: 100%; overflow: hidden; overscroll-behavior: none; }
   /* 画面は「見えている領域（visualViewport）」にぴったり合わせる。高さを --vvh に固定しているので、
      キーボードが出ても入力欄が下に落ちない（--vvh はJSがvisualViewportから逐次更新する）。 */
-  .screen { position: fixed; left: 0; right: 0; top: var(--vvt, 0px); height: var(--vvh, 100dvh); max-height: var(--vvh, 100dvh); }
+  .screen { position: fixed; left: 0; right: 0; top: var(--vvt, 0px); height: var(--vvh, 100dvh); max-height: min(var(--vvh, 100dvh), 100dvh); }
+  /* 端末下端のジェスチャー領域に送信ボタンが重ならないよう、下に少し余裕をとる
+     （.composer 本体より後に書けないので、詳細度を上げて確実に効かせる） */
+  .screen .composer { padding-bottom: calc(16px + var(--safe-bottom)); }
   .sheet-backdrop { inset: auto; left: 0; right: 0; top: var(--vvt, 0px); height: var(--vvh, 100dvh); }
   .sheet { max-height: calc(var(--vvh, 100dvh) - 16px); }
 }
@@ -720,6 +726,24 @@ body.kbd-open { --safe-bottom: 0px; }
 }
 .reaction-bar button:hover { border-color: var(--accent-border); background: var(--accent-soft); }
 .reaction-bar button.mine { border-color: var(--accent-border); background: var(--accent-soft); }
+/* 一番端の「⋯」＝もっとたくさんの絵文字を選ぶボタン */
+.reaction-bar button.reaction-more { flex: 0 0 auto; min-width: 46px; font-size: 17px; color: var(--subtext0); }
+.reaction-bar button.reaction-more:hover { color: var(--text); border-color: var(--accent-border); background: var(--accent-soft); }
+
+/* 絵文字ピッカー（リアクションの「⋯」から開く） */
+.emoji-grid {
+  display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px;
+  padding: 2px 14px 14px; overflow-y: auto; overscroll-behavior: contain;
+  max-height: 46vh;
+  max-height: 46dvh;
+}
+.emoji-grid button {
+  font-family: inherit; font-size: 23px; line-height: 1; padding: 10px 0;
+  border: 1px solid transparent; border-radius: var(--radius-sm); background: transparent;
+  color: var(--text); cursor: pointer;
+}
+.emoji-grid button:hover, .emoji-grid button:active { border-color: var(--hairline); background: var(--surface0); }
+.emoji-grid button.mine { border-color: var(--accent-border); background: var(--accent-soft); }
 
 /* ---------- グループ画像（グループの所有者だけが設定できる） ---------- */
 
@@ -1315,7 +1339,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
           <button id="btn-cancel-edit" type="button">キャンセル</button>
         </div>
         <form id="composer" class="composer">
-          <textarea id="input-message" rows="1" placeholder="メッセージを入力…（改行は Shift+Enter）" autocomplete="off" enterkeyhint="enter" disabled></textarea>
+          <textarea id="input-message" rows="1" placeholder="メッセージを入力…" autocomplete="off" enterkeyhint="enter" disabled></textarea>
           <button type="submit" id="btn-send" class="composer-send" disabled>送信</button>
         </form>
       </div>
@@ -1408,6 +1432,16 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
         <span>この端末からだけ削除</span>
       </button>
       <button id="btn-message-actions-cancel" class="sheet-item sheet-cancel">キャンセル</button>
+    </div>
+  </div>
+
+  <!-- ============ シート: リアクションの絵文字ピッカー（操作シートの「⋯」から開く） ============ -->
+  <div id="sheet-emoji-picker" class="sheet-backdrop hidden">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <h3 class="sheet-title">リアクションを選ぶ</h3>
+      <div id="emoji-grid" class="emoji-grid"></div>
+      <button class="sheet-item sheet-cancel" data-close-sheet="sheet-emoji-picker">キャンセル</button>
     </div>
   </div>
 
@@ -2876,7 +2910,19 @@ function appendMessageToRoom(room, message) {
 // リアクションは「本文と同じルーム鍵で暗号化した kind:"reaction" のメッセージ」として全員に配る。
 // サーバは中身を復号できないまま中継するだけで、既読管理・自動削除の仕組みも本文メッセージと共通。
 
+// すぐ押せる定型リアクション（操作シートに横並び。一番端は「⋯」でピッカーを開く）
 const REACTION_EMOJIS = ["👍", "❤️", "😂", "😮", "😢", "🎉"];
+
+// 「⋯」から選べる絵文字。ここに無い絵文字は送信も受信も受け付けない（いたずら防止）。
+const REACTION_PICKER_EMOJIS = [
+  ...REACTION_EMOJIS,
+  "😆", "😊", "😍", "🥰", "🤔", "😅", "😭", "😡", "😱", "🙌", "👏", "🙏", "💯", "🔥", "✨", "💦",
+  "🥳", "🤩", "😎", "🤗", "🤝", "😇", "😴", "🤣", "😌", "😳", "🤯", "👀", "✅", "❌", "❓", "🎊",
+  "💐", "🌸", "🍀", "⭐", "🌙", "☀️", "⚡", "🍺", "🍰", "🎂", "🍣", "🍕", "⚽", "🎮", "🎵", "📣",
+  "💡", "🐱", "🐶", "🐻", "🌈",
+];
+
+const REACTION_ALLOWED = new Set(REACTION_PICKER_EMOJIS);
 
 /** メッセージに付いているリアクションのチップ（多い順）。 */
 function reactionChipsHtml(m) {
@@ -2884,7 +2930,7 @@ function reactionChipsHtml(m) {
   if (!map) return "";
   const entries = Object.entries(map).filter(([, users]) => Array.isArray(users) && users.length > 0);
   if (entries.length === 0) return "";
-  entries.sort((a, b) => b[1].length - a[1].length || REACTION_EMOJIS.indexOf(a[0]) - REACTION_EMOJIS.indexOf(b[0]));
+  entries.sort((a, b) => b[1].length - a[1].length || REACTION_PICKER_EMOJIS.indexOf(a[0]) - REACTION_PICKER_EMOJIS.indexOf(b[0]));
   const chips = entries
     .map(([emoji, users]) => {
       const mine = users.includes(state.userId);
@@ -2914,7 +2960,7 @@ async function toggleReaction(messageId, emoji) {
   const room = state.rooms.get(state.openRoomId);
   if (!room) return;
   if (!room.roomKey) { showToast("ルーム鍵がまだありません"); return; }
-  if (!REACTION_EMOJIS.includes(emoji)) return;
+  if (!REACTION_ALLOWED.has(emoji)) return;
   const message = findMessage(room, messageId);
   if (!message || message.deleted || message.system) return;
 
@@ -2938,7 +2984,7 @@ async function applyReactionPayload(room, payload) {
   const { id, kind, from, target, emoji, op, ts, sig } = payload || {};
   if (kind !== "reaction" || typeof from !== "string" || typeof target !== "string") return;
   if (op !== "add" && op !== "remove") return;
-  if (!REACTION_EMOJIS.includes(emoji)) return;
+  if (!REACTION_ALLOWED.has(emoji)) return;
   if (from !== state.userId) {
     const member = room.members.get(from);
     if (!member?.ecdsaPublicKey) return;
@@ -2996,6 +3042,38 @@ function renderReactionBar(room, m, enabled) {
     });
     bar.appendChild(b);
   }
+  // 一番端（右端）は三点メニュー。ここから「もっとたくさんの絵文字」を選べる。
+  const more = document.createElement("button");
+  more.type = "button";
+  more.className = "reaction-more";
+  more.textContent = "⋯";
+  more.title = "もっとたくさんの絵文字から選ぶ";
+  more.setAttribute("aria-label", "もっとたくさんの絵文字から選ぶ");
+  more.addEventListener("click", () => {
+    closeSheet("sheet-message-actions");
+    openEmojiPicker(m);
+  });
+  bar.appendChild(more);
+}
+
+/** 「⋯」から開く絵文字ピッカー。選んだ絵文字でその場でリアクションする（もう一度押すと外れる）。 */
+function openEmojiPicker(m) {
+  const grid = document.getElementById("emoji-grid");
+  if (!grid) return;
+  grid.innerHTML = "";
+  for (const emoji of REACTION_PICKER_EMOJIS) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = emoji;
+    b.title = `「${emoji}」とリアクション`;
+    if (m.reactions?.[emoji]?.includes(state.userId)) b.classList.add("mine");
+    b.addEventListener("click", () => {
+      closeSheet("sheet-emoji-picker");
+      toggleReaction(m.id, emoji);
+    });
+    grid.appendChild(b);
+  }
+  openSheet("sheet-emoji-picker");
 }
 
 function startEditMessage(messageId) {
@@ -3533,8 +3611,15 @@ function discardMessage(messageId) {
 
 function autosizeComposer() {
   const ta = document.getElementById("input-message");
+  // プレースホルダは折り返すと scrollHeight に加算されるため、空欄のときに高さを測ると
+  // 入力欄が1行ぶん余計に伸び、送信ボタンごと下へずれて「入力欄が落ちた」ように見える。
+  // 測る間だけプレースホルダを外して、行数だけで高さを決める。
+  const ph = ta.placeholder;
+  ta.placeholder = "";
   ta.style.height = "auto";
-  ta.style.height = Math.min(ta.scrollHeight + 2, 160) + "px";
+  const needed = ta.scrollHeight;
+  ta.placeholder = ph;
+  ta.style.height = Math.min(needed + 2, 160) + "px";
 }
 
 function initRoomScreen() {
@@ -4268,12 +4353,15 @@ function initViewportSync() {
     const h = Math.round(vv ? vv.height : window.innerHeight);
     const w = Math.round(vv ? vv.width : window.innerWidth);
     const layoutH = Math.round(document.documentElement.clientHeight || window.innerHeight || h);
+    const winH = Math.round(window.innerHeight || h);
     if (Math.abs(w - lastW) > 40) baseH = 0; // 回転・幅の変化で基準をリセット
     lastW = w;
     baseH = Math.max(baseH, h);
     const kbd = window.matchMedia("(max-width: 959.98px)").matches && baseH - h > 120;
-    // 見えている高さが実画面の高さを超えないようにする（--vvh が古いまま残っても画面が下へはみ出さない）
-    const height = layoutH > 0 ? Math.min(h, layoutH) : h;
+    // 見えている高さを過大評価しない：visualViewport.height が実際の表示領域より大きい（昔の100vh相当の）
+    // 値を返す端末があるため、取得できる値のうち「一番小さいもの」を採用する。
+    // これで --vvh が大きすぎて入力欄が画面の下へ落ちることがなくなる。
+    const height = Math.max(1, Math.min(h, layoutH || h, winH || h));
     // visualViewport のずれはキーボード表示中だけ反映し、しかも「画面の下端が実画面の下端を超えない」範囲に収める。
     // iOS はキーボードを閉じても offsetTop が残ることがあり、そのまま足すと入力欄が画面の下に
     // 落ちて押しづらくなる（＝まさにこの症状）。ずれが残っても下端は必ず画面内に収まる。
