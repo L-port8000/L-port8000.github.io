@@ -83,8 +83,10 @@ body.kbd-open { --safe-bottom: 0px; }
 
 /* スマホ幅: ページ自体はスクロールさせず、見えている領域（visualViewport）に画面を固定する */
 @media (max-width: 959.98px) {
-  html, body { position: fixed; inset: 0; width: 100%; overflow: hidden; }
-  .screen { position: fixed; left: 0; right: 0; top: var(--vvt, 0px); }
+  html, body { position: fixed; inset: 0; width: 100%; height: 100%; overflow: hidden; overscroll-behavior: none; }
+  /* 画面は「見えている領域（visualViewport）」にぴったり合わせる。高さを --vvh に固定しているので、
+     キーボードが出ても入力欄が下に落ちない（--vvh はJSがvisualViewportから逐次更新する）。 */
+  .screen { position: fixed; left: 0; right: 0; top: var(--vvt, 0px); height: var(--vvh, 100dvh); max-height: var(--vvh, 100dvh); }
   .sheet-backdrop { inset: auto; left: 0; right: 0; top: var(--vvt, 0px); height: var(--vvh, 100dvh); }
   .sheet { max-height: calc(var(--vvh, 100dvh) - 16px); }
 }
@@ -698,6 +700,38 @@ body.kbd-open { --safe-bottom: 0px; }
 .composer-send:hover:not(:disabled) { border-color: var(--accent); background: rgba(var(--accent-rgb), 0.2); }
 .composer-send:disabled { opacity: 0.35; cursor: default; }
 
+/* ---------- リアクション（絵文字） ---------- */
+
+.msg-reactions { display: flex; flex-wrap: wrap; gap: 4px; margin: 5px 4px 0; max-width: 100%; }
+.reaction-chip {
+  display: inline-flex; align-items: center; gap: 4px; font-family: inherit;
+  font-size: 12px; line-height: 1; padding: 4px 9px; border-radius: 99px;
+  border: 1px solid var(--hairline-strong); background: var(--mantle); color: var(--subtext1);
+  cursor: pointer; transition: border-color 0.2s var(--ease), background 0.2s var(--ease);
+}
+.reaction-chip:hover { border-color: var(--accent-border); }
+.reaction-chip.mine { border-color: var(--accent-border); background: var(--accent-soft); color: var(--accent); }
+.reaction-chip .n { font-size: 10.5px; letter-spacing: 0.02em; }
+.reaction-bar { display: flex; gap: 6px; padding: 2px 16px 12px; }
+.reaction-bar button {
+  flex: 1; font-size: 20px; line-height: 1; padding: 10px 0; font-family: inherit;
+  border: 1px solid var(--hairline); background: var(--mantle); border-radius: var(--radius-sm);
+  cursor: pointer; transition: border-color 0.2s var(--ease), background 0.2s var(--ease);
+}
+.reaction-bar button:hover { border-color: var(--accent-border); background: var(--accent-soft); }
+.reaction-bar button.mine { border-color: var(--accent-border); background: var(--accent-soft); }
+
+/* ---------- グループ画像（グループの所有者だけが設定できる） ---------- */
+
+.group-photo {
+  display: flex; align-items: center; gap: 14px;
+  padding: 2px 0 14px; margin-bottom: 12px; border-bottom: 1px solid var(--hairline);
+}
+.group-photo-avatar { width: 56px; height: 56px; font-size: 22px; }
+.group-photo-meta { min-width: 0; flex: 1; }
+.group-photo-name { font-family: var(--font-display); font-size: 15px; letter-spacing: 0.05em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.group-photo-hint { font-size: 11.5px; line-height: 1.5; color: var(--overlay1); margin-top: 3px; }
+
 /* ---------- 詳細パネル（メンバー・連絡先） ---------- */
 
 .members-panel {
@@ -1249,6 +1283,15 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
           </button>
         </div>
 
+        <div id="group-photo" class="group-photo hidden">
+          <span class="member-avatar group-photo-avatar" id="group-photo-avatar"></span>
+          <div class="group-photo-meta">
+            <div class="group-photo-name" id="group-photo-name"></div>
+            <div class="group-photo-hint" id="group-photo-hint"></div>
+            <button id="btn-set-group-photo" class="chip-btn hidden" style="margin-top:8px;">画像リンクを設定</button>
+          </div>
+        </div>
+
         <div id="direct-peer-info" class="hidden">
           <p class="muted" style="padding:0 4px;">相手のアドレス</p>
           <div class="address-box small"><code id="peer-address"></code></div>
@@ -1324,10 +1367,30 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
     </div>
   </div>
 
+  <!-- ============ シート: グループ画像（グループの所有者のみ） ============ -->
+  <div id="sheet-group-photo" class="sheet-backdrop hidden">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <h3 class="sheet-title">グループ画像</h3>
+      <div class="sheet-pad">
+        <p class="muted">画像のURL（http/https）を貼り付けると、グループのアイコンとして全員に表示されます。</p>
+        <label class="field">
+          <span>画像のURL</span>
+          <input id="input-group-photo-url" type="url" inputmode="url" placeholder="https://example.com/group.png" autocomplete="off" spellcheck="false">
+        </label>
+        <button id="btn-group-photo-apply" class="btn-primary">設定する</button>
+        <button id="btn-group-photo-reset" class="btn-secondary">画像を外す</button>
+        <p id="group-photo-status" class="status-line"></p>
+      </div>
+      <button class="sheet-item sheet-cancel" data-close-sheet="sheet-group-photo">キャンセル</button>
+    </div>
+  </div>
+
   <!-- ============ シート: メッセージ操作 ============ -->
   <div id="sheet-message-actions" class="sheet-backdrop hidden">
     <div class="sheet">
       <div class="sheet-handle"></div>
+      <div id="message-reaction-bar" class="reaction-bar hidden"></div>
       <button id="btn-message-copy" class="sheet-item">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>
         <span>コピー</span>
@@ -1641,6 +1704,22 @@ function avatarSig(initial, avatarUrl) { return `${initial}|${avatarUrl || ""}|$
 function escapeHtml(s) {
   return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
+/** 日付（2026.09.27 の形式）。1日以上前のメッセージの時刻表示に使う。 */
+function formatDay(ts) {
+  const d = new Date(ts);
+  return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`;
+}
+
+/** メッセージの時刻表示。今日（24時間以内）は "14:05"、それより古いものは "2026.09.27 14:05"。 */
+function formatMessageTime(ts) {
+  const d = new Date(ts);
+  const now = new Date();
+  const hhmm = d.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" });
+  const sameDay = d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+  if (sameDay && now.getTime() - ts < 24 * 60 * 60 * 1000) return hhmm;
+  return `${formatDay(ts)} ${hhmm}`;
+}
+
 function formatRelativeTime(ts) {
   if (!ts) return "";
   const diffMs = Date.now() - ts;
@@ -1649,8 +1728,7 @@ function formatRelativeTime(ts) {
   if (min < 60) return `${min}分前`;
   const hr = Math.floor(min / 60);
   if (hr < 24) return `${hr}時間前`;
-  const d = new Date(ts);
-  return d.toLocaleDateString("ja-JP", { month: "numeric", day: "numeric" });
+  return formatDay(ts);
 }
 function truncateAddress(address) {
   if (!address) return "";
@@ -1824,6 +1902,7 @@ const api = {
   subscribePush: (token, subscription) => apiFetch("/push/subscribe", { method: "POST", token, body: { subscription } }),
   unsubscribePush: (token, endpoint) => apiFetch("/push/unsubscribe", { method: "POST", token, body: { endpoint } }),
   setProfile: (token, avatarUrl) => apiFetch("/me/profile", { method: "POST", token, body: { avatarUrl } }),
+  setRoomAvatar: (token, roomId, avatarUrl) => apiFetch(`/groups/${roomId}/avatar`, { method: "POST", token, body: { avatarUrl } }),
 };
 
 // ===== アプリケーション状態 =====
@@ -1889,6 +1968,8 @@ function serializeRoomForIdb(room) {
     lastMessageId: room.lastMessageId ?? null,
     lastPreview: room.lastPreview ?? "",
     unread: room.unread ?? 0,
+    avatarUrl: room.avatarUrl ?? null,
+    ownerUserId: room.ownerUserId ?? null,
   };
 }
 const backedUpKeyRooms = new Set();
@@ -1934,6 +2015,9 @@ async function hydrateRoomFromRecord(record) {
     lastMessageId: record.lastMessageId ?? null,
     lastPreview: record.lastPreview ?? "",
     unread: record.unread ?? 0,
+    avatarUrl: record.avatarUrl ?? null,
+    ownerUserId: record.ownerUserId ?? null,
+    isOwner: (record.ownerUserId ?? null) === state.userId,
   };
 
   if (record.kind === "group" && record.members) {
@@ -1948,7 +2032,7 @@ async function hydrateRoomFromRecord(record) {
 
   await pruneOldMessages(record.roomId);
   const storedMessages = await idbGetMessagesForRoom(record.roomId);
-  room.messages = storedMessages.sort((a, b) => a.ts - b.ts).map((m) => ({ id: m.id, fromUserId: m.fromUserId, displayName: m.displayName, text: m.text, ts: m.ts, verified: m.verified, deleted: m.deleted, edited: m.edited, system: m.system, warn: m.warn }));
+  room.messages = storedMessages.sort((a, b) => a.ts - b.ts).map((m) => ({ id: m.id, fromUserId: m.fromUserId, displayName: m.displayName, text: m.text, ts: m.ts, verified: m.verified, deleted: m.deleted, edited: m.edited, system: m.system, warn: m.warn, reactions: m.reactions ?? {} }));
 
   return room;
 }
@@ -2327,7 +2411,7 @@ function renderChatList() {
     if (!node) { node = { li: buildChatListNode(room), sig: "", avSig: "" }; chatListNodes.set(room.roomId, node); }
     const label = roomLabel(room);
     const initial = (label || "?").charAt(0).toUpperCase();
-    const avatarUrl = room.kind === "direct" ? room.peer?.avatarUrl : null;
+    const avatarUrl = room.kind === "direct" ? room.peer?.avatarUrl : room.avatarUrl;
     const preview = room.lastPreview || "タップして開く";
     const time = formatRelativeTime(room.lastActivity);
     const unread = room.unread > 0 ? (room.unread > 9 ? "9+" : String(room.unread)) : "";
@@ -2416,6 +2500,13 @@ async function refreshMyRooms() {
     } else {
       if ((serverRoom.name || room.name) !== room.name) dirty = true;
       room.name = serverRoom.name || room.name;
+      // グループ画像と所有者（サーバが持つ情報。画像を変えた人がいれば全端末に反映される）
+      const groupAvatar = serverRoom.avatarUrl ?? null;
+      const groupOwner = serverRoom.ownerUserId ?? null;
+      if (room.avatarUrl !== groupAvatar || room.ownerUserId !== groupOwner) dirty = true;
+      room.avatarUrl = groupAvatar;
+      room.ownerUserId = groupOwner;
+      room.isOwner = groupOwner === state.userId;
       const restoredKey = state.restoredRoomKeys[room.roomId];
       if (!room.roomKey && restoredKey) {
         try {
@@ -2550,6 +2641,9 @@ function initAddSheet() {
         lastMessageId: null,
         lastPreview: "",
         unread: 0,
+        avatarUrl: null,
+        ownerUserId: state.userId, // 作成者＝所有者（画像リンクを設定できる）
+        isOwner: true,
       };
       state.rooms.set(roomId, room);
       await persistRoom(room);
@@ -2612,6 +2706,34 @@ function updateRoomHeaderAndMembers(roomId) {
     document.getElementById("members-panel-title").textContent = "メンバー";
   }
   renderMembers(room);
+  renderGroupPhoto(room);
+}
+
+/** 詳細パネルのグループ画像。画像リンクを貼り付けられるのはグループの所有者だけ。 */
+function renderGroupPhoto(room) {
+  const box = document.getElementById("group-photo");
+  if (!box) return;
+  if (room.kind !== "group") { box.classList.add("hidden"); return; }
+  box.classList.remove("hidden");
+
+  const label = roomLabel(room) || "グループ";
+  const initial = (label || "?").trim().charAt(0).toUpperCase();
+  const sig = avatarSig(initial, room.avatarUrl);
+  if (box.dataset.avatarSig !== sig) {
+    box.dataset.avatarSig = sig;
+    document.getElementById("group-photo-avatar").innerHTML = avatarInner(initial, room.avatarUrl);
+  }
+  document.getElementById("group-photo-name").textContent = label;
+
+  const hint = document.getElementById("group-photo-hint");
+  const btn = document.getElementById("btn-set-group-photo");
+  if (room.isOwner) {
+    hint.textContent = "あなたがこのグループの所有者です。画像リンクを貼り付けられます。";
+    btn.classList.remove("hidden");
+  } else {
+    hint.textContent = room.avatarUrl ? "" : "画像はまだ設定されていません（所有者が設定できます）。";
+    btn.classList.add("hidden");
+  }
 }
 
 function renderMembers(room) {
@@ -2687,7 +2809,8 @@ function buildMessageRow(m, hideSender = false) {
   }
 
   row.className = `msg-row ${mine ? "mine" : "theirs"}${hideSender ? " streak" : ""}${m.status === "sending" ? " pending" : ""}${m.status === "failed" ? " failed" : ""}`;
-  const time = new Date(m.ts).toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" });
+  const time = formatMessageTime(m.ts);
+  const reactionsHtml = reactionChipsHtml(m);
   const editedTag = m.edited ? '<span class="msg-edited-tag">(編集済み)</span>' : "";
   const canAct = mine && (!m.status || m.status === "sent");
   const actions = canAct ? '<button class="msg-act" data-act="edit">編集</button><button class="msg-act danger" data-act="delete">削除</button>' : "";
@@ -2699,7 +2822,11 @@ function buildMessageRow(m, hideSender = false) {
     ${mine || hideSender ? "" : `<div class="msg-sender">${senderAvatarHtml(m)}${escapeHtml(m.displayName)}</div>`}
     <div class="msg-bubble${m.verified ? "" : " unverified"}">${escapeHtml(m.text)}</div>
     <div class="msg-meta">${m.verified ? "" : icon("warning", "icon icon-inline icon-warn")}${time}${m.verified ? "" : " ・ 署名検証失敗"}${editedTag}${status ? " ・ " + status : ""}${actions}</div>
+    ${reactionsHtml}
   `;
+  row.querySelectorAll(".reaction-chip").forEach((chip) => {
+    chip.addEventListener("click", (e) => { e.stopPropagation(); toggleReaction(m.id, chip.dataset.emoji); });
+  });
   if (!m.status || m.status === "sent") {
     row.addEventListener("click", () => {
       if (window.getSelection()?.toString()) return; // 文字選択（コピー）中は開かない
@@ -2745,6 +2872,93 @@ function appendMessageToRoom(room, message) {
   if (message.id) persistMessage(room.roomId, message);
 }
 
+// ===== リアクション（絵文字） =====
+// リアクションは「本文と同じルーム鍵で暗号化した kind:"reaction" のメッセージ」として全員に配る。
+// サーバは中身を復号できないまま中継するだけで、既読管理・自動削除の仕組みも本文メッセージと共通。
+
+const REACTION_EMOJIS = ["👍", "❤️", "😂", "😮", "😢", "🎉"];
+
+/** メッセージに付いているリアクションのチップ（多い順）。 */
+function reactionChipsHtml(m) {
+  const map = m.reactions;
+  if (!map) return "";
+  const entries = Object.entries(map).filter(([, users]) => Array.isArray(users) && users.length > 0);
+  if (entries.length === 0) return "";
+  entries.sort((a, b) => b[1].length - a[1].length || REACTION_EMOJIS.indexOf(a[0]) - REACTION_EMOJIS.indexOf(b[0]));
+  const chips = entries
+    .map(([emoji, users]) => {
+      const mine = users.includes(state.userId);
+      return `<button type="button" class="reaction-chip${mine ? " mine" : ""}" data-emoji="${escapeHtml(emoji)}" title="${users.length}人がリアクション">${escapeHtml(emoji)}<span class="n">${users.length}</span></button>`;
+    })
+    .join("");
+  return `<div class="msg-reactions">${chips}</div>`;
+}
+
+/** リアクションの状態を1件分だけ更新して、表示とIndexedDBに反映する。 */
+function applyReaction(room, message, emoji, userId, op) {
+  if (!message.reactions) message.reactions = {};
+  const users = Array.isArray(message.reactions[emoji]) ? message.reactions[emoji] : [];
+  if (op === "add") {
+    if (!users.includes(userId)) message.reactions[emoji] = [...users, userId];
+  } else {
+    const next = users.filter((u) => u !== userId);
+    if (next.length > 0) message.reactions[emoji] = next;
+    else delete message.reactions[emoji];
+  }
+  if (state.openRoomId === room.roomId) updateMessageRowInPlace(message);
+  persistMessage(room.roomId, message);
+}
+
+/** リアクションを付ける／外す（自分の分だけ。送信に失敗したら元に戻す）。 */
+async function toggleReaction(messageId, emoji) {
+  const room = state.rooms.get(state.openRoomId);
+  if (!room) return;
+  if (!room.roomKey) { showToast("ルーム鍵がまだありません"); return; }
+  if (!REACTION_EMOJIS.includes(emoji)) return;
+  const message = findMessage(room, messageId);
+  if (!message || message.deleted || message.system) return;
+
+  const had = !!(message.reactions?.[emoji]?.includes(state.userId));
+  const op = had ? "remove" : "add";
+  applyReaction(room, message, emoji, state.userId, op); // 先に自分の画面へ反映（通信を待たない）
+
+  const payload = { id: crypto.randomUUID(), kind: "reaction", from: state.userId, target: messageId, emoji, op, ts: Date.now() };
+  try {
+    const sig = await signJson(state.ecdsaPrivateKey, payload);
+    const { iv, ciphertext } = await aesGcmEncryptJson(room.roomKey, { ...payload, sig });
+    await api.send(state.token, room.roomId, { type: "reaction", to: null, iv, ciphertext });
+  } catch (e) {
+    applyReaction(room, message, emoji, state.userId, had ? "add" : "remove"); // 表示を元に戻す
+    showToast(`リアクションを送れませんでした: ${e.message}`);
+  }
+}
+
+/** 受信したリアクションのペイロード（復号済み）を検証して反映する。 */
+async function applyReactionPayload(room, payload) {
+  const { id, kind, from, target, emoji, op, ts, sig } = payload || {};
+  if (kind !== "reaction" || typeof from !== "string" || typeof target !== "string") return;
+  if (op !== "add" && op !== "remove") return;
+  if (!REACTION_EMOJIS.includes(emoji)) return;
+  if (from !== state.userId) {
+    const member = room.members.get(from);
+    if (!member?.ecdsaPublicKey) return;
+    if (!(await verifyJson(member.ecdsaPublicKey, { id, kind, from, target, emoji, op, ts }, sig))) return;
+  }
+  const message = findMessage(room, target);
+  if (!message || message.deleted || message.system) return;
+  applyReaction(room, message, emoji, from, op);
+}
+
+/** 受信したリアクション（暗号文）を復号して反映する。 */
+async function applyReactionMessage(room, msg) {
+  try {
+    const payload = await aesGcmDecryptJson(room.roomKey, msg.iv, msg.ciphertext);
+    await applyReactionPayload(room, payload);
+  } catch (e) {
+    console.error("リアクションの復号に失敗しました", e);
+  }
+}
+
 // ===== メッセージの編集・削除 =====
 
 function openMessageActionsSheet(messageId) {
@@ -2758,7 +2972,30 @@ function openMessageActionsSheet(messageId) {
   show("btn-message-copy", live);
   show("btn-message-edit", mine && live && !!room.roomKey);
   show("btn-message-delete", mine && live && !!room.roomKey);
+  renderReactionBar(room, m, live && !m.system);
   openSheet("sheet-message-actions");
+}
+
+/** メッセージ操作シートの上に、定型の絵文字リアクションのボタンを並べる。 */
+function renderReactionBar(room, m, enabled) {
+  const bar = document.getElementById("message-reaction-bar");
+  if (!bar) return;
+  const usable = enabled && !!room.roomKey;
+  bar.innerHTML = "";
+  bar.classList.toggle("hidden", !usable);
+  if (!usable) return;
+  for (const emoji of REACTION_EMOJIS) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = emoji;
+    b.title = `「${emoji}」とリアクション`;
+    if (m.reactions?.[emoji]?.includes(state.userId)) b.classList.add("mine");
+    b.addEventListener("click", () => {
+      closeSheet("sheet-message-actions");
+      toggleReaction(m.id, emoji);
+    });
+    bar.appendChild(b);
+  }
 }
 
 function startEditMessage(messageId) {
@@ -2849,6 +3086,7 @@ function applyDelete(room, messageId) {
   if (!message) return;
   message.deleted = true;
   message.text = "";
+  message.reactions = {};
   if (state.openRoomId === room.roomId) updateMessageRowInPlace(message);
   if (room.lastMessageId === messageId) room.lastPreview = "メッセージが削除されました";
   persistMessage(room.roomId, message);
@@ -2932,6 +3170,8 @@ async function decryptAndAppendChat(room, msg) {
   try {
     const payload = await aesGcmDecryptJson(room.roomKey, msg.iv, msg.ciphertext);
     const { id, kind, from, text, ts, sig } = payload;
+    // リアクションは署名対象のフィールドが違うので、本文とは別の経路で処理する
+    if (kind === "reaction") { await applyReactionPayload(room, payload); return; }
     const member = room.members.get(from);
     const isSelf = from === state.userId;
     const verified = isSelf || (member?.ecdsaPublicKey ? await verifyJson(member.ecdsaPublicKey, { id, kind, from, text, ts }, sig) : false);
@@ -2976,7 +3216,10 @@ async function flushPendingEncrypted(room) {
   if (!room.roomKey || room.pendingEncrypted.length === 0) return;
   const pending = room.pendingEncrypted;
   room.pendingEncrypted = [];
-  for (const msg of pending) await decryptAndAppendChat(room, msg);
+  for (const msg of pending) {
+    if (msg.type === "reaction") await applyReactionMessage(room, msg);
+    else await decryptAndAppendChat(room, msg);
+  }
 }
 
 async function processIncomingMessage(room, msg) {
@@ -3033,6 +3276,15 @@ async function processIncomingMessage(room, msg) {
     } catch (e) {
       console.error("keywrapの復号に失敗", e);
     }
+    return;
+  }
+
+  if (msg.type === "reaction") {
+    if (!room.roomKey) {
+      room.pendingEncrypted.push(msg);
+      return;
+    }
+    await applyReactionMessage(room, msg);
     return;
   }
 
@@ -3570,6 +3822,71 @@ function initAvatarSettings() {
   setInterval(verifyAvatarLink, AVATAR_RECHECK_MS);
 }
 
+// ===== グループ画像（グループの所有者が画像リンクを貼り付ける） =====
+
+function initGroupPhotoSheet() {
+  document.getElementById("btn-set-group-photo").addEventListener("click", () => {
+    const room = state.rooms.get(state.openRoomId);
+    if (!room || room.kind !== "group" || !room.isOwner) return;
+    document.getElementById("input-group-photo-url").value = room.avatarUrl || "";
+    const st = document.getElementById("group-photo-status");
+    st.textContent = "";
+    st.className = "status-line";
+    openSheet("sheet-group-photo");
+    setTimeout(() => document.getElementById("input-group-photo-url").focus(), 50);
+  });
+
+  document.getElementById("btn-group-photo-apply").addEventListener("click", applyGroupPhotoFromInput);
+  document.getElementById("input-group-photo-url").addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); applyGroupPhotoFromInput(); } });
+  document.getElementById("btn-group-photo-reset").addEventListener("click", () => {
+    document.getElementById("input-group-photo-url").value = "";
+    setGroupPhoto(null);
+  });
+}
+
+async function applyGroupPhotoFromInput() {
+  const st = document.getElementById("group-photo-status");
+  const btn = document.getElementById("btn-group-photo-apply");
+  const url = normalizeAvatarUrl(document.getElementById("input-group-photo-url").value);
+  if (!url) {
+    st.textContent = "http:// または https:// で始まる画像のURLを入力してください";
+    st.className = "status-line error";
+    return;
+  }
+  btn.disabled = true;
+  st.className = "status-line";
+  st.textContent = "画像を確認しています…";
+  const ok = await probeImage(proxiedAvatarSrc(url));
+  btn.disabled = false;
+  if (!ok) {
+    st.textContent = "画像を読み込めませんでした。URLと公開設定を確認してください";
+    st.className = "status-line error";
+    return;
+  }
+  await setGroupPhoto(url);
+}
+
+/** グループ画像をサーバに保存する（null で解除）。所有者以外はサーバが拒否する。 */
+async function setGroupPhoto(url) {
+  const room = state.rooms.get(state.openRoomId);
+  if (!room || room.kind !== "group") return;
+  const st = document.getElementById("group-photo-status");
+  try {
+    const res = await api.setRoomAvatar(state.token, room.roomId, url);
+    room.avatarUrl = res?.avatarUrl ?? null;
+    await persistRoom(room);
+    renderChatList();
+    renderGroupPhoto(room);
+    st.className = "status-line";
+    st.textContent = url ? "グループ画像を設定しました（全員に表示されます）" : "グループ画像を外しました";
+    if (!url) document.getElementById("input-group-photo-url").value = "";
+    else setTimeout(() => closeSheet("sheet-group-photo"), 700);
+  } catch (e) {
+    st.className = "status-line error";
+    st.textContent = `設定できませんでした: ${e.message}`;
+  }
+}
+
 // ===== 通知（ページ内）・PWAバッジ・マニフェスト =====
 // Service Workerを使わないため、通知はページが開いている間だけ（別タブ・最小化中でも可）。
 
@@ -3945,29 +4262,43 @@ window.addEventListener("focus", () => {
 function initViewportSync() {
   const vv = window.visualViewport;
   const root = document.documentElement;
+  const input = document.getElementById("input-message");
   let baseH = 0, lastW = 0;
-  const apply = () => {
+  const apply = (withScroll) => {
     const h = Math.round(vv ? vv.height : window.innerHeight);
     const w = Math.round(vv ? vv.width : window.innerWidth);
-    const top = Math.round(vv ? vv.offsetTop : 0);
+    const layoutH = Math.round(document.documentElement.clientHeight || window.innerHeight || h);
     if (Math.abs(w - lastW) > 40) baseH = 0; // 回転・幅の変化で基準をリセット
     lastW = w;
     baseH = Math.max(baseH, h);
-    root.style.setProperty("--vvh", h + "px");
-    root.style.setProperty("--vvt", top + "px");
     const kbd = window.matchMedia("(max-width: 959.98px)").matches && baseH - h > 120;
+    // 見えている高さが実画面の高さを超えないようにする（--vvh が古いまま残っても画面が下へはみ出さない）
+    const height = layoutH > 0 ? Math.min(h, layoutH) : h;
+    // visualViewport のずれはキーボード表示中だけ反映し、しかも「画面の下端が実画面の下端を超えない」範囲に収める。
+    // iOS はキーボードを閉じても offsetTop が残ることがあり、そのまま足すと入力欄が画面の下に
+    // 落ちて押しづらくなる（＝まさにこの症状）。ずれが残っても下端は必ず画面内に収まる。
+    const maxTop = Math.max(0, layoutH - height);
+    const top = kbd && vv ? Math.max(0, Math.min(Math.round(vv.offsetTop), maxTop)) : 0;
+    root.style.setProperty("--vvh", height + "px");
+    root.style.setProperty("--vvt", top + "px");
     document.body.classList.toggle("kbd-open", kbd);
     if (!kbd && window.scrollY) window.scrollTo(0, 0);
-    if (state.stick && state.openRoomId) scrollMessagesToBottom();
+    if (withScroll !== false && state.stick && state.openRoomId) scrollMessagesToBottom();
   };
   apply();
   if (vv) { vv.addEventListener("resize", apply); vv.addEventListener("scroll", apply); }
   window.addEventListener("resize", apply);
   window.addEventListener("orientationchange", () => setTimeout(apply, 250));
+  window.addEventListener("pageshow", () => { setTimeout(apply, 0); setTimeout(apply, 300); });
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) apply(); });
   const list = document.getElementById("message-list");
   list.addEventListener("scroll", () => { state.stick = list.scrollHeight - list.scrollTop - list.clientHeight < 80; }, { passive: true });
   // 入力欄にフォーカスしたとき、キーボードが出きるのを待ってから最下部へ
-  document.getElementById("input-message").addEventListener("focus", () => setTimeout(() => { apply(); if (state.openRoomId) scrollMessagesToBottom(); }, 300));
+  input.addEventListener("focus", () => setTimeout(() => { apply(); if (state.openRoomId) scrollMessagesToBottom(); }, 300));
+  // キーボードが閉じた直後にもう一度合わせる（機種によっては resize が来ないため）
+  input.addEventListener("blur", () => { setTimeout(apply, 60); setTimeout(apply, 350); });
+  // iOS では visualViewport の変化でイベントが来ないことがあるので、念のため定期的にも合わせる（自動スクロールはしない）
+  setInterval(() => { if (!document.hidden) apply(false); }, 2000);
 }
 
 // ===== 起動処理 =====
@@ -3989,6 +4320,7 @@ async function boot() {
   initMessageActionsSheet();
   initNotificationSettings();
   initAvatarSettings();
+  initGroupPhotoSheet();
   initThemeSwatches();
   state.avatarUrl = loadAvatarLocal();
 
