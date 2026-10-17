@@ -843,6 +843,8 @@ input[type="range"] {
   inset: 0;
   width: 100%;
   height: 100%;
+  max-width: 100%;
+  max-height: 100%;
   object-fit: contain;
   user-select: none;
   -webkit-user-drag: none;
@@ -1361,7 +1363,7 @@ input[type="range"]::-moz-range-thumb {
     </nav>
   </div>
 
-  <input type="file" id="file-input" accept="image/*" capture="environment" hidden />
+  <input type="file" id="file-input" accept="image/*" hidden />
 
   <div id="stage-overlay" hidden></div>
 
@@ -2318,55 +2320,73 @@ input[type="range"]::-moz-range-thumb {
     cropImg.src = cropDataUrl;
     cropImg.onload = () => {
       const aspect = state.sourceCanvas.width / state.sourceCanvas.height;
-      const parent = wrap.parentElement;
-      const maxW = parent.clientWidth - 32;
-      const maxH = parent.clientHeight - 32;
-      let w, h;
-      if (maxW / aspect <= maxH) {
-        w = maxW;
-        h = maxW / aspect;
-      } else {
-        h = maxH;
-        w = maxH * aspect;
-      }
-      wrap.style.width = w + "px";
-      wrap.style.height = h + "px";
-      wrap.style.aspectRatio = aspect;
-      cropDisplaySize = { w, h };
-      // SVG overlay
-      cropOverlay = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-      cropOverlay.setAttribute("class", "crop-overlay");
-      cropOverlay.setAttribute("viewBox", `0 0 ${w} ${h}`);
-      cropOverlay.setAttribute("preserveAspectRatio", "none");
-      cropOverlay.innerHTML = `
-        <defs>
-          <mask id="cropMask">
-            <rect x="0" y="0" width="${w}" height="${h}" fill="white"/>
-            <polygon id="cropPolyMask" fill="black"/>
-          </mask>
-        </defs>
-        <rect x="0" y="0" width="${w}" height="${h}" fill="black" fill-opacity="0.45" mask="url(#cropMask)"/>
-        <polygon id="cropPoly" fill="none" stroke="var(--primary)" stroke-width="2" stroke-dasharray="6 4"/>
-        <line id="cropLine1" stroke="var(--primary)" stroke-width="0.5" stroke-opacity="0.4"/>
-        <line id="cropLine2" stroke="var(--primary)" stroke-width="0.5" stroke-opacity="0.4"/>
-      `;
-      wrap.appendChild(cropImg);
-      wrap.appendChild(cropOverlay);
-      // Create handles
-      cropHandles = [];
-      for (let i = 0; i < 4; i++) {
-        const h = createElement("button", { class: "crop-handle", ariaLabel: `コーナー ${i + 1}` });
-        h.innerHTML = '<span class="dot"></span>';
-        h.dataset.idx = i;
-        h.addEventListener("pointerdown", (e) => {
-          e.preventDefault();
-          cropActiveIdx = i;
-        });
-        wrap.appendChild(h);
-        cropHandles.push(h);
-      }
-      renderCropPolygon();
+      // requestAnimationFrame を使って DOM レイアウトが確定してからサイズ計算する。
+      // 直前の appendChild 直後は clientHeight が 0 を返すモバイル環境があるため。
+      requestAnimationFrame(() => layoutCropWrap(wrap, aspect));
     };
+  }
+
+  function layoutCropWrap(wrap, aspect) {
+    const parent = wrap.parentElement;
+    // レイアウト未確定対策のフォールバック付き寸法取得
+    let maxW = (parent.clientWidth || window.innerWidth) - 32;
+    let maxH = (parent.clientHeight || (window.innerHeight - 200)) - 32;
+    // さらに安全のための最小値保証
+    maxW = Math.max(160, maxW);
+    maxH = Math.max(160, maxH);
+    let w, h;
+    if (maxW / aspect <= maxH) {
+      w = maxW;
+      h = maxW / aspect;
+    } else {
+      h = maxH;
+      w = maxH * aspect;
+    }
+    wrap.style.width = w + "px";
+    wrap.style.height = h + "px";
+    wrap.style.aspectRatio = aspect;
+    cropDisplaySize = { w, h };
+
+    // 既にオーバーレイが構築済みならポリゴンだけ再描画
+    if (cropOverlay && cropOverlay.isConnected) {
+      cropOverlay.setAttribute("viewBox", `0 0 ${w} ${h}`);
+      renderCropPolygon();
+      return;
+    }
+
+    // SVG overlay
+    cropOverlay = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    cropOverlay.setAttribute("class", "crop-overlay");
+    cropOverlay.setAttribute("viewBox", `0 0 ${w} ${h}`);
+    cropOverlay.setAttribute("preserveAspectRatio", "none");
+    cropOverlay.innerHTML = `
+      <defs>
+        <mask id="cropMask">
+          <rect x="0" y="0" width="${w}" height="${h}" fill="white"/>
+          <polygon id="cropPolyMask" fill="black"/>
+        </mask>
+      </defs>
+      <rect x="0" y="0" width="${w}" height="${h}" fill="black" fill-opacity="0.45" mask="url(#cropMask)"/>
+      <polygon id="cropPoly" fill="none" stroke="var(--primary)" stroke-width="2" stroke-dasharray="6 4"/>
+      <line id="cropLine1" stroke="var(--primary)" stroke-width="0.5" stroke-opacity="0.4"/>
+      <line id="cropLine2" stroke="var(--primary)" stroke-width="0.5" stroke-opacity="0.4"/>
+    `;
+    wrap.appendChild(cropImg);
+    wrap.appendChild(cropOverlay);
+    // Create handles
+    cropHandles = [];
+    for (let i = 0; i < 4; i++) {
+      const h = createElement("button", { class: "crop-handle", ariaLabel: `コーナー ${i + 1}` });
+      h.innerHTML = '<span class="dot"></span>';
+      h.dataset.idx = i;
+      h.addEventListener("pointerdown", (e) => {
+        e.preventDefault();
+        cropActiveIdx = i;
+      });
+      wrap.appendChild(h);
+      cropHandles.push(h);
+    }
+    renderCropPolygon();
   }
 
   function renderCropPolygon() {
@@ -2409,6 +2429,24 @@ input[type="range"]::-moz-range-thumb {
   });
   document.addEventListener("pointerup", () => {
     cropActiveIdx = null;
+  });
+
+  // 画面回転・リサイズ時にクロップ領域を再レイアウト
+  let cropResizeTimer = null;
+  window.addEventListener("resize", () => {
+    if (!cropWrap || !cropImg || !state.sourceCanvas) return;
+    clearTimeout(cropResizeTimer);
+    cropResizeTimer = setTimeout(() => {
+      const aspect = state.sourceCanvas.width / state.sourceCanvas.height;
+      layoutCropWrap(cropWrap, aspect);
+    }, 120);
+  });
+  window.addEventListener("orientationchange", () => {
+    if (!cropWrap || !cropImg || !state.sourceCanvas) return;
+    setTimeout(() => {
+      const aspect = state.sourceCanvas.width / state.sourceCanvas.height;
+      layoutCropWrap(cropWrap, aspect);
+    }, 200);
   });
 
   /* ============================================================ enhance === */
