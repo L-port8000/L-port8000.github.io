@@ -96,6 +96,16 @@ body.kbd-open { --safe-bottom: 0px; }
   .screen .composer { padding-bottom: calc(16px + var(--safe-bottom)); }
   .sheet-backdrop { inset: auto; left: 0; right: 0; top: var(--vvt, 0px); height: var(--vvh, 100dvh); }
   .sheet { max-height: calc(var(--vvh, 100dvh) - 16px); }
+  /* キーボードが出ている間はシートを画面上部に固定する。
+     下端固定のままだと、入力欄にフォーカスした瞬間にキーボードで押し上げられ、
+     入力欄の位置が動いて押しづらくなる（グループ画像のURL入力などで発生）。 */
+  body.kbd-open .sheet-backdrop { align-items: flex-start; padding-top: max(8px, env(safe-area-inset-top)); }
+  body.kbd-open .sheet {
+    border-radius: 20px;
+    border-bottom: 1px solid var(--hairline);
+    margin-top: 0;
+    animation: none;
+  }
 }
 
 /* ブラウザ既定の太いスクロールバーを避ける */
@@ -813,6 +823,17 @@ body.kbd-open { --safe-bottom: 0px; }
 .group-photo-name { font-family: var(--font-display); font-size: 15px; letter-spacing: 0.05em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .group-photo-hint { font-size: 11.5px; line-height: 1.5; color: var(--overlay1); margin-top: 3px; }
 
+/* ---------- 連絡先のプロフィール（1対1の詳細） ---------- */
+.peer-profile {
+  display: flex; align-items: center; gap: 14px;
+  padding: 2px 0 14px; margin-bottom: 12px; border-bottom: 1px solid var(--hairline);
+}
+.peer-avatar { width: 56px; height: 56px; font-size: 22px; flex-shrink: 0; }
+.peer-name {
+  font-family: var(--font-display); font-size: 16px; letter-spacing: 0.05em;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;
+}
+
 /* ---------- 詳細パネル（メンバー・連絡先） ---------- */
 
 .members-panel {
@@ -1399,7 +1420,11 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
         </div>
 
         <div id="direct-peer-info" class="hidden">
-          <p class="muted" style="padding:0 4px;">相手のアドレス</p>
+          <div class="peer-profile">
+            <span class="peer-avatar member-avatar" id="peer-avatar"></span>
+            <div class="peer-name" id="peer-name"></div>
+          </div>
+          <p class="muted" style="padding:0 4px;">アカウントID</p>
           <div class="address-box small"><code id="peer-address"></code></div>
         </div>
 
@@ -1604,7 +1629,12 @@ function openDb() {
       if (!db.objectStoreNames.contains("messages")) db.createObjectStore("messages");
       if (!db.objectStoreNames.contains("settings")) db.createObjectStore("settings"); // Service Worker(sw.js)と共有する設定
     };
-    req.onsuccess = () => resolve(req.result);
+    req.onsuccess = () => {
+      const db = req.result;
+      // 別タブ/SWがDBを更新するときは、この接続を閉じて更新を妨げない
+      try { db.onversionchange = () => db.close(); } catch {}
+      resolve(db);
+    };
     req.onerror = () => reject(req.error);
   });
 }
@@ -1787,6 +1817,55 @@ const avatarBlobCache = new Map();   // url -> objectURL
 const avatarFetching = new Set();
 const avatarFailed = new Map();      // url -> 失敗時刻（一定時間は画像を出さず頭文字のまま。時間が経てば再試行）
 const AVATAR_RETRY_MS = 60 * 1000;
+const AVATAR_CACHE_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000; // 端末キャッシュの保持期間
+const AVATAR_CACHE_PREFIX = "avatar:";   // settingsストア内のキー接頭辞
+const AVATAR_INDEX_KEY = "avatarIndex";  // キャッシュ済みURLの一覧
+let avatarsCacheLoaded = false;
+let avatarIndexQueue = Promise.resolve(); // インデックス更新の直列化
+
+/** 表示中の<img>を、取得済みのobjectURLへ差し替える（通信は発生しない）。 */
+function swapAvatarImages(url, obj) {
+  document.querySelectorAll("img[data-avatar-url]").forEach((img) => {
+    if (img.dataset.avatarUrl === url && img.src !== obj) img.src = obj;
+  });
+}
+
+/** 端末に保存したアイコン画像をメモリへ読み込む（起動時に1回）。同じセッション中は再取得しない。 */
+async function loadAvatarCache() {
+  if (avatarsCacheLoaded) return;
+  avatarsCacheLoaded = true;
+  try {
+    const index = (await idbGet("settings", AVATAR_INDEX_KEY)) || [];
+    const now = Date.now();
+    const kept = [];
+    for (const url of index) {
+      const rec = await idbGet("settings", AVATAR_CACHE_PREFIX + url);
+      if (!rec || !rec.blob) continue;
+      if (rec.ts && now - rec.ts > AVATAR_CACHE_MAX_AGE_MS) { idbDelete("settings", AVATAR_CACHE_PREFIX + url).catch(() => {}); continue; }
+      kept.push(url);
+      if (avatarBlobCache.has(url)) continue;
+      const obj = URL.createObjectURL(rec.blob);
+      avatarBlobCache.set(url, obj);
+      swapAvatarImages(url, obj);
+    }
+    if (kept.length !== index.length) await idbPut("settings", kept, AVATAR_INDEX_KEY).catch(() => {});
+  } catch {}
+}
+
+/** 取得したアイコン画像を端末に保存する（次回以降は通信せずに表示できる）。 */
+async function persistAvatar(url, blob) {
+  try {
+    await idbPut("settings", { blob, ts: Date.now() }, AVATAR_CACHE_PREFIX + url);
+    avatarIndexQueue = avatarIndexQueue.then(async () => {
+      try {
+        const index = (await idbGet("settings", AVATAR_INDEX_KEY)) || [];
+        if (!index.includes(url)) { index.push(url); await idbPut("settings", index, AVATAR_INDEX_KEY); }
+      } catch {}
+    });
+    await avatarIndexQueue;
+  } catch {}
+}
+
 function avatarRecentlyFailed(url) {
   const t = avatarFailed.get(url);
   return !!t && Date.now() - t < AVATAR_RETRY_MS;
@@ -1802,8 +1881,9 @@ async function warmAvatar(url) {
     if (!/^image\//.test(blob.type) || blob.size > 4 * 1024 * 1024) throw new Error("not an image");
     const obj = URL.createObjectURL(blob);
     avatarBlobCache.set(url, obj);
+    persistAvatar(url, blob); // 端末に保存（次回以降は通信なしで表示）
     // すでに表示中の<img>があれば差し替える（取得済みデータなので通信は発生しない）
-    document.querySelectorAll("img[data-avatar-url]").forEach((img) => { if (img.dataset.avatarUrl === url && img.src !== obj) img.src = obj; });
+    swapAvatarImages(url, obj);
   } catch {
     // CORS等でfetchできない場合は、通常の<img>読み込みに任せる
   } finally {
@@ -2881,7 +2961,18 @@ function updateRoomHeaderAndMembers(roomId) {
   renderRoomSubtitle(room);
   if (room.kind === "direct") {
     directPeerInfoEl.classList.remove("hidden");
-    document.getElementById("peer-address").textContent = room.peer?.address || "";
+    const peer = room.peer;
+    document.getElementById("peer-address").textContent = peer?.address || "";
+    document.getElementById("peer-name").textContent = peer?.displayName || "名前未設定";
+    const peerAvEl = document.getElementById("peer-avatar");
+    if (peerAvEl) {
+      const pInitial = [...(peer?.displayName || "?")][0]?.toUpperCase() || "?";
+      const pSig = avatarSig(pInitial, peer?.avatarUrl);
+      if (peerAvEl.dataset.sig !== pSig) {
+        peerAvEl.dataset.sig = pSig;
+        peerAvEl.innerHTML = avatarInner(pInitial, peer?.avatarUrl);
+      }
+    }
     addGroupMemberBtn.classList.add("hidden");
     document.getElementById("members-panel-title").textContent = "連絡先の詳細";
   } else {
@@ -4135,7 +4226,7 @@ function openRenameSheet(roomId) {
   const input = document.getElementById("input-rename-chat");
   input.value = room.alias || room.name || "";
   openSheet("sheet-rename");
-  setTimeout(() => input.focus(), 50);
+  setTimeout(() => input.focus({ preventScroll: true }), 50);
 }
 
 async function saveRename() {
@@ -4375,7 +4466,7 @@ function initGroupPhotoSheet() {
     st.textContent = "";
     st.className = "status-line";
     openSheet("sheet-group-photo");
-    setTimeout(() => document.getElementById("input-group-photo-url").focus(), 50);
+    setTimeout(() => document.getElementById("input-group-photo-url").focus({ preventScroll: true }), 50);
   });
 
   document.getElementById("btn-group-photo-apply").addEventListener("click", applyGroupPhotoFromInput);
@@ -4918,6 +5009,7 @@ async function boot() {
   initGroupPhotoSheet();
   initThemeSwatches();
   state.avatarUrl = loadAvatarLocal();
+  await loadAvatarCache(); // 端末に保存済みのアイコン画像を先に読み込む（通信を減らす）
 
   const session = loadSessionMeta();
   const identity = await loadIdentityFromIdb();
