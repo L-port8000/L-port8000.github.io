@@ -1,5 +1,15 @@
 "use strict";
 
+/**
+ * E2EE Chat — Service Worker（プッシュ通知専用・単体で完結。importScriptsなし）
+ *
+ * index.html と同じフォルダに置くと、アプリを閉じていてもプッシュ通知が届くようになる。
+ * 置かなくてもチャット本体は動く（その場合、通知はアプリを開いている間だけ）。
+ *
+ * サーバから届くpushペイロード: { kind, roomId, from, fromDisplayName, iv, ciphertext, ts }
+ *   - ciphertext はルーム鍵(AES-GCM)で暗号化されたまま。サーバは中身を知らない。
+ *   - 「通知に内容を表示する」がONで、この端末にルーム鍵があるときだけ、ここで復号して本文を出す。
+ */
 
 const DB_NAME = "e2ee-chat";
 
@@ -21,7 +31,8 @@ function openDb() {
     const req = indexedDB.open(DB_NAME);
     // 未ログイン（DBがまだ無い）なら作らずに中止する
     req.onupgradeneeded = () => { try { req.transaction.abort(); } catch {} };
-    req.onsuccess = () => resolve(req.result);
+    // アプリ側がDBを更新（バージョンアップ）するとき、この接続が邪魔をしないよう閉じる
+    req.onsuccess = () => { const db = req.result; try { db.onversionchange = () => db.close(); } catch {} resolve(db); };
     req.onerror = () => reject(req.error);
   });
 }
