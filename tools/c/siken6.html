@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#080808">
+<title>Silent Camera — ローカル撮影テスト</title>
+<meta name="description" content="外部ライブラリを使わず、ブラウザ内で写真・動画を扱う単一HTMLのカメラ試験プログラム。">
+<style>
+:root{color-scheme:dark;--bg:#080808;--panel:#171717;--line:#303030;--text:#f5f5f5;--muted:#a9a9a9;--accent:#fff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}
+button,select{font:inherit}button{border:1px solid var(--line);background:#222;color:var(--text);border-radius:12px;padding:11px 14px;cursor:pointer}button:disabled{opacity:.45;cursor:not-allowed}button:focus-visible,select:focus-visible{outline:2px solid white;outline-offset:2px}
+.app{max-width:760px;margin:auto;min-height:100dvh;display:flex;flex-direction:column;padding:14px;gap:12px}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px}h1{font-size:20px;margin:0} .sub{font-size:12px;color:var(--muted)}
+.preview{position:relative;overflow:hidden;background:#000;border:1px solid var(--line);border-radius:18px;aspect-ratio:4/3;display:grid;place-items:center}
+video#live{width:100%;height:100%;object-fit:cover} .placeholder{position:absolute;color:#aaa;text-align:center;padding:20px;pointer-events:none}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.toolbar button{flex:1}
+.primary{background:#f3f3f3;color:#111;border-color:#f3f3f3;font-weight:650}.danger{border-color:#783333;color:#ffb6b6}
+.status{padding:10px 12px;border:1px solid var(--line);border-radius:12px;color:var(--muted);font-size:13px;min-height:42px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:13px;display:grid;gap:10px}
+.panel h2{font-size:15px;margin:0}.field{display:flex;justify-content:space-between;gap:12px;align-items:center}.field label{font-size:14px}.field select{max-width:58%;background:#222;color:white;border:1px solid var(--line);border-radius:8px;padding:7px}
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}.item{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#101010;min-width:0}.item img,.item video{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;background:#000}.item .meta{padding:8px;display:grid;gap:6px;font-size:12px;color:var(--muted)}.item button{padding:7px;font-size:12px}
+.note{font-size:12px;color:var(--muted);margin:0}.pill{border:1px solid var(--line);border-radius:99px;padding:4px 8px;font-size:11px;color:#ddd}
+footer{padding:4px 0 12px;color:#777;font-size:11px}
+[hidden]{display:none!important}
+@media(min-width:620px){.app{padding:22px}.preview{max-height:65vh}}
+</style>
+</head>
+<body>
+<main class="app">
+  <header>
+    <div><h1>Silent Camera</h1><div class="sub">単一HTML・ローカル処理の試験版</div></div>
+    <span class="pill">外部ライブラリなし</span>
+  </header>
+
+  <div class="preview">
+    <video id="live" autoplay playsinline muted hidden></video>
+    <div id="placeholder" class="placeholder">カメラを起動すると、ここに映像が表示されます。</div>
+    <canvas id="canvas" hidden></canvas>
+  </div>
+
+  <div class="toolbar">
+    <button id="startBtn" class="primary">カメラを起動</button>
+    <button id="photoBtn" disabled>写真を撮影</button>
+    <button id="recordBtn" disabled>動画を録画</button>
+    <button id="stopBtn" class="danger" disabled>録画停止</button>
+    <button id="switchBtn" disabled>カメラ切替</button>
+  </div>
+
+  <section class="panel">
+    <h2>撮影設定</h2>
+    <div class="field"><label for="facing">カメラ</label><select id="facing"><option value="environment">背面カメラ</option><option value="user">前面カメラ</option></select></div>
+    <div class="field"><label for="quality">写真サイズ</label><select id="quality"><option value="source">カメラ映像の解像度</option><option value="1920">最大 1920px</option><option value="1280">最大 1280px</option></select></div>
+    <p class="note">シャッター音は再生しません。OSやブラウザ、端末メーカーがカメラ撮影時に独自の音を鳴らす場合、その音をこのWebページから制御することはできません。</p>
+  </section>
+
+  <div id="status" class="status" role="status" aria-live="polite">待機中。カメラ起動にはHTTPSまたはlocalhostなどの安全なコンテキストが必要です。</div>
+
+  <section class="panel">
+    <div class="field"><h2>このセッションの撮影データ</h2><button id="clearBtn">一覧を消去</button></div>
+    <div id="gallery" class="gallery"></div>
+    <p class="note">撮影データはこのページ内で生成し、ダウンロード操作時にファイルとして保存します。ページを閉じると一覧は消えます。自動アップロード機能はありません。</p>
+  </section>
+
+  <footer>プライバシー試験用サンプル。外部スクリプト、解析ビーコン、API呼び出しは含みません。ブラウザ自体の通信やホスティング環境のログまでは、このHTML単独では保証・制御できません。</footer>
+</main>
+<script>
+(() => {
+  "use strict";
+  const $ = id => document.getElementById(id);
+  const live = $("live"), canvas = $("canvas"), ctx = canvas.getContext("2d");
+  const startBtn = $("startBtn"), photoBtn = $("photoBtn"), recordBtn = $("recordBtn"), stopBtn = $("stopBtn"), switchBtn = $("switchBtn");
+  const facing = $("facing"), quality = $("quality"), status = $("status"), placeholder = $("placeholder"), gallery = $("gallery");
+  let stream = null, recorder = null, chunks = [], recordingStarted = 0, recordingTimer = null, currentFacing = "environment", entries = [];
+
+  function say(message) { status.textContent = message; }
+  function setCameraState(active) {
+    photoBtn.disabled = !active;
+    recordBtn.disabled = !active || !window.MediaRecorder;
+    switchBtn.disabled = !active;
+    startBtn.textContent = active ? "カメラを停止" : "カメラを起動";
+    live.hidden = !active;
+    placeholder.hidden = active;
+  }
+  function stopCamera() {
+    if (recorder && recorder.state !== "inactive") recorder.stop();
+    if (stream) stream.getTracks().forEach(track => track.stop());
+    stream = null;
+    live.srcObject = null;
+    setCameraState(false);
+    say("カメラを停止しました。");
+  }
+  async function startCamera() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      say("この環境ではカメラAPIを利用できません。HTTPSまたはlocalhostで開いてください。"); return;
+    }
+    if (stream) { stopCamera(); return; }
+    try {
+      currentFacing = facing.value;
+      stream = await navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: { facingMode: { ideal: currentFacing }, width: { ideal: 3840 }, height: { ideal: 2160 } }
+      });
+      live.srcObject = stream;
+      await live.play();
+      setCameraState(true);
+      const track = stream.getVideoTracks()[0];
+      const s = track && track.getSettings ? track.getSettings() : {};
+      say("カメラ起動中" + (s.width && s.height ? ` — ${s.width}×${s.height}` : "") + "。シャッター音はこのページから再生していません。");
+    } catch (err) {
+      stream = null;
+      setCameraState(false);
+      say("カメラを起動できませんでした: " + (err && err.message ? err.message : String(err)) + "。権限と安全な接続を確認してください。");
+    }
+  }
+  function canvasBlob(type, qualityValue) {
+    return new Promise(resolve => canvas.toBlob(resolve, type, qualityValue));
+  }
+  async function takePhoto() {
+    if (!stream || !live.videoWidth) { say("カメラ映像の準備ができていません。"); return; }
+    let w = live.videoWidth, h = live.videoHeight;
+    const limit = quality.value === "source" ? Infinity : Number(quality.value);
+    if (Math.max(w, h) > limit) {
+      const scale = limit / Math.max(w, h);
+      w = Math.round(w * scale); h = Math.round(h * scale);
+    }
+    canvas.width = w; canvas.height = h;
+    ctx.drawImage(live, 0, 0, w, h);
+    const blob = await canvasBlob("image/jpeg", 0.94);
+    if (!blob) { say("写真データを生成できませんでした。"); return; }
+    addEntry(blob, "photo", `photo-${stamp()}.jpg`);
+    say(`写真を撮影しました（${w}×${h}）。シャッター音は再生していません。`);
+  }
+  function stamp() {
+    const d = new Date();
+    return [d.getFullYear(), String(d.getMonth()+1).padStart(2,"0"), String(d.getDate()).padStart(2,"0"), "-", String(d.getHours()).padStart(2,"0"), String(d.getMinutes()).padStart(2,"0"), String(d.getSeconds()).padStart(2,"0")].join("");
+  }
+  function addEntry(blob, type, filename) {
+    const url = URL.createObjectURL(blob);
+    const item = { blob, type, filename, url };
+    entries.unshift(item);
+    const card = document.createElement("article");
+    card.className = "item";
+    if (type === "photo") {
+      const img = document.createElement("img"); img.src = url; img.alt = "撮影した写真"; card.append(img);
+    } else {
+      const video = document.createElement("video"); video.src = url; video.controls = true; video.playsInline = true; card.append(video);
+    }
+    const meta = document.createElement("div"); meta.className = "meta";
+    const info = document.createElement("div"); info.textContent = `${type === "photo" ? "写真" : "動画"} · ${(blob.size/1024/1024).toFixed(2)} MB`;
+    const download = document.createElement("button"); download.textContent = "ダウンロード"; download.addEventListener("click", () => downloadBlob(item));
+    meta.append(info, download); card.append(meta); card.dataset.entry = filename; gallery.prepend(card);
+  }
+  function downloadBlob(item) {
+    const a = document.createElement("a"); a.href = item.url; a.download = item.filename;
+    document.body.append(a); a.click(); a.remove();
+  }
+  function startRecording() {
+    if (!stream || !window.MediaRecorder) { say("このブラウザでは動画録画に対応していません。"); return; }
+    let options = {};
+    for (const mime of ["video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/webm"]) {
+      if (MediaRecorder.isTypeSupported(mime)) { options.mimeType = mime; break; }
+    }
+    try {
+      chunks = [];
+      recorder = new MediaRecorder(stream, options);
+      recorder.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+      recorder.onerror = e => say("録画エラー: " + (e.error?.message || "詳細不明"));
+      recorder.onstop = () => {
+        clearInterval(recordingTimer); recordingTimer = null;
+        const mime = recorder && recorder.mimeType ? recorder.mimeType : "video/webm";
+        const blob = new Blob(chunks, { type: mime });
+        if (blob.size) {
+          const ext = mime.includes("mp4") ? "mp4" : "webm";
+          addEntry(blob, "video", `video-${stamp()}.${ext}`);
+          say(`録画を保存用データにしました（${(blob.size/1024/1024).toFixed(2)} MB）。ダウンロードを押して保存してください。`);
+        } else say("録画データが空でした。");
+        recordBtn.disabled = !stream || !window.MediaRecorder;
+        stopBtn.disabled = true;
+      };
+      recorder.start(1000);
+      recordingStarted = Date.now();
+      recordBtn.disabled = true; stopBtn.disabled = false;
+      say("録画中です。音声は取得していません。");
+    } catch (err) { say("録画を開始できませんでした: " + err.message); }
+  }
+  function stopRecording() {
+    if (recorder && recorder.state !== "inactive") recorder.stop();
+  }
+  startBtn.addEventListener("click", startCamera);
+  photoBtn.addEventListener("click", takePhoto);
+  recordBtn.addEventListener("click", startRecording);
+  stopBtn.addEventListener("click", stopRecording);
+  switchBtn.addEventListener("click", async () => {
+    const next = currentFacing === "environment" ? "user" : "environment";
+    facing.value = next;
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      stream = null; live.srcObject = null;
+    }
+    currentFacing = next;
+    await startCamera();
+  });
+  facing.addEventListener("change", async () => {
+    if (!stream) { currentFacing = facing.value; return; }
+    stream.getTracks().forEach(track => track.stop()); stream = null; live.srcObject = null;
+    currentFacing = facing.value;
+    await startCamera();
+  });
+  $("clearBtn").addEventListener("click", () => {
+    entries.forEach(entry => URL.revokeObjectURL(entry.url));
+    entries = []; gallery.replaceChildren(); say("このページの撮影一覧を消去しました。ダウンロード済みファイルは削除されません。");
+  });
+  window.addEventListener("pagehide", () => {
+    if (recorder && recorder.state !== "inactive") recorder.stop();
+    if (stream) stream.getTracks().forEach(track => track.stop());
+    entries.forEach(entry => URL.revokeObjectURL(entry.url));
+  });
+})();
+</script>
+</body>
+</html>
