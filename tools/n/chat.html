@@ -49,6 +49,7 @@
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --vvh: 100dvh; /* 実際に見えている高さ（JSがvisualViewportから更新。キーボード表示中も入力欄が隠れない） */
   --vvt: 0px;
+  --composer-h: 44px; /* 入力欄と送信ボタンの「1行のときの高さ」。両者で同じ値を使い、必ず同じ高さ・同じ下端に揃える */
   --ease: cubic-bezier(0.25, 0.8, 0.4, 1);
 }
 
@@ -666,31 +667,48 @@ body.kbd-open { --safe-bottom: 0px; }
 .edit-indicator button { background: none; border: none; color: var(--overlay1); font-size: 12px; cursor: pointer; padding: 4px 8px; font-family: inherit; }
 .edit-indicator button:hover { color: var(--text); }
 
+/* ---------- 入力欄（送信ボタンとまったく同じ高さ・同じ下端に揃える） ----------
+   1行のときの高さは --composer-h ひとつで決める。入力欄も送信ボタンも同じ値を使い、
+   さらに「1行に収まっている間は入力欄の height をインライン指定しない（＝CSSの値のまま）」ので、
+   端末・フォント・プレースホルダーの折り返しなどで両者の高さや位置がずれることがない。 */
+
 .composer {
   display: flex;
+  align-items: flex-end; /* 複数行入力になったときは送信ボタンを下端に揃える */
   gap: 10px;
-  padding: 12px 16px calc(12px + var(--safe-bottom));
+  padding: 10px 14px calc(12px + var(--safe-bottom));
   border-top: 1px solid var(--hairline);
   background: rgba(17, 17, 27, 0.9);
   flex-shrink: 0;
 }
-.composer input {
+.composer textarea {
   flex: 1;
   min-width: 0;
+  box-sizing: border-box;
+  display: block;
+  height: var(--composer-h);     /* 送信ボタンと同じ高さ */
+  min-height: var(--composer-h);
   font-family: inherit;
-  font-size: 16px;
-  padding: 11px 18px;
-  border-radius: 999px;
+  font-size: 16px;               /* iOS で入力時に自動拡大されないよう16px以上にする */
+  line-height: 1.5;              /* 24px */
+  padding: 9px 18px;             /* 9 + 24 + 9 + 枠2 = 44px（--composer-h と同じ） */
+  border-radius: 22px;
   border: 1px solid var(--hairline);
   background: var(--mantle);
   color: var(--text);
   outline: none;
+  resize: none;
+  overflow-y: auto;
+  max-height: 160px;
   transition: border-color 0.25s var(--ease), box-shadow 0.25s var(--ease);
 }
-.composer input::placeholder { color: var(--overlay0); }
-.composer input:focus { border-color: var(--accent-border); box-shadow: 0 0 0 3px var(--accent-soft); }
-.composer input:disabled { opacity: 0.45; }
+.composer textarea::placeholder { color: var(--overlay0); }
+.composer textarea:focus { border-color: var(--accent-border); box-shadow: 0 0 0 3px var(--accent-soft); }
+.composer textarea:disabled { opacity: 0.45; }
 .composer-send {
+  flex-shrink: 0;
+  height: var(--composer-h);     /* 入力欄と同じ高さ */
+  min-height: var(--composer-h);
   font-family: inherit;
   font-weight: 500;
   font-size: 13px;
@@ -907,7 +925,7 @@ body.kbd-open { --safe-bottom: 0px; }
   .msg-status .icon { width: 13px; height: 13px; }
 
   .composer { padding: 16px 44px calc(16px + var(--safe-bottom)); gap: 12px; border-top-color: var(--hairline-strong); }
-  .composer textarea { font-size: 16.5px; padding: 13px 22px; border-color: var(--hairline-strong); background: var(--surface0); border-radius: 26px; }
+  .composer textarea { padding-left: 22px; padding-right: 22px; border-color: var(--hairline-strong); background: var(--surface0); border-radius: 26px; }
   .composer-send { font-size: 14.5px; padding: 0 30px; background: var(--accent); color: var(--crust); border-color: var(--accent); font-weight: 600; }
   .composer-send:hover:not(:disabled) { background: var(--accent); filter: brightness(1.1); }
 
@@ -979,17 +997,7 @@ body.kbd-open { --safe-bottom: 0px; }
   font-family: var(--font-display); font-size: 11px; color: var(--accent);
   background: var(--mantle); border: 1px solid var(--accent-border);
 }
-.composer { align-items: flex-end; }
-.composer textarea {
-  flex: 1; min-width: 0; font-family: inherit; font-size: 16px; line-height: 1.5; padding: 10px 18px;
-  border-radius: 22px; border: 1px solid var(--hairline); background: var(--mantle); color: var(--text);
-  outline: none; resize: none; max-height: 160px; overflow-y: auto; display: block;
-  transition: border-color 0.25s var(--ease), box-shadow 0.25s var(--ease);
-}
-.composer textarea::placeholder { color: var(--overlay0); }
-.composer textarea:focus { border-color: var(--accent-border); box-shadow: 0 0 0 3px var(--accent-soft); }
-.composer textarea:disabled { opacity: 0.45; }
-.composer-send { align-self: flex-end; min-height: 44px; }
+/* （入力欄まわりのスタイルは上の .composer 節に一本化した） */
 .notify-help { font-size: 12px; line-height: 1.7; color: var(--subtext0); margin: 8px 0 0; }
 .notify-help.warn { color: var(--red); }
 .msg-row.streak { margin-top: -6px; }
@@ -1031,7 +1039,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
   outline: 1px solid var(--accent);
   outline-offset: 2px;
 }
-.field input:focus-visible, .field textarea:focus-visible, .composer input:focus-visible { outline: none; }
+.field input:focus-visible, .field textarea:focus-visible, .composer textarea:focus-visible { outline: none; }
 
 </style>
 </head>
@@ -3611,15 +3619,24 @@ function discardMessage(messageId) {
 
 function autosizeComposer() {
   const ta = document.getElementById("input-message");
-  // プレースホルダは折り返すと scrollHeight に加算されるため、空欄のときに高さを測ると
-  // 入力欄が1行ぶん余計に伸び、送信ボタンごと下へずれて「入力欄が落ちた」ように見える。
-  // 測る間だけプレースホルダを外して、行数だけで高さを決める。
+  // プレースホルダーは折り返すと scrollHeight に加算されるため、測る間だけ外す
   const ph = ta.placeholder;
   ta.placeholder = "";
-  ta.style.height = "auto";
-  const needed = ta.scrollHeight;
+  ta.style.height = "auto";            // 中身に合わせた自然な高さを測る
+  const needed = ta.scrollHeight + 2;  // 枠線2pxぶん
   ta.placeholder = ph;
-  ta.style.height = Math.min(needed + 2, 160) + "px";
+  // 1行に収まっている間はインライン指定を外し、CSSの height（＝送信ボタンと同じ --composer-h）に任せる。
+  // こうすると端末・フォント・文字サイズの違いで入力欄だけ背が変わることがなくなり、
+  // 送信ボタンと必ず同じ高さ・同じ下端に揃う。2行以上になったときだけ伸ばす。
+  const base = composerRowHeight();
+  if (needed <= base + 0.5) ta.style.height = "";
+  else ta.style.height = Math.round(Math.min(needed, 160)) + "px";
+}
+
+/** 入力欄と送信ボタンの1行時の共通の高さ（CSS変数 --composer-h）。 */
+function composerRowHeight() {
+  const v = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--composer-h"));
+  return Number.isFinite(v) && v > 0 ? v : 44;
 }
 
 function initRoomScreen() {
