@@ -285,6 +285,14 @@ body.kbd-open { --safe-bottom: 0px; }
   white-space: nowrap;
   margin-top: 1px;
 }
+/* 「○○が入力中…」。等幅だと読みにくいので通常フォント＋アクセント色にする */
+.bar-subtitle.typing {
+  font-family: var(--font);
+  font-size: 11.5px;
+  letter-spacing: 0;
+  color: var(--accent);
+  margin-top: 0;
+}
 .bar-action {
   background: none;
   border: none;
@@ -1116,7 +1124,11 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
       </div>
       <h1>アカウントIDで復元</h1>
-      <p class="lead">登録時に表示された16単語のパスフレーズを、半角スペース区切りで入力してください。</p>
+      <p class="lead">登録時に表示された<strong>アカウントID（アドレス）</strong>と<strong>16単語のパスフレーズ</strong>の両方を入力してください。どちらか一方だけでは復元できません。</p>
+      <label class="field">
+        <span>アカウントID（アドレス）</span>
+        <input id="input-restore-address" type="text" placeholder="例: 05a1b2c3d4e5…" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+      </label>
       <label class="field">
         <span>パスフレーズ（16単語）</span>
         <textarea id="input-restore-passphrase" rows="3" placeholder="例: apple river amber tiger ..." autocomplete="off"></textarea>
@@ -1262,6 +1274,25 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
             <span>既読を表示する</span>
           </span>
           <input type="checkbox" id="checkbox-show-read" checked>
+        </label>
+      </div>
+
+      <div class="sheet-section">
+        <h2 class="sheet-section-title">入力中</h2>
+        <p class="muted">相手がメッセージを打っている間、トークの見出しに「入力中…」と表示します（この端末だけの設定です）。</p>
+        <label class="toggle-row">
+          <span class="btn-with-icon" style="justify-content:flex-start;">
+            <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.9 8.9 0 0 1-3.2-.6L3 21l1.7-4.9A8.4 8.4 0 0 1 12 3.1a8.4 8.4 0 0 1 9 8.4Z"/><circle cx="8.5" cy="11.5" r="0.6" fill="currentColor" stroke="none"/><circle cx="12" cy="11.5" r="0.6" fill="currentColor" stroke="none"/><circle cx="15.5" cy="11.5" r="0.6" fill="currentColor" stroke="none"/></svg>
+            <span>相手の「入力中」を表示する</span>
+          </span>
+          <input type="checkbox" id="checkbox-show-typing" checked>
+        </label>
+        <label class="toggle-row">
+          <span class="btn-with-icon" style="justify-content:flex-start;">
+            <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"/><polyline points="6 11 12 5 18 11"/></svg>
+            <span>自分の「入力中」を相手に送る</span>
+          </span>
+          <input type="checkbox" id="checkbox-send-typing" checked>
         </label>
       </div>
 
@@ -1719,7 +1750,6 @@ const SYNC_PUSH_VISIBLE_MS = 20000; // プッシュ有効（相手が送れば�
 const SYNC_HIDDEN_MS = 60000;     // 画面が隠れている（別タブ・最小化）
 const SYNC_HIDDEN_PUSH_MS = 120000;
 const ROOMS_REFRESH_MS = 5 * 60 * 1000; // ルーム一覧の定期再取得（変更があれば /sync の rev で即わかる）
-const PUSH_RECHECK_MS = 12 * 60 * 60 * 1000;
 const AVATAR_RECHECK_MS = 60 * 60 * 1000;
 
 // ===== SVGアイコン =====
@@ -1938,6 +1968,12 @@ function parsePassphraseInput(input) {
   return words;
 }
 
+/** 入力されたアカウントID（アドレス、またはuserId）を比較できる形にそろえる。
+ *  貼り付け時の空白・改行・大文字小文字の違いを吸収する（アドレスは「05 + 64桁の16進」）。 */
+function normalizeAccountId(value) {
+  return String(value ?? "").replace(/\s+/g, "").trim().toLowerCase();
+}
+
 /** パスフレーズから「サーバに問い合わせるための検索キー」と「バックアップの暗号鍵」を、
  *  それぞれ別のsalt文字列でPBKDF2により導出する（両者が混ざらないようドメイン分離している）。
  *  サーバはlookupIdしか受け取らないため、パスフレーズ自体を知ることはできない。 */
@@ -2009,6 +2045,19 @@ function showReadEnabled() {
   try { return localStorage.getItem(READ_SETTING_KEY) !== "0"; } catch { return true; }
 }
 
+// ===== 「入力中」の設定（この端末だけ） =====
+// 表示 = 相手が入力中なら見出しに出す / 送信 = 自分が入力中であることを相手に伝える
+const TYPING_DISPLAY_KEY = "e2ee_chat_show_typing";
+const TYPING_SEND_KEY = "e2ee_chat_send_typing";
+const TYPING_SEND_MS = 2800; // 連続で送りすぎないための最短間隔
+const TYPING_TTL_MS = 6000; // これだけ経過したら「入力中」を消す
+function typingDisplayEnabled() {
+  try { return localStorage.getItem(TYPING_DISPLAY_KEY) !== "0"; } catch { return true; }
+}
+function typingSendEnabled() {
+  try { return localStorage.getItem(TYPING_SEND_KEY) !== "0"; } catch { return true; }
+}
+
 // ===== アプリケーション状態 =====
 
 const state = {
@@ -2026,6 +2075,7 @@ const state = {
   rooms: new Map(),
   sync: { timer: null, inFlight: false, running: false, fail: 0, lastActivity: Date.now(), rev: null, roomsAt: 0, deferred: [], authLost: false },
   pushActive: false, // 端末でプッシュ購読済み（サーバも対応）。true の間はページ側の通知を出さない（二重通知の防止）
+  lastPushAt: new Map(), // roomId -> 直近にプッシュを受信した時刻（ページ側通知との二重表示を避ける）
   stick: true, // メッセージ一覧が最下部に追従しているか
   avatarUrl: null, // 自分のアイコン画像URL（null = 初期アイコン）
   restoredRoomKeys: {}, // パスフレーズ復元で戻したグループ鍵 { roomId: base64 }
@@ -2034,6 +2084,10 @@ const state = {
   reply: null, // { roomId, messageId, from, name, excerpt } | null（返信先）
   showRead: showReadEnabled(), // 自分が送ったメッセージの既読を表示するか
   readAt: 0, // 既読状況を最後に問い合わせた時刻（連打を避ける）
+  showTyping: typingDisplayEnabled(), // 相手の「入力中」を表示するか
+  sendTyping: typingSendEnabled(), // 自分の「入力中」を相手に送るか
+  typingSentAt: 0, // 最後に「入力中」を送った時刻
+  typingSentRoom: null, // 最後に「入力中」を送ったルーム
 };
 
 // ===== 永続化ヘルパ =====
@@ -2117,6 +2171,7 @@ async function hydrateRoomFromRecord(record) {
     roomKeyRawCache: record.roomKeyRaw ?? null,
     wrapSentTo: new Set(),
     pendingEncrypted: [],
+    typing: new Map(), // userId -> 最後に「入力中」を受け取った時刻（揮発。保存しない）
     messages: [],
     lastActivity: record.lastActivity ?? 0,
     lastMessageId: record.lastMessageId ?? null,
@@ -2338,9 +2393,18 @@ async function uploadAccountBackup() {
 function initRestore() {
   const btn = document.getElementById("btn-do-restore");
   const textarea = document.getElementById("input-restore-passphrase");
+  const addressInput = document.getElementById("input-restore-address");
   const statusEl = document.getElementById("restore-status");
 
   btn.addEventListener("click", async () => {
+    // アカウントIDとパスフレーズの「両方」を要求する（片方だけでは復元させない）
+    const enteredId = normalizeAccountId(addressInput.value);
+    if (!enteredId) {
+      statusEl.textContent = "アカウントID（アドレス）を入力してください";
+      statusEl.className = "status-line error";
+      addressInput.focus();
+      return;
+    }
     const words = parsePassphraseInput(textarea.value);
     if (!words) {
       statusEl.textContent = `パスフレーズは単語リストにある${PASSPHRASE_WORD_COUNT}単語をスペース区切りで入力してください`;
@@ -2354,6 +2418,15 @@ function initRestore() {
       const { lookupId, encryptionKey } = await deriveBackupSecrets(words);
       const { iv, ciphertext } = await api.getBackup(lookupId);
       const payload = await aesGcmDecryptJson(encryptionKey, iv, ciphertext);
+
+      // 入力されたアカウントIDが、復号したアカウントのものと一致するか確認する（取り違え・総当たり防止）。
+      // 通常はアドレス（05…）を照合するが、内部IDで入力されても本人確認には十分なので受け付ける。
+      const actualIds = [normalizeAccountId(payload.address), normalizeAccountId(payload.userId)].filter(Boolean);
+      if (actualIds.length === 0 || !actualIds.includes(enteredId)) {
+        statusEl.textContent = "アカウントIDとパスフレーズが一致しません。両方をもう一度確認してください。";
+        statusEl.className = "status-line error";
+        return;
+      }
 
       state.userId = payload.userId;
       state.token = payload.token;
@@ -2374,6 +2447,7 @@ function initRestore() {
 
       statusEl.textContent = "";
       textarea.value = "";
+      addressInput.value = "";
       await enterLobby();
     } catch (e) {
       statusEl.textContent = e instanceof ApiError ? "そのパスフレーズのアカウントが見つかりませんでした" : `失敗しました: ${e.message}`;
@@ -2412,7 +2486,7 @@ async function wipeLocalDataAndReload() {
   await teardownPush();
   localStorage.removeItem("e2ee_chat_session");
 
-  try { localStorage.removeItem(NOTIFY_BODY_KEY); localStorage.removeItem(AVATAR_KEY); localStorage.removeItem(AVATAR_SHARED_KEY); localStorage.removeItem(PUSH_REG_KEY); localStorage.removeItem(READ_SETTING_KEY); } catch {}
+  try { localStorage.removeItem(NOTIFY_BODY_KEY); localStorage.removeItem(AVATAR_KEY); localStorage.removeItem(AVATAR_SHARED_KEY); localStorage.removeItem(PUSH_REG_KEY); localStorage.removeItem(READ_SETTING_KEY); localStorage.removeItem(TYPING_DISPLAY_KEY); localStorage.removeItem(TYPING_SEND_KEY); } catch {}
 
   await new Promise((resolve) => {
     const req = indexedDB.deleteDatabase(DB_NAME);
@@ -2571,6 +2645,7 @@ async function refreshMyRooms() {
         roomKeyRawCache: null,
         wrapSentTo: new Set(),
         pendingEncrypted: [],
+        typing: new Map(),
         messages: [],
         lastActivity: serverRoom.createdAt || Date.now(),
         lastMessageId: null,
@@ -2708,6 +2783,7 @@ function initAddSheet() {
         roomKeyRawCache: await exportRoomKeyRaw(roomKey),
         wrapSentTo: new Set(),
         pendingEncrypted: [],
+        typing: new Map(),
         messages: [],
         lastActivity: Date.now(),
         lastMessageId: null,
@@ -2743,6 +2819,7 @@ function initAddSheet() {
         roomKeyRawCache: await exportRoomKeyRaw(roomKey),
         wrapSentTo: new Set(),
         pendingEncrypted: [],
+        typing: new Map(),
         messages: [],
         lastActivity: Date.now(),
         lastMessageId: null,
@@ -2798,24 +2875,41 @@ function updateRoomHeaderAndMembers(roomId) {
   if (!room || state.openRoomId !== roomId) return;
 
   document.getElementById("room-title").textContent = roomLabel(room) || "チャット";
-  const subtitleEl = document.getElementById("room-subtitle");
   const directPeerInfoEl = document.getElementById("direct-peer-info");
   const addGroupMemberBtn = document.getElementById("btn-add-group-member");
 
+  renderRoomSubtitle(room);
   if (room.kind === "direct") {
-    subtitleEl.textContent = truncateAddress(room.peer?.address || "");
     directPeerInfoEl.classList.remove("hidden");
     document.getElementById("peer-address").textContent = room.peer?.address || "";
     addGroupMemberBtn.classList.add("hidden");
     document.getElementById("members-panel-title").textContent = "連絡先の詳細";
   } else {
-    subtitleEl.textContent = `${room.members.size + 1}人のメンバー`;
     directPeerInfoEl.classList.add("hidden");
     addGroupMemberBtn.classList.remove("hidden");
     document.getElementById("members-panel-title").textContent = "メンバー";
   }
   renderMembers(room);
   renderGroupPhoto(room);
+}
+
+/** 見出しの下の行。誰かが入力中ならそれを優先し、そうでなければ通常の情報（アドレス／人数）を出す。 */
+function renderRoomSubtitle(room) {
+  const subtitleEl = document.getElementById("room-subtitle");
+  if (!subtitleEl) return;
+  const typers = state.showTyping ? activeTypers(room) : [];
+  if (typers.length > 0) {
+    const names = typers.map((uid) => (room.members.get(uid)?.displayName || room.peer?.displayName || "だれか").trim().slice(0, 12));
+    subtitleEl.textContent = names.length === 1
+      ? `${names[0]} が入力中…`
+      : `${names.slice(0, 2).join("、")} が入力中…`;
+    subtitleEl.classList.add("typing");
+    return;
+  }
+  subtitleEl.classList.remove("typing");
+  subtitleEl.textContent = room.kind === "direct"
+    ? truncateAddress(room.peer?.address || "")
+    : `${room.members.size + 1}人のメンバー`;
 }
 
 /** 詳細パネルのグループ画像。画像リンクを貼り付けられるのはグループの所有者だけ。 */
@@ -3083,6 +3177,79 @@ async function applyReactionMessage(room, msg) {
   }
 }
 
+// ===== 入力中（タイピング）表示 =====
+// 「入力中」は本文ではないので、サーバ側でも短命（1分で自動削除）に扱い、通知も出さない。
+// 中身は他のメッセージと同じくルーム鍵で暗号化した kind:"typing" をブロードキャストするだけ。
+
+/** 自分が入力中であることを相手に伝える（連続で送りすぎないよう間引く）。
+ *  本文ではないので、失敗しても黙って諦める（チャットの邪魔をしない）。 */
+function notifyTyping() {
+  if (!state.sendTyping) return;
+  const room = state.rooms.get(state.openRoomId);
+  if (!room || !room.roomKey) return;
+  const now = Date.now();
+  if (state.typingSentRoom === room.roomId && now - state.typingSentAt < TYPING_SEND_MS) return;
+  state.typingSentRoom = room.roomId;
+  state.typingSentAt = now;
+  (async () => {
+    try {
+      const payload = { kind: "typing", from: state.userId, ts: now };
+      const sig = await signJson(state.ecdsaPrivateKey, payload);
+      const { iv, ciphertext } = await aesGcmEncryptJson(room.roomKey, { ...payload, sig });
+      await api.send(state.token, room.roomId, { type: "typing", to: null, iv, ciphertext });
+    } catch { /* 入力中の通知は失敗しても無視 */ }
+  })();
+}
+
+/** まだ有効な「入力中」の相手（TTLを過ぎたものは捨てる）。 */
+function activeTypers(room) {
+  const now = Date.now();
+  const out = [];
+  for (const [uid, at] of room.typing ?? []) {
+    if (now - at <= TYPING_TTL_MS) out.push(uid);
+    else room.typing.delete(uid);
+  }
+  return out;
+}
+
+let typingExpiryTimer = null;
+/** 最後の「入力中」が消えたら見出しを元に戻す（誰かが入力し続けている間はタイマーを延ばす）。 */
+function scheduleTypingExpiry() {
+  if (typingExpiryTimer) clearTimeout(typingExpiryTimer);
+  typingExpiryTimer = setTimeout(() => {
+    typingExpiryTimer = null;
+    const room = state.rooms.get(state.openRoomId);
+    if (!room) return;
+    if (activeTypers(room).length > 0) { scheduleTypingExpiry(); return; }
+    renderRoomSubtitle(room);
+  }, TYPING_TTL_MS + 300);
+}
+
+/** 受信した「入力中」のペイロード（復号済み）を検証して反映する。 */
+async function applyTypingPayload(room, payload) {
+  const { kind, from, ts, sig } = payload || {};
+  if (kind !== "typing" || typeof from !== "string" || typeof ts !== "number") return;
+  if (from === state.userId) return;
+  if (Date.now() - ts > TYPING_TTL_MS) return; // 古いもの（遅れて届いたもの）は無視
+  const member = room.members.get(from);
+  if (!member?.ecdsaPublicKey) return;
+  if (!(await verifyJson(member.ecdsaPublicKey, { kind, from, ts }, sig))) return;
+  if (!room.typing) room.typing = new Map();
+  room.typing.set(from, Date.now());
+  scheduleTypingExpiry();
+  if (state.openRoomId === room.roomId) renderRoomSubtitle(room);
+}
+
+/** 受信した「入力中」（暗号文）を復号して反映する。 */
+async function applyTypingMessage(room, msg) {
+  try {
+    const payload = await aesGcmDecryptJson(room.roomKey, msg.iv, msg.ciphertext);
+    await applyTypingPayload(room, payload);
+  } catch (e) {
+    console.error("入力中の復号に失敗しました", e);
+  }
+}
+
 // ===== メッセージの編集・削除 =====
 
 function openMessageActionsSheet(messageId) {
@@ -3309,6 +3476,27 @@ function initReadSettings() {
       refreshReadStatuses(room);
     }
   });
+}
+
+function initTypingSettings() {
+  const displayBox = document.getElementById("checkbox-show-typing");
+  const sendBox = document.getElementById("checkbox-send-typing");
+  if (displayBox) {
+    displayBox.checked = state.showTyping;
+    displayBox.addEventListener("change", () => {
+      state.showTyping = displayBox.checked;
+      try { localStorage.setItem(TYPING_DISPLAY_KEY, displayBox.checked ? "1" : "0"); } catch {}
+      const room = state.rooms.get(state.openRoomId);
+      if (room) renderRoomSubtitle(room);
+    });
+  }
+  if (sendBox) {
+    sendBox.checked = state.sendTyping;
+    sendBox.addEventListener("change", () => {
+      state.sendTyping = sendBox.checked;
+      try { localStorage.setItem(TYPING_SEND_KEY, sendBox.checked ? "1" : "0"); } catch {}
+    });
+  }
 }
 
 function startEditMessage(messageId) {
@@ -3607,6 +3795,13 @@ async function processIncomingMessage(room, msg) {
     return;
   }
 
+  // 「入力中」は一瞬で意味を失うので、鍵が無いときは溜めずに捨てる（遅れて届いても無意味）
+  if (msg.type === "typing") {
+    if (!room.roomKey) return;
+    await applyTypingMessage(room, msg);
+    return;
+  }
+
   if (msg.type === "chat") {
     if (!room.roomKey) {
       room.pendingEncrypted.push(msg);
@@ -3883,7 +4078,10 @@ function composerRowHeight() {
 
 function initRoomScreen() {
   const composerInput = document.getElementById("input-message");
-  composerInput.addEventListener("input", autosizeComposer);
+  composerInput.addEventListener("input", () => {
+    autosizeComposer();
+    if (composerInput.value.trim()) notifyTyping();
+  });
   composerInput.addEventListener("keydown", (e) => {
     if (e.key !== "Enter" || e.shiftKey || e.isComposing || e.keyCode === 229) return;
     // タッチ端末ではEnterは改行（送信は送信ボタン）、PCではEnterで送信・Shift+Enterで改行
@@ -4300,6 +4498,13 @@ async function registerServiceWorker() {
     swReg = await navigator.serviceWorker.register(url, { scope: new URL("./", url).href });
     navigator.serviceWorker.addEventListener("message", (ev) => {
       if (ev.data?.type === "open-room" && ev.data.roomId && state.rooms.has(ev.data.roomId)) openRoom(ev.data.roomId);
+      if (ev.data?.type === "push") {
+        // プッシュが実際に届いた時刻を記録する（届いていればページ側の通知は出さない＝二重通知の防止。
+        // 逆にプッシュが届かない端末では、ページ側の通知がそのまま働く）
+        if (ev.data.roomId) state.lastPushAt.set(ev.data.roomId, Date.now());
+        state.lastPushAt.set("__any__", Date.now());
+        syncNow();
+      }
       if (ev.data?.type === "sync-now") syncNow(); // プッシュが届いた = 新着あり。すぐ取りに行く
     });
     return swReg;
@@ -4422,9 +4627,11 @@ async function enableNotifications() {
   runPushDiagnostics();
 }
 
-/** 起動時：許可済みなら購読をサーバに登録し直す（購読の有効期限切れ・サーバ側の削除に備える）。
- *  端末の購読が前回登録したものと同じで12時間以内なら、サーバへは何も送らない。
- *  ただしサーバのVAPID鍵が変わっていた場合は、時間内でも購読を作り直す。 */
+/** 起動時：許可済みなら購読をサーバに登録し直す。
+ *  端末側に購読が残っていても、サーバ側では（410 Gone等で）削除されていることがある。
+ *  「登録済み」と決め打ちすると、その間まったく通知が来なくなるため、起動のたびに
+ *  現在の購読をサーバへ登録し直す（UPSERTなので安価・何度でも安全）。
+ *  サーバのVAPID鍵が変わっていた場合だけは、購読そのものを作り直す。 */
 async function ensurePushSubscription() {
   if (!pushSupported() || Notification.permission !== "granted" || !state.token) return;
   try {
@@ -4438,13 +4645,22 @@ async function ensurePushSubscription() {
       const { publicKey } = await api.vapidPublicKey();
       serverKeyChanged = !!publicKey && (!last?.vapidKey || last.vapidKey !== publicKey);
     } catch {}
-    if (sub && last && last.endpoint === sub.endpoint && last.uid === state.userId && Date.now() - last.ts < PUSH_RECHECK_MS && !serverKeyChanged) {
-      state.pushActive = true;
+    if (sub && last && last.endpoint === sub.endpoint && last.uid === state.userId && !serverKeyChanged) {
+      // 同じ購読を使い続ける場合でも、サーバへの再登録は必ず行う。
+      // サーバ側だけが（404/410等で）削除していると、ここで再登録しない限り通知が一切届かなくなる。
+      try {
+        await api.subscribePush(state.token, sub.toJSON());
+        localStorage.setItem(PUSH_REG_KEY, JSON.stringify({ endpoint: sub.endpoint, uid: state.userId, vapidKey: last.vapidKey, ts: Date.now() }));
+        state.pushActive = true;
+      } catch (e) {
+        console.warn("プッシュ購読の再登録に失敗", e);
+      }
     } else {
-      await subscribePush(serverKeyChanged); // 鍵が変わっていれば作り直す
+      await subscribePush(serverKeyChanged); // 鍵が変わっていれば購読を作り直す
     }
   } catch (e) { console.warn("プッシュ購読の更新に失敗", e); }
   refreshNotifyButton();
+  runPushDiagnostics();
 }
 
 /** 開いたルームの通知は、開いた時点で消す。 */
@@ -4492,8 +4708,34 @@ async function runPushDiagnostics() {
       }
     }
     items.push(st.subscriptions > 0 ? diagItem("ok", `サーバに登録された購読: ${st.subscriptions}件`) : diagItem("ng", "サーバに登録された購読: 0件", "「通知を有効にする」を押すと登録されます"));
+    // サーバが最後に送った通知の結果（＝Google/Appleのpushサービスが受け付けたか）
+    if (Array.isArray(st.recentPushes) && st.recentPushes.length > 0) {
+      const p = st.recentPushes[0];
+      const when = formatRelativeTime(p.at);
+      if (typeof p.status === "number" && p.status >= 200 && p.status < 300) {
+        items.push(diagItem("ok", `最後の通知送信: 受け付けられました（HTTP ${p.status}）`, `${p.host} / ${when}`));
+      } else {
+        items.push(diagItem("ng", `最後の通知送信: 拒否されました（HTTP ${p.status || "通信エラー"}）`, `${p.host} / ${when}${p.detail ? " / " + p.detail : ""}`));
+      }
+    }
   } catch (e) {
     items.push(diagItem("ng", "サーバの通知設定を取得できませんでした", e.message));
+  }
+  // この端末が実際にプッシュを受け取ったか（sw.jsが記録した受信ログ）
+  let pushLog = [];
+  try { pushLog = (await idbGet("settings", "pushLog")) || []; } catch {}
+  if (Array.isArray(pushLog) && pushLog.length > 0) {
+    const last = pushLog[0];
+    const when = formatRelativeTime(last.ts);
+    if (last.error) items.push(diagItem("na", `プッシュ受信履歴: ${when}`, `${last.action || "受信"} / 表示時の問題: ${last.error}`));
+    else items.push(diagItem("ok", `プッシュ受信履歴: ${when}`, `${last.action || "受信"}${last.note ? " / " + last.note : ""}`));
+  } else if (sub) {
+    items.push(diagItem("na", "プッシュ受信履歴: まだありません", "アプリを閉じた状態でテスト通知を送ると、届くかどうかを確認できます"));
+  }
+  // Androidで通知が来ない場合のよくある原因（端末側の設定）
+  if (perm === "granted" && sub && /Android/i.test(navigator.userAgent)) {
+    items.push(diagItem("na", "Androidの場合は端末の省電力設定も確認してください",
+      "設定 > アプリ > Chrome（ホーム画面に追加した場合はそのアプリ）> バッテリー を「制限なし」にし、通知を許可してください。それでも届かないときは、いったん通知を無効→有効にし直すと直ることがあります。"));
   }
   listEl.innerHTML = items.join("");
 }
@@ -4537,9 +4779,13 @@ async function sendTestPush() {
 }
 
 async function showBrowserNotification(room, senderName, text) {
-  if (state.pushActive) return; // プッシュ通知が有効なら、Service Worker側が通知を出す（二重通知を防ぐ）
   if (!document.hidden) return;
   if (!("Notification" in window) || Notification.permission !== "granted") return;
+  // 直近にプッシュが届いているなら、Service Worker側が同じ通知（同じtag）を出しているので
+  // ここでは出さない。逆に、プッシュが届いていない端末（Androidで通知が来ない等）では
+  // ページ側が通知を出すことで、少なくともアプリを開いている間は気づけるようにする。
+  const lastPush = Math.max(state.lastPushAt.get(room.roomId) ?? 0, state.lastPushAt.get("__any__") ?? 0);
+  if (state.pushActive && Date.now() - lastPush < 10000) return;
   const showBody = notifyBodyEnabled();
   const title = showBody ? (room.kind === "group" ? `${roomLabel(room)} ・ ${senderName}` : senderName) : "E2EE Chat";
   const options = { body: showBody ? text : "新しいメッセージがあります", tag: `room-${room.roomId}`, renotify: true, data: { roomId: room.roomId } };
@@ -4667,6 +4913,7 @@ async function boot() {
   initMessageActionsSheet();
   initNotificationSettings();
   initReadSettings();
+  initTypingSettings();
   initAvatarSettings();
   initGroupPhotoSheet();
   initThemeSwatches();
