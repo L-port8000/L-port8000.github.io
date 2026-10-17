@@ -1,6 +1,5 @@
 "use strict";
 
-
 const DB_NAME = "e2ee-chat";
 // アイコン画像（無ければブラウザ既定のアイコンになるだけで、通知自体は出る）
 const ICON_URL = new URL("icons/icon-192.png", self.registration.scope).href;
