@@ -1123,6 +1123,7 @@ input[type="range"]::-moz-range-thumb {
   padding: 0.5rem;
   overflow: hidden;
   position: relative;
+  isolation: isolate; /* viewer-rotate-busy をこの領域内に閉じ込め、header/footer に重ねない */
   cursor: pointer;
 }
 .viewer-image-wrap img {
@@ -1144,7 +1145,11 @@ input[type="range"]::-moz-range-thumb {
   -webkit-backdrop-filter: blur(4px);
   font-size: 13px;
   color: var(--text);
-  z-index: 5;
+  z-index: 2; /* image-wrap 内でのみ有効（isolation により外部に影響しない） */
+}
+/* hidden 属性を確実に尊重する（display:flex より詳細度を高める） */
+.viewer-rotate-busy[hidden] {
+  display: none !important;
 }
 .viewer-rotate-busy .spinner {
   width: 16px;
