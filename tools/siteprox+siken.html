@@ -314,12 +314,19 @@ oninput="render()">
 <script>
 
 const proxies=[
+...["deltamath.interdoge.cfd.cdn.cloudflare.net","indev.interdoge.cfd.cdn.cloudflare.net"].map(d=>({type:"dogeub",domain:d,ip:"172.96.141.252",region:"America - Los Angeles",speed:"LOW",youtube:"✕"})),
 
-...["pluralsight.gq","pluralsight.cf","udemy.gq","flipgrid.cf","achievementnetwork.cf","r.achievementnetwork.cf","coursera.gq","nitrotype.gq","rammerhead.eu.org","browser.rammerhead.org","shouldiboosttherammerheadserver.tk","achievementnetwork.tk","codewars.cf","r.codewars.cf","login.achievementnetwork.cf","coursera.cf","britannica.cf","absolutevalueequations.cf","platform.techsmart.gq","oldermillard.001-lab.space","tcpghe.tcp64.de","britannica.gq","keldkzk.lan64.de","myschools.fanclub.rocks","codeacademy.gq","monkeytype.tk","sentry.soraapp.gq","math.epivotp.xyz","pp.hamburger.ip-ddns.com","e.textbooks.is-great.net","platform.everfi.cf","rh.ajaxfnc.com","goxy.f5.si","hammerhead.iot64.de","googleclassroom.ipv64.net","r.outschool.gq","membean.cf"].map(d=>({type:"Rammerhead",domain:d.replace(/^https?:\/\//,"").replace(/^www\./,""),ip:"15.204.239.204",region:"America - New York",speed:"LOW",youtube:"✕"})),
+...["dogeub.storage.googleapis.com/index.html","instructure.storage.googleapis.com/index.html","educationate.storage.googleapis.com/index.html","canvas-lms.storage.googleapis.com/index.html","storage.googleapis.com/educationate/index.html","storage.googleapis.com/instructure/index.html","storage.googleapis.com/dogeub/index.html","storage.googleapis.com/canvas-lms/index.html"].map(d=>({type:"dogeub",domain:d,ip:"142.250.21.207",region:"America",speed:"LOW",youtube:"✕"})),
 
-...["unko.gorira.f5.si"].map(d=>({type:"Rammerhead",domain:d,ip:"208.87.240.79",region:"America - Los Angeles",speed:"LOW",youtube:"✕"})),
+...["s3.amazonaws.com/deltamath-demo/index.html","s3.amazonaws.com/educationate/index.html","lsrelay-1.s3.amazonaws.com/index.html","s3.amazonaws.com/lsrelay-1/index.html","deltamath-demo.s3.amazonaws.com/index.html","educationate.s3.amazonaws.com/index.html","lsrelay-a.s3.amazonaws.com/index.html"].map(d=>({type:"dogeub",domain:d,ip:"16.15.199.30",region:"America - Seattle",speed:"LOW",youtube:"✕"})),
 
-...["nasubi314.mrco.giize.com","zisyouusotuki.f5.si","direct2.rammerhead.org","direct10.rammerhead.org","direct11.rammerhead.org","direct12.rammerhead.org","direct13.rammerhead.org"].map(d=>({type:"Rammerhead",domain:d,ip:"208.87.241.201",region:"America - Los Angeles",speed:"LOW",youtube:"✕"})),
+...["dogeub.github.io","aqplemine.github.io/Educational-games-test"].map(d=>({type:"dogeub",domain:d,ip:"185.199.110.153",region:"America",speed:"LOW",youtube:"✕"})),
+
+...["file.vise.best","50centwasinda.club","live.rdocart.com","dean.lat"].map(d=>({type:"dogeub",domain:d,ip:"15.204.230.53",region:"America - Reston",speed:"LOW",youtube:"✕"})),
+
+{type:"dogeub",domain:"d1ks901xvjj2p6.cloudfront.net/index.html",ip:"3.164.125.105",region:"America - Seattle",speed:"LOW",youtube:"✕"},
+
+...["endiseducation.com","endiseducation.org","about.ajhmath.org","endis.college","practice.rest"].map(d=>({type:"Re:Vault",domain:d,ip:"15.204.254.75",region:"America - Reston",speed:"HIGH",youtube:"✕"})),
 
 ...["imgay.ofmdirect.com","damon.ndr.cl","jonahdaman.hillbrick.net","oh.zjhmz.cn","dreamofbonky.alptechflow.com","notsuchagoodideabro.quality-electronics.com","gym.clas.swork.networkindia.com","imwitboolymon.bad.mn","lyndonyay.darquemusic.com","burkholder.jake.eu"].map(d=>({type:"Rammerhead",domain:d,ip:"108.181.5.193",region:"America - Los Angeles",speed:"LOW",youtube:"✕"})),
 
@@ -344,21 +351,13 @@ const proxies=[
 {type:"UnblockProxy",domain:"stopcensoring.me",ip:"51.159.195.18",region:"France",speed:"LOW",youtube:"✕"},
 {type:"Lunar",domain:"pass.securly.eupla.com",ip:"172.93.102.108",region:"America - New York",speed:"LOW",youtube:"✕"},
 
-...["deltamath.interdoge.cfd.cdn.cloudflare.net","indev.interdoge.cfd.cdn.cloudflare.net"].map(d=>({type:"dogeub",domain:d,ip:"172.96.141.252",region:"America - Los Angeles",speed:"LOW",youtube:"✕"})),
-
-...["dogeub.storage.googleapis.com/index.html","instructure.storage.googleapis.com/index.html","educationate.storage.googleapis.com/index.html","canvas-lms.storage.googleapis.com/index.html","storage.googleapis.com/educationate/index.html","storage.googleapis.com/instructure/index.html","storage.googleapis.com/dogeub/index.html","storage.googleapis.com/canvas-lms/index.html"].map(d=>({type:"dogeub",domain:d,ip:"142.250.21.207",region:"America",speed:"LOW",youtube:"✕"})),
-
-...["s3.amazonaws.com/deltamath-demo/index.html","s3.amazonaws.com/educationate/index.html","lsrelay-1.s3.amazonaws.com/index.html","s3.amazonaws.com/lsrelay-1/index.html","deltamath-demo.s3.amazonaws.com/index.html","educationate.s3.amazonaws.com/index.html","lsrelay-a.s3.amazonaws.com/index.html"].map(d=>({type:"dogeub",domain:d,ip:"16.15.199.30",region:"America - Seattle",speed:"LOW",youtube:"✕"})),
-
-...["dogeub.github.io","aqplemine.github.io/Educational-games-test"].map(d=>({type:"dogeub",domain:d,ip:"185.199.110.153",region:"America",speed:"LOW",youtube:"✕"})),
-
-...["file.vise.best","50centwasinda.club","live.rdocart.com","dean.lat"].map(d=>({type:"dogeub",domain:d,ip:"15.204.230.53",region:"America - Reston",speed:"LOW",youtube:"✕"})),
-
-{type:"dogeub",domain:"d1ks901xvjj2p6.cloudfront.net/index.html",ip:"3.164.125.105",region:"America - Seattle",speed:"LOW",youtube:"✕"},
-
-...["endiseducation.com","endiseducation.org","about.ajhmath.org","endis.college","practice.rest"].map(d=>({type:"Re:Vault",domain:d,ip:"15.204.254.75",region:"America - Reston",speed:"HIGH",youtube:"✕"})),
-
 {type:"Re:Vault",domain:"ajhsvault.org",ip:"104.21.83.171",region:"America - ",speed:"LOW",youtube:"✕"}
+
+...["pluralsight.gq","pluralsight.cf","udemy.gq","flipgrid.cf","achievementnetwork.cf","r.achievementnetwork.cf","coursera.gq","nitrotype.gq","rammerhead.eu.org","browser.rammerhead.org","shouldiboosttherammerheadserver.tk","achievementnetwork.tk","codewars.cf","r.codewars.cf","login.achievementnetwork.cf","coursera.cf","britannica.cf","absolutevalueequations.cf","platform.techsmart.gq","oldermillard.001-lab.space","tcpghe.tcp64.de","britannica.gq","keldkzk.lan64.de","myschools.fanclub.rocks","codeacademy.gq","monkeytype.tk","sentry.soraapp.gq","math.epivotp.xyz","pp.hamburger.ip-ddns.com","e.textbooks.is-great.net","platform.everfi.cf","rh.ajaxfnc.com","goxy.f5.si","hammerhead.iot64.de","googleclassroom.ipv64.net","r.outschool.gq","membean.cf"].map(d=>({type:"Rammerhead",domain:d.replace(/^https?:\/\//,"").replace(/^www\./,""),ip:"15.204.239.204",region:"America - New York",speed:"LOW",youtube:"✕"})),
+
+...["unko.gorira.f5.si"].map(d=>({type:"Rammerhead",domain:d,ip:"208.87.240.79",region:"America - Los Angeles",speed:"LOW",youtube:"✕"})),
+
+...["nasubi314.mrco.giize.com","zisyouusotuki.f5.si","direct2.rammerhead.org","direct10.rammerhead.org","direct11.rammerhead.org","direct12.rammerhead.org","direct13.rammerhead.org"].map(d=>({type:"Rammerhead",domain:d,ip:"208.87.241.201",region:"America - Los Angeles",speed:"LOW",youtube:"✕"})),
 
 ];
 
