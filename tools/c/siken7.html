@@ -3,323 +3,317 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>iOS一括ビルドシステム</title>
+    <title>iOS一括ビルドシステム (IPA / DEB)</title>
     <style>
+        :root { --ok:#238636; --ok-h:#2ea44f; --err:#da3637; --bg:#f4f7f6; }
+        * { box-sizing: border-box; }
         body {
-            font-family: sans-serif;
-            text-align: center;
-            padding: 40px 16px;
-            background: #f4f7f6;
+            font-family: system-ui, -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif;
+            padding: 32px 16px;
+            background: var(--bg);
             color: #333;
+            margin: 0;
         }
         .container {
-            max-width: 500px;
+            max-width: 520px;
             margin: 0 auto;
-            background: white;
-            padding: 30px;
+            background: #fff;
+            padding: 28px;
             border-radius: 12px;
             box-shadow: 0 4px 6px rgba(0,0,0,.1);
-            box-sizing: border-box;
         }
-        input[type="file"], input[type="password"] {
-            margin: 12px 0;
-            padding: 12px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            width: 100%;
-            box-sizing: border-box;
+        h2 { text-align: center; margin-top: 0; }
+        label { display: block; font-size: 13px; font-weight: 600; margin: 14px 0 4px; }
+        input[type="file"], input[type="password"], select {
+            padding: 11px; border: 1px solid #ccc; border-radius: 6px;
+            width: 100%; font-size: 14px; background: #fff;
         }
+        .row { display: flex; gap: 12px; }
+        .row > div { flex: 1; }
+        .check { display: flex; align-items: center; gap: 6px; font-size: 12px; margin-top: 8px; font-weight: 400; }
+        .check input { width: auto; }
         button {
-            padding: 15px;
-            font-size: 17px;
-            cursor: pointer;
-            background: #238636;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-weight: bold;
-            width: 100%;
+            margin-top: 20px; padding: 15px; font-size: 17px; cursor: pointer;
+            background: var(--ok); color: #fff; border: none; border-radius: 6px;
+            font-weight: bold; width: 100%;
         }
-        button:hover { background: #2ea44f; }
-        button:disabled {
-            background: #a2a2a2;
-            cursor: not-allowed;
-        }
+        button:hover { background: var(--ok-h); }
+        button:disabled { background: #a2a2a2; cursor: not-allowed; }
+        progress { width: 100%; height: 10px; margin-top: 16px; display: none; }
         #status {
-            margin-top: 20px;
-            font-size: 14px;
-            text-align: left;
-            background: #eee;
-            padding: 15px;
-            border-radius: 6px;
-            white-space: pre-wrap;
-            overflow-wrap: anywhere;
-            font-family: monospace;
+            margin-top: 16px; font-size: 13px; background: #eee; padding: 14px;
+            border-radius: 6px; white-space: pre-wrap; overflow-wrap: anywhere;
+            font-family: ui-monospace, monospace; max-height: 260px; overflow: auto;
         }
-        .warning {
-            font-size: 12px;
-            color: #b42318;
-            text-align: left;
-        }
+        #status a { color: inherit; }
+        .hint { font-size: 12px; color: #666; }
+        .warning { font-size: 12px; color: #b42318; }
+        #schemeWrap.off { opacity: .45; }
     </style>
 </head>
 <body>
 <div class="container">
     <h2>🚀 iOS一括ビルドシステム</h2>
-    <p style="font-size:13px;color:#666">
-        xcodeprojやソースフォルダをまとめたZIPファイルを選択してください。
+    <p class="hint">
+        Xcodeプロジェクト、またはTheos(tweak)プロジェクトをZIPにまとめて選択してください。
+        Theosプロジェクトは自動検出され、常にdebが出力されます。
     </p>
 
     <label for="token">GitHub Personal Access Token</label>
-    <input
-        type="password"
-        id="token"
-        placeholder="github_pat_..."
-        autocomplete="off"
-    >
+    <input type="password" id="token" placeholder="github_pat_..." autocomplete="off">
+    <label class="check">
+        <input type="checkbox" id="remember"> このブラウザにトークンを保存する
+    </label>
+    <p class="hint">必要権限: Contents (Read/Write)、Actions (Read)</p>
 
+    <label for="zipFile">プロジェクトZIP</label>
     <input type="file" id="zipFile" accept=".zip">
 
-    <button id="buildBtn" type="button">
-        📦 アップロードしてビルド開始
-    </button>
+    <div class="row">
+        <div>
+            <label for="target">出力形式</label>
+            <select id="target">
+                <option value="both">IPA + DEB</option>
+                <option value="ipa">IPAのみ</option>
+                <option value="deb">DEBのみ</option>
+            </select>
+        </div>
+        <div id="schemeWrap">
+            <label for="scheme">DEBスキーム</label>
+            <select id="scheme">
+                <option value="rootful">rootful</option>
+                <option value="rootless">rootless</option>
+                <option value="both">両方</option>
+            </select>
+        </div>
+    </div>
+
+    <button id="buildBtn" type="button">📦 アップロードしてビルド開始</button>
+    <progress id="bar" max="100" value="0"></progress>
 
     <p class="warning">
         注意：この方式はブラウザからGitHubに直接アクセスします。
-        本番運用ではトークンをサーバー側で管理してください。
+        トークンは信頼できる端末でのみ使用してください。
     </p>
 
-    <div id="status" role="status" aria-live="polite">
-        ここにログが表示されます
-    </div>
+    <div id="status" role="status" aria-live="polite">ここにログが表示されます</div>
 </div>
 
 <script>
 "use strict";
 
 const GITHUB_OWNER = "L-port8000";
-const GITHUB_REPO = "NewYTPlus";
-const FILE_PATH = "project.zip";
+const GITHUB_REPO  = "NewYTPlus";
+const FILE_PATH    = "project.zip";
+const SECRET_SALT  = "ipa-builder-1";
 
-const SECRET_SALT = "ipa-builder-1";
+const MAX_BYTES    = 95 * 1024 * 1024;   // Contents APIの上限(約100MB)対策
+const POLL_MS      = 8000;
+const POLL_LIMIT_MS = 45 * 60 * 1000;
 
-const API_BASE =
-    `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}`;
+const API_BASE = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}`;
 
-const logDiv = document.getElementById("status");
-const buildBtn = document.getElementById("buildBtn");
+const $ = id => document.getElementById(id);
+const logDiv = $("status"), buildBtn = $("buildBtn"), bar = $("bar");
+const tokenInput = $("token"), remember = $("remember");
+
+// ---------- 保存済みトークン ----------
+try {
+    const saved = localStorage.getItem("gh_token");
+    if (saved) { tokenInput.value = saved; remember.checked = true; }
+} catch {}
+
+// ---------- UI ----------
+$("target").addEventListener("change", updateSchemeState);
+$("zipFile").addEventListener("change", updateSchemeState);
+function updateSchemeState() {
+    // IPAのみの場合、DEBスキームは(Xcodeでは)無関係。Theosはデバイス側で判別できないので無効化しない。
+    $("schemeWrap").classList.toggle("off", $("target").value === "ipa");
+}
+updateSchemeState();
 
 function log(message) {
     logDiv.textContent += message + "\n";
+    logDiv.scrollTop = logDiv.scrollHeight;
+}
+function logLink(label, url) {
+    const a = document.createElement("a");
+    a.href = url; a.target = "_blank"; a.rel = "noopener"; a.textContent = url;
+    logDiv.append(label, a, "\n");
+}
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+// ---------- GitHub API ----------
+function headers(extra = {}) {
+    return {
+        "Accept": "application/vnd.github+json",
+        "Authorization": `Bearer ${tokenInput.value.trim()}`,
+        "X-GitHub-Api-Version": "2022-11-28",
+        ...extra
+    };
 }
 
-async function githubRequest(url, options = {}) {
-    const token = document.getElementById("token").value.trim();
-
-    const response = await fetch(url, {
-        ...options,
-        headers: {
-            "Accept": "application/vnd.github+json",
-            "Authorization": `Bearer ${token}`,
-            "X-GitHub-Api-Version": "2022-11-28",
-            ...options.headers
-        }
-    });
-
-    if (!response.ok) {
-        let detail = "";
-        try {
-            const data = await response.json();
-            detail = data.message || JSON.stringify(data);
-        } catch {
-            detail = response.statusText;
-        }
-
-        throw new Error(
-            `GitHub APIエラー (${response.status}): ${detail}`
-        );
+async function gh(url, options = {}) {
+    const res = await fetch(url, { ...options, headers: headers(options.headers) });
+    if (!res.ok) {
+        let detail = res.statusText;
+        try { const d = await res.json(); detail = d.message || JSON.stringify(d); } catch {}
+        const err = new Error(`GitHub APIエラー (${res.status}): ${detail}`);
+        err.status = res.status;
+        throw err;
     }
-
-    return response;
+    return res;
 }
 
 function toBase64(file) {
     return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-
-        reader.onload = () => {
-            const result = reader.result;
-            const comma = result.indexOf(",");
-
-            if (comma < 0) {
-                reject(new Error("ファイルの変換に失敗しました"));
-                return;
-            }
-
-            resolve(result.slice(comma + 1));
+        const r = new FileReader();
+        r.onload = () => {
+            const s = r.result, i = s.indexOf(",");
+            i < 0 ? reject(new Error("ファイルの変換に失敗しました")) : resolve(s.slice(i + 1));
         };
-
-        reader.onerror = () => {
-            reject(reader.error || new Error("ファイル読み込みエラー"));
-        };
-
-        reader.readAsDataURL(file);
+        r.onerror = () => reject(r.error || new Error("ファイル読み込みエラー"));
+        r.readAsDataURL(file);
     });
 }
 
+async function sha256Hex(text) {
+    const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+// ---------- ビルド進捗の監視 ----------
+async function watchRun(since) {
+    log("6. ビルドの開始を待っています...");
+    const start = Date.now();
+    let runId = null, lastStatus = "";
+
+    while (Date.now() - start < POLL_LIMIT_MS) {
+        await sleep(POLL_MS);
+        try {
+            if (!runId) {
+                const r = await gh(`${API_BASE}/actions/runs?event=repository_dispatch&per_page=10`);
+                const d = await r.json();
+                const run = (d.workflow_runs || []).find(x => x.created_at >= since);
+                if (run) { runId = run.id; logLink("実行ページ: ", run.html_url); }
+                continue;
+            }
+            const r = await gh(`${API_BASE}/actions/runs/${runId}`);
+            const run = await r.json();
+            const st = run.status === "completed" ? `completed:${run.conclusion}` : run.status;
+            if (st !== lastStatus) { log(`状態: ${st}`); lastStatus = st; }
+
+            if (run.status === "completed") {
+                if (run.conclusion === "success") {
+                    log("✅ ビルド成功！ 実行ページの Artifacts (Build-Output) からIPA/DEBをダウンロードできます。");
+                    logLink("ダウンロード: ", run.html_url);
+                    logDiv.style.color = "#238636";
+                } else {
+                    log(`❌ ビルド失敗 (${run.conclusion})。ログは実行ページで確認してください。`);
+                    logDiv.style.color = "#da3637";
+                }
+                return;
+            }
+        } catch (e) {
+            // 権限不足(Actions: Read なし)などは監視のみ諦める
+            if (e.status === 403 || e.status === 404) {
+                log("(Actionsの読み取り権限がないため、自動監視を終了します)");
+                logLink("Actions: ", `https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/actions`);
+                return;
+            }
+        }
+    }
+    log("監視がタイムアウトしました。Actionsページで確認してください。");
+}
+
+// ---------- メイン処理 ----------
 async function startUploadAndBuild() {
     if (buildBtn.disabled) return;
 
-    const token = document.getElementById("token").value.trim();
-    const fileInput = document.getElementById("zipFile");
-    const file = fileInput.files[0];
+    const token = tokenInput.value.trim();
+    const file = $("zipFile").files[0];
 
-    if (!token) {
-        alert("GitHubトークンを入力してください。");
-        return;
+    if (!token) return alert("GitHubトークンを入力してください。");
+    if (!file || !file.name.toLowerCase().endsWith(".zip")) return alert("ZIPファイルを選択してください。");
+    if (file.size > MAX_BYTES) {
+        return alert(`ZIPが大きすぎます (${(file.size/1048576).toFixed(1)} MB)。95MB以下にしてください。`);
+    }
+    if (!crypto.subtle) {
+        return alert("SHA-256 APIが利用できません。HTTPSまたはlocalhostで開いてください。");
     }
 
-    if (!file) {
-        alert("ZIPファイルを選択してください。");
-        return;
-    }
-
-    if (!file.name.toLowerCase().endsWith(".zip")) {
-        alert("ZIPファイルを選択してください。");
-        return;
-    }
+    try {
+        remember.checked ? localStorage.setItem("gh_token", token) : localStorage.removeItem("gh_token");
+    } catch {}
 
     buildBtn.disabled = true;
     logDiv.textContent = "";
     logDiv.style.color = "#333";
+    bar.style.display = "block";
+    bar.value = 5;
 
     try {
-        // STEP 1: GitHub上の既存ファイルを確認
+        // 1. 既存ファイル確認
         log("1. GitHub上の既存ファイルを確認中...");
-
         let currentSha = null;
-
-        const checkRes = await fetch(
-            `${API_BASE}/contents/${FILE_PATH}`,
-            {
-                headers: {
-                    "Accept": "application/vnd.github+json",
-                    "Authorization": `Bearer ${token}`,
-                    "X-GitHub-Api-Version": "2022-11-28"
-                }
-            }
-        );
-
-        if (checkRes.ok) {
-            const checkData = await checkRes.json();
-            currentSha = checkData.sha;
+        try {
+            const r = await gh(`${API_BASE}/contents/${FILE_PATH}`);
+            currentSha = (await r.json()).sha;
             log("既存ファイルを確認しました。更新します。");
-        } else if (checkRes.status === 404) {
+        } catch (e) {
+            if (e.status !== 404) throw e;
             log("既存ファイルはありません。新規作成します。");
-        } else {
-            let detail = "";
-            try {
-                const data = await checkRes.json();
-                detail = data.message || "";
-            } catch {}
-
-            throw new Error(
-                `既存ファイルの確認に失敗 (${checkRes.status})` +
-                (detail ? `: ${detail}` : "")
-            );
         }
+        bar.value = 15;
 
-        // STEP 2: ZIPをBase64に変換
+        // 2. Base64化
         log("2. ZIPファイルを読み込み中...");
-        log(`ファイル名: ${file.name}`);
-        log(`サイズ: ${(file.size / 1024 / 1024).toFixed(2)} MB`);
+        log(`ファイル名: ${file.name} / ${(file.size / 1048576).toFixed(2)} MB`);
+        const content = await toBase64(file);
+        bar.value = 35;
 
-        const base64Content = await toBase64(file);
-
-        // STEP 3: GitHubにアップロード
+        // 3. アップロード
         log("3. GitHubへZIPをアップロード中...");
+        const body = { message: "Upload project.zip from Web Frontend", content };
+        if (currentSha) body.sha = currentSha;
 
-        const requestBody = {
-            message: "Upload project.zip from Web Frontend",
-            content: base64Content
-        };
+        const push = await gh(`${API_BASE}/contents/${FILE_PATH}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body)
+        });
+        const pushData = await push.json();
+        if (!pushData.content?.sha) throw new Error("アップロード結果を確認できませんでした。");
+        log(`アップロード成功！ (commit ${pushData.commit.sha.slice(0, 7)})`);
+        bar.value = 65;
 
-        if (currentSha) {
-            requestBody.sha = currentSha;
-        }
-
-        const pushRes = await githubRequest(
-            `${API_BASE}/contents/${FILE_PATH}`,
-            {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(requestBody)
-            }
-        );
-
-        const pushData = await pushRes.json();
-
-        if (!pushData.content || !pushData.content.sha) {
-            throw new Error("アップロード結果を確認できませんでした。");
-        }
-
-        log("アップロード成功！");
-        log(`コミットSHA: ${pushData.commit.sha}`);
-
-        // STEP 4: GitHub Actionsを起動
+        // 4. Actions起動
         log("4. GitHub Actionsを起動中...");
-
-        if (!crypto.subtle) {
-            throw new Error(
-                "SHA-256 APIが利用できません。" +
-                "HTTPSまたはlocalhostでページを開いてください。"
-            );
-        }
-
         const timestamp = Date.now().toString();
-        const textBuffer = new TextEncoder().encode(
-            timestamp + SECRET_SALT
-        );
+        const hash = await sha256Hex(timestamp + SECRET_SALT);
+        const since = new Date(Date.now() - 10000).toISOString().replace(/\.\d+Z$/, "Z");
 
-        const hashBuffer = await crypto.subtle.digest(
-            "SHA-256",
-            textBuffer
-        );
+        const dispatch = await gh(`${API_BASE}/dispatches`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                event_type: "remote_build_trigger",
+                client_payload: {
+                    timestamp,
+                    hash,
+                    target: $("target").value,
+                    scheme: $("scheme").value
+                }
+            })
+        });
+        if (dispatch.status !== 204) throw new Error(`予期しない応答ステータス: ${dispatch.status}`);
 
-        const generatedHash = Array.from(
-            new Uint8Array(hashBuffer)
-        ).map(b => b.toString(16).padStart(2, "0")).join("");
+        log(`5. ビルド起動を受け付けました！ (出力: ${$("target").value} / スキーム: ${$("scheme").value})`);
+        bar.value = 80;
 
-        const dispatchRes = await githubRequest(
-            `${API_BASE}/dispatches`,
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    event_type: "remote_build_trigger",
-                    client_payload: {
-                        timestamp,
-                        hash: generatedHash
-                    }
-                })
-            }
-        );
-
-        if (dispatchRes.status !== 204) {
-            throw new Error(
-                `予期しない応答ステータス: ${dispatchRes.status}`
-            );
-        }
-
-        log("5. ビルド起動リクエストを受け付けました！");
-        log("GitHubのActionsページで実行状況を確認してください。");
-        log(`https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/actions`);
-
-        logDiv.style.color = "#238636";
+        // 6. 進捗監視
+        await watchRun(since);
+        bar.value = 100;
 
     } catch (error) {
         log(`エラー: ${error.message}`);
