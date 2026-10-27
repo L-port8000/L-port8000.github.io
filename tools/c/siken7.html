@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>iOS一括ビルドシステム</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            text-align: center;
+            padding: 40px 16px;
+            background: #f4f7f6;
+            color: #333;
+        }
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,.1);
+            box-sizing: border-box;
+        }
+        input[type="file"], input[type="password"] {
+            margin: 12px 0;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        button {
+            padding: 15px;
+            font-size: 17px;
+            cursor: pointer;
+            background: #238636;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            width: 100%;
+        }
+        button:hover { background: #2ea44f; }
+        button:disabled {
+            background: #a2a2a2;
+            cursor: not-allowed;
+        }
+        #status {
+            margin-top: 20px;
+            font-size: 14px;
+            text-align: left;
+            background: #eee;
+            padding: 15px;
+            border-radius: 6px;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+            font-family: monospace;
+        }
+        .warning {
+            font-size: 12px;
+            color: #b42318;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>🚀 iOS一括ビルドシステム</h2>
+    <p style="font-size:13px;color:#666">
+        xcodeprojやソースフォルダをまとめたZIPファイルを選択してください。
+    </p>
+
+    <label for="token">GitHub Personal Access Token</label>
+    <input
+        type="password"
+        id="token"
+        placeholder="github_pat_..."
+        autocomplete="off"
+    >
+
+    <input type="file" id="zipFile" accept=".zip">
+
+    <button id="buildBtn" type="button">
+        📦 アップロードしてビルド開始
+    </button>
+
+    <p class="warning">
+        注意：この方式はブラウザからGitHubに直接アクセスします。
+        本番運用ではトークンをサーバー側で管理してください。
+    </p>
+
+    <div id="status" role="status" aria-live="polite">
+        ここにログが表示されます
+    </div>
+</div>
+
+<script>
+"use strict";
+
+const GITHUB_OWNER = "L-port8000";
+const GITHUB_REPO = "NewYTPlus";
+const FILE_PATH = "project.zip";
+
+const SECRET_SALT = "ipa-builder-1";
+
+const API_BASE =
+    `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}`;
+
+const logDiv = document.getElementById("status");
+const buildBtn = document.getElementById("buildBtn");
+
+function log(message) {
+    logDiv.textContent += message + "\n";
+}
+
+async function githubRequest(url, options = {}) {
+    const token = document.getElementById("token").value.trim();
+
+    const response = await fetch(url, {
+        ...options,
+        headers: {
+            "Accept": "application/vnd.github+json",
+            "Authorization": `Bearer ${token}`,
+            "X-GitHub-Api-Version": "2022-11-28",
+            ...options.headers
+        }
+    });
+
+    if (!response.ok) {
+        let detail = "";
+        try {
+            const data = await response.json();
+            detail = data.message || JSON.stringify(data);
+        } catch {
+            detail = response.statusText;
+        }
+
+        throw new Error(
+            `GitHub APIエラー (${response.status}): ${detail}`
+        );
+    }
+
+    return response;
+}
+
+function toBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+
+        reader.onload = () => {
+            const result = reader.result;
+            const comma = result.indexOf(",");
+
+            if (comma < 0) {
+                reject(new Error("ファイルの変換に失敗しました"));
+                return;
+            }
+
+            resolve(result.slice(comma + 1));
+        };
+
+        reader.onerror = () => {
+            reject(reader.error || new Error("ファイル読み込みエラー"));
+        };
+
+        reader.readAsDataURL(file);
+    });
+}
+
+async function startUploadAndBuild() {
+    if (buildBtn.disabled) return;
+
+    const token = document.getElementById("token").value.trim();
+    const fileInput = document.getElementById("zipFile");
+    const file = fileInput.files[0];
+
+    if (!token) {
+        alert("GitHubトークンを入力してください。");
+        return;
+    }
+
+    if (!file) {
+        alert("ZIPファイルを選択してください。");
+        return;
+    }
+
+    if (!file.name.toLowerCase().endsWith(".zip")) {
+        alert("ZIPファイルを選択してください。");
+        return;
+    }
+
+    buildBtn.disabled = true;
+    logDiv.textContent = "";
+    logDiv.style.color = "#333";
+
+    try {
+        // STEP 1: GitHub上の既存ファイルを確認
+        log("1. GitHub上の既存ファイルを確認中...");
+
+        let currentSha = null;
+
+        const checkRes = await fetch(
+            `${API_BASE}/contents/${FILE_PATH}`,
+            {
+                headers: {
+                    "Accept": "application/vnd.github+json",
+                    "Authorization": `Bearer ${token}`,
+                    "X-GitHub-Api-Version": "2022-11-28"
+                }
+            }
+        );
+
+        if (checkRes.ok) {
+            const checkData = await checkRes.json();
+            currentSha = checkData.sha;
+            log("既存ファイルを確認しました。更新します。");
+        } else if (checkRes.status === 404) {
+            log("既存ファイルはありません。新規作成します。");
+        } else {
+            let detail = "";
+            try {
+                const data = await checkRes.json();
+                detail = data.message || "";
+            } catch {}
+
+            throw new Error(
+                `既存ファイルの確認に失敗 (${checkRes.status})` +
+                (detail ? `: ${detail}` : "")
+            );
+        }
+
+        // STEP 2: ZIPをBase64に変換
+        log("2. ZIPファイルを読み込み中...");
+        log(`ファイル名: ${file.name}`);
+        log(`サイズ: ${(file.size / 1024 / 1024).toFixed(2)} MB`);
+
+        const base64Content = await toBase64(file);
+
+        // STEP 3: GitHubにアップロード
+        log("3. GitHubへZIPをアップロード中...");
+
+        const requestBody = {
+            message: "Upload project.zip from Web Frontend",
+            content: base64Content
+        };
+
+        if (currentSha) {
+            requestBody.sha = currentSha;
+        }
+
+        const pushRes = await githubRequest(
+            `${API_BASE}/contents/${FILE_PATH}`,
+            {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(requestBody)
+            }
+        );
+
+        const pushData = await pushRes.json();
+
+        if (!pushData.content || !pushData.content.sha) {
+            throw new Error("アップロード結果を確認できませんでした。");
+        }
+
+        log("アップロード成功！");
+        log(`コミットSHA: ${pushData.commit.sha}`);
+
+        // STEP 4: GitHub Actionsを起動
+        log("4. GitHub Actionsを起動中...");
+
+        if (!crypto.subtle) {
+            throw new Error(
+                "SHA-256 APIが利用できません。" +
+                "HTTPSまたはlocalhostでページを開いてください。"
+            );
+        }
+
+        const timestamp = Date.now().toString();
+        const textBuffer = new TextEncoder().encode(
+            timestamp + SECRET_SALT
+        );
+
+        const hashBuffer = await crypto.subtle.digest(
+            "SHA-256",
+            textBuffer
+        );
+
+        const generatedHash = Array.from(
+            new Uint8Array(hashBuffer)
+        ).map(b => b.toString(16).padStart(2, "0")).join("");
+
+        const dispatchRes = await githubRequest(
+            `${API_BASE}/dispatches`,
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    event_type: "remote_build_trigger",
+                    client_payload: {
+                        timestamp,
+                        hash: generatedHash
+                    }
+                })
+            }
+        );
+
+        if (dispatchRes.status !== 204) {
+            throw new Error(
+                `予期しない応答ステータス: ${dispatchRes.status}`
+            );
+        }
+
+        log("5. ビルド起動リクエストを受け付けました！");
+        log("GitHubのActionsページで実行状況を確認してください。");
+        log(`https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/actions`);
+
+        logDiv.style.color = "#238636";
+
+    } catch (error) {
+        log(`エラー: ${error.message}`);
+        logDiv.style.color = "#da3637";
+    } finally {
+        buildBtn.disabled = false;
+    }
+}
+
+buildBtn.addEventListener("click", startUploadAndBuild);
+</script>
+</body>
+</html>
