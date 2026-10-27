@@ -3,97 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>iOS一括ビルドシステム (IPA / DEB)</title>
+    <title>iOS一括ビルド / DEB注入システム</title>
     <style>
-        :root { --ok:#238636; --ok-h:#2ea44f; --err:#da3637; --bg:#f4f7f6; }
         * { box-sizing: border-box; }
         body {
             font-family: system-ui, -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif;
-            padding: 32px 16px;
-            background: var(--bg);
-            color: #333;
-            margin: 0;
+            padding: 32px 16px; background: #f4f7f6; color: #333; margin: 0;
         }
         .container {
-            max-width: 520px;
-            margin: 0 auto;
-            background: #fff;
-            padding: 28px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0,0,0,.1);
+            max-width: 540px; margin: 0 auto; background: #fff; padding: 28px;
+            border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,.1);
         }
         h2 { text-align: center; margin-top: 0; }
-        label { display: block; font-size: 13px; font-weight: 600; margin: 14px 0 4px; }
-        input[type="file"], input[type="password"], select {
+        label { display: block; font-size: 13px; font-weight: 600; margin: 16px 0 4px; }
+        input[type="file"], input[type="password"], input[type="url"] {
             padding: 11px; border: 1px solid #ccc; border-radius: 6px;
             width: 100%; font-size: 14px; background: #fff;
         }
-        .row { display: flex; gap: 12px; }
-        .row > div { flex: 1; }
-        .check { display: flex; align-items: center; gap: 6px; font-size: 12px; margin-top: 8px; font-weight: 400; }
+        .seg { display: flex; gap: 8px; margin-bottom: 8px; }
+        .seg label {
+            flex: 1; margin: 0; padding: 8px; text-align: center; font-weight: 500;
+            border: 1px solid #ccc; border-radius: 6px; cursor: pointer; font-size: 13px;
+        }
+        .seg input { display: none; }
+        .seg input:checked + span { font-weight: 700; color: #238636; }
+        .seg label:has(input:checked) { border-color: #238636; background: #eefaf1; }
+        .check { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 400; margin-top: 8px; }
         .check input { width: auto; }
+        .hidden { display: none; }
         button {
-            margin-top: 20px; padding: 15px; font-size: 17px; cursor: pointer;
-            background: var(--ok); color: #fff; border: none; border-radius: 6px;
+            margin-top: 22px; padding: 15px; font-size: 17px; cursor: pointer;
+            background: #238636; color: #fff; border: none; border-radius: 6px;
             font-weight: bold; width: 100%;
         }
-        button:hover { background: var(--ok-h); }
+        button:hover { background: #2ea44f; }
         button:disabled { background: #a2a2a2; cursor: not-allowed; }
         progress { width: 100%; height: 10px; margin-top: 16px; display: none; }
         #status {
             margin-top: 16px; font-size: 13px; background: #eee; padding: 14px;
             border-radius: 6px; white-space: pre-wrap; overflow-wrap: anywhere;
-            font-family: ui-monospace, monospace; max-height: 260px; overflow: auto;
+            font-family: ui-monospace, monospace; max-height: 280px; overflow: auto;
         }
         #status a { color: inherit; }
-        .hint { font-size: 12px; color: #666; }
+        .hint { font-size: 12px; color: #666; margin: 4px 0 0; }
         .warning { font-size: 12px; color: #b42318; }
-        #schemeWrap.off { opacity: .45; }
     </style>
 </head>
 <body>
 <div class="container">
-    <h2>🚀 iOS一括ビルドシステム</h2>
+    <h2>🚀 iOSビルド / DEB注入</h2>
     <p class="hint">
-        Xcodeプロジェクト、またはTheos(tweak)プロジェクトをZIPにまとめて選択してください。
-        Theosプロジェクトは自動検出され、常にdebが出力されます。
+        TweakのDEBを復号済みIPAに注入して、IPAとして出力します。
+        Theosプロジェクト(ZIP)を渡すと、DEBのビルドから自動で行います。
+        Xcodeプロジェクト(ZIP)の場合は、従来どおり署名なしIPAをビルドします。
     </p>
 
     <label for="token">GitHub Personal Access Token</label>
     <input type="password" id="token" placeholder="github_pat_..." autocomplete="off">
-    <label class="check">
-        <input type="checkbox" id="remember"> このブラウザにトークンを保存する
-    </label>
+    <label class="check"><input type="checkbox" id="remember"> このブラウザにトークンを保存する</label>
     <p class="hint">必要権限: Contents (Read/Write)、Actions (Read)</p>
 
-    <label for="zipFile">プロジェクトZIP</label>
-    <input type="file" id="zipFile" accept=".zip">
+    <label for="srcFile">① Tweak (.deb) またはプロジェクトZIP (.zip)</label>
+    <input type="file" id="srcFile" accept=".zip,.deb">
+    <p class="hint">Theos / Xcodeプロジェクト、またはdebを含むZIPも可</p>
 
-    <div class="row">
-        <div>
-            <label for="target">出力形式</label>
-            <select id="target">
-                <option value="both">IPA + DEB</option>
-                <option value="ipa">IPAのみ</option>
-                <option value="deb">DEBのみ</option>
-            </select>
-        </div>
-        <div id="schemeWrap">
-            <label for="scheme">DEBスキーム</label>
-            <select id="scheme">
-                <option value="rootful">rootful</option>
-                <option value="rootless">rootless</option>
-                <option value="both">両方</option>
-            </select>
-        </div>
+    <label>② ベースIPA（復号済み）</label>
+    <div class="seg">
+        <label><input type="radio" name="ipaMode" value="file" checked><span>ファイル</span></label>
+        <label><input type="radio" name="ipaMode" value="url"><span>URL</span></label>
+        <label><input type="radio" name="ipaMode" value="none"><span>不要</span></label>
     </div>
+    <div id="ipaFileBox">
+        <input type="file" id="ipaFile" accept=".ipa">
+        <p class="hint">95MBまで。それ以上はURL指定を使ってください。</p>
+    </div>
+    <div id="ipaUrlBox" class="hidden">
+        <input type="url" id="ipaUrl" placeholder="https://example.com/app.ipa">
+        <p class="hint">直リンク(https)。ビルド側で直接ダウンロードします。</p>
+    </div>
+    <p class="hint hidden" id="noneHint">Xcodeプロジェクトをビルドするだけの場合に選択します。</p>
 
-    <button id="buildBtn" type="button">📦 アップロードしてビルド開始</button>
+    <button id="buildBtn" type="button">📦 アップロードして開始</button>
     <progress id="bar" max="100" value="0"></progress>
 
     <p class="warning">
-        注意：この方式はブラウザからGitHubに直接アクセスします。
-        トークンは信頼できる端末でのみ使用してください。
+        注意：ブラウザからGitHubへ直接アクセスします。信頼できる端末でのみ使用してください。
+        アップロードしたファイルはリポジトリの履歴に残ります。
     </p>
 
     <div id="status" role="status" aria-live="polite">ここにログが表示されます</div>
@@ -104,11 +99,10 @@
 
 const GITHUB_OWNER = "L-port8000";
 const GITHUB_REPO  = "NewYTPlus";
-const FILE_PATH    = "project.zip";
 const SECRET_SALT  = "ipa-builder-1";
 
-const MAX_BYTES    = 95 * 1024 * 1024;   // Contents APIの上限(約100MB)対策
-const POLL_MS      = 8000;
+const MAX_BYTES     = 95 * 1024 * 1024;
+const POLL_MS       = 8000;
 const POLL_LIMIT_MS = 45 * 60 * 1000;
 
 const API_BASE = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}`;
@@ -117,25 +111,21 @@ const $ = id => document.getElementById(id);
 const logDiv = $("status"), buildBtn = $("buildBtn"), bar = $("bar");
 const tokenInput = $("token"), remember = $("remember");
 
-// ---------- 保存済みトークン ----------
 try {
     const saved = localStorage.getItem("gh_token");
     if (saved) { tokenInput.value = saved; remember.checked = true; }
 } catch {}
 
-// ---------- UI ----------
-$("target").addEventListener("change", updateSchemeState);
-$("zipFile").addEventListener("change", updateSchemeState);
-function updateSchemeState() {
-    // IPAのみの場合、DEBスキームは(Xcodeでは)無関係。Theosはデバイス側で判別できないので無効化しない。
-    $("schemeWrap").classList.toggle("off", $("target").value === "ipa");
-}
-updateSchemeState();
+const ipaMode = () => document.querySelector('input[name="ipaMode"]:checked').value;
 
-function log(message) {
-    logDiv.textContent += message + "\n";
-    logDiv.scrollTop = logDiv.scrollHeight;
-}
+document.querySelectorAll('input[name="ipaMode"]').forEach(r => r.addEventListener("change", () => {
+    const m = ipaMode();
+    $("ipaFileBox").classList.toggle("hidden", m !== "file");
+    $("ipaUrlBox").classList.toggle("hidden", m !== "url");
+    $("noneHint").classList.toggle("hidden", m !== "none");
+}));
+
+function log(msg) { logDiv.textContent += msg + "\n"; logDiv.scrollTop = logDiv.scrollHeight; }
 function logLink(label, url) {
     const a = document.createElement("a");
     a.href = url; a.target = "_blank"; a.rel = "noopener"; a.textContent = url;
@@ -143,7 +133,6 @@ function logLink(label, url) {
 }
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-// ---------- GitHub API ----------
 function headers(extra = {}) {
     return {
         "Accept": "application/vnd.github+json",
@@ -182,42 +171,64 @@ async function sha256Hex(text) {
     return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
-// ---------- ビルド進捗の監視 ----------
+// リポジトリ直下の repoPath にファイルを作成/更新
+async function uploadFile(repoPath, file) {
+    let sha = null;
+    try {
+        const r = await gh(`${API_BASE}/contents/${repoPath}`);
+        sha = (await r.json()).sha;
+    } catch (e) {
+        if (e.status !== 404) throw e;
+    }
+
+    log(`  ${repoPath}: ${(file.size / 1048576).toFixed(2)} MB を読み込み中...`);
+    const content = await toBase64(file);
+
+    const body = { message: `Upload ${repoPath} from Web Frontend`, content };
+    if (sha) body.sha = sha;
+
+    const res = await gh(`${API_BASE}/contents/${repoPath}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (!data.content?.sha) throw new Error(`${repoPath} のアップロード結果を確認できませんでした。`);
+    log(`  ${repoPath}: アップロード成功`);
+}
+
 async function watchRun(since) {
-    log("6. ビルドの開始を待っています...");
+    log("ビルドの開始を待っています...");
     const start = Date.now();
-    let runId = null, lastStatus = "";
+    let runId = null, last = "";
 
     while (Date.now() - start < POLL_LIMIT_MS) {
         await sleep(POLL_MS);
         try {
             if (!runId) {
-                const r = await gh(`${API_BASE}/actions/runs?event=repository_dispatch&per_page=10`);
-                const d = await r.json();
+                const d = await (await gh(`${API_BASE}/actions/runs?event=repository_dispatch&per_page=10`)).json();
                 const run = (d.workflow_runs || []).find(x => x.created_at >= since);
                 if (run) { runId = run.id; logLink("実行ページ: ", run.html_url); }
                 continue;
             }
-            const r = await gh(`${API_BASE}/actions/runs/${runId}`);
-            const run = await r.json();
+            const run = await (await gh(`${API_BASE}/actions/runs/${runId}`)).json();
             const st = run.status === "completed" ? `completed:${run.conclusion}` : run.status;
-            if (st !== lastStatus) { log(`状態: ${st}`); lastStatus = st; }
+            if (st !== last) { log(`状態: ${st}`); last = st; }
 
             if (run.status === "completed") {
                 if (run.conclusion === "success") {
-                    log("✅ ビルド成功！ 実行ページの Artifacts (Build-Output) からIPA/DEBをダウンロードできます。");
+                    log("✅ 完了！ 実行ページの Artifacts (Build-Output) からIPAをダウンロードできます。");
                     logLink("ダウンロード: ", run.html_url);
                     logDiv.style.color = "#238636";
                 } else {
-                    log(`❌ ビルド失敗 (${run.conclusion})。ログは実行ページで確認してください。`);
+                    log(`❌ 失敗 (${run.conclusion})。詳細は実行ページのログを確認してください。`);
                     logDiv.style.color = "#da3637";
                 }
                 return;
             }
         } catch (e) {
-            // 権限不足(Actions: Read なし)などは監視のみ諦める
             if (e.status === 403 || e.status === 404) {
-                log("(Actionsの読み取り権限がないため、自動監視を終了します)");
+                log("(Actions読み取り権限がないため自動監視を終了します)");
                 logLink("Actions: ", `https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/actions`);
                 return;
             }
@@ -226,25 +237,32 @@ async function watchRun(since) {
     log("監視がタイムアウトしました。Actionsページで確認してください。");
 }
 
-// ---------- メイン処理 ----------
-async function startUploadAndBuild() {
+async function start() {
     if (buildBtn.disabled) return;
 
     const token = tokenInput.value.trim();
-    const file = $("zipFile").files[0];
+    const src = $("srcFile").files[0];
+    const mode = ipaMode();
+    const ipa = $("ipaFile").files[0];
+    const ipaUrl = $("ipaUrl").value.trim();
 
     if (!token) return alert("GitHubトークンを入力してください。");
-    if (!file || !file.name.toLowerCase().endsWith(".zip")) return alert("ZIPファイルを選択してください。");
-    if (file.size > MAX_BYTES) {
-        return alert(`ZIPが大きすぎます (${(file.size/1048576).toFixed(1)} MB)。95MB以下にしてください。`);
-    }
-    if (!crypto.subtle) {
-        return alert("SHA-256 APIが利用できません。HTTPSまたはlocalhostで開いてください。");
-    }
+    if (!src) return alert("① DEB または ZIP を選択してください。");
 
-    try {
-        remember.checked ? localStorage.setItem("gh_token", token) : localStorage.removeItem("gh_token");
-    } catch {}
+    const lower = src.name.toLowerCase();
+    const srcType = lower.endsWith(".deb") ? "deb" : lower.endsWith(".zip") ? "zip" : null;
+    if (!srcType) return alert("① は .deb または .zip を選択してください。");
+
+    if (mode === "file") {
+        if (!ipa || !ipa.name.toLowerCase().endsWith(".ipa")) return alert("② IPAファイルを選択してください。");
+        if (ipa.size > MAX_BYTES) return alert("IPAが95MBを超えています。URL指定を使ってください。");
+    }
+    if (mode === "url" && !/^https:\/\//i.test(ipaUrl)) return alert("② IPAのURLは https:// で始めてください。");
+    if (mode === "none" && srcType === "deb") return alert("DEBを注入するにはベースIPAが必要です。");
+    if (src.size > MAX_BYTES) return alert("①のファイルが95MBを超えています。");
+    if (!crypto.subtle) return alert("SHA-256 APIが使えません。HTTPSまたはlocalhostで開いてください。");
+
+    try { remember.checked ? localStorage.setItem("gh_token", token) : localStorage.removeItem("gh_token"); } catch {}
 
     buildBtn.disabled = true;
     logDiv.textContent = "";
@@ -253,77 +271,50 @@ async function startUploadAndBuild() {
     bar.value = 5;
 
     try {
-        // 1. 既存ファイル確認
-        log("1. GitHub上の既存ファイルを確認中...");
-        let currentSha = null;
-        try {
-            const r = await gh(`${API_BASE}/contents/${FILE_PATH}`);
-            currentSha = (await r.json()).sha;
-            log("既存ファイルを確認しました。更新します。");
-        } catch (e) {
-            if (e.status !== 404) throw e;
-            log("既存ファイルはありません。新規作成します。");
-        }
-        bar.value = 15;
-
-        // 2. Base64化
-        log("2. ZIPファイルを読み込み中...");
-        log(`ファイル名: ${file.name} / ${(file.size / 1048576).toFixed(2)} MB`);
-        const content = await toBase64(file);
+        log("1. ファイルをアップロード中...");
+        await uploadFile(srcType === "deb" ? "tweak.deb" : "project.zip", src);
         bar.value = 35;
 
-        // 3. アップロード
-        log("3. GitHubへZIPをアップロード中...");
-        const body = { message: "Upload project.zip from Web Frontend", content };
-        if (currentSha) body.sha = currentSha;
-
-        const push = await gh(`${API_BASE}/contents/${FILE_PATH}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body)
-        });
-        const pushData = await push.json();
-        if (!pushData.content?.sha) throw new Error("アップロード結果を確認できませんでした。");
-        log(`アップロード成功！ (commit ${pushData.commit.sha.slice(0, 7)})`);
+        if (mode === "file") {
+            await uploadFile("base.ipa", ipa);
+        }
         bar.value = 65;
 
-        // 4. Actions起動
-        log("4. GitHub Actionsを起動中...");
+        log("2. GitHub Actionsを起動中...");
         const timestamp = Date.now().toString();
         const hash = await sha256Hex(timestamp + SECRET_SALT);
         const since = new Date(Date.now() - 10000).toISOString().replace(/\.\d+Z$/, "Z");
 
-        const dispatch = await gh(`${API_BASE}/dispatches`, {
+        const res = await gh(`${API_BASE}/dispatches`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 event_type: "remote_build_trigger",
                 client_payload: {
-                    timestamp,
-                    hash,
-                    target: $("target").value,
-                    scheme: $("scheme").value
+                    timestamp, hash,
+                    source: srcType,
+                    ipa: mode,
+                    ipa_url: mode === "url" ? ipaUrl : ""
                 }
             })
         });
-        if (dispatch.status !== 204) throw new Error(`予期しない応答ステータス: ${dispatch.status}`);
+        if (res.status !== 204) throw new Error(`予期しない応答ステータス: ${res.status}`);
 
-        log(`5. ビルド起動を受け付けました！ (出力: ${$("target").value} / スキーム: ${$("scheme").value})`);
+        log(`3. 受け付けました (入力: ${srcType} / ベースIPA: ${mode})`);
         bar.value = 80;
 
-        // 6. 進捗監視
         await watchRun(since);
         bar.value = 100;
 
-    } catch (error) {
-        log(`エラー: ${error.message}`);
+    } catch (e) {
+        log(`エラー: ${e.message}`);
         logDiv.style.color = "#da3637";
     } finally {
         buildBtn.disabled = false;
     }
 }
 
-buildBtn.addEventListener("click", startUploadAndBuild);
+buildBtn.addEventListener("click", start);
 </script>
 </body>
 </html>
