@@ -38,6 +38,15 @@
         }
         button:hover { background: #2ea44f; }
         button:disabled { background: #a2a2a2; cursor: not-allowed; }
+
+        .download-btn {
+            display: block; margin-top: 10px; padding: 13px;
+            text-align: center; text-decoration: none;
+            background: #0969da; color: #fff; border-radius: 6px;
+            font-size: 15px; font-weight: bold;
+        }
+        .download-btn:hover { background: #0550ae; }
+
         progress { width: 100%; height: 10px; margin-top: 16px; display: none; }
         #status {
             margin-top: 16px; font-size: 13px; background: #eee; padding: 14px;
@@ -84,6 +93,15 @@
     <p class="hint hidden" id="noneHint">Xcodeプロジェクトをビルドするだけの場合に選択します。</p>
 
     <button id="buildBtn" type="button">📦 アップロードして開始</button>
+
+    <a
+        class="download-btn"
+        href="data:application/octet-stream;base64,bmFtZTogUmVtb3RlIFRyaWdnZXIgQnVpbGQgLyBJbmplY3QgSVBBCgojIOWLleS9nOODouODvOODie+8iOiHquWLleWIpOWumu+8iQojICAtIFRoZW9z44OX44Ot44K444Kn44Kv44OIKFpJUCkgOiBtYWtlIHBhY2thZ2Ug44GnZGVi44KS5L2c5oiQIOKGkiDjg5njg7zjgrlJUEHjgavms6jlhaUKIyAgLSBERUIgLyBERULlhaXjgopaSVAgICAgICAgIDog44Gd44GuZGVi44KS44OZ44O844K5SVBB44Gr5rOo5YWlCiMgIC0gWGNvZGXjg5fjg63jgrjjgqfjgq/jg4goWklQKSAgOiDnvbLlkI3jgarjgZdJUEHjgpLjg5Pjg6vjg4nvvIjlvpPmnaXli5XkvZzvvIkKCm9uOgogIHJlcG9zaXRvcnlfZGlzcGF0Y2g6CiAgICB0eXBlczogWyJyZW1vdGVfYnVpbGRfdHJpZ2dlciJdCgogIHdvcmtmbG93X2Rpc3BhdGNoOgogICAgaW5wdXRzOgogICAgICBzb3VyY2U6CiAgICAgICAgZGVzY3JpcHRpb246ICLlhaXlipvjgr3jg7zjgrkgKHppcD1wcm9qZWN0LnppcCAvIGRlYj10d2Vhay5kZWIpIgogICAgICAgIHR5cGU6IGNob2ljZQogICAgICAgIGRlZmF1bHQ6IHppcAogICAgICAgIG9wdGlvbnM6IFt6aXAsIGRlYl0KICAgICAgaXBhOgogICAgICAgIGRlc2NyaXB0aW9uOiAi44OZ44O844K5SVBB44Gu5Y+W5b6X5pa55rOVIChmaWxlPWJhc2UuaXBhIC8gdXJsPVVSTOOBi+OCiURMIC8gbm9uZT3kuI3opoEpIgogICAgICAgIHR5cGU6IGNob2ljZQogICAgICAgIGRlZmF1bHQ6IGZpbGUKICAgICAgICBvcHRpb25zOiBbZmlsZSwgdXJsLCBub25lXQogICAgICBpcGFfdXJsOgogICAgICAgIGRlc2NyaXB0aW9uOiAi44OZ44O844K5SVBB44GuVVJMIChodHRwcykiCiAgICAgICAgdHlwZTogc3RyaW5nCiAgICAgICAgZGVmYXVsdDogIiIKCnBlcm1pc3Npb25zOgogIGNvbnRlbnRzOiByZWFkCgpjb25jdXJyZW5jeToKICBncm91cDogcmVtb3RlLWJ1aWxkCiAgY2FuY2VsLWluLXByb2dyZXNzOiBmYWxzZQoKam9iczoKICB2ZXJpZnlfYW5kX2J1aWxkOgogICAgcnVucy1vbjogbWFjb3MtMTUKICAgIHRpbWVvdXQtbWludXRlczogNjAKCiAgICBzdGVwczoKICAgICAgLSBuYW1lOiBDaGVja291dCByZXBvc2l0b3J5CiAgICAgICAgdXNlczogYWN0aW9ucy9jaGVja291dEB2NAoKICAgICAgIyAxLiDjg4/jg4Pjgrfjg6XmpJzoqLwKICAgICAgLSBuYW1lOiBWZXJpZnkgU2VjdXJpdHkgSGFzaAogICAgICAgIHNoZWxsOiBiYXNoCiAgICAgICAgZW52OgogICAgICAgICAgUkVDRUlWRURfSEFTSDogJHt7IGdpdGh1Yi5ldmVudC5jbGllbnRfcGF5bG9hZC5oYXNoIH19CiAgICAgICAgICBSRUNFSVZFRF9USU1FU1RBTVA6ICR7eyBnaXRodWIuZXZlbnQuY2xpZW50X3BheWxvYWQudGltZXN0YW1wIH19CiAgICAgICAgICBTRUNSRVRfU0FMVDogJHt7IHNlY3JldHMuQlVJTERfVFJJR0dFUl9TQUxUIH19CiAgICAgICAgICBFVkVOVF9OQU1FOiAke3sgZ2l0aHViLmV2ZW50X25hbWUgfX0KICAgICAgICBydW46IHwKICAgICAgICAgIHNldCAtZXVvIHBpcGVmYWlsCgogICAgICAgICAgaWYgWyAiJEVWRU5UX05BTUUiID0gIndvcmtmbG93X2Rpc3BhdGNoIiBdOyB0aGVuCiAgICAgICAgICAgIGVjaG8gIk1hbnVhbCB3b3JrZmxvdyBydW4uIgogICAgICAgICAgICBleGl0IDAKICAgICAgICAgIGZpCgogICAgICAgICAgaWYgWyAteiAiJFNFQ1JFVF9TQUxUIiBdIHx8IFsgLXogIiRSRUNFSVZFRF9IQVNIIiBdIHx8IFsgLXogIiRSRUNFSVZFRF9USU1FU1RBTVAiIF07IHRoZW4KICAgICAgICAgICAgZWNobyAiOjplcnJvcjo6TWlzc2luZyBzZWN1cml0eSB2ZXJpZmljYXRpb24gdmFsdWVzLiIKICAgICAgICAgICAgZXhpdCAxCiAgICAgICAgICBmaQoKICAgICAgICAgIGlmICEgW1sgIiRSRUNFSVZFRF9USU1FU1RBTVAiID1+IF5bMC05XSskIF1dOyB0aGVuCiAgICAgICAgICAgIGVjaG8gIjo6ZXJyb3I6OkludmFsaWQgdGltZXN0YW1wLiIKICAgICAgICAgICAgZXhpdCAxCiAgICAgICAgICBmaQoKICAgICAgICAgIE5PVz0kKGRhdGUgKyVzKQogICAgICAgICAgQUdFPSQoKE5PVyAtIFJFQ0VJVkVEX1RJTUVTVEFNUCAvIDEwMDApKQogICAgICAgICAgaWYgWyAiJEFHRSIgLWx0IC02MCBdIHx8IFsgIiRBR0UiIC1ndCA2MDAgXTsgdGhlbgogICAgICAgICAgICBlY2hvICI6OmVycm9yOjpSZXF1ZXN0IGV4cGlyZWQuIgogICAgICAgICAgICBleGl0IDEKICAgICAgICAgIGZpCgogICAgICAgICAgRVhQRUNURURfSEFTSD0kKAogICAgICAgICAgICBwcmludGYgJyVzJyAiJHtSRUNFSVZFRF9USU1FU1RBTVB9JHtTRUNSRVRfU0FMVH0iIHwgc2hhc3VtIC1hIDI1NiB8IGF3ayAne3ByaW50ICQxfScKICAgICAgICAgICkKCiAgICAgICAgICBpZiBbICIkUkVDRUlWRURfSEFTSCIgIT0gIiRFWFBFQ1RFRF9IQVNIIiBdOyB0aGVuCiAgICAgICAgICAgIGVjaG8gIjo6ZXJyb3I6OlNlY3VyaXR5IGhhc2ggdmVyaWZpY2F0aW9uIGZhaWxlZC4iCiAgICAgICAgICAgIGV4aXQgMQogICAgICAgICAgZmkKICAgICAgICAgIGVjaG8gIlNlY3VyaXR5IHZlcmlmaWNhdGlvbiBzdWNjZWVkZWQuIgoKICAgICAgIyAyLiDjgqrjg5fjgrfjg6fjg7Pop6PmsboKICAgICAgLSBuYW1lOiBSZXNvbHZlIG9wdGlvbnMKICAgICAgICBzaGVsbDogYmFzaAogICAgICAgIGVudjoKICAgICAgICAgIFBfU09VUkNFOiAke3sgZ2l0aHViLmV2ZW50LmNsaWVudF9wYXlsb2FkLnNvdXJjZSB9fQogICAgICAgICAgUF9JUEE6ICR7eyBnaXRodWIuZXZlbnQuY2xpZW50X3BheWxvYWQuaXBhIH19CiAgICAgICAgICBQX0lQQV9VUkw6ICR7eyBnaXRodWIuZXZlbnQuY2xpZW50X3BheWxvYWQuaXBhX3VybCB9fQogICAgICAgICAgSV9TT1VSQ0U6ICR7eyBpbnB1dHMuc291cmNlIH19CiAgICAgICAgICBJX0lQQTogJHt7IGlucHV0cy5pcGEgfX0KICAgICAgICAgIElfSVBBX1VSTDogJHt7IGlucHV0cy5pcGFfdXJsIH19CiAgICAgICAgcnVuOiB8CiAgICAgICAgICBzZXQgLWV1byBwaXBlZmFpbAoKICAgICAgICAgIFNPVVJDRT0iJHtQX1NPVVJDRTotJHtJX1NPVVJDRTotemlwfX0iCiAgICAgICAgICBJUEFfTU9ERT0iJHtQX0lQQTotJHtJX0lQQTotZmlsZX19IgogICAgICAgICAgSVBBX1VSTD0iJHtQX0lQQV9VUkw6LSR7SV9JUEFfVVJMOi19fSIKCiAgICAgICAgICBjYXNlICIkU09VUkNFIiAgIGluIHppcHxkZWIpICAgICAgIDs7ICopIGVjaG8gIjo6ZXJyb3I6OkludmFsaWQgc291cmNlIjsgIGV4aXQgMTs7IGVzYWMKICAgICAgICAgIGNhc2UgIiRJUEFfTU9ERSIgaW4gZmlsZXx1cmx8bm9uZSkgOzsgKikgZWNobyAiOjplcnJvcjo6SW52YWxpZCBpcGEgbW9kZSI7IGV4aXQgMTs7IGVzYWMKCiAgICAgICAgICBpZiBbICIkSVBBX01PREUiID0gInVybCIgXTsgdGhlbgogICAgICAgICAgICBjYXNlICIkSVBBX1VSTCIgaW4gaHR0cHM6Ly8qKSA7OyAqKSBlY2hvICI6OmVycm9yOjpJUEEgVVJMIOOBryBodHRwczovLyDjgaflp4vjgb7jgovlv4XopoHjgYzjgYLjgorjgb7jgZkiOyBleGl0IDE7OyBlc2FjCiAgICAgICAgICBmaQoKICAgICAgICAgIHsKICAgICAgICAgICAgZWNobyAiU09VUkNFPSRTT1VSQ0UiCiAgICAgICAgICAgIGVjaG8gIklQQV9NT0RFPSRJUEFfTU9ERSIKICAgICAgICAgICAgZWNobyAiSVBBX1VSTD0kSVBBX1VSTCIKICAgICAgICAgIH0gPj4gIiRHSVRIVUJfRU5WIgoKICAgICAgICAgIG1rZGlyIC1wIG91dCBkZWJzCiAgICAgICAgICBlY2hvICJzb3VyY2U9JFNPVVJDRSBpcGE9JElQQV9NT0RFIgoKICAgICAgIyAzLiDlhaXlipvjga7lsZXplovjgajjg5fjg63jgrjjgqfjgq/jg4jnqK7liKXliKTlrpoKICAgICAgLSBuYW1lOiBQcmVwYXJlIGlucHV0CiAgICAgICAgc2hlbGw6IGJhc2gKICAgICAgICBydW46IHwKICAgICAgICAgIHNldCAtZXVvIHBpcGVmYWlsCgogICAgICAgICAgaWYgWyAiJFNPVVJDRSIgPSAiZGViIiBdOyB0aGVuCiAgICAgICAgICAgIFsgLWYgdHdlYWsuZGViIF0gfHwgeyBlY2hvICI6OmVycm9yOjp0d2Vhay5kZWIg44GM44Oq44Od44K444OI44Oq44Gr44GC44KK44G+44Gb44KT44CCIjsgZXhpdCAxOyB9CiAgICAgICAgICAgIGNwIHR3ZWFrLmRlYiBkZWJzLwogICAgICAgICAgICBlY2hvICJQUk9KRUNUX1RZUEU9ZGVib25seSIgPj4gIiRHSVRIVUJfRU5WIgogICAgICAgICAgICBleGl0IDAKICAgICAgICAgIGZpCgogICAgICAgICAgWyAtZiBwcm9qZWN0LnppcCBdIHx8IHsgZWNobyAiOjplcnJvcjo6cHJvamVjdC56aXAg44GM44Oq44Od44K444OI44Oq44Gr44GC44KK44G+44Gb44KT44CCIjsgbHMgLWxhOyBleGl0IDE7IH0KCiAgICAgICAgICBybSAtcmYgZXh0cmFjdGVkCiAgICAgICAgICBta2RpciAtcCBleHRyYWN0ZWQKICAgICAgICAgIHVuemlwIC1xIC1vIHByb2plY3QuemlwIC1kIGV4dHJhY3RlZCAteCAnX19NQUNPU1gvKicgJyovLkRTX1N0b3JlJwogICAgICAgICAgZmluZCBleHRyYWN0ZWQgLW1heGRlcHRoIDMgLXByaW50IHwgaGVhZCAtODAKCiAgICAgICAgICBUSEVPU19NQUtFRklMRT0kKAogICAgICAgICAgICBmaW5kIGV4dHJhY3RlZCAtbWF4ZGVwdGggNCAtbmFtZSBNYWtlZmlsZSAtbm90IC1wYXRoICcqL19fTUFDT1NYLyonIFwKICAgICAgICAgICAgICAtZXhlYyBncmVwIC1sRSAndGhlb3MvbWFrZWZpbGVzfFwkXChUSEVPU1wpJyB7fSArIDI+L2Rldi9udWxsIHwgaGVhZCAtbjEgfHwgdHJ1ZQogICAgICAgICAgKQoKICAgICAgICAgIGlmIFsgLW4gIiRUSEVPU19NQUtFRklMRSIgXTsgdGhlbgogICAgICAgICAgICBlY2hvICJQUk9KRUNUX1RZUEU9dGhlb3MiID4+ICIkR0lUSFVCX0VOViIKICAgICAgICAgICAgZWNobyAiVEhFT1NfUFJPSkVDVF9ESVI9JChkaXJuYW1lICIkVEhFT1NfTUFLRUZJTEUiKSIgPj4gIiRHSVRIVUJfRU5WIgogICAgICAgICAgICBlY2hvICJEZXRlY3RlZCBUaGVvcyBwcm9qZWN0LiIKICAgICAgICAgICAgZXhpdCAwCiAgICAgICAgICBmaQoKICAgICAgICAgIFhDT0RFUFJPSj0kKGZpbmQgZXh0cmFjdGVkIC10eXBlIGQgLW5hbWUgJyoueGNvZGVwcm9qJyAtcHJ1bmUgLXByaW50IC1xdWl0KQogICAgICAgICAgaWYgWyAtbiAiJFhDT0RFUFJPSiIgXTsgdGhlbgogICAgICAgICAgICBlY2hvICJQUk9KRUNUX1RZUEU9eGNvZGUiID4+ICIkR0lUSFVCX0VOViIKICAgICAgICAgICAgZWNobyAiWENPREVQUk9KPSRYQ09ERVBST0oiID4+ICIkR0lUSFVCX0VOViIKICAgICAgICAgICAgZWNobyAiUFJPSkVDVF9OQU1FPSQoYmFzZW5hbWUgIiRYQ09ERVBST0oiIC54Y29kZXByb2opIiA+PiAiJEdJVEhVQl9FTlYiCiAgICAgICAgICAgIGVjaG8gIkRldGVjdGVkIFhjb2RlIHByb2plY3QuIgogICAgICAgICAgICBleGl0IDAKICAgICAgICAgIGZpCgogICAgICAgICAgIyBaSVDlhoXjga5kZWLjgpLjgZ3jga7jgb7jgb7kvb/jgYYKICAgICAgICAgIGlmIGZpbmQgZXh0cmFjdGVkIC1uYW1lICcqLmRlYicgfCBncmVwIC1xIC47IHRoZW4KICAgICAgICAgICAgZmluZCBleHRyYWN0ZWQgLW5hbWUgJyouZGViJyAtZXhlYyBjcCB7fSBkZWJzLyBcOwogICAgICAgICAgICBlY2hvICJQUk9KRUNUX1RZUEU9ZGVib25seSIgPj4gIiRHSVRIVUJfRU5WIgogICAgICAgICAgICBlY2hvICJEZXRlY3RlZCAuZGViIGZpbGVzIGluIFpJUC4iCiAgICAgICAgICAgIGV4aXQgMAogICAgICAgICAgZmkKCiAgICAgICAgICBlY2hvICI6OmVycm9yOjpUaGVvcyAvIFhjb2RlIOODl+ODreOCuOOCp+OCr+ODiOOCgiAuZGViIOOCguimi+OBpOOBi+OCiuOBvuOBm+OCk+OAgiIKICAgICAgICAgIGV4aXQgMQoKICAgICAgIyDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAgVGhlb3M6IGRlYuOCkuODk+ODq+ODiSDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAKICAgICAgLSBuYW1lOiBTZXR1cCBUaGVvcwogICAgICAgIGlmOiBlbnYuUFJPSkVDVF9UWVBFID09ICd0aGVvcycKICAgICAgICBzaGVsbDogYmFzaAogICAgICAgIHJ1bjogfAogICAgICAgICAgc2V0IC1ldW8gcGlwZWZhaWwKICAgICAgICAgIGJyZXcgaW5zdGFsbCBsZGlkIGRwa2cgbWFrZSB4egoKICAgICAgICAgIGV4cG9ydCBUSEVPUz0iJEhPTUUvdGhlb3MiCiAgICAgICAgICBnaXQgY2xvbmUgLS1yZWN1cnNpdmUgLS1kZXB0aCAxIGh0dHBzOi8vZ2l0aHViLmNvbS90aGVvcy90aGVvcy5naXQgIiRUSEVPUyIKICAgICAgICAgIHJtIC1yZiAiJFRIRU9TL3Nka3MiCiAgICAgICAgICBnaXQgY2xvbmUgLS1kZXB0aCAxIGh0dHBzOi8vZ2l0aHViLmNvbS90aGVvcy9zZGtzLmdpdCAiJFRIRU9TL3Nka3MiCgogICAgICAgICAgZWNobyAiVEhFT1M9JFRIRU9TIiA+PiAiJEdJVEhVQl9FTlYiCiAgICAgICAgICBlY2hvICIkKGJyZXcgLS1wcmVmaXggbWFrZSkvbGliZXhlYy9nbnViaW4iID4+ICIkR0lUSFVCX1BBVEgiCgogICAgICAtIG5hbWU6IEJ1aWxkIERFQiB3aXRoIFRoZW9zCiAgICAgICAgaWY6IGVudi5QUk9KRUNUX1RZUEUgPT0gJ3RoZW9zJwogICAgICAgIHNoZWxsOiBiYXNoCiAgICAgICAgcnVuOiB8CiAgICAgICAgICBzZXQgLWV1byBwaXBlZmFpbAogICAgICAgICAgY2QgIiRUSEVPU19QUk9KRUNUX0RJUiIKICAgICAgICAgIHJtIC1yZiAudGhlb3MgcGFja2FnZXMKICAgICAgICAgIG1ha2UgY2xlYW4gcGFja2FnZSBGSU5BTFBBQ0tBR0U9MQogICAgICAgICAgY3AgcGFja2FnZXMvKi5kZWIgIiRHSVRIVUJfV09SS1NQQUNFL2RlYnMvIgogICAgICAgICAgbHMgLWxoICIkR0lUSFVCX1dPUktTUEFDRS9kZWJzIgoKICAgICAgIyDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAgSVBB44G45rOo5YWlIOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgAogICAgICAtIG5hbWU6IEZldGNoIGJhc2UgSVBBCiAgICAgICAgaWY6IGVudi5QUk9KRUNUX1RZUEUgPT0gJ3RoZW9zJyB8fCBlbnYuUFJPSkVDVF9UWVBFID09ICdkZWJvbmx5JwogICAgICAgIHNoZWxsOiBiYXNoCiAgICAgICAgcnVuOiB8CiAgICAgICAgICBzZXQgLWV1byBwaXBlZmFpbAoKICAgICAgICAgIGNhc2UgIiRJUEFfTU9ERSIgaW4KICAgICAgICAgICAgdXJsKQogICAgICAgICAgICAgIGVjaG8gIkRvd25sb2FkaW5nIGJhc2UgSVBBLi4uIgogICAgICAgICAgICAgIGN1cmwgLWZMIC0tcmV0cnkgMyAtLW1heC10aW1lIDEyMDAgLW8gYmFzZV9pbnB1dC5pcGEgIiRJUEFfVVJMIgogICAgICAgICAgICAgIDs7CiAgICAgICAgICAgIGZpbGUpCiAgICAgICAgICAgICAgWyAtZiBiYXNlLmlwYSBdIHx8IHsgZWNobyAiOjplcnJvcjo6YmFzZS5pcGEg44GM44Oq44Od44K444OI44Oq44Gr44GC44KK44G+44Gb44KT44CCIjsgZXhpdCAxOyB9CiAgICAgICAgICAgICAgY3AgYmFzZS5pcGEgYmFzZV9pbnB1dC5pcGEKICAgICAgICAgICAgICA7OwogICAgICAgICAgICBub25lKQogICAgICAgICAgICAgIGVjaG8gIjo6ZXJyb3I6OkRFQuOCkuazqOWFpeOBmeOCi+OBq+OBr+ODmeODvOOCuUlQQeOBjOW/heimgeOBp+OBmeOAgiIKICAgICAgICAgICAgICBleGl0IDEKICAgICAgICAgICAgICA7OwogICAgICAgICAgZXNhYwoKICAgICAgICAgIGxzIC1saCBiYXNlX2lucHV0LmlwYQoKICAgICAgICAgIHVuemlwIC1sIGJhc2VfaW5wdXQuaXBhIHwgZ3JlcCAtcUUgJ1BheWxvYWQvW14vXStcLmFwcC9JbmZvXC5wbGlzdCcgXAogICAgICAgICAgICB8fCB7IGVjaG8gIjo6ZXJyb3I6OuacieWKueOBqklQQeOBp+OBr+OBguOCiuOBvuOBm+OCkyAoUGF5bG9hZC8qLmFwcCDjgYzopovjgaTjgYvjgorjgb7jgZvjgpMp44CCIjsgZXhpdCAxOyB9CgogICAgICAtIG5hbWU6IENoZWNrIElQQSBpcyBkZWNyeXB0ZWQKICAgICAgICBpZjogZW52LlBST0pFQ1RfVFlQRSA9PSAndGhlb3MnIHx8IGVudi5QUk9KRUNUX1RZUEUgPT0gJ2RlYm9ubHknCiAgICAgICAgc2hlbGw6IGJhc2gKICAgICAgICBydW46IHwKICAgICAgICAgIHNldCAtZXVvIHBpcGVmYWlsCgogICAgICAgICAgcm0gLXJmIGlwYV9jaGVjayAmJiBta2RpciBpcGFfY2hlY2sKICAgICAgICAgIHVuemlwIC1xIGJhc2VfaW5wdXQuaXBhICdQYXlsb2FkLyovSW5mby5wbGlzdCcgJ1BheWxvYWQvKi8qJyAtZCBpcGFfY2hlY2sgfHwgdHJ1ZQoKICAgICAgICAgIEFQUD0kKGZpbmQgaXBhX2NoZWNrL1BheWxvYWQgLW1heGRlcHRoIDEgLW5hbWUgJyouYXBwJyAtcHJpbnQgLXF1aXQpCiAgICAgICAgICBFWEVDPSQoL3Vzci9saWJleGVjL1BsaXN0QnVkZHkgLWMgIlByaW50IDpDRkJ1bmRsZUV4ZWN1dGFibGUiICIkQVBQL0luZm8ucGxpc3QiKQoKICAgICAgICAgIGlmIG90b29sIC1sICIkQVBQLyRFWEVDIiAyPi9kZXYvbnVsbCB8IGdyZXAgLUE0IExDX0VOQ1JZUFRJT05fSU5GTyB8IGdyZXAgLXEgJ2NyeXB0aWQgMSc7IHRoZW4KICAgICAgICAgICAgZWNobyAiOjplcnJvcjo644GT44GuSVBB44GvQXBwIFN0b3Jl54mIKOaal+WPt+WMlua4iOOBvynjgafjgZnjgILlvqnlj7fmuIjjgb9JUEHjgpLkvb/nlKjjgZfjgabjgY/jgaDjgZXjgYTjgIIiCiAgICAgICAgICAgIGV4aXQgMQogICAgICAgICAgZmkKICAgICAgICAgIGVjaG8gIklQQSBpcyBkZWNyeXB0ZWQuIgogICAgICAgICAgcm0gLXJmIGlwYV9jaGVjawoKICAgICAgLSBuYW1lOiBJbnN0YWxsIEN5YW4gKHB5enVsZS1ydykKICAgICAgICBpZjogZW52LlBST0pFQ1RfVFlQRSA9PSAndGhlb3MnIHx8IGVudi5QUk9KRUNUX1RZUEUgPT0gJ2RlYm9ubHknCiAgICAgICAgc2hlbGw6IGJhc2gKICAgICAgICBydW46IHwKICAgICAgICAgIHNldCAtZXVvIHBpcGVmYWlsCiAgICAgICAgICBicmV3IGluc3RhbGwgbGRpZAogICAgICAgICAgcHl0aG9uMyAtbSB2ZW52ICIkSE9NRS9jeWFuLXZlbnYiCiAgICAgICAgICAiJEhPTUUvY3lhbi12ZW52L2Jpbi9waXAiIGluc3RhbGwgLS1xdWlldCBcCiAgICAgICAgICAgICJodHRwczovL2dpdGh1Yi5jb20vYXNkZnp4Y3Zibi9weXp1bGUtcncvYXJjaGl2ZS9tYWluLnppcCIKICAgICAgICAgIGVjaG8gIiRIT01FL2N5YW4tdmVudi9iaW4iID4+ICIkR0lUSFVCX1BBVEgiCgogICAgICAtIG5hbWU6IEluamVjdCBERUIgaW50byBJUEEKICAgICAgICBpZjogZW52LlBST0pFQ1RfVFlQRSA9PSAndGhlb3MnIHx8IGVudi5QUk9KRUNUX1RZUEUgPT0gJ2RlYm9ubHknCiAgICAgICAgc2hlbGw6IGJhc2gKICAgICAgICBydW46IHwKICAgICAgICAgIHNldCAtZXVvIHBpcGVmYWlsCgogICAgICAgICAgc2hvcHQgLXMgbnVsbGdsb2IKICAgICAgICAgIERFQlM9KGRlYnMvKi5kZWIpCiAgICAgICAgICBbICIkeyNERUJTW0BdfSIgLWd0IDAgXSB8fCB7IGVjaG8gIjo6ZXJyb3I6OuazqOWFpeOBmeOCi2RlYuOBjOOBguOCiuOBvuOBm+OCk+OAgiI7IGV4aXQgMTsgfQoKICAgICAgICAgIEFSR1M9KCkKICAgICAgICAgIGZvciBkIGluICIke0RFQlNbQF19IjsgZG8gQVJHUys9KC1mICIkZCIpOyBkb25lCgogICAgICAgICAgZWNobyAiSW5qZWN0aW5nOiAke0RFQlNbKl19IgogICAgICAgICAgY3lhbiAtaSBiYXNlX2lucHV0LmlwYSAtbyBvdXQvSW5qZWN0ZWQuaXBhIC11IC1zICIke0FSR1NbQF19IgoKICAgICAgICAgIFsgLXMgb3V0L0luamVjdGVkLmlwYSBdIHx8IHsgZWNobyAiOjplcnJvcjo65rOo5YWl44Gr5aSx5pWX44GX44G+44GX44Gf44CCIjsgZXhpdCAxOyB9CiAgICAgICAgICBjcCAiJHtERUJTW0BdfSIgb3V0LwogICAgICAgICAgbHMgLWxoIG91dAoKICAgICAgIyDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAgWGNvZGU6IElQQeODk+ODq+ODie+8iOW+k+adpeWLleS9nO+8iSDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAKICAgICAgLSBuYW1lOiBCdWlsZCBYY29kZSBwcm9qZWN0IHRvIElQQQogICAgICAgIGlmOiBlbnYuUFJPSkVDVF9UWVBFID09ICd4Y29kZScKICAgICAgICBzaGVsbDogYmFzaAogICAgICAgIHJ1bjogfAogICAgICAgICAgc2V0IC1ldW8gcGlwZWZhaWwKCiAgICAgICAgICB4Y29kZWJ1aWxkIC1saXN0IC1qc29uIC1wcm9qZWN0ICIkWENPREVQUk9KIiA+IHhjb2RlLWxpc3QuanNvbgogICAgICAgICAgU0NIRU1FPSQocHl0aG9uMyAtYyAnaW1wb3J0IGpzb247ZD1qc29uLmxvYWQob3BlbigieGNvZGUtbGlzdC5qc29uIikpO3M9ZC5nZXQoInByb2plY3QiLHt9KS5nZXQoInNjaGVtZXMiLFtdKTtwcmludChzWzBdIGlmIHMgZWxzZSAiIiknKQogICAgICAgICAgWyAtbiAiJFNDSEVNRSIgXSB8fCB7IGVjaG8gIjo6ZXJyb3I6Olhjb2RlIHNjaGVtZSDjgYzopovjgaTjgYvjgorjgb7jgZvjgpPjgIIiOyBleGl0IDE7IH0KCiAgICAgICAgICB4Y29kZWJ1aWxkIGJ1aWxkIFwKICAgICAgICAgICAgLXByb2plY3QgIiRYQ09ERVBST0oiIC1zY2hlbWUgIiRTQ0hFTUUiIFwKICAgICAgICAgICAgLWNvbmZpZ3VyYXRpb24gUmVsZWFzZSAtc2RrIGlwaG9uZW9zIFwKICAgICAgICAgICAgLWRlcml2ZWREYXRhUGF0aCAiJEdJVEhVQl9XT1JLU1BBQ0UvYnVpbGRfb3V0cHV0IiBcCiAgICAgICAgICAgIENPREVfU0lHTklOR19BTExPV0VEPU5PIENPREVfU0lHTklOR19SRVFVSVJFRD1OTyBcCiAgICAgICAgICAgIENPREVfU0lHTl9JREVOVElUWT0iIiBQUk9WSVNJT05JTkdfUFJPRklMRV9TUEVDSUZJRVI9IiIKCiAgICAgICAgICBBUFBfRElSPSIkR0lUSFVCX1dPUktTUEFDRS9idWlsZF9vdXRwdXQvQnVpbGQvUHJvZHVjdHMvUmVsZWFzZS1pcGhvbmVvcyIKICAgICAgICAgIEFQUF9QQVRIPSQoZmluZCAiJEFQUF9ESVIiIC1tYXhkZXB0aCAxIC10eXBlIGQgLW5hbWUgJyouYXBwJyAtcHJpbnQgLXF1aXQpCiAgICAgICAgICBbIC1uICIkQVBQX1BBVEgiIF0gfHwgeyBlY2hvICI6OmVycm9yOjouYXBwIOOBjOeUn+aIkOOBleOCjOOBvuOBm+OCk+OBp+OBl+OBn+OAgiI7IGV4aXQgMTsgfQoKICAgICAgICAgIFBLRz0iJEdJVEhVQl9XT1JLU1BBQ0UvaXBhX3BhY2thZ2UiCiAgICAgICAgICBybSAtcmYgIiRQS0ciICYmIG1rZGlyIC1wICIkUEtHL1BheWxvYWQiCiAgICAgICAgICBkaXR0byAiJEFQUF9QQVRIIiAiJFBLRy9QYXlsb2FkLyQoYmFzZW5hbWUgIiRBUFBfUEFUSCIpIgogICAgICAgICAgKGNkICIkUEtHIiAmJiB6aXAgLXFyeSAiJEdJVEhVQl9XT1JLU1BBQ0Uvb3V0LyR7UFJPSkVDVF9OQU1FfV91bnNpZ25lZC5pcGEiIFBheWxvYWQpCiAgICAgICAgICBscyAtbGggb3V0CgogICAgICAtIG5hbWU6IFVwbG9hZCBhcnRpZmFjdHMKICAgICAgICB1c2VzOiBhY3Rpb25zL3VwbG9hZC1hcnRpZmFjdEB2NAogICAgICAgIHdpdGg6CiAgICAgICAgICBuYW1lOiBCdWlsZC1PdXRwdXQKICAgICAgICAgIHBhdGg6IG91dC8qCiAgICAgICAgICBpZi1uby1maWxlcy1mb3VuZDogZXJyb3IKICAgICAgICAgIHJldGVudGlvbi1kYXlzOiA3"
+        download="main.yml"
+    >
+        ⬇️ main.ymlをダウンロード
+    </a>
+
     <progress id="bar" max="100" value="0"></progress>
 
     <p class="warning">
@@ -125,12 +143,20 @@ document.querySelectorAll('input[name="ipaMode"]').forEach(r => r.addEventListen
     $("noneHint").classList.toggle("hidden", m !== "none");
 }));
 
-function log(msg) { logDiv.textContent += msg + "\n"; logDiv.scrollTop = logDiv.scrollHeight; }
+function log(msg) {
+    logDiv.textContent += msg + "\n";
+    logDiv.scrollTop = logDiv.scrollHeight;
+}
+
 function logLink(label, url) {
     const a = document.createElement("a");
-    a.href = url; a.target = "_blank"; a.rel = "noopener"; a.textContent = url;
+    a.href = url;
+    a.target = "_blank";
+    a.rel = "noopener";
+    a.textContent = url;
     logDiv.append(label, a, "\n");
 }
+
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 function headers(extra = {}) {
@@ -146,7 +172,10 @@ async function gh(url, options = {}) {
     const res = await fetch(url, { ...options, headers: headers(options.headers) });
     if (!res.ok) {
         let detail = res.statusText;
-        try { const d = await res.json(); detail = d.message || JSON.stringify(d); } catch {}
+        try {
+            const d = await res.json();
+            detail = d.message || JSON.stringify(d);
+        } catch {}
         const err = new Error(`GitHub APIエラー (${res.status}): ${detail}`);
         err.status = res.status;
         throw err;
@@ -159,7 +188,9 @@ function toBase64(file) {
         const r = new FileReader();
         r.onload = () => {
             const s = r.result, i = s.indexOf(",");
-            i < 0 ? reject(new Error("ファイルの変換に失敗しました")) : resolve(s.slice(i + 1));
+            i < 0
+                ? reject(new Error("ファイルの変換に失敗しました"))
+                : resolve(s.slice(i + 1));
         };
         r.onerror = () => reject(r.error || new Error("ファイル読み込みエラー"));
         r.readAsDataURL(file);
@@ -168,7 +199,9 @@ function toBase64(file) {
 
 async function sha256Hex(text) {
     const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
-    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+    return Array.from(new Uint8Array(buf))
+        .map(b => b.toString(16).padStart(2, "0"))
+        .join("");
 }
 
 // リポジトリ直下の repoPath にファイルを作成/更新
@@ -184,7 +217,10 @@ async function uploadFile(repoPath, file) {
     log(`  ${repoPath}: ${(file.size / 1048576).toFixed(2)} MB を読み込み中...`);
     const content = await toBase64(file);
 
-    const body = { message: `Upload ${repoPath} from Web Frontend`, content };
+    const body = {
+        message: `Upload ${repoPath} from Web Frontend`,
+        content
+    };
     if (sha) body.sha = sha;
 
     const res = await gh(`${API_BASE}/contents/${repoPath}`, {
@@ -192,8 +228,11 @@ async function uploadFile(repoPath, file) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body)
     });
+
     const data = await res.json();
-    if (!data.content?.sha) throw new Error(`${repoPath} のアップロード結果を確認できませんでした。`);
+    if (!data.content?.sha) {
+        throw new Error(`${repoPath} のアップロード結果を確認できませんでした。`);
+    }
     log(`  ${repoPath}: アップロード成功`);
 }
 
@@ -204,16 +243,33 @@ async function watchRun(since) {
 
     while (Date.now() - start < POLL_LIMIT_MS) {
         await sleep(POLL_MS);
+
         try {
             if (!runId) {
-                const d = await (await gh(`${API_BASE}/actions/runs?event=repository_dispatch&per_page=10`)).json();
+                const d = await (
+                    await gh(`${API_BASE}/actions/runs?event=repository_dispatch&per_page=10`)
+                ).json();
+
                 const run = (d.workflow_runs || []).find(x => x.created_at >= since);
-                if (run) { runId = run.id; logLink("実行ページ: ", run.html_url); }
+                if (run) {
+                    runId = run.id;
+                    logLink("実行ページ: ", run.html_url);
+                }
                 continue;
             }
-            const run = await (await gh(`${API_BASE}/actions/runs/${runId}`)).json();
-            const st = run.status === "completed" ? `completed:${run.conclusion}` : run.status;
-            if (st !== last) { log(`状態: ${st}`); last = st; }
+
+            const run = await (
+                await gh(`${API_BASE}/actions/runs/${runId}`)
+            ).json();
+
+            const st = run.status === "completed"
+                ? `completed:${run.conclusion}`
+                : run.status;
+
+            if (st !== last) {
+                log(`状態: ${st}`);
+                last = st;
+            }
 
             if (run.status === "completed") {
                 if (run.conclusion === "success") {
@@ -234,6 +290,7 @@ async function watchRun(since) {
             }
         }
     }
+
     log("監視がタイムアウトしました。Actionsページで確認してください。");
 }
 
@@ -250,19 +307,44 @@ async function start() {
     if (!src) return alert("① DEB または ZIP を選択してください。");
 
     const lower = src.name.toLowerCase();
-    const srcType = lower.endsWith(".deb") ? "deb" : lower.endsWith(".zip") ? "zip" : null;
+    const srcType = lower.endsWith(".deb")
+        ? "deb"
+        : lower.endsWith(".zip")
+            ? "zip"
+            : null;
+
     if (!srcType) return alert("① は .deb または .zip を選択してください。");
 
     if (mode === "file") {
-        if (!ipa || !ipa.name.toLowerCase().endsWith(".ipa")) return alert("② IPAファイルを選択してください。");
-        if (ipa.size > MAX_BYTES) return alert("IPAが95MBを超えています。URL指定を使ってください。");
+        if (!ipa || !ipa.name.toLowerCase().endsWith(".ipa")) {
+            return alert("② IPAファイルを選択してください。");
+        }
+        if (ipa.size > MAX_BYTES) {
+            return alert("IPAが95MBを超えています。URL指定を使ってください。");
+        }
     }
-    if (mode === "url" && !/^https:\/\//i.test(ipaUrl)) return alert("② IPAのURLは https:// で始めてください。");
-    if (mode === "none" && srcType === "deb") return alert("DEBを注入するにはベースIPAが必要です。");
-    if (src.size > MAX_BYTES) return alert("①のファイルが95MBを超えています。");
-    if (!crypto.subtle) return alert("SHA-256 APIが使えません。HTTPSまたはlocalhostで開いてください。");
 
-    try { remember.checked ? localStorage.setItem("gh_token", token) : localStorage.removeItem("gh_token"); } catch {}
+    if (mode === "url" && !/^https:\/\//i.test(ipaUrl)) {
+        return alert("② IPAのURLは https:// で始めてください。");
+    }
+
+    if (mode === "none" && srcType === "deb") {
+        return alert("DEBを注入するにはベースIPAが必要です。");
+    }
+
+    if (src.size > MAX_BYTES) {
+        return alert("①のファイルが95MBを超えています。");
+    }
+
+    if (!crypto.subtle) {
+        return alert("SHA-256 APIが使えません。HTTPSまたはlocalhostで開いてください。");
+    }
+
+    try {
+        remember.checked
+            ? localStorage.setItem("gh_token", token)
+            : localStorage.removeItem("gh_token");
+    } catch {}
 
     buildBtn.disabled = true;
     logDiv.textContent = "";
@@ -283,7 +365,9 @@ async function start() {
         log("2. GitHub Actionsを起動中...");
         const timestamp = Date.now().toString();
         const hash = await sha256Hex(timestamp + SECRET_SALT);
-        const since = new Date(Date.now() - 10000).toISOString().replace(/\.\d+Z$/, "Z");
+        const since = new Date(Date.now() - 10000)
+            .toISOString()
+            .replace(/\.\d+Z$/, "Z");
 
         const res = await gh(`${API_BASE}/dispatches`, {
             method: "POST",
@@ -291,14 +375,18 @@ async function start() {
             body: JSON.stringify({
                 event_type: "remote_build_trigger",
                 client_payload: {
-                    timestamp, hash,
+                    timestamp,
+                    hash,
                     source: srcType,
                     ipa: mode,
                     ipa_url: mode === "url" ? ipaUrl : ""
                 }
             })
         });
-        if (res.status !== 204) throw new Error(`予期しない応答ステータス: ${res.status}`);
+
+        if (res.status !== 204) {
+            throw new Error(`予期しない応答ステータス: ${res.status}`);
+        }
 
         log(`3. 受け付けました (入力: ${srcType} / ベースIPA: ${mode})`);
         bar.value = 80;
