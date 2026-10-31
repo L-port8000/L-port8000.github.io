@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>wpbrowser ビルドクライアント</title>
+<style>
+  :root { --bg:#0f1115; --card:#181b22; --line:#2a2f3a; --fg:#e6e8ee; --mute:#8b93a5; --acc:#4f8cff; --ok:#3fb950; --ng:#f85149; --warn:#d29922; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:15px/1.6 system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 20px 16px 60px; }
+  h1 { font-size: 20px; margin: 8px 0 18px; }
+  h2 { font-size: 15px; margin: 0 0 12px; color: var(--mute); font-weight: 600; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; margin-bottom:16px; }
+  label { display:block; font-size:12px; color:var(--mute); margin:10px 0 4px; }
+  input { width:100%; padding:10px 12px; background:#0f1115; color:var(--fg); border:1px solid var(--line); border-radius:8px; font:inherit; }
+  input:focus { outline:2px solid var(--acc); outline-offset:-1px; }
+  .row { display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
+  @media (max-width:520px){ .row { grid-template-columns:1fr; } }
+  .btns { display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }
+  button { padding:10px 16px; border-radius:8px; border:1px solid var(--line); background:#222733; color:var(--fg); font:inherit; cursor:pointer; }
+  button.primary { background:var(--acc); border-color:var(--acc); color:#fff; font-weight:600; }
+  button:disabled { opacity:.5; cursor:default; }
+  .note { font-size:12px; color:var(--mute); margin-top:10px; }
+  .msg { margin-top:12px; padding:10px 12px; border-radius:8px; font-size:13px; display:none; }
+  .msg.show { display:block; }
+  .msg.ok { background:#12261a; border:1px solid #1f4d2c; color:#8fe0a4; }
+  .msg.err { background:#2a1517; border:1px solid #5a2327; color:#ffa8a3; }
+  .msg.info { background:#15202f; border:1px solid #243a5a; color:#a9c7ff; }
+  .run { display:flex; align-items:center; gap:10px; padding:10px 0; border-top:1px solid var(--line); flex-wrap:wrap; }
+  .run:first-child { border-top:none; }
+  .dot { width:10px; height:10px; border-radius:50%; background:var(--mute); flex:none; }
+  .dot.ok { background:var(--ok); } .dot.ng { background:var(--ng); } .dot.run { background:var(--warn); animation:p 1s infinite alternate; }
+  @keyframes p { to { opacity:.3; } }
+  .grow { flex:1; min-width:180px; }
+  .sub { font-size:12px; color:var(--mute); }
+  a { color:var(--acc); }
+  .small { padding:6px 10px; font-size:13px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>wpbrowser ビルドクライアント</h1>
+
+  <section class="card">
+    <h2>設定</h2>
+    <div class="row">
+      <div><label for="owner">オーナー</label><input id="owner" placeholder="your-name" autocomplete="off"></div>
+      <div><label for="repo">リポジトリ</label><input id="repo" placeholder="wpbrowser" autocomplete="off"></div>
+    </div>
+    <div class="row">
+      <div><label for="wf">ワークフローのファイル名</label><input id="wf" value="build.yml" autocomplete="off"></div>
+      <div><label for="ref">ブランチ / タグ</label><input id="ref" value="main" autocomplete="off"></div>
+    </div>
+    <label for="token">GitHub Personal Access Token</label>
+    <input id="token" type="password" placeholder="github_pat_… / ghp_…" autocomplete="off" spellcheck="false">
+    <div class="btns">
+      <button id="save" class="primary">保存</button>
+      <button id="clear">トークンを削除</button>
+    </div>
+    <div id="cfgMsg" class="msg"></div>
+    <p class="note">
+      トークンはこのブラウザの localStorage に暗号化(AES-GCM)して保存し、api.github.com 以外には送信しません。
+      ただしソルトがコードに固定されているため、これは難読化であり、強い保護ではありません。共有端末では使わず、権限は最小にしてください。
+      必要な権限: Fine-grained は対象リポジトリの「Actions: Read and write」、Classic は「repo」と「workflow」。
+    </p>
+  </section>
+
+  <section class="card">
+    <h2>ビルド</h2>
+    <div class="btns" style="margin-top:0">
+      <button id="run" class="primary">ビルドを実行</button>
+      <button id="refresh">更新</button>
+    </div>
+    <div id="runMsg" class="msg"></div>
+    <div id="runs" style="margin-top:8px"></div>
+  </section>
+</main>
+
+<script>
+"use strict";
+const SECRET_SALT  = "ipa-builder-1";
+const API = "https://api.github.com";
+const LS_CFG = "wpb_client_cfg";
+const LS_TOK = "wpb_client_tok";
+const $ = id => document.getElementById(id);
+
+/* ---------- 暗号化保存 ---------- */
+const enc = new TextEncoder(), dec = new TextDecoder();
+async function getKey() {
+  const base = await crypto.subtle.importKey("raw", enc.encode(SECRET_SALT + "|" + location.origin), "PBKDF2", false, ["deriveKey"]);
+  return crypto.subtle.deriveKey(
+    { name: "PBKDF2", salt: enc.encode(SECRET_SALT), iterations: 100000, hash: "SHA-256" },
+    base, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
+}
+const b64 = buf => btoa(String.fromCharCode(...new Uint8Array(buf)));
+const unb64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+async function encryptText(t) {
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, await getKey(), enc.encode(t)));
+  const out = new Uint8Array(iv.length + ct.length); out.set(iv); out.set(ct, iv.length);
+  return b64(out);
+}
+async function decryptText(s) {
+  const raw = unb64(s);
+  const pt = await crypto.subtle.decrypt({ name: "AES-GCM", iv: raw.slice(0, 12) }, await getKey(), raw.slice(12));
+  return dec.decode(pt);
+}
+
+/* ---------- 設定 ---------- */
+function msg(el, text, kind) { el.textContent = text; el.className = "msg show " + kind; }
+function hide(el) { el.className = "msg"; }
+const NAME_RE = /^[A-Za-z0-9_.-]+$/;
+
+function readCfg() {
+  return { owner: $("owner").value.trim(), repo: $("repo").value.trim(), wf: $("wf").value.trim(), ref: $("ref").value.trim() };
+}
+function validCfg(c) {
+  return NAME_RE.test(c.owner) && NAME_RE.test(c.repo) && NAME_RE.test(c.wf) && c.ref.length > 0;
+}
+async function loadToken() {
+  const s = localStorage.getItem(LS_TOK);
+  if (!s) return "";
+  try { return await decryptText(s); } catch { return ""; }
+}
+async function loadAll() {
+  try {
+    const c = JSON.parse(localStorage.getItem(LS_CFG) || "{}");
+    for (const k of ["owner", "repo", "wf", "ref"]) if (c[k]) $(k).value = c[k];
+  } catch {}
+  const t = await loadToken();
+  if (t) $("token").placeholder = "保存済み(変更する場合のみ入力)";
+  return t;
+}
+
+$("save").onclick = async () => {
+  const c = readCfg();
+  if (!validCfg(c)) return msg($("cfgMsg"), "オーナー・リポジトリ・ファイル名・ブランチを正しく入力してください。", "err");
+  try {
+    localStorage.setItem(LS_CFG, JSON.stringify(c));
+    const t = $("token").value.trim();
+    if (t) {
+      localStorage.setItem(LS_TOK, await encryptText(t));
+      $("token").value = "";
+      $("token").placeholder = "保存済み(変更する場合のみ入力)";
+    }
+    msg($("cfgMsg"), "保存しました。", "ok");
+    refreshRuns();
+  } catch (e) { msg($("cfgMsg"), "保存に失敗しました: " + e.message, "err"); }
+};
+$("clear").onclick = () => {
+  localStorage.removeItem(LS_TOK);
+  $("token").value = ""; $("token").placeholder = "github_pat_… / ghp_…";
+  msg($("cfgMsg"), "トークンを削除しました。", "ok");
+};
+
+/* ---------- GitHub API ---------- */
+async function gh(path, opts = {}) {
+  const token = await loadToken();
+  if (!token) throw new Error("トークンが保存されていません。");
+  const r = await fetch(API + path, {
+    ...opts,
+    headers: {
+      "Accept": "application/vnd.github+json",
+      "Authorization": "Bearer " + token,
+      "X-GitHub-Api-Version": "2022-11-28",
+      ...(opts.headers || {})
+    }
+  });
+  if (!r.ok && r.status !== 204) {
+    let m = ""; try { m = (await r.json()).message; } catch {}
+    throw new Error(`GitHub API ${r.status}${m ? ": " + m : ""}`);
+  }
+  return r;
+}
+function base() {
+  const c = readCfg();
+  if (!validCfg(c)) throw new Error("設定が不正です。");
+  return { c, p: `/repos/${c.owner}/${c.repo}` };
+}
+
+$("run").onclick = async () => {
+  $("run").disabled = true; hide($("runMsg"));
+  try {
+    const { c, p } = base();
+    await gh(`${p}/actions/workflows/${encodeURIComponent(c.wf)}/dispatches`, {
+      method: "POST", body: JSON.stringify({ ref: c.ref })
+    });
+    msg($("runMsg"), "ビルドを開始しました。一覧に反映されるまで数秒かかります。", "ok");
+    setTimeout(refreshRuns, 3000);
+  } catch (e) { msg($("runMsg"), e.message, "err"); }
+  $("run").disabled = false;
+};
+$("refresh").onclick = () => refreshRuns();
+
+/* ---------- 実行一覧 ---------- */
+let timer = null;
+function fmt(t) { return new Date(t).toLocaleString("ja-JP"); }
+function statusOf(r) {
+  if (r.status !== "completed") return { cls: "run", label: r.status === "queued" ? "待機中" : "実行中" };
+  if (r.conclusion === "success") return { cls: "ok", label: "成功" };
+  return { cls: "ng", label: r.conclusion === "cancelled" ? "キャンセル" : "失敗" };
+}
+
+async function refreshRuns() {
+  clearTimeout(timer);
+  const box = $("runs");
+  let data;
+  try {
+    const { c, p } = base();
+    const r = await gh(`${p}/actions/workflows/${encodeURIComponent(c.wf)}/runs?per_page=8`);
+    data = await r.json();
+  } catch (e) { box.textContent = ""; msg($("runMsg"), e.message, "err"); return; }
+
+  box.textContent = "";
+  let active = false;
+  if (!data.workflow_runs.length) {
+    const d = document.createElement("div"); d.className = "sub"; d.textContent = "実行履歴はありません。"; box.append(d);
+  }
+  for (const run of data.workflow_runs) {
+    const st = statusOf(run);
+    if (st.cls === "run") active = true;
+    const row = document.createElement("div"); row.className = "run";
+    const dot = document.createElement("span"); dot.className = "dot " + st.cls;
+    const g = document.createElement("div"); g.className = "grow";
+    const t = document.createElement("div"); t.textContent = `#${run.run_number} ${st.label}`;
+    const s = document.createElement("div"); s.className = "sub"; s.textContent = `${fmt(run.created_at)} · ${run.head_branch}`;
+    g.append(t, s);
+    const link = document.createElement("a"); link.href = run.html_url; link.target = "_blank"; link.rel = "noopener"; link.textContent = "GitHubで開く";
+    row.append(dot, g, link);
+    if (st.cls === "ok") {
+      const b = document.createElement("button"); b.className = "small"; b.textContent = "成果物(.deb)を取得";
+      b.onclick = () => listArtifacts(run.id, row, b);
+      row.append(b);
+    }
+    box.append(row);
+  }
+  if (active) timer = setTimeout(refreshRuns, 5000);
+}
+
+async function listArtifacts(runId, row, btn) {
+  btn.disabled = true;
+  try {
+    const { p } = base();
+    const r = await gh(`${p}/actions/runs/${runId}/artifacts`);
+    const arts = (await r.json()).artifacts.filter(a => !a.expired);
+    if (!arts.length) { btn.textContent = "成果物なし(期限切れ)"; return; }
+    btn.remove();
+    for (const a of arts) {
+      const b = document.createElement("button"); b.className = "small";
+      b.textContent = `${a.name}.zip をダウンロード (${(a.size_in_bytes / 1024).toFixed(0)} KB)`;
+      b.onclick = () => download(a, b);
+      row.append(b);
+    }
+  } catch (e) { msg($("runMsg"), e.message, "err"); btn.disabled = false; }
+}
+
+async function download(a, btn) {
+  const label = btn.textContent; btn.disabled = true; btn.textContent = "取得中…";
+  try {
+    const { p } = base();
+    const r = await gh(`${p}/actions/artifacts/${a.id}/zip`);
+    const blob = await r.blob();
+    const url = URL.createObjectURL(blob);
+    const el = document.createElement("a"); el.href = url; el.download = a.name + ".zip";
+    document.body.append(el); el.click(); el.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+    msg($("runMsg"), "ダウンロードしました。zipを展開すると rootful / rootless の .deb が入っています。", "ok");
+  } catch (e) { msg($("runMsg"), e.message, "err"); }
+  btn.disabled = false; btn.textContent = label;
+}
+
+loadAll().then(t => { if (t) refreshRuns(); });
+</script>
+</body>
+</html>
