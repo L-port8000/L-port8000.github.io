@@ -13,8 +13,8 @@
   h2 { font-size: 15px; margin: 0 0 12px; color: var(--mute); font-weight: 600; }
   .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; margin-bottom:16px; }
   label { display:block; font-size:12px; color:var(--mute); margin:10px 0 4px; }
-  input { width:100%; padding:10px 12px; background:#0f1115; color:var(--fg); border:1px solid var(--line); border-radius:8px; font:inherit; }
-  input:focus { outline:2px solid var(--acc); outline-offset:-1px; }
+  input, select { width:100%; padding:10px 12px; background:#0f1115; color:var(--fg); border:1px solid var(--line); border-radius:8px; font:inherit; }
+  input:focus, select:focus { outline:2px solid var(--acc); outline-offset:-1px; }
   .row { display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
   @media (max-width:520px){ .row { grid-template-columns:1fr; } }
   .btns { display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }
@@ -49,8 +49,19 @@
       <div><label for="repo">リポジトリ</label><input id="repo" placeholder="wpbrowser" autocomplete="off"></div>
     </div>
     <div class="row">
-      <div><label for="wf">ワークフローのファイル名</label><input id="wf" value="build.yml" autocomplete="off"></div>
-      <div><label for="ref">ブランチ / タグ</label><input id="ref" value="main" autocomplete="off"></div>
+      <div><label for="wf">宛先ワークフロー</label>
+        <select id="wf">
+          <option value="main.yml">main.yml(IPA注入ビルド)</option>
+          <option value="build.yml">build.yml(wpbrowser .deb ビルド)</option>
+        </select></div>
+      <div id="refBox"><label for="ref">ブランチ / タグ(workflow_dispatch用)</label><input id="ref" value="main" autocomplete="off"></div>
+    </div>
+    <div id="methodBox">
+      <label for="method">build.yml の起動方式</label>
+      <select id="method">
+        <option value="repository_dispatch">repository_dispatch(Contents: Read and write で動作)</option>
+        <option value="workflow_dispatch">workflow_dispatch(Actions: Read and write が必要)</option>
+      </select>
     </div>
     <label for="token">GitHub Personal Access Token</label>
     <input id="token" type="password" placeholder="github_pat_… / ghp_…" autocomplete="off" spellcheck="false">
@@ -68,6 +79,13 @@
 
   <section class="card">
     <h2>ビルド</h2>
+    <div id="mainBox">
+      <label for="srcUrl">① ソースのURL(https。ZIP / DEB / dylib はビルド側で自動判定)</label>
+      <input id="srcUrl" type="url" placeholder="https://example.com/project.zip" autocomplete="off">
+      <label for="ipaUrl">② ベースIPAのURL(https)</label>
+      <input id="ipaUrl" type="url" placeholder="https://example.com/base.ipa" autocomplete="off">
+      <p class="note">main.yml宛はURL指定のみ対応です。ファイルのアップロードが必要なときは、添付のツールを使ってください。</p>
+    </div>
     <div class="btns" style="margin-top:0">
       <button id="run" class="primary">ビルドを実行</button>
       <button id="refresh">更新</button>
@@ -113,7 +131,21 @@ function hide(el) { el.className = "msg"; }
 const NAME_RE = /^[A-Za-z0-9_.-]+$/;
 
 function readCfg() {
-  return { owner: $("owner").value.trim(), repo: $("repo").value.trim(), wf: $("wf").value.trim(), ref: $("ref").value.trim() };
+  return { owner: $("owner").value.trim(), repo: $("repo").value.trim(), wf: $("wf").value,
+           ref: $("ref").value.trim(), method: $("method").value };
+}
+function updateDest() {
+  const isMain = $("wf").value === "main.yml";
+  const m = $("method").value === "workflow_dispatch";
+  $("mainBox").style.display = isMain ? "" : "none";
+  $("methodBox").style.display = isMain ? "none" : "";
+  $("refBox").style.display = (!isMain && m) ? "" : "none";
+}
+$("wf").onchange = () => { updateDest(); refreshRuns(); };
+$("method").onchange = updateDest;
+async function sha256Hex(text) {
+  const b = await crypto.subtle.digest("SHA-256", enc.encode(text));
+  return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, "0")).join("");
 }
 function validCfg(c) {
   return NAME_RE.test(c.owner) && NAME_RE.test(c.repo) && NAME_RE.test(c.wf) && c.ref.length > 0;
@@ -126,8 +158,9 @@ async function loadToken() {
 async function loadAll() {
   try {
     const c = JSON.parse(localStorage.getItem(LS_CFG) || "{}");
-    for (const k of ["owner", "repo", "wf", "ref"]) if (c[k]) $(k).value = c[k];
+    for (const k of ["owner", "repo", "wf", "ref", "method"]) if (c[k]) $(k).value = c[k];
   } catch {}
+  updateDest();
   const t = await loadToken();
   if (t) $("token").placeholder = "保存済み(変更する場合のみ入力)";
   return t;
@@ -169,7 +202,10 @@ async function gh(path, opts = {}) {
   });
   if (!r.ok && r.status !== 204) {
     let m = ""; try { m = (await r.json()).message; } catch {}
-    throw new Error(`GitHub API ${r.status}${m ? ": " + m : ""}`);
+    const op = (opts.method || "GET") + " " + path.replace(/^\/repos\/[^/]+\/[^/]+/, "…");
+    const hint = r.status === 403 ? "(権限不足: Actions=Read and write と、リポジトリ/Resource ownerの選択を確認)"
+               : r.status === 404 ? "(リポジトリ名・ファイル名・ブランチ、またはトークンのアクセス範囲を確認)" : "";
+    throw new Error(`GitHub API ${r.status}${m ? ": " + m : ""} [${op}] ${hint}`);
   }
   return r;
 }
@@ -183,9 +219,29 @@ $("run").onclick = async () => {
   $("run").disabled = true; hide($("runMsg"));
   try {
     const { c, p } = base();
-    await gh(`${p}/actions/workflows/${encodeURIComponent(c.wf)}/dispatches`, {
-      method: "POST", body: JSON.stringify({ ref: c.ref })
-    });
+    const post = (path, body) => gh(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    if (c.wf === "main.yml") {
+      const srcUrl = $("srcUrl").value.trim(), ipaUrl = $("ipaUrl").value.trim();
+      if (!/^https:\/\//i.test(srcUrl)) throw new Error("① ソースのURLは https:// で始めてください。");
+      if (!/^https:\/\//i.test(ipaUrl)) throw new Error("② ベースIPAのURLは https:// で始めてください。");
+      const timestamp = Date.now().toString();
+      await post(`${p}/dispatches`, {
+        event_type: "remote_build_trigger",
+        client_payload: {
+          timestamp, hash: await sha256Hex(timestamp + SECRET_SALT),
+          source: "url", source_url: srcUrl, source_parts: "0", source_name: "",
+          ipa: "url", ipa_url: ipaUrl, ipa_parts: "0"
+        }
+      });
+    } else if (c.method === "workflow_dispatch") {
+      await post(`${p}/actions/workflows/${encodeURIComponent(c.wf)}/dispatches`, { ref: c.ref });
+    } else {
+      const timestamp = Date.now().toString();
+      await post(`${p}/dispatches`, {
+        event_type: "wpbrowser_build",
+        client_payload: { timestamp, hash: await sha256Hex(timestamp + SECRET_SALT) }
+      });
+    }
     msg($("runMsg"), "ビルドを開始しました。一覧に反映されるまで数秒かかります。", "ok");
     setTimeout(refreshRuns, 3000);
   } catch (e) { msg($("runMsg"), e.message, "err"); }
